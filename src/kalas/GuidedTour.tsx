@@ -154,6 +154,14 @@ export default function GuidedTour({
     };
   }, [step.anchor, advance]);
 
+  /* The last step points at the checklist, so the checklist has to be on
+     screen. Every other step waits for the couple to navigate themselves —
+     this one cannot, because the tour is over and there is nothing left to
+     press. */
+  useEffect(() => {
+    if (step.final && step.page) navigateRef.current?.(step.page);
+  }, [step.final, step.page]);
+
   const onNext = () => {
     // Escape hatch: they didn't click the control, so take them there ourselves.
     if (step.page) navigateRef.current?.(step.page);
@@ -264,7 +272,15 @@ export default function GuidedTour({
                 <button
                   key={prompt}
                   type="button"
-                  onClick={() => onAskAva(filled)}
+                  onClick={() => {
+                    /* Open the page the prompt is about before sending it, so
+                       the couple watches the board fill up instead of reading
+                       that it happened. The agent navigates too, but only once
+                       it has finished — that is twenty seconds of staring at
+                       the wrong screen. */
+                    if (step.page) navigateRef.current?.(step.page);
+                    onAskAva(filled);
+                  }}
                   className="flex cursor-pointer items-center gap-2 rounded-full bg-sage-tint px-4 py-2.5 text-left text-[13px] font-semibold text-sage-strong transition-colors hover:bg-sage"
                 >
                   <Play size={12} strokeWidth={2.5} className="shrink-0 fill-current" aria-hidden />

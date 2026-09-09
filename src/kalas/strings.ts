@@ -62,7 +62,8 @@ export const EN: Record<string, string> = {
   'Tidslinjen regnes baglæns': 'The timeline is worked out backwards',
   'Her lander svarene': 'This is where the replies land',
   'Der er mere, når I når dertil': "There's more when you get there",
-  'Det var rundturen': "That's the tour",
+  'Sådan kommer I i gang': 'Where to start',
+  'Hvad skal vi gøre først?': 'What should we do first?',
   'I behøver ikke lede efter knapper. Jeg åbner den rigtige side og laver arbejdet — I skal bare **sige til**.\n\nRundturen tager fem minutter, og I kan **stoppe når som helst**.':
     "You don't need to hunt for buttons. I open the right page and do the work — you just **say the word**.\n\nThe tour takes five minutes, and you can **stop whenever you like**.",
   'Jeg søger på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I gemmer favoritter på jeres **shortlist** og ser, hvem I har booket.':
@@ -77,8 +78,8 @@ export const EN: Record<string, string> = {
     'Once I have written to a place, I gather the thread, pull **the price** out of the email and have **a suggested reply** ready. You just approve it.',
   'Bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse ligger i menuen. **Én ting ad gangen** — de venter på jer.':
     'Wedding site, invitations, registry, seating plan and honeymoon are in the menu. **One thing at a time** — they will wait.',
-  'Nu er I i gang. Jeg er her, hvis I får brug for mig — **skriv bare til mig**, når som helst.':
-    'You are up and running. I am here if you need me — **just write to me**, any time.',
+  'Start i **Kom godt i gang** — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.':
+    'Start with **Kom godt i gang** — the next steps are there, one at a time, and I tick them off as you go.\n\nIf you are unsure, just ask me.',
   'Rundvisning': 'Guided tour',
   '{n} af {total}': '{n} of {total}',
   'Spring rundvisningen over': 'Skip the tour',

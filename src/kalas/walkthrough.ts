@@ -106,11 +106,16 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   },
   {
     id: 'choose',
-    page: null,
+    page: 'home',
+    /* Ends on the checklist rather than on a goodbye. "That was the tour" and
+       then an empty screen leaves them exactly where they were before it
+       started — the last thing a tour owes them is the first thing to do. */
+    anchor: 'home-checklist',
     final: true,
-    title: 'Det var rundturen',
+    title: 'Sådan kommer I i gang',
     body:
-      'Nu er I i gang. Jeg er her, hvis I får brug for mig — **skriv bare til mig**, når som helst.',
+      'Start i **Kom godt i gang** — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.',
+    tries: ['Hvad skal vi gøre først?'],
   },
 ] as const;
 

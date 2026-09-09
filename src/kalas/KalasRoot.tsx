@@ -8,7 +8,7 @@ import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
 import { WALKTHROUGH_KEY, walkthroughParams } from './walkthrough';
-import ClassicWalkthrough from './ClassicWalkthrough';
+import GuidedTour from './GuidedTour';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
 import { LanguageProvider, type Lang } from './i18n';
@@ -66,9 +66,10 @@ function AppInner() {
     if (saved === 'ava' || saved === 'inspiration') return 'home';
     return migrateSavedScreen(saved) || 'home';
   });
-  // Ava's one-time walkthrough, armed by onboarding completion (or `?walkthrough=1`
-  // so it can be replayed on demand). It runs in whichever mode the couple is
-  // in — in the chat as bubbles, in classic as a card anchored to the interface.
+  // Ava's one-time guided tour, armed by onboarding completion (or
+  // `?walkthrough=1` so it can be replayed on demand). One tour, mounted below
+  // both shells: onboarding lands every couple in chat mode, so a tour that
+  // only ran in classic was a tour nobody was shown.
   const [walkthroughActive, setWalkthroughActive] = useState(() => {
     try {
       if (new URLSearchParams(window.location.search).get('walkthrough') === '1') {
@@ -87,8 +88,11 @@ function AppInner() {
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const askAva = useCallback((prompt: string) => {
     setPendingPrompt(prompt);
-    setChatMode(true);
-    try { localStorage.setItem('kalas_chat_mode', '1'); } catch { /* ignore */ }
+    // Already in chat: the prompt lands in the thread they are looking at.
+    setChatMode((on) => {
+      if (!on) { try { localStorage.setItem('kalas_chat_mode', '1'); } catch { /* ignore */ } }
+      return true;
+    });
   }, []);
 
   const toggleChatMode = useCallback((on: boolean) => {
@@ -152,9 +156,16 @@ function AppInner() {
 
   const activeScreen = screen === 'ava' ? 'home' : screen;
 
-  // The walkthrough used to pin the app to chat mode, so a couple in classic
-  // never saw it at all. It now has a classic sibling (below) sharing the same
-  // script and progress key, and only chat mode routes through ChatShell.
+  const tour = walkthroughActive ? (
+    <GuidedTour
+      params={walkthroughParams(event, couple)}
+      onNavigate={navigate}
+      onAskAva={askAva}
+      onFinish={finishWalkthrough}
+      chatMode={chatMode}
+    />
+  ) : null;
+
   if (chatMode) {
     return (
       <ChatShell
@@ -170,14 +181,14 @@ function AppInner() {
             onUiAction={applyUiAction}
             uiMode="chat"
             variant="drawer"
-            walkthroughActive={walkthroughActive}
-            onWalkthroughFinish={finishWalkthrough}
             pendingPrompt={pendingPrompt}
             onPendingPromptSent={() => setPendingPrompt(null)}
           />
         }
+        hideModeToggle={walkthroughActive}
       >
         {screens[activeScreen as AppScreen]}
+        {tour}
       </ChatShell>
     );
   }
@@ -194,14 +205,7 @@ function AppInner() {
       <AnimatePresence mode="wait">
         <div key={activeScreen}>{screens[activeScreen as AppScreen]}</div>
       </AnimatePresence>
-      {walkthroughActive && (
-        <ClassicWalkthrough
-          params={walkthroughParams(event, couple)}
-          onNavigate={navigate}
-          onAskAva={askAva}
-          onFinish={finishWalkthrough}
-        />
-      )}
+      {tour}
     </Shell>
   );
 }

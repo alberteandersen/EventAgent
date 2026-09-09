@@ -92,31 +92,12 @@ export const EN: Record<string, string> = {
     "That's the tour. You're up and running, I'm here if you need me.",
 
   // ── Ava's onboarding walkthrough ────────────────────────────────────
-  'Så er I inde, velkommen! Lad mig vise jer rundt. Det korte af det lange: I behøver ikke lede efter knapper. Skriv til mig her, så åbner jeg den rigtige side og laver arbejdet.':
-    "You're in, welcome! Let me show you around. The short version: you don't need to hunt for buttons. Write to me here and I'll open the right page and do the work.",
-  'Det her er leverandører. Her udforsker I steder og folk, gemmer favoritter på jeres shortlist, og ser hvem I har booket. Prøv at bede mig om noget, jeg søger på nettet og lægger rigtige steder på tavlen.':
-    "This is vendors. Here you explore places and people, save favourites to your shortlist, and see who you've booked. Try asking me for something, I search the web and put real places on the board.",
-  'Budgettet. Jeg fordeler det på kategorier og siger til, før I rammer loftet. I kan trække i det selv, eller bare bede mig om at ændre det.':
-    'The budget. I split it across categories and warn you before you hit the ceiling. You can drag it around yourself, or just ask me to change it.',
-  'Gæstelisten. Importér fra CSV eller tilføj dem enkeltvis, jeg holder styr på svar, plus-ens og kostbehov undervejs. I kan også bare spørge mig om status.':
-    'The guest list. Import from CSV or add them one by one, I keep track of replies, plus-ones and dietary needs along the way. You can also just ask me for the status.',
-  'Tidslinjen lægger jeg baglæns fra jeres dato, så I altid ved hvad der haster. Spørg mig endelig.':
-    'I lay the timeline out backwards from your date, so you always know what is urgent. Do ask me.',
-  'Og her lander svarene. Når jeg har skrevet til et sted, samler jeg tråden, trækker prisen ud af mailen og lægger et forslag til svar klar, I skal bare godkende.':
-    "And this is where replies land. Once I've written to a place, I gather the thread, pull the price out of the email and have a suggested reply ready, you just approve it.",
-  'Der er mere når I når dertil: jeres bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse. Bed mig om at åbne en af dem, når I er klar.':
-    "There's more when you get there: your wedding site, invitations, registry, seating plan and honeymoon. Ask me to open any of them when you're ready.",
-  'Det var rundturen. Hvordan vil I helst arbejde? I kan altid skifte oppe i hjørnet.':
-    "That's the tour. How would you rather work? You can always switch up in the corner.",
-  'Find et bryllupssted i {city} til {guests} gæster': 'Find a wedding venue in {city} for {guests} guests',
+                  'Find et bryllupssted i {city} til {guests} gæster': 'Find a wedding venue in {city} for {guests} guests',
   'Sæt budgettet for mad og drikke til {foodBudget} kr': 'Set the food and drink budget to {foodBudget} kr',
   'Hvordan får vi gæstelisten i gang?': 'How do we get the guest list started?',
   'Hvad bør vi have på plads inden {dateHint}?': 'What should we have in place before {dateHint}?',
   'Hjælp os videre, hvad mangler vi at få på plads?': 'Help us move forward, what do we still need to sort out?',
-  'Prøv: “{prompt}”': 'Try: “{prompt}”',
-  'Kig på skærmen, jeg bliver her, til I siger videre.':
-    'Take a look at the screen, I\'ll wait here until you say continue.',
-  'Spring guiden over': 'Skip the guide',
+      'Spring guiden over': 'Skip the guide',
   'Bliv i chatten': 'Stay in chat',
   'Skift til klassisk': 'Switch to classic',
 

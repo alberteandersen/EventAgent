@@ -1,9 +1,8 @@
-/* Ava's conversational walkthrough — the script.
+/* Ava's guided tour — the script.
  *
- * Replaces the old spotlight tour: instead of coach-marks with Next/Back, Ava
- * narrates each page in the chat, pulls it up on the stage, and offers real
- * prompts the couple can try. The prompts are sent to the agent verbatim, so
- * they genuinely execute — a venue search really lands venues on the board.
+ * One entry per page: a title, a short body, and the prompts the couple can
+ * try. The prompts are sent to the agent verbatim, so they genuinely execute —
+ * a venue search really lands venues on the board.
  *
  * Copy is Danish source with {named} placeholders, resolved through the same
  * t(source, params) i18n as the rest of the app (see i18n.tsx / strings.ts).
@@ -16,16 +15,12 @@ export const WALKTHROUGH_KEY = 'kalas_walkthrough';
 
 export type WalkthroughStep = {
   id: string;
-  /** Stage navigates here when the step opens. */
+  /** Where "Videre" takes them when they do not press the control itself. */
   page: ScreenId | null;
-  /** Ava's line. */
-  message: string;
-  /* Classic mode has no chat thread on screen, so the steps that talk about
-     "writing to me here" would be lying. It also gets a headline, because the
-     card is read at a glance and one long sentence is not glanceable.
-     `**bold**` in the body renders through the same RichText as the chat. */
-  classicTitle?: string;
-  classicMessage?: string;
+  /** Read at a glance, so a headline rather than a paragraph. */
+  title: string;
+  /** `**bold**` renders through the same RichText as the chat bubbles. */
+  body: string;
   /** What the couple clicks to advance in classic — a `data-tour` value. */
   anchor?: string;
   /** "Try asking me…" prompts — sent to the agent for real. */
@@ -47,90 +42,74 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'intro',
     page: 'home',
-    message:
-      'Så er I inde, velkommen! Lad mig vise jer rundt. Det korte af det lange: I behøver ikke lede efter knapper. Skriv til mig her, så åbner jeg den rigtige side og laver arbejdet.',
     anchor: 'home-checklist',
-    classicTitle: 'Velkommen. Jeg viser rundt',
-    classicMessage:
+    title: 'Velkommen. Jeg viser rundt',
+    body:
       'I behøver ikke lede efter knapper. Jeg åbner den rigtige side og laver arbejdet — I skal bare **sige til**.\n\nRundturen tager fem minutter, og I kan **stoppe når som helst**.',
   },
   {
     id: 'vendors',
     page: 'team',
     anchor: 'team',
-    message:
-      'Det her er leverandører. Her udforsker I steder og folk, gemmer favoritter på jeres shortlist, og ser hvem I har booket. Prøv at bede mig om noget, jeg søger på nettet og lægger rigtige steder på tavlen.',
     tries: ['Find et bryllupssted i {city} til {guests} gæster'],
     needs: ['city', 'guests'],
-    classicTitle: 'Her finder I stederne',
-    classicMessage:
+    title: 'Her finder I stederne',
+    body:
       'Jeg søger på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I gemmer favoritter på jeres **shortlist** og ser, hvem I har booket.',
   },
   {
     id: 'budget',
     page: 'budget',
     anchor: 'budget',
-    message:
-      'Budgettet. Jeg fordeler det på kategorier og siger til, før I rammer loftet. I kan trække i det selv, eller bare bede mig om at ændre det.',
     tries: ['Sæt budgettet for mad og drikke til {foodBudget} kr'],
     needs: ['foodBudget'],
-    classicTitle: 'Budgettet holder styr på sig selv',
-    classicMessage:
+    title: 'Budgettet holder styr på sig selv',
+    body:
       'Jeg fordeler beløbet på **kategorier** og siger til, **før I rammer loftet**. I kan trække i det selv — eller bede mig om at ændre det.',
   },
   {
     id: 'guests',
     page: 'guests',
     anchor: 'guests',
-    message:
-      'Gæstelisten. Importér fra CSV eller tilføj dem enkeltvis, jeg holder styr på svar, plus-ens og kostbehov undervejs. I kan også bare spørge mig om status.',
     /* Not "who hasn't replied yet": the walkthrough runs on day one, when the
        list is empty and the honest answer is "nobody, there are no guests".
        A prompt that only works months later is a prompt that fails now. */
     tries: ['Hvordan får vi gæstelisten i gang?'],
-    classicTitle: 'Gæstelisten, uden regneark',
-    classicMessage:
+    title: 'Gæstelisten, uden regneark',
+    body:
       'Importér fra **CSV** eller tilføj dem enkeltvis. Jeg holder styr på **svar**, **plus-ens** og **kostbehov** undervejs.',
   },
   {
     id: 'planning',
     page: 'planning',
     anchor: 'planning',
-    message:
-      'Tidslinjen lægger jeg baglæns fra jeres dato, så I altid ved hvad der haster. Spørg mig endelig.',
     tries: ['Hvad bør vi have på plads inden {dateHint}?'],
     needs: ['dateHint'],
-    classicTitle: 'Tidslinjen regnes baglæns',
-    classicMessage:
+    title: 'Tidslinjen regnes baglæns',
+    body:
       'Fra jeres dato og hjem, så I altid ved **hvad der haster nu** — og hvad der kan vente.',
   },
   {
     id: 'inbox',
     page: 'inbox',
     anchor: 'inbox',
-    message:
-      'Og her lander svarene. Når jeg har skrevet til et sted, samler jeg tråden, trækker prisen ud af mailen og lægger et forslag til svar klar, I skal bare godkende.',
-    classicTitle: 'Her lander svarene',
-    classicMessage:
+    title: 'Her lander svarene',
+    body:
       'Når jeg har skrevet til et sted, samler jeg tråden, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende.',
   },
   {
     id: 'rest',
     page: 'home',
-    message:
-      'Der er mere når I når dertil: jeres bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse. Bed mig om at åbne en af dem, når I er klar.',
-    classicTitle: 'Der er mere, når I når dertil',
-    classicMessage:
+    title: 'Der er mere, når I når dertil',
+    body:
       'Bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse ligger i menuen. **Én ting ad gangen** — de venter på jer.',
   },
   {
     id: 'choose',
     page: null,
-    message:
-      'Det var rundturen. Hvordan vil I helst arbejde? I kan altid skifte oppe i hjørnet.',
     final: true,
-    classicTitle: 'Det var rundturen',
-    classicMessage:
+    title: 'Det var rundturen',
+    body:
       'Nu er I i gang. Jeg er her, hvis I får brug for mig — **skriv bare til mig**, når som helst.',
   },
 ] as const;

@@ -1,11 +1,11 @@
 "use client";
 
-/* Harness for ClassicWalkthrough — the real component against stand-in nav
+/* Harness for GuidedTour — the real component against stand-in nav
    rows carrying the same `data-tour` values as Shell, so the ring and the
    click-to-advance can be exercised without a signed-in wedding. */
 
 import { useState } from 'react';
-import ClassicWalkthrough from '@/kalas/ClassicWalkthrough';
+import GuidedTour from '@/kalas/GuidedTour';
 import RichText from '@/kalas/chat/RichText';
 import { LanguageProvider } from '@/kalas/i18n';
 import { WALKTHROUGH_KEY } from '@/kalas/walkthrough';
@@ -32,7 +32,7 @@ Venuet forankrer alt det andet — blomster, musik og catering er alle lokale ti
 Skal jeg begynde at researche venues nær **Denmark**?`;
 
 export default function DevWalkthroughPage() {
-  // Armed during init so ClassicWalkthrough reads step 0 on its first render.
+  // Armed during init so GuidedTour reads step 0 on its first render.
   const [running, setRunning] = useState(() => {
     try { localStorage.setItem(WALKTHROUGH_KEY, '0'); } catch { /* ignore */ }
     return true;
@@ -43,7 +43,7 @@ export default function DevWalkthroughPage() {
   return (
     <LanguageProvider initialLang="da">
       <div className="theme-kalas min-h-screen bg-canvas px-8 py-12 text-ink">
-        <p className="eyebrow mb-6">Dev · ClassicWalkthrough</p>
+        <p className="eyebrow mb-6">Dev · GuidedTour</p>
 
         <div className="flex max-w-[240px] flex-col gap-1">
           <button data-tour="home-checklist" className="rounded-[10px] border border-line px-3 py-2.5 text-left text-sm font-semibold">
@@ -69,11 +69,11 @@ export default function DevWalkthroughPage() {
         </div>
 
         {running && (
-          <ClassicWalkthrough
+          <GuidedTour
             params={{ city: 'Fyn', guests: 80, foodBudget: '85.000', dateHint: 'juni 2027' }}
             onNavigate={(s: ScreenId) => note(`navigate: ${s}`)}
-            onAskAva={(p) => note(`askAva: ${p}`)}
-            onFinish={(mode) => { note(`finish: ${mode}`); setRunning(false); }}
+            onAskAva={(p: string) => note(`askAva: ${p}`)}
+            onFinish={(mode: 'chat' | 'classic') => { note(`finish: ${mode}`); setRunning(false); }}
           />
         )}
       </div>

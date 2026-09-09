@@ -33,6 +33,8 @@ export interface EventRow {
   status: EventStatus;
   chosen_venue_id: string | null;
   journey_overrides: Record<string, string>;
+  /** Task ids the couple turned off on the home checklist. */
+  checklist_hidden: string[];
   reply_tag: string | null;
   created_at: string;
 }

@@ -68,6 +68,9 @@ function Site({ slug, couple, config, design, siteHtml, photoUrls, registryItems
           claimedByItem={claimedByItem}
           onRsvp={() => setRsvpOpen(true)}
           onClaim={(it) => setClaimItem(it)}
+          /* Only offered once the date is firm — a calendar entry for
+             "spring 2028" would be a guess in a place people trust. */
+          icsUrl={couple.dateISO ? `/api/w/${slug}/ics` : null}
         />
       )}
       {rsvpOpen && <RsvpModal slug={slug} config={config} token={rsvpToken ?? null} onClose={() => setRsvpOpen(false)} />}

@@ -8,12 +8,13 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gift, Plus, Trash2, Link2, Check, Pencil, ExternalLink, Heart } from 'lucide-react';
+import { Gift, Plus, Trash2, Link2, Check, Pencil, ExternalLink, Heart, Share2 } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
 import { Pill, cn } from '../ui';
 import GiftCard from '../registry/GiftCard';
-import { sortGifts, claimedCount } from '../registry/gifts';
+import HeroPhoto from './home/HeroPhoto';
+import { sortGifts, PRICE_BANDS, inBand } from '../registry/gifts';
 import type { RegistryItemRow } from '@/lib/db/types';
 
 /** An item being written: a fresh wish has no id, an edit carries one. */
@@ -21,16 +22,38 @@ type Draft = Partial<RegistryItemRow> & { id?: string };
 
 const EMPTY: Draft = { title: '', currency: 'DKK', quantity: 1, favourite: false };
 
+const FALLBACK_PHOTO =
+  'https://cdn.wonder.so/images/019d9110-e1f2-74f3-85e8-c89f82be5a63/6d0cada0901a800c9f43a2cf68a9d52f6cf2620687565337240b2d069d261834.jpg';
+
 export default function Registry({ onNavigate }: { onNavigate?: (s: import('../Shell').ScreenId) => void }) {
   const { t } = useLang();
-  const { registryItems, registryClaims, addRegistryItem, updateRegistryItem, deleteRegistryItem } = useWedding();
+  const {
+    couple, weddingSite,
+    registryItems, addRegistryItem, updateRegistryItem, deleteRegistryItem,
+  } = useWedding();
   const [url, setUrl] = useState('');
   const [looking, setLooking] = useState(false);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [band, setBand] = useState<string>('all');
+  const [copied, setCopied] = useState(false);
 
-  const claimsForItem = (id: string) => registryClaims.filter((c) => c.item_id === id);
-  const items = sortGifts(registryItems);
+  const allItems = sortGifts(registryItems);
+  const items = allItems.filter((it) => inBand(it.price_cents, band));
+
+  const coupleLabel = couple.b && couple.a ? `${couple.a} & ${couple.b}` : couple.a || t('Vores ønskeliste');
+
+  const publicUrl = weddingSite?.domain
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}/w/${weddingSite.domain}`
+    : null;
+  const share = async () => {
+    if (!publicUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch { /* clipboard blocked — the link is on screen anyway */ }
+  };
 
   const lookup = async () => {
     const clean = url.trim();
@@ -77,17 +100,53 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
   const toggleFavourite = (it: RegistryItemRow) =>
     void updateRegistryItem(it.id, { favourite: !it.favourite });
 
-  const editing = draft?.id ? registryItems.find((it) => it.id === draft.id) ?? null : null;
-  const editingClaims = editing ? claimsForItem(editing.id) : [];
 
   return (
     <div className="px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
-      <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
-        {t('Ønskeliste')}
-      </h1>
-      <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
-        {t('Indsæt et link til en gave, så henter vi billede og pris. Gæsterne kan reservere den fra jeres bryllupsside, så to ikke køber det samme.')}
-      </p>
+      {/* The couple's own list, with their faces on it — this is the page a
+          guest opens, and "Ønskeliste" over a grid of products said nothing
+          about whose wedding it was. */}
+      <div className="flex flex-col gap-6 rounded-[28px] border border-line bg-card p-6 sm:flex-row sm:items-start sm:p-7">
+        <HeroPhoto
+          fallback={FALLBACK_PHOTO}
+          alt={coupleLabel}
+          className="sm:w-[200px]"
+          frameClassName="h-[180px] sm:h-[200px]"
+        />
+
+        <div className="flex min-w-0 flex-1 flex-col gap-3">
+          <p className="eyebrow">{t('Ønskeliste')}</p>
+          <h1 className="font-serif text-[clamp(1.8rem,3.5vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
+            {coupleLabel}
+          </h1>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[0.82rem] text-muted">
+              {t('{n} ønsker på listen', { n: allItems.length })}
+            </span>
+            {publicUrl ? (
+              <button
+                type="button"
+                onClick={share}
+                className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong px-3 py-1.5 text-[0.78rem] font-semibold text-ink transition-colors hover:border-ink"
+              >
+                {copied ? <Check size={13} /> : <Share2 size={13} />}
+                {copied ? t('Link kopieret') : t('Del listen')}
+              </button>
+            ) : (
+              <span className="text-[0.78rem] text-muted">
+                {t('Udgiv jeres bryllupsside, så kan I dele listen.')}
+              </span>
+            )}
+          </div>
+
+          {allItems.length > 0 && (
+            <p className="text-[0.78rem] text-muted">
+              {t('Gæsterne kan se, hvad der er reserveret, så to ikke køber det samme. I kan ikke — det er hele overraskelsen.')}
+            </p>
+          )}
+        </div>
+      </div>
 
       {/* Add */}
       <div className="mt-8 flex flex-wrap items-center gap-2 rounded-2xl rule bg-card p-2">
@@ -166,21 +225,6 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
                 </div>
               </div>
 
-              {/* Who reserved it, and what they wrote. This used to sit on every
-                  card, where it was the single biggest thing on the screen. */}
-              {editing && editingClaims.length > 0 && (
-                <div className="mt-4 rule-t pt-3">
-                  <p className="text-[0.68rem] font-medium uppercase tracking-[0.16em] text-muted">{t('Reserveret af')}</p>
-                  <div className="mt-1.5 space-y-1.5">
-                    {editingClaims.map((c) => (
-                      <div key={c.id}>
-                        <p className="text-[0.8rem] font-medium text-ink">{c.guest_name}</p>
-                        {c.message && <p className="text-[0.76rem] italic leading-snug text-muted">{c.message}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
           </motion.div>
         )}
@@ -194,16 +238,47 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
           <p className="mt-1 max-w-sm text-[0.88rem] text-muted">{t('Indsæt jeres første gavelink ovenfor.')}</p>
         </div>
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+        <>
+        {/* Prisklasser: a guest arrives with an amount in mind, not a product.
+            Hidden until there is enough on the list for filtering to mean
+            anything. */}
+        {allItems.length >= 4 && (
+          <div className="mt-8 flex flex-wrap gap-1.5">
+            {PRICE_BANDS.map((b) => {
+              const count = allItems.filter((it) => inBand(it.price_cents, b.id)).length;
+              return (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => setBand(b.id)}
+                  disabled={count === 0}
+                  className={cn(
+                    'rounded-full border px-3 py-1.5 text-[0.78rem] font-medium transition-colors cursor-pointer',
+                    band === b.id
+                      ? 'border-ink bg-ink text-canvas'
+                      : 'border-line text-ink-soft hover:border-ink hover:text-ink',
+                    count === 0 && 'cursor-not-allowed opacity-40',
+                  )}
+                >
+                  {t(b.label)} <span className="opacity-60">{count}</span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
           {items.map((it) => {
-            const claimed = claimedCount(claimsForItem(it.id));
-            const reserved = claimed >= it.quantity;
+            /* Deliberately not computed. Whether a gift is taken, and by whom,
+               is the guests' business — the couple's own screen never shows it,
+               because knowing is exactly the surprise the list protects. The
+               public site (SiteRenderer) is where reservations live. */
             return (
               <div key={it.id} className="flex flex-col gap-1.5">
                 <GiftCard
                   item={it}
-                  reserved={reserved}
-                  reservedBy={claimsForItem(it.id)[0]?.guest_name ?? null}
+                  reserved={false}
+                  reservedBy={null}
                   actions={
                     <>
                       <TileButton label={t('Rediger')} onClick={() => setDraft({ ...it })}><Pencil size={15} /></TileButton>
@@ -238,13 +313,16 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
                   </div>
                 )}
 
-                {!reserved && claimed > 0 && (
-                  <p className="px-1 text-[0.72rem] text-muted">{t('{n}/{q} reserveret', { n: claimed, q: it.quantity })}</p>
-                )}
               </div>
             );
           })}
         </div>
+        {items.length === 0 && allItems.length > 0 && (
+          <p className="mt-8 text-center text-[0.85rem] text-ink-soft">
+            {t('Ingen ønsker i denne prisklasse.')}
+          </p>
+        )}
+        </>
       )}
 
       {items.length > 0 && (

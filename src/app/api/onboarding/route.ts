@@ -97,24 +97,43 @@ export async function POST(request: NextRequest) {
       ? `your style: "${description.slice(0, 80)}"`
       : `jeres stil: "${description.slice(0, 80)}"`
     : null;
+  /* The first thing the couple ever reads from Ava. It used to be one long
+     run-on sentence with their answers comma-joined into the middle of it —
+     written out as a short greeting, a bulleted read-back they can check at a
+     glance, and one question. RichText in the chat renders the bullets. */
+  const facts = [
+    city,
+    dateKnown,
+    guestCount
+      ? language === "en"
+        ? `around ${guestCount} guests`
+        : `omkring ${guestCount} gæster`
+      : null,
+    styleHint,
+  ].filter(Boolean);
+  const bullets = facts.map((f) => `- ${f}`).join("\n");
+
   const welcome =
     language === "en"
-      ? `Hi ${names}! I'm Ava, your wedding planner. Here's what I have so far: ${[
-          city,
-          dateKnown,
-          guestCount ? `around ${guestCount} guests` : null,
-          styleHint,
-        ]
-          .filter(Boolean)
-          .join(", ")}. The venue anchors everything else, flowers, music and catering are all local to it. Shall I start researching venues near ${city}?`
-      : `Hej ${names}! Jeg er Ava, jeres bryllupsplanlægger. Her er hvad jeg har indtil videre: ${[
-          city,
-          dateKnown,
-          guestCount ? `omkring ${guestCount} gæster` : null,
-          styleHint,
-        ]
-          .filter(Boolean)
-          .join(", ")}. Venuet forankrer alt det andet, blomster, musik og catering er alle lokale til det. Skal jeg begynde at researche venues nær ${city}?`;
+      ? `Hi ${names}! I'm Ava, your wedding planner.
+
+Here's what I have so far:
+
+${bullets}
+
+The venue anchors everything else — flowers, music and catering are all local to it, so it's the first thing worth locking down.
+
+Shall I start researching venues near ${city}?`
+      : `Hej ${names}! Jeg er Ava, jeres bryllupsplanlægger.
+
+Her er hvad jeg har indtil videre:
+
+${bullets}
+
+Venuet forankrer alt det andet — blomster, musik og catering er alle lokale til det, så det er det første, der er værd at få på plads.
+
+Skal jeg begynde at researche venues nær ${city}?`;
+
   await supabase.from("chat_messages").insert({
     event_id: event.id,
     user_id: user.id,

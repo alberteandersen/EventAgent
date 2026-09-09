@@ -156,8 +156,21 @@ html {
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── Walkthrough spotlight ───────────────────────────────────────────────
+   The cutout is one element: a ring around the target plus a huge spread
+   shadow that dims everything outside it. pointer-events stay off, so the
+   real control underneath is still the thing the couple clicks. */
+@keyframes kalas-tour-pulse {
+  0%, 100% { box-shadow: 0 0 0 9999px rgba(19, 26, 22, 0.5), 0 0 0 0 rgba(122, 155, 138, 0.55); }
+  50%      { box-shadow: 0 0 0 9999px rgba(19, 26, 22, 0.5), 0 0 0 10px rgba(122, 155, 138, 0); }
+}
+.kalas-tour-spot {
+  animation: kalas-tour-pulse 2s ease-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  .kalas-tour-spot { box-shadow: 0 0 0 9999px rgba(19, 26, 22, 0.5) !important; }
 }
 /* ── Printing the seating plan ───────────────────────────────────────────
    The chart is printed from its own sheet, portalled to <body>, so a

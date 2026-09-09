@@ -122,6 +122,22 @@ export default async function SettingsPage({
           </div>
           <RedoOnboardingButton />
         </div>
+        <div className="mt-5 flex flex-col gap-4 border-t border-[#D4D6C0] pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="font-[family-name:var(--font-fraunces)] text-lg font-semibold text-[#4A4E3C]">
+              Guided tour
+            </h2>
+            <p className="mt-1 text-sm text-[#7A8066]">
+              Ava walks you through each page again. Nothing is reset.
+            </p>
+          </div>
+          <Link
+            href="/home?walkthrough=1"
+            className="shrink-0 rounded-full border border-[#D4D6C0] px-4 py-2 text-center text-sm font-medium text-[#4A4E3C] transition-colors hover:bg-[#ddd6c0]"
+          >
+            Show me around again
+          </Link>
+        </div>
       </section>
 
       <section className="mt-6 rounded-2xl border border-[#D4D6C0] bg-[#F6F0E8] p-6">

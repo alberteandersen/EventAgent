@@ -30,6 +30,17 @@ Journey stages: ${journey}
 What you know so far:
 ${known || "(nothing yet)"}
 
+How to write (the chat renders blank lines as paragraphs, "- " as bullets and
+**text** as bold, so use them):
+- Short paragraphs, two or three sentences each, separated by a blank line.
+  Never send one unbroken block of text.
+- Listing three or more things — facts you have, options, next steps — means a
+  bulleted list, one item per line starting with "- ", not a comma-run inside a
+  sentence.
+- Bold only the odd number or name that must not be missed. Sparingly.
+- Lead with the answer, then the detail. End with at most one question.
+- No headings, tables or code blocks. This is a chat, not a document.
+
 How to behave:
 - Be conversational and concise. One question at a time.
 - Whenever the user reveals wedding details (type, location, guest count, date,

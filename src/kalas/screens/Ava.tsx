@@ -20,7 +20,8 @@ import {
 } from '@/lib/vendor-batch';
 import { useWalkthrough } from '../useWalkthrough';
 import WalkthroughChips from '../WalkthroughChips';
-import type { WalkthroughParams } from '../walkthrough';
+import RichText from '../chat/RichText';
+import { HANDOFF_KEY, walkthroughParams } from '../walkthrough';
 
 export default function Ava({
   onNavigate,
@@ -92,25 +93,6 @@ export default function Ava({
       onWalkthroughFinish={onWalkthroughFinish}
     />
   );
-}
-
-/** Placeholders for the walkthrough's try-prompts, from the couple's own answers. */
-function walkthroughParams(
-  event: { location: string | null; date_hint: string | null } | null,
-  couple: { guests: number; budgetTotal: number; dateLabel: string },
-): Partial<WalkthroughParams> {
-  const p: Partial<WalkthroughParams> = {};
-  if (event?.location) p.city = event.location;
-  if (couple.guests > 0) p.guests = couple.guests;
-  if (couple.budgetTotal > 0) {
-    // ~30 % of the total is the usual food-and-drink share; round to 5.000 kr
-    // so the suggested prompt reads like something a person would type.
-    const food = Math.round((couple.budgetTotal * 0.3) / 5_000) * 5_000;
-    if (food > 0) p.foodBudget = food.toLocaleString('da-DK');
-  }
-  const when = event?.date_hint || couple.dateLabel;
-  if (when) p.dateHint = when;
-  return p;
 }
 
 function AvaChat({
@@ -192,6 +174,21 @@ function AvaChat({
       supabase.removeChannel(channel);
     };
   }, [supabase, eventId, setMessages]);
+
+  /* A prompt handed over from classic mode (the walkthrough's try-buttons live
+     outside the chat there). Consumed once, so a reload doesn't resend it. */
+  const handedOffRef = useRef(false);
+  useEffect(() => {
+    if (!historyLoaded || handedOffRef.current) return;
+    let prompt: string | null = null;
+    try {
+      prompt = sessionStorage.getItem(HANDOFF_KEY);
+      if (prompt) sessionStorage.removeItem(HANDOFF_KEY);
+    } catch { /* ignore */ }
+    if (!prompt) return;
+    handedOffRef.current = true;
+    void sendMessage(prompt);
+  }, [historyLoaded, sendMessage]);
 
   const wt = useWalkthrough({
     active: Boolean(walkthroughActive),
@@ -283,9 +280,11 @@ function Bubble({
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
       className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}>
       {msg.content && (
-        <div className={cn('max-w-[80%] whitespace-pre-line rounded-3xl px-5 py-3.5 text-[0.97rem] leading-relaxed',
+        <div className={cn('max-w-[80%] rounded-3xl px-5 py-3.5 text-[0.97rem] leading-relaxed',
           mine ? 'rounded-br-lg bg-ink text-canvas' : 'rounded-bl-lg rule bg-card text-ink')}>
-          {msg.content}
+          {/* The couple's own line is short and literal; Ava's is the one that
+              needs paragraphs and bullets to stay skimmable. */}
+          {mine ? <span className="whitespace-pre-line">{msg.content}</span> : <RichText text={msg.content} />}
         </div>
       )}
       {msg.payload && (

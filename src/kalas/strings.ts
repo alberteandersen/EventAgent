@@ -3,6 +3,66 @@
    Use {name} placeholders for interpolation via t(str, { name }). */
 
 export const EN: Record<string, string> = {
+  'Områder': 'Areas',
+
+  'Sæt i kalenderen': 'Add to calendar',
+
+  // ── Ønskeliste ──────────────────────────────────────────────────────
+  'Vores ønskeliste': 'Our wishlist',
+  '{n} ønsker på listen': '{n} wishes on the list',
+  'Del listen': 'Share the list',
+  'Link kopieret': 'Link copied',
+  'Udgiv jeres bryllupsside, så kan I dele listen.': 'Publish your wedding site to share the list.',
+  'Gæsterne kan se, hvad der er reserveret, så to ikke køber det samme. I kan ikke — det er hele overraskelsen.':
+    "Guests can see what's reserved, so two people don't buy the same thing. You can't — that's the whole surprise.",
+  'Under 300 kr': 'Under 300 kr',
+  '300–800 kr': '300–800 kr',
+  'Over 800 kr': 'Over 800 kr',
+  'Ingen ønsker i denne prisklasse.': 'No wishes in this price range.',
+
+  // ── Home: getting started ───────────────────────────────────────────
+  'Sæt jeres budget': 'Set your budget',
+  'Sæt jeres dato': 'Set your date',
+  'Ava fordeler det på kategorier bagefter': 'Ava splits it across categories afterwards',
+  'Tryk på datoen øverst på siden': 'Press the date at the top of the page',
+  'Ret datoen': 'Change the date',
+  'Tryk på {label} i menuen': 'Press {label} in the menu',
+  'Spring dette trin over': 'Skip this step',
+  'Fortæl Ava om jeres bryllup': 'Tell Ava about your wedding',
+  'Vi foreslår kr {amount}': 'We suggest kr {amount}',
+  '{n} af 3 på shortlisten': '{n} of 3 shortlisted',
+  'Ava søger på nettet og lægger dem på tavlen': 'Ava searches the web and puts them on the board',
+  '{n} af 10 tilføjet': '{n} of 10 added',
+  'Tilføj de første 10 gæster': 'Add the first 10 guests',
+  'I har været hele vejen igennem. Resten holder jeg øje med.':
+    "You've been all the way through. I'll keep an eye on the rest.",
+  'Resten af tjeklisten ligger under Tidslinje & tjekliste →':
+    'The rest of the checklist is under Timeline & checklist →',
+  'Forslag': 'Suggested',
+  'Brancheestimat for et dansk bryllup. Ret det hele.':
+    'Industry estimate for a Danish wedding. Change all of it.',
+  'Fortæl Ava jeres gæsteantal, så regner jeg et forslag':
+    'Tell Ava your headcount and I\'ll work out a suggestion',
+  'Importér fra CSV, eller tilføj de første ti i hånden':
+    'Import from CSV, or add the first ten by hand',
+  'Ava søger steder i {region} på det åbne web': 'Ava searches the open web for places in {region}',
+  'Ava søger steder på det åbne web og verificerer dem':
+    'Ava searches the open web for places and verifies them',
+  'Vælg et tema, og publicér når I er klar': 'Choose a theme, and publish when you are ready',
+
+  // ── Classic-mode walkthrough ────────────────────────────────────────
+  'Rundvisning': 'Guided tour',
+  '{n} af {total}': '{n} of {total}',
+  'Spring rundvisningen over': 'Skip the tour',
+  'Prøv chat-tilstand': 'Try chat mode',
+  'Så er jeg klar': "I'm ready",
+  'Så er I inde, velkommen! Lad mig vise jer rundt på fem minutter. I trykker selv undervejs, og I kan stoppe når som helst.':
+    "You're in, welcome! Let me show you around in five minutes. You do the clicking, and you can stop whenever you like.",
+  'Der er mere i menuen når I når dertil: jeres bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse.':
+    "There's more in the menu when you get there: your wedding site, invitations, registry, seating plan and honeymoon.",
+  'Det var rundturen. Nu er I i gang, jeg er her, hvis I får brug for mig.':
+    "That's the tour. You're up and running, I'm here if you need me.",
+
   // ── Ava's onboarding walkthrough ────────────────────────────────────
   'Så er I inde, velkommen! Lad mig vise jer rundt. Det korte af det lange: I behøver ikke lede efter knapper. Skriv til mig her, så åbner jeg den rigtige side og laver arbejdet.':
     "You're in, welcome! Let me show you around. The short version: you don't need to hunt for buttons. Write to me here and I'll open the right page and do the work.",

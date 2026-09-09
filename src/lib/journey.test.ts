@@ -18,6 +18,7 @@ function makeEvent(overrides: Partial<EventRow> = {}): EventRow {
     status: "gathering",
     chosen_venue_id: null,
     journey_overrides: {},
+  checklist_hidden: [],
     reply_tag: null,
     created_at: new Date().toISOString(),
     ...overrides,

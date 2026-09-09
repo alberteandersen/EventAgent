@@ -7,7 +7,8 @@ import { useCallback, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
-import { WALKTHROUGH_KEY } from './walkthrough';
+import { HANDOFF_KEY, WALKTHROUGH_KEY, walkthroughParams } from './walkthrough';
+import ClassicWalkthrough from './ClassicWalkthrough';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
 import { LanguageProvider, type Lang } from './i18n';
@@ -46,7 +47,7 @@ export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }
 
 function AppInner() {
   const { pendingCount } = useKalas();
-  const { replies } = useWedding();
+  const { replies, event, couple } = useWedding();
   const inboxBadge = replies.filter((r) => !r.read_at).length;
   const [hubTick, setHubTick] = useState(0);
   // Chat mode: collapsed icon-rail + Ava-driven stage. Sticky across visits.
@@ -66,8 +67,8 @@ function AppInner() {
     return migrateSavedScreen(saved) || 'home';
   });
   // Ava's one-time walkthrough, armed by onboarding completion (or `?walkthrough=1`
-  // so it can be replayed on demand). It runs inside the chat, so it forces chat
-  // mode until the couple picks a mode at the end.
+  // so it can be replayed on demand). It runs in whichever mode the couple is
+  // in — in the chat as bubbles, in classic as a card anchored to the interface.
   const [walkthroughActive, setWalkthroughActive] = useState(() => {
     try {
       if (new URLSearchParams(window.location.search).get('walkthrough') === '1') {
@@ -77,6 +78,15 @@ function AppInner() {
       return localStorage.getItem(WALKTHROUGH_KEY) !== null;
     } catch { return false; }
   });
+
+  /* A walkthrough try-prompt pressed in classic: park it, switch to chat, and
+     Ava sends it on mount. The search really runs — that is the point of the
+     button, and it is why this is a walkthrough rather than a slideshow. */
+  const askAva = useCallback((prompt: string) => {
+    try { sessionStorage.setItem(HANDOFF_KEY, prompt); } catch { /* ignore */ }
+    setChatMode(true);
+    try { localStorage.setItem('kalas_chat_mode', '1'); } catch { /* ignore */ }
+  }, []);
 
   const toggleChatMode = useCallback((on: boolean) => {
     setChatMode(on);
@@ -139,9 +149,10 @@ function AppInner() {
 
   const activeScreen = screen === 'ava' ? 'home' : screen;
 
-  // The walkthrough lives in the chat, so it pins the app to chat mode until
-  // the couple makes their choice on the last step.
-  if (chatMode || walkthroughActive) {
+  // The walkthrough used to pin the app to chat mode, so a couple in classic
+  // never saw it at all. It now has a classic sibling (below) sharing the same
+  // script and progress key, and only chat mode routes through ChatShell.
+  if (chatMode) {
     return (
       <ChatShell
         current={activeScreen}
@@ -150,7 +161,6 @@ function AppInner() {
         stageSignal={stageTick}
         pendingCount={pendingCount}
         inboxBadge={inboxBadge}
-        hideModeToggle={walkthroughActive}
         chat={
           <Ava
             onNavigate={navigate}
@@ -179,6 +189,14 @@ function AppInner() {
       <AnimatePresence mode="wait">
         <div key={activeScreen}>{screens[activeScreen as AppScreen]}</div>
       </AnimatePresence>
+      {walkthroughActive && (
+        <ClassicWalkthrough
+          params={walkthroughParams(event, couple)}
+          onNavigate={navigate}
+          onAskAva={askAva}
+          onFinish={finishWalkthrough}
+        />
+      )}
     </Shell>
   );
 }

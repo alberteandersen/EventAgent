@@ -85,17 +85,30 @@ export default function DevGlobePage() {
           >
             Til Danmark
           </button>
-          <span>markører: {places.length}</span>
           <span>valgt: {picked}</span>
+        </div>
+
+        {/* The globe no longer carries place markers, so the harness drives it
+            the way the real screen does: from the list beside it. */}
+        <div className="mb-4 flex flex-wrap gap-2">
+          {places.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onPick(p)}
+              className="rounded-full border border-line px-3 py-1.5 text-[0.8rem] font-semibold text-ink-soft hover:border-ink hover:text-ink cursor-pointer"
+            >
+              {p.name}
+            </button>
+          ))}
+          {places.length === 0 && <span className="text-[0.8rem] text-muted">ingen steder på dette niveau</span>}
         </div>
 
         <div className="relative h-[min(62vh,560px)] overflow-hidden rounded-[28px] border border-line bg-[#f7f5ef]">
           <DestinationGlobe
             selectedCountry="Denmark"
             onCountryPick={(c) => setPicked(`country: ${c}`)}
-            places={places}
             focus={focus}
-            onPlacePick={onPick}
           />
         </div>
       </div>

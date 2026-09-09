@@ -17,7 +17,21 @@ import { cn } from '../../ui';
 import { normalizeImage } from '../../site/normalizeImage';
 import type { SitePhotoRow } from '@/lib/db/types';
 
-export default function HeroPhoto({ fallback, alt }: { fallback: string; alt: string }) {
+export default function HeroPhoto({
+  fallback,
+  alt,
+  className,
+  frameClassName,
+}: {
+  fallback: string;
+  alt: string;
+  /* The frame is the caller's business: the home hero wants a wide 380px
+     panel, the registry header a small square beside the couple's name.
+     Baking the hero's size into the component made it burst out of any
+     narrower column it was put in. */
+  className?: string;
+  frameClassName?: string;
+}) {
   const { t } = useLang();
   const { event, sitePhotos, refresh } = useWedding();
   // Keyed by the photo it belongs to, so a stale signed URL is never shown
@@ -96,9 +110,12 @@ export default function HeroPhoto({ fallback, alt }: { fallback: string; alt: st
   const shown = url ?? fallback;
 
   return (
-    <div className="flex w-full shrink-0 flex-col gap-2 lg:w-[380px]">
+    <div className={cn('flex w-full shrink-0 flex-col gap-2', className ?? 'lg:w-[380px]')}>
       <div
-        className="group relative h-[240px] w-full rounded-[22px] border-[6px] border-[#f8f6f0] bg-cover bg-center shadow-[0_16px_40px_rgba(36,65,58,0.18)] lg:h-[300px]"
+        className={cn(
+          'group relative w-full rounded-[22px] border-[6px] border-[#f8f6f0] bg-cover bg-center shadow-[0_16px_40px_rgba(36,65,58,0.18)]',
+          frameClassName ?? 'h-[240px] lg:h-[300px]',
+        )}
         style={{ backgroundImage: `url('${shown}')` }}
         role="img"
         aria-label={alt}

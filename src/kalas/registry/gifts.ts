@@ -38,3 +38,28 @@ export function formatPrice(priceCents: number | null | undefined, currency: str
   const rounded = Number.isInteger(amount) ? amount : Math.round(amount * 100) / 100;
   return `${rounded.toLocaleString('da-DK')} ${currency}`;
 }
+
+/* Price bands, so a guest can find a gift at the level they had in mind
+   instead of scrolling the whole list — the one thing everybody recognises
+   from Ønskeskyen. Danish kroner, chosen to match what people actually spend
+   on a wedding gift rather than to divide the range evenly. Pure, so both the
+   couple's screen and the public site can filter the same way. */
+export const PRICE_BANDS = [
+  { id: 'all', label: 'Alle', min: null, max: null },
+  { id: 'under300', label: 'Under 300 kr', min: null, max: 300_00 },
+  { id: '300to800', label: '300–800 kr', min: 300_00, max: 800_00 },
+  { id: 'over800', label: 'Over 800 kr', min: 800_00, max: null },
+] as const;
+
+/** Does this price fall in the band? A gift with no price shows in "Alle"
+ *  only — guessing which band it belongs to would put it in front of the
+ *  wrong guest. */
+export function inBand(priceCents: number | null | undefined, bandId: string): boolean {
+  if (bandId === 'all') return true;
+  const band = PRICE_BANDS.find((b) => b.id === bandId);
+  if (!band) return true;
+  if (priceCents == null || !Number.isFinite(priceCents)) return false;
+  if (band.min != null && priceCents < band.min) return false;
+  if (band.max != null && priceCents >= band.max) return false;
+  return true;
+}

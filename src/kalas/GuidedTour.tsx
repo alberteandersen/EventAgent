@@ -192,13 +192,10 @@ export default function GuidedTour({
     };
   }, [step.anchor, advance]);
 
-  /* The page follows the step. Waiting for the couple to click meant hearing
-     about the guest list while still looking at the budget — the tour has to
-     show the thing it is describing. The spotlight still points at the menu
-     item so they learn where it lives, and pressing it moves on. */
-  useEffect(() => {
-    if (step.page) navigateRef.current?.(step.page);
-  }, [step.page, step.id]);
+  /* Opening the step's page is KalasRoot's job, not this component's. Done
+     here it re-fired whenever the tour re-rendered or was re-mounted, which
+     yanked the couple back to Hjem the moment they clicked something on the
+     page themselves — pressing a checklist row went nowhere. */
 
   const onNext = () => {
     // Escape hatch: they didn't click the control, so take them there ourselves.

@@ -3,7 +3,7 @@
 /* Authenticated Kalas app. Mounted at /home via next/dynamic with ssr:false,
    so sessionStorage/window access in the screens is safe. Onboarding lives
    on its own Next route (/onboarding), no phase state here. */
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
@@ -101,6 +101,7 @@ function AppInner() {
     if (!walkthroughActive) return;
     try { localStorage.setItem(WALKTHROUGH_KEY, String(tourStep)); } catch { /* ignore */ }
   }, [walkthroughActive, tourStep]);
+
   const askAva = useCallback((prompt: string) => {
     setPendingPrompt(prompt);
     // Already in chat: the prompt lands in the thread they are looking at.
@@ -131,6 +132,22 @@ function AppInner() {
     if (chatMode) setStageTick((t) => t + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  /* The page follows the tour, exactly once per step. It lives up here with
+     the step it belongs to: inside the tour it re-fired on re-render and on
+     the re-mount a mode change causes, so the couple was pulled back to Hjem
+     the instant they clicked a checklist row — the row navigated, and the
+     tour navigated straight back. */
+  const navigateRef = useRef<(s: NavigateTarget) => void>(() => {});
+  useEffect(() => { navigateRef.current = navigate; });
+  const navigatedForStep = useRef<number | null>(null);
+  useEffect(() => {
+    if (!walkthroughActive) return;
+    if (navigatedForStep.current === tourStep) return;
+    navigatedForStep.current = tourStep;
+    const page = WALKTHROUGH_STEPS[tourStep]?.page;
+    if (page) navigateRef.current(page);
+  }, [walkthroughActive, tourStep]);
 
   // Agent-fired navigation (streamed `ui` frames).
   const applyUiAction = useCallback((action: AgentUiAction) => {

@@ -22,8 +22,9 @@ import { Lightbox } from '../onboarding/Lightbox';
 import { useWedding } from '../useWedding';
 import { cn } from '../ui';
 import type { NavigateTarget } from '../lib/hub-nav';
-import { useLang } from '../i18n';
+import { useLang, type Lang } from '../i18n';
 import type { HoneymoonSaveRow } from '@/lib/db/types';
+import { providerLinks } from '@/lib/honeymoon/providers';
 import type { HoneymoonDestination } from '@/app/api/honeymoon/destinations/route';
 import type { HoneymoonHotel } from '@/app/api/honeymoon/hotels/route';
 import type {
@@ -238,7 +239,7 @@ type ToggleSave = (row: {
 ══════════════════════════════════════════════════════════════════════════ */
 const UdforskTab = forwardRef<
   { searchHotels: (dest: string) => void },
-  { region: string; lang: string; findSaved: FindSaved; onToggleSave: ToggleSave }
+  { region: string; lang: Lang; findSaved: FindSaved; onToggleSave: ToggleSave }
 >(function UdforskTab({ region, lang, findSaved, onToggleSave }, ref) {
   const { t } = useLang();
 
@@ -473,21 +474,46 @@ const UdforskTab = forwardRef<
                 </button>
               </div>
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {hotels.map((h) => (
+              /* The first result runs full width. A page of identical thumbnails
+                 has no point of view; leading with one hotel, big, says which
+                 one Ava would book — and the rest still fit on one screen. */
+              <div className="flex flex-col gap-4">
+                {hotels[0] && (
                   <HotelCard
-                    key={h.id}
-                    h={h}
-                    saved={Boolean(findSaved('hotel', h.place_id, h.name))}
+                    h={hotels[0]}
+                    feature
+                    destination={destination}
+                    lang={lang}
+                    saved={Boolean(findSaved('hotel', hotels[0].place_id, hotels[0].name))}
                     onToggleSave={() => onToggleSave({
-                      kind: 'hotel', name: h.name, location: h.address ?? destination,
-                      blurb: h.why_fit ?? h.description, image_url: h.photo,
-                      place_id: h.place_id, rating: h.rating,
-                      meta: { price_hint: h.price_hint, photos: h.photos },
+                      kind: 'hotel', name: hotels[0].name, location: hotels[0].address ?? destination,
+                      blurb: hotels[0].why_fit ?? hotels[0].description, image_url: hotels[0].photo,
+                      place_id: hotels[0].place_id, rating: hotels[0].rating,
+                      meta: { price_hint: hotels[0].price_hint, photos: hotels[0].photos },
                     })}
-                    onExpand={h.photos.length ? () => setLightbox({ photos: h.photos, index: 0, alt: h.name }) : undefined}
+                    onExpand={hotels[0].photos.length
+                      ? () => setLightbox({ photos: hotels[0].photos, index: 0, alt: hotels[0].name })
+                      : undefined}
                   />
-                ))}
+                )}
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {hotels.slice(1).map((h) => (
+                    <HotelCard
+                      key={h.id}
+                      h={h}
+                      destination={destination}
+                      lang={lang}
+                      saved={Boolean(findSaved('hotel', h.place_id, h.name))}
+                      onToggleSave={() => onToggleSave({
+                        kind: 'hotel', name: h.name, location: h.address ?? destination,
+                        blurb: h.why_fit ?? h.description, image_url: h.photo,
+                        place_id: h.place_id, rating: h.rating,
+                        meta: { price_hint: h.price_hint, photos: h.photos },
+                      })}
+                      onExpand={h.photos.length ? () => setLightbox({ photos: h.photos, index: 0, alt: h.name }) : undefined}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -559,14 +585,28 @@ function DestCard({ s, active, saved, onChoose, onToggleSave }: {
 }
 
 /* Hotel result card. */
-function HotelCard({ h, saved, onToggleSave, onExpand }: {
+function HotelCard({ h, saved, onToggleSave, onExpand, feature = false, destination, lang }: {
   h: HoneymoonHotel; saved: boolean; onToggleSave: () => void; onExpand?: () => void;
+  /* The first result runs full width with the photo alongside the copy — one
+     hotel presented properly says more than nine thumbnails. */
+  feature?: boolean;
+  destination?: string;
+  lang?: Lang;
 }) {
+  const { t } = useLang();
+  const links = providerLinks({ name: h.name, location: destination ?? h.address, lang });
+
   return (
-    <div className="group flex flex-col overflow-hidden rounded-2xl border border-[#e6e9e5] bg-[#ffffff] transition-shadow hover:shadow-sm">
-      <div className="relative aspect-[4/3] overflow-hidden">
+    <div className={cn(
+      'group flex overflow-hidden rounded-2xl border border-[#e6e9e5] bg-[#ffffff] transition-shadow hover:shadow-sm',
+      feature ? 'flex-col lg:flex-row' : 'flex-col',
+    )}>
+      <div className={cn(
+        'relative overflow-hidden',
+        feature ? 'aspect-[16/10] lg:aspect-auto lg:w-[52%] lg:shrink-0' : 'aspect-[4/3]',
+      )}>
         {h.photo ? (
-          <img src={h.photo} alt={h.name} loading="lazy"
+          <img src={h.photo} alt={h.name} loading={feature ? 'eager' : 'lazy'}
             className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-[#e8f0ec]"><Hotel size={22} className="text-[#24413a] opacity-40" /></div>
@@ -575,21 +615,65 @@ function HotelCard({ h, saved, onToggleSave, onExpand }: {
         <div className="absolute right-2 top-2"><SaveHeart saved={saved} onClick={onToggleSave} /></div>
         <RatingBadge rating={h.rating} className="absolute left-2 top-2" />
         {onExpand && (
-          <button type="button" onClick={onExpand} aria-label="Se billeder"
+          <button type="button" onClick={onExpand} aria-label={t('Se billeder')}
             className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-canvas/90 text-[#46574f] backdrop-blur-sm transition-colors hover:text-ink cursor-pointer">
             <Expand size={14} />
           </button>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <p className="font-serif text-[1.02rem] leading-tight text-ink">{h.name}</p>
-        {h.address && <p className="mt-0.5 truncate text-[0.7rem] text-muted">{h.address}</p>}
+
+      <div className={cn('flex flex-1 flex-col', feature ? 'gap-3 p-6 lg:p-8' : 'p-4')}>
+        <div>
+          <p className={cn('font-serif leading-tight text-ink', feature ? 'text-[1.6rem]' : 'text-[1.02rem]')}>
+            {h.name}
+          </p>
+          {h.address && (
+            <p className={cn('mt-0.5 text-muted', feature ? 'text-[0.78rem]' : 'truncate text-[0.7rem]')}>
+              {h.address}
+            </p>
+          )}
+        </div>
+
+        {/* The reason to care. On the feature card it is the point of the card,
+            not a caption under the photo, so it is not clamped to two lines. */}
         {(h.why_fit || h.description) && (
-          <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-ink-soft">{h.why_fit || h.description}</p>
+          <p className={cn(
+            'leading-snug text-ink-soft',
+            feature ? 'text-[0.95rem] leading-relaxed' : 'mt-2 line-clamp-2 text-[0.8rem]',
+          )}>
+            {h.why_fit || h.description}
+          </p>
         )}
+
         {h.price_hint && (
-          <span className="mt-2.5 inline-block w-fit rounded-full bg-shell px-2.5 py-1 text-[0.66rem] font-bold uppercase tracking-[0.08em] text-[#5f6b66]">{h.price_hint}</span>
+          <span className={cn(
+            'inline-block w-fit rounded-full bg-shell px-2.5 py-1 text-[0.66rem] font-bold uppercase tracking-[0.08em] text-[#5f6b66]',
+            feature ? '' : 'mt-2.5',
+          )}>
+            {h.price_hint}
+          </span>
         )}
+
+        {/* Deep links, not live prices — see lib/honeymoon/providers.ts. The
+            couple asked what it costs; this is the honest way to answer that
+            without a partner agreement. */}
+        <div className={cn('flex flex-wrap gap-2', feature ? 'mt-auto pt-2' : 'mt-3')}>
+          {(feature ? links : links.slice(0, 1)).map((l) => (
+            <a
+              key={l.id}
+              href={l.url}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border border-[#dcdfdb] px-3 py-1.5 font-semibold text-ink transition-colors hover:border-[#24413a]',
+                feature ? 'text-[0.78rem]' : 'text-[0.72rem]',
+              )}
+            >
+              {t(l.label)}
+              <ArrowUpRight size={12} className="shrink-0" aria-hidden />
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );

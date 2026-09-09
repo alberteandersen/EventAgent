@@ -7,6 +7,9 @@ export const EN: Record<string, string> = {
 
   'Sæt i kalenderen': 'Add to calendar',
 
+  // ── Bryllupsrejse ───────────────────────────────────────────────────
+  'Se priser på Booking': 'See prices on Booking',
+
   // ── Ønskeliste ──────────────────────────────────────────────────────
   'Vores ønskeliste': 'Our wishlist',
   '{n} ønsker på listen': '{n} wishes on the list',

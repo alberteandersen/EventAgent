@@ -21,6 +21,25 @@ export default async function SettingsPage({
   const params = await searchParams;
   const profile = await getOrCreateProfile(supabase, user.id);
   const admin = isPlatformAdmin(user.email);
+  /* The rest of this page is English, but these two are the only way back to
+     the interview and the tour — a couple who cannot read the label cannot
+     find the way back at all. */
+  const da = (profile.language ?? "da") !== "en";
+  const copy = da
+    ? {
+        onboarding: "Onboarding",
+        onboardingSub: "Kør interviewet igen for at ændre navne, destination, dato og stil.",
+        tour: "Rundvisning",
+        tourSub: "Ava viser jer rundt på siderne igen. Intet bliver nulstillet.",
+        tourCta: "Vis mig rundt igen",
+      }
+    : {
+        onboarding: "Onboarding",
+        onboardingSub: "Run the wedding interview again to update names, destination, date, and style.",
+        tour: "Guided tour",
+        tourSub: "Ava walks you through each page again. Nothing is reset.",
+        tourCta: "Show me around again",
+      };
   const platform = admin ? await getPlatformConnection() : null;
 
   return (
@@ -115,28 +134,24 @@ export default async function SettingsPage({
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-serif text-lg font-semibold text-[var(--color-ink)]">
-              Onboarding
+              {copy.onboarding}
             </h2>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">
-              Run the wedding interview again to update names, destination, date, and style.
-            </p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">{copy.onboardingSub}</p>
           </div>
           <RedoOnboardingButton />
         </div>
         <div className="mt-5 flex flex-col gap-4 border-t border-[var(--color-line)] pt-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="font-serif text-lg font-semibold text-[var(--color-ink)]">
-              Guided tour
+              {copy.tour}
             </h2>
-            <p className="mt-1 text-sm text-[var(--color-muted)]">
-              Ava walks you through each page again. Nothing is reset.
-            </p>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">{copy.tourSub}</p>
           </div>
           <Link
             href="/home?walkthrough=1"
             className="shrink-0 rounded-full border border-[var(--color-line)] px-4 py-2 text-center text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-shell)]"
           >
-            Show me around again
+            {copy.tourCta}
           </Link>
         </div>
       </section>

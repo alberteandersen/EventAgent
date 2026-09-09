@@ -411,7 +411,7 @@ const UdforskTab = forwardRef<
             ) : destFailed ? (
               <PanelError label={t('Kunne ikke hente destinationer.')} onRetry={() => void loadDestinations(country)} />
             ) : (
-              <div className="flex flex-col gap-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {dests.map((s) => {
                   const saved = Boolean(findSaved('destination', null, s.name));
                   return (
@@ -534,7 +534,7 @@ const UdforskTab = forwardRef<
 });
 
 /* Destination card in the side panel. */
-function DestCard({ s, active, saved, onChoose, onToggleSave }: {
+export function DestCard({ s, active, saved, onChoose, onToggleSave }: {
   s: HoneymoonDestination; active: boolean; saved: boolean;
   onChoose: () => void; onToggleSave: () => void;
 }) {
@@ -542,50 +542,64 @@ function DestCard({ s, active, saved, onChoose, onToggleSave }: {
   const KIND_LABEL: Record<HoneymoonDestination['kind'], string> = {
     beach: t('Strand'), adventure: t('Eventyr'), city: t('By'), nature: t('Natur'),
   };
+  /* A honeymoon is chosen on the picture. The card used to be a 112px strip of
+     photo above three lines of small type — the same shape as a search result,
+     for the one decision in the app that is made with the eyes. The image now
+     carries the card, with the name on it and the reason underneath in
+     something you can read. */
   return (
     <div className={cn(
-      'group relative overflow-hidden rounded-2xl border transition-colors',
-      active ? 'border-[#24413a] shadow-[0_6px_18px_rgba(18,51,43,0.12)]' : 'border-[#e6e9e5] hover:border-[#24413a]/40',
+      'group relative overflow-hidden rounded-[20px] border transition-all',
+      active
+        ? 'border-[#24413a] shadow-[0_10px_28px_rgba(18,51,43,0.16)]'
+        : 'border-[#e6e9e5] hover:border-[#24413a]/40 hover:shadow-[0_8px_22px_rgba(18,51,43,0.10)]',
     )}>
-      <div className="absolute right-2 top-2 z-10">
-        <SaveHeart saved={saved} onClick={onToggleSave} className="h-8 w-8" />
+      <div className="absolute right-3 top-3 z-10">
+        <SaveHeart saved={saved} onClick={onToggleSave} className="h-9 w-9" />
       </div>
       <button type="button" onClick={onChoose} className="block w-full text-left cursor-pointer">
-        {s.photo ? (
-          <div className="relative h-28 w-full overflow-hidden">
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
+          {s.photo ? (
             <img src={s.photo} alt={s.name} loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]" />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-          </div>
-        ) : (
-          <div className="flex h-28 w-full items-center justify-center bg-[#e8f0ec]">
-            <MapPin size={18} className="text-[#24413a] opacity-40" />
-          </div>
-        )}
-        <div className="p-3">
-          <div className="flex items-center gap-2">
-            <p className="truncate font-serif text-[0.98rem] text-[#24413a]">{s.name}</p>
-            <span className="shrink-0 rounded-full bg-[#eceeeb] px-2 py-0.5 text-[0.56rem] font-bold uppercase tracking-[0.1em] text-[#24413a]">
-              {KIND_LABEL[s.kind]}
-            </span>
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-[#e8f0ec]">
+              <MapPin size={22} className="text-[#24413a] opacity-40" />
+            </div>
+          )}
+          {/* Strong enough at the foot to carry the name, clear at the top so
+              the photograph is still the thing you see. */}
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,34,21,0)_38%,rgba(18,34,21,0.72)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-4">
+            <div className="min-w-0">
+              <p className="text-[0.6rem] font-bold uppercase tracking-[0.16em] text-white/75">
+                {KIND_LABEL[s.kind]}
+              </p>
+              <p className="mt-1 truncate font-serif text-[1.45rem] leading-tight text-white">{s.name}</p>
+            </div>
             {s.rating != null && (
-              <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[0.7rem] text-ink-soft">
+              <span className="mb-1 inline-flex shrink-0 items-center gap-1 rounded-full bg-black/35 px-2 py-1 text-[0.7rem] font-semibold text-white backdrop-blur-sm">
                 <Star size={11} className="fill-[#e6a34e] text-[#e6a34e]" />{s.rating.toFixed(1)}
               </span>
             )}
           </div>
-          {s.blurb && <p className="mt-1 line-clamp-2 text-[0.76rem] leading-snug text-ink-soft">{s.blurb}</p>}
-          <span className="mt-1.5 inline-flex items-center gap-1 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[#24413a]">
+        </div>
+        <div className="flex items-end justify-between gap-4 p-4">
+          {s.blurb ? (
+            <p className="line-clamp-3 text-[0.86rem] leading-relaxed text-ink-soft">{s.blurb}</p>
+          ) : <span />}
+          <span className="inline-flex shrink-0 items-center gap-1 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#24413a]">
             {t('Se hoteller')} <ArrowRight size={12} />
           </span>
         </div>
       </button>
+
     </div>
   );
 }
 
 /* Hotel result card. */
-function HotelCard({ h, saved, onToggleSave, onExpand, feature = false, destination, lang }: {
+export function HotelCard({ h, saved, onToggleSave, onExpand, feature = false, destination, lang }: {
   h: HoneymoonHotel; saved: boolean; onToggleSave: () => void; onExpand?: () => void;
   /* The first result runs full width with the photo alongside the copy — one
      hotel presented properly says more than nine thumbnails. */

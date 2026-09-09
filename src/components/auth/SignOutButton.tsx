@@ -33,7 +33,7 @@ export function SignOutButton({
       disabled={loading}
       className={
         className ??
-        "rounded-full border border-[#D4D6C0] px-4 py-2 text-sm font-medium text-[#656952] transition hover:bg-[#ddd6c0] disabled:opacity-50"
+        "rounded-full border border-[var(--color-line)] px-4 py-2 text-sm font-medium text-[var(--color-ink-soft)] transition hover:bg-[var(--color-shell)] disabled:opacity-50"
       }
     >
       {children ?? (loading ? "Signing out…" : "Log out")}

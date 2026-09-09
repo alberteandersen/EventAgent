@@ -21,7 +21,7 @@ import {
 import { useWalkthrough } from '../useWalkthrough';
 import WalkthroughChips from '../WalkthroughChips';
 import RichText from '../chat/RichText';
-import { HANDOFF_KEY, walkthroughParams } from '../walkthrough';
+import { walkthroughParams } from '../walkthrough';
 
 export default function Ava({
   onNavigate,
@@ -31,6 +31,8 @@ export default function Ava({
   variant = 'page',
   walkthroughActive = false,
   onWalkthroughFinish,
+  pendingPrompt = null,
+  onPendingPromptSent,
 }: {
   onNavigate?: (s: NavigateTarget) => void;
   onClose?: () => void;
@@ -41,6 +43,9 @@ export default function Ava({
   /** Runs Ava's post-onboarding walkthrough inside this chat. */
   walkthroughActive?: boolean;
   onWalkthroughFinish?: (mode: 'chat' | 'classic') => void;
+  /** A prompt handed over from classic mode, sent once the history is in. */
+  pendingPrompt?: string | null;
+  onPendingPromptSent?: () => void;
 }) {
   const { loading, event, couple } = useWedding();
   const { t } = useLang();
@@ -91,6 +96,8 @@ export default function Ava({
       variant={variant}
       walkthroughActive={walkthroughActive}
       onWalkthroughFinish={onWalkthroughFinish}
+      pendingPrompt={pendingPrompt}
+      onPendingPromptSent={onPendingPromptSent}
     />
   );
 }
@@ -105,6 +112,8 @@ function AvaChat({
   variant,
   walkthroughActive,
   onWalkthroughFinish,
+  pendingPrompt,
+  onPendingPromptSent,
 }: {
   eventId: string;
   coupleA: string;
@@ -115,6 +124,8 @@ function AvaChat({
   variant: 'page' | 'drawer';
   walkthroughActive?: boolean;
   onWalkthroughFinish?: (mode: 'chat' | 'classic') => void;
+  pendingPrompt?: string | null;
+  onPendingPromptSent?: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const { refresh, venues, event, couple } = useWedding();
@@ -176,19 +187,17 @@ function AvaChat({
   }, [supabase, eventId, setMessages]);
 
   /* A prompt handed over from classic mode (the walkthrough's try-buttons live
-     outside the chat there). Consumed once, so a reload doesn't resend it. */
-  const handedOffRef = useRef(false);
+     outside the chat there). Waits for the history, because sending before it
+     lands means the reply is wiped when it arrives. Cleared through the
+     callback so it is sent exactly once. */
+  const sentRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!historyLoaded || handedOffRef.current) return;
-    let prompt: string | null = null;
-    try {
-      prompt = sessionStorage.getItem(HANDOFF_KEY);
-      if (prompt) sessionStorage.removeItem(HANDOFF_KEY);
-    } catch { /* ignore */ }
-    if (!prompt) return;
-    handedOffRef.current = true;
-    void sendMessage(prompt);
-  }, [historyLoaded, sendMessage]);
+    if (!historyLoaded || !pendingPrompt) return;
+    if (sentRef.current === pendingPrompt) return;
+    sentRef.current = pendingPrompt;
+    void sendMessage(pendingPrompt);
+    onPendingPromptSent?.();
+  }, [historyLoaded, pendingPrompt, sendMessage, onPendingPromptSent]);
 
   const wt = useWalkthrough({
     active: Boolean(walkthroughActive),

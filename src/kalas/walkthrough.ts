@@ -14,9 +14,6 @@ import type { ScreenId } from './Shell';
 /** localStorage key holding the current step index — also the "armed" marker. */
 export const WALKTHROUGH_KEY = 'kalas_walkthrough';
 
-/** sessionStorage slot for a prompt handed from classic mode into the chat. */
-export const HANDOFF_KEY = 'kalas_ava_prompt';
-
 export type WalkthroughStep = {
   id: string;
   /** Stage navigates here when the step opens. */
@@ -77,7 +74,10 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     anchor: 'guests',
     message:
       'Gæstelisten. Importér fra CSV eller tilføj dem enkeltvis, jeg holder styr på svar, plus-ens og kostbehov undervejs. I kan også bare spørge mig om status.',
-    tries: ['Hvem mangler at svare på invitationen?'],
+    /* Not "who hasn't replied yet": the walkthrough runs on day one, when the
+       list is empty and the honest answer is "nobody, there are no guests".
+       A prompt that only works months later is a prompt that fails now. */
+    tries: ['Hvordan får vi gæstelisten i gang?'],
   },
   {
     id: 'planning',

@@ -85,7 +85,7 @@ export const EN: Record<string, string> = {
     "That's the tour. How would you rather work? You can always switch up in the corner.",
   'Find et bryllupssted i {city} til {guests} gæster': 'Find a wedding venue in {city} for {guests} guests',
   'Sæt budgettet for mad og drikke til {foodBudget} kr': 'Set the food and drink budget to {foodBudget} kr',
-  'Hvem mangler at svare på invitationen?': 'Who still needs to reply to the invitation?',
+  'Hvordan får vi gæstelisten i gang?': 'How do we get the guest list started?',
   'Hvad bør vi have på plads inden {dateHint}?': 'What should we have in place before {dateHint}?',
   'Hjælp os videre, hvad mangler vi at få på plads?': 'Help us move forward, what do we still need to sort out?',
   'Prøv: “{prompt}”': 'Try: “{prompt}”',

@@ -8,7 +8,7 @@ import { useState } from 'react';
 import ClassicWalkthrough from '@/kalas/ClassicWalkthrough';
 import RichText from '@/kalas/chat/RichText';
 import { LanguageProvider } from '@/kalas/i18n';
-import { WALKTHROUGH_KEY, HANDOFF_KEY } from '@/kalas/walkthrough';
+import { WALKTHROUGH_KEY } from '@/kalas/walkthrough';
 import type { ScreenId } from '@/kalas/Shell';
 
 const ANCHORS: { id: string; label: string }[] = [
@@ -72,10 +72,7 @@ export default function DevWalkthroughPage() {
           <ClassicWalkthrough
             params={{ city: 'Fyn', guests: 80, foodBudget: '85.000', dateHint: 'juni 2027' }}
             onNavigate={(s: ScreenId) => note(`navigate: ${s}`)}
-            onAskAva={(p) => {
-              try { sessionStorage.setItem(HANDOFF_KEY, p); } catch { /* ignore */ }
-              note(`askAva: ${p}`);
-            }}
+            onAskAva={(p) => note(`askAva: ${p}`)}
             onFinish={(mode) => { note(`finish: ${mode}`); setRunning(false); }}
           />
         )}

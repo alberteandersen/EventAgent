@@ -7,7 +7,7 @@ import { useCallback, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
-import { HANDOFF_KEY, WALKTHROUGH_KEY, walkthroughParams } from './walkthrough';
+import { WALKTHROUGH_KEY, walkthroughParams } from './walkthrough';
 import ClassicWalkthrough from './ClassicWalkthrough';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
@@ -79,11 +79,14 @@ function AppInner() {
     } catch { return false; }
   });
 
-  /* A walkthrough try-prompt pressed in classic: park it, switch to chat, and
-     Ava sends it on mount. The search really runs — that is the point of the
-     button, and it is why this is a walkthrough rather than a slideshow. */
+  /* A walkthrough try-prompt pressed in classic: switch to chat and hand Ava
+     the prompt to send. The search really runs — that is the point of the
+     button, and why this is a walkthrough rather than a slideshow.
+     React state, not sessionStorage: writing to storage notifies nobody, so an
+     Ava that was already mounted never noticed the prompt arrive. */
+  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const askAva = useCallback((prompt: string) => {
-    try { sessionStorage.setItem(HANDOFF_KEY, prompt); } catch { /* ignore */ }
+    setPendingPrompt(prompt);
     setChatMode(true);
     try { localStorage.setItem('kalas_chat_mode', '1'); } catch { /* ignore */ }
   }, []);
@@ -169,6 +172,8 @@ function AppInner() {
             variant="drawer"
             walkthroughActive={walkthroughActive}
             onWalkthroughFinish={finishWalkthrough}
+            pendingPrompt={pendingPrompt}
+            onPendingPromptSent={() => setPendingPrompt(null)}
           />
         }
       >

@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { HeartHandshake, Images, Star, Share2 } from 'lucide-react';
+import { HeartHandshake, Images, Star, Share2, Mail } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { cn } from '../ui';
 import { useLang } from '../i18n';
 import type { ScreenId } from '../Shell';
 import TakkelisteTab from './nygift/TakkelisteTab';
+import TakkekortTab from './nygift/TakkekortTab';
 import AlbumTab from './nygift/AlbumTab';
 import AnmeldelserTab from './nygift/AnmeldelserTab';
 import DelTab from './nygift/DelTab';
@@ -37,6 +38,7 @@ export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => v
 
   const TABS: { id: NygiftTab; label: string; Icon: LucideIcon; open: number }[] = [
     { id: 'takkeliste', label: 'Takkeliste', Icon: HeartHandshake, open: total - done },
+    { id: 'takkekort', label: 'Takkekort', Icon: Mail, open: 0 },
     { id: 'album', label: 'Album', Icon: Images, open: 0 },
     { id: 'anmeldelser', label: 'Anmeldelser', Icon: Star, open: 0 },
     { id: 'del', label: 'Del', Icon: Share2, open: 0 },
@@ -86,6 +88,7 @@ export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => v
 
       <AnimatePresence mode="wait">
         {tab === 'takkeliste' && <TakkelisteTab key="takkeliste" />}
+        {tab === 'takkekort' && <TakkekortTab key="takkekort" />}
         {tab === 'album' && <AlbumTab key="album" onNavigate={onNavigate} />}
         {tab === 'anmeldelser' && <AnmeldelserTab key="anmeldelser" />}
         {tab === 'del' && <DelTab key="del" onNavigate={onNavigate} />}

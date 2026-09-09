@@ -53,6 +53,21 @@ export const EN: Record<string, string> = {
     'Ava searches the open web for places and verifies them',
   'Vælg et tema, og publicér når I er klar': 'Choose a theme, and publish when you are ready',
 
+  // ── Nygift: takkekort ───────────────────────────────────────────────
+  'Samme designs som jeres invitation, med teksten vendt om: I inviterede dem, nu takker I dem.':
+    'The same designs as your invitation, with the words turned around: you invited them, now you thank them.',
+  'Jeres egen hilsen': 'Your own words',
+  '{n} designs er skjult — de har ikke plads til jeres egen hilsen.':
+    '{n} designs are hidden — they have no room for your own words.',
+  'Fx: Tak fordi I dansede til den lyse morgen.': 'E.g. Thank you for dancing until dawn.',
+  '{n} mangler stadig en tak': '{n} still to thank',
+  'Alle har fået tak': 'Everyone has been thanked',
+  'Navnene står som de skal skrives på kortet.': 'The names read as they should be written on the card.',
+  'Kopiér hilsener': 'Copy greetings',
+  '+{n} flere': '+{n} more',
+  '{name} er valgt.': '{name} selected.',
+  'Send det med mail': 'Send it by email',
+
   // ── Classic-mode walkthrough ────────────────────────────────────────
   'Ava er i gang': 'Ava is working',
   'Hun søger på nettet nu. Følg med i **samtalen til højre** — jeg siger til, når hun er færdig.':

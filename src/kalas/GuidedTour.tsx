@@ -107,6 +107,8 @@ export default function GuidedTour({
   const tries = stepTries(step, params);
   const [box, setBox] = useState<Box | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  /* The element the step points at, so the tag can press it. */
+  const anchorElRef = useRef<HTMLElement | null>(null);
   const [cardH, setCardH] = useState(260);
 
   /* Asking them to try something and then saying nothing when it works is the
@@ -154,6 +156,7 @@ export default function GuidedTour({
     const measure = () => {
       if (!el) {
         el = anchor ? findAnchor(anchor) : null;
+        anchorElRef.current = el;
         if (!el) return;
         el.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
         el.addEventListener('click', onClick);
@@ -185,6 +188,7 @@ export default function GuidedTour({
       cancelAnimationFrame(raf);
       window.clearInterval(timer);
       el?.removeEventListener('click', onClick);
+      anchorElRef.current = null;
     };
   }, [step.anchor, advance]);
 
@@ -269,7 +273,6 @@ export default function GuidedTour({
           than describing its location in words. */}
       {pointing && tag && (
         <div
-          aria-hidden
           className={cn(
             'pointer-events-none fixed z-40 flex transition-all duration-300',
             tag.below ? 'flex-col items-start' : 'items-center',
@@ -287,9 +290,22 @@ export default function GuidedTour({
               ? { borderBottomColor: 'var(--color-ink)' }
               : { borderRightColor: 'var(--color-ink)' }}
           />
-          <span className="rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold whitespace-nowrap text-canvas shadow-[0_4px_14px_rgba(36,65,58,0.3)]">
+          {/* It says "press here", so pressing it has to work. It used to be
+              decoration with pointer-events off, and a label that does nothing
+              when you obey it is the worst thing on the screen. Pressing it
+              presses the real control, so the app does exactly what it would
+              have done — navigation included — and the tour moves on. */}
+          <button
+            type="button"
+            onClick={() => {
+              const el = anchorElRef.current;
+              if (el) el.click();
+              else advance();
+            }}
+            className="pointer-events-auto cursor-pointer rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold whitespace-nowrap text-canvas shadow-[0_4px_14px_rgba(36,65,58,0.3)] transition-opacity hover:opacity-90"
+          >
             {t('Tryk her')}
-          </span>
+          </button>
         </div>
       )}
 

@@ -20,8 +20,11 @@ export type WalkthroughStep = {
   page: ScreenId | null;
   /** Ava's line. */
   message: string;
-  /* Classic mode has no chat thread on screen, so the two steps that talk
-     about "writing to me here" would be lying. Only those override. */
+  /* Classic mode has no chat thread on screen, so the steps that talk about
+     "writing to me here" would be lying. It also gets a headline, because the
+     card is read at a glance and one long sentence is not glanceable.
+     `**bold**` in the body renders through the same RichText as the chat. */
+  classicTitle?: string;
   classicMessage?: string;
   /** What the couple clicks to advance in classic — a `data-tour` value. */
   anchor?: string;
@@ -46,9 +49,10 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     page: 'home',
     message:
       'Så er I inde, velkommen! Lad mig vise jer rundt. Det korte af det lange: I behøver ikke lede efter knapper. Skriv til mig her, så åbner jeg den rigtige side og laver arbejdet.',
-    classicMessage:
-      'Så er I inde, velkommen! Lad mig vise jer rundt på fem minutter. I trykker selv undervejs, og I kan stoppe når som helst.',
     anchor: 'home-checklist',
+    classicTitle: 'Velkommen. Jeg viser rundt',
+    classicMessage:
+      'I behøver ikke lede efter knapper. Jeg åbner den rigtige side og laver arbejdet — I skal bare **sige til**.\n\nRundturen tager fem minutter, og I kan **stoppe når som helst**.',
   },
   {
     id: 'vendors',
@@ -58,6 +62,9 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
       'Det her er leverandører. Her udforsker I steder og folk, gemmer favoritter på jeres shortlist, og ser hvem I har booket. Prøv at bede mig om noget, jeg søger på nettet og lægger rigtige steder på tavlen.',
     tries: ['Find et bryllupssted i {city} til {guests} gæster'],
     needs: ['city', 'guests'],
+    classicTitle: 'Her finder I stederne',
+    classicMessage:
+      'Jeg søger på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I gemmer favoritter på jeres **shortlist** og ser, hvem I har booket.',
   },
   {
     id: 'budget',
@@ -67,6 +74,9 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
       'Budgettet. Jeg fordeler det på kategorier og siger til, før I rammer loftet. I kan trække i det selv, eller bare bede mig om at ændre det.',
     tries: ['Sæt budgettet for mad og drikke til {foodBudget} kr'],
     needs: ['foodBudget'],
+    classicTitle: 'Budgettet holder styr på sig selv',
+    classicMessage:
+      'Jeg fordeler beløbet på **kategorier** og siger til, **før I rammer loftet**. I kan trække i det selv — eller bede mig om at ændre det.',
   },
   {
     id: 'guests',
@@ -78,6 +88,9 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
        list is empty and the honest answer is "nobody, there are no guests".
        A prompt that only works months later is a prompt that fails now. */
     tries: ['Hvordan får vi gæstelisten i gang?'],
+    classicTitle: 'Gæstelisten, uden regneark',
+    classicMessage:
+      'Importér fra **CSV** eller tilføj dem enkeltvis. Jeg holder styr på **svar**, **plus-ens** og **kostbehov** undervejs.',
   },
   {
     id: 'planning',
@@ -87,6 +100,9 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
       'Tidslinjen lægger jeg baglæns fra jeres dato, så I altid ved hvad der haster. Spørg mig endelig.',
     tries: ['Hvad bør vi have på plads inden {dateHint}?'],
     needs: ['dateHint'],
+    classicTitle: 'Tidslinjen regnes baglæns',
+    classicMessage:
+      'Fra jeres dato og hjem, så I altid ved **hvad der haster nu** — og hvad der kan vente.',
   },
   {
     id: 'inbox',
@@ -94,23 +110,28 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     anchor: 'inbox',
     message:
       'Og her lander svarene. Når jeg har skrevet til et sted, samler jeg tråden, trækker prisen ud af mailen og lægger et forslag til svar klar, I skal bare godkende.',
+    classicTitle: 'Her lander svarene',
+    classicMessage:
+      'Når jeg har skrevet til et sted, samler jeg tråden, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende.',
   },
   {
     id: 'rest',
     page: 'home',
     message:
       'Der er mere når I når dertil: jeres bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse. Bed mig om at åbne en af dem, når I er klar.',
+    classicTitle: 'Der er mere, når I når dertil',
     classicMessage:
-      'Der er mere i menuen når I når dertil: jeres bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse.',
+      'Bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse ligger i menuen. **Én ting ad gangen** — de venter på jer.',
   },
   {
     id: 'choose',
     page: null,
     message:
       'Det var rundturen. Hvordan vil I helst arbejde? I kan altid skifte oppe i hjørnet.',
-    classicMessage:
-      'Det var rundturen. Nu er I i gang, jeg er her, hvis I får brug for mig.',
     final: true,
+    classicTitle: 'Det var rundturen',
+    classicMessage:
+      'Nu er I i gang. Jeg er her, hvis I får brug for mig — **skriv bare til mig**, når som helst.',
   },
 ] as const;
 

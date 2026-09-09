@@ -14,9 +14,10 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { X, MousePointerClick } from 'lucide-react';
+import { X, Play } from 'lucide-react';
 import { NAV, type ScreenId } from './Shell';
 import { useLang } from './i18n';
+import RichText from './chat/RichText';
 import {
   WALKTHROUGH_KEY,
   WALKTHROUGH_STEPS,
@@ -99,31 +100,45 @@ export default function ClassicWalkthrough({
   // not because we moved the page under them.
   useEffect(() => {
     const anchor = step.anchor;
-    // Measured on the next frame, never synchronously: the step usually
-    // arrives with a page change, and the target has not been laid out yet.
     let el: HTMLElement | null = null;
-    const measure = () => {
-      if (!el) return;
+    let raf = 0;
+    let last: Box | null = null;
+
+    /* Measured every frame rather than on scroll and resize events. The step
+       usually arrives with a page change and a smooth scrollIntoView, and a
+       one-shot measurement lands before either has settled — which put the
+       "Tryk her" tag a few hundred pixels above the control it points at.
+       The state only changes when the rectangle does, so the loop costs a
+       getBoundingClientRect per frame and no renders. */
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      if (!el) {
+        el = anchor ? findAnchor(anchor) : null;
+        if (!el) return;
+        el.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+        el.addEventListener('click', onClick);
+      }
       const r = el.getBoundingClientRect();
-      setBox({ top: r.top - PAD, left: r.left - PAD, width: r.width + PAD * 2, height: r.height + PAD * 2 });
+      const next: Box = {
+        top: r.top - PAD, left: r.left - PAD, width: r.width + PAD * 2, height: r.height + PAD * 2,
+      };
+      if (last && last.top === next.top && last.left === next.left
+        && last.width === next.width && last.height === next.height) return;
+      last = next;
+      setBox(next);
     };
     const onClick = () => advance();
 
-    const raf = requestAnimationFrame(() => {
-      el = anchor ? findAnchor(anchor) : null;
-      if (!el) { setBox(null); return; }
-      measure();
-      el.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-      el.addEventListener('click', onClick);
-    });
-
-    window.addEventListener('resize', measure);
-    window.addEventListener('scroll', measure, true);
+    // Clearing goes through the same frame as measuring, so no setState runs
+    // synchronously in the effect body.
+    if (!anchor) {
+      raf = requestAnimationFrame(() => setBox(null));
+      return () => cancelAnimationFrame(raf);
+    }
+    raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
       el?.removeEventListener('click', onClick);
-      window.removeEventListener('resize', measure);
-      window.removeEventListener('scroll', measure, true);
     };
   }, [step.anchor, advance]);
 
@@ -134,14 +149,17 @@ export default function ClassicWalkthrough({
   };
 
   const total = WALKTHROUGH_STEPS.length;
-  const message = t(
+  const body = t(
     step.classicMessage ?? step.message,
     params as Record<string, string | number>,
   );
+  const title = t(step.classicTitle ?? 'Rundvisning');
 
-  // "Tryk på Budget i menuen" — the nav owns the label, so it stays in step.
+  // The nav owns its label, so the eyebrow and the "Tryk her" tag stay in step
+  // with whatever the menu is called.
   const navLabel = NAV.find((n) => n.id === step.anchor)?.label;
-  const cta = navLabel ? t('Tryk på {label} i menuen', { label: t(navLabel) }) : null;
+  const eyebrow = navLabel ? t(navLabel) : t('Hjem');
+  const cta = Boolean(navLabel);
 
   /* Only the desktop layout follows the target; on a phone the card is a
      sheet above the bottom nav, so inline coordinates would fight the class. */
@@ -157,6 +175,8 @@ export default function ClassicWalkthrough({
 
   const placed = wide && box ? placeCard(box) : null;
 
+  const pct = Math.round(((idx + 1) / total) * 100);
+
   return (
     <>
       {box && (
@@ -167,37 +187,64 @@ export default function ClassicWalkthrough({
         />
       )}
 
+      {/* "Tryk her", welded to the control itself. The card explains; this
+          says where the finger goes, and it travels with the target rather
+          than describing its location in words. */}
+      {box && cta && (
+        <div
+          aria-hidden
+          className="pointer-events-none fixed z-40 flex items-center transition-all duration-300"
+          style={{ top: box.top + box.height / 2 - 14, left: box.left + box.width + 10 }}
+        >
+          <span
+            className="h-0 w-0 border-y-[6px] border-r-[7px] border-y-transparent"
+            style={{ borderRightColor: 'var(--color-ink)' }}
+          />
+          <span className="rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold whitespace-nowrap text-canvas shadow-[0_4px_14px_rgba(19,26,22,0.35)]">
+            {t('Tryk her')}
+          </span>
+        </div>
+      )}
+
       <div
         role="dialog"
         aria-label={t('Rundvisning')}
-        className="fixed inset-x-4 bottom-24 z-50 rounded-[18px] border border-line-strong bg-card p-5 shadow-[0_12px_32px_rgba(19,26,22,0.28)] lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[340px]"
+        className="fixed inset-x-4 bottom-24 z-50 overflow-hidden rounded-[18px] bg-[#1b2420] p-5 text-[#e6ede8] shadow-[0_16px_44px_rgba(0,0,0,0.45)] lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[360px]"
         style={placed ? { top: placed.top, left: placed.left, right: 'auto', bottom: 'auto' } : undefined}
       >
-        <div className="flex items-start justify-between gap-3">
-          <p className="eyebrow">{t('{n} af {total}', { n: idx + 1, total })}</p>
-          <button
-            type="button"
-            onClick={() => onFinish('classic')}
-            aria-label={t('Spring rundvisningen over')}
-            className="-mr-1 -mt-1 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted transition-colors hover:bg-shell hover:text-ink"
-          >
-            <X size={15} strokeWidth={1.8} />
-          </button>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7fbba0]">
+            {eyebrow}
+          </p>
+          <div className="flex items-center gap-2">
+            {/* How far in they are, as a ring rather than a number to read. */}
+            <span
+              aria-hidden
+              className="h-4 w-4 shrink-0 rounded-full"
+              style={{ background: `conic-gradient(#7fbba0 ${pct}%, rgba(230,237,232,0.18) 0)` }}
+            />
+            <span className="sr-only">{t('{n} af {total}', { n: idx + 1, total })}</span>
+            <button
+              type="button"
+              onClick={() => onFinish('classic')}
+              aria-label={t('Spring rundvisningen over')}
+              className="-mr-1 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-[#8fa199] transition-colors hover:bg-white/10 hover:text-[#e6ede8]"
+            >
+              <X size={14} strokeWidth={2} />
+            </button>
+          </div>
         </div>
 
-        <p aria-live="polite" className="mt-2 text-sm leading-relaxed text-ink">
-          {message}
-        </p>
+        <h2 className="mt-2.5 font-serif text-[1.35rem] leading-tight text-white">
+          {title}
+        </h2>
 
-        {cta && (
-          <p className="mt-3 flex items-center gap-2 rounded-xl bg-sage-tint px-3 py-2 text-[13px] font-semibold text-sage-strong">
-            <MousePointerClick size={15} strokeWidth={2} className="shrink-0" aria-hidden />
-            {cta}
-          </p>
-        )}
+        <div aria-live="polite" className="mt-2 text-[13.5px] leading-relaxed text-[#b9c7c0]">
+          <RichText text={body} />
+        </div>
 
         {tries.length > 0 && (
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="mt-4 flex flex-col gap-2">
             {tries.map((prompt) => {
               const filled = t(prompt, params as Record<string, string | number>);
               return (
@@ -205,9 +252,10 @@ export default function ClassicWalkthrough({
                   key={prompt}
                   type="button"
                   onClick={() => onAskAva(filled)}
-                  className="cursor-pointer rounded-xl border border-line-strong bg-shell px-3 py-2 text-left text-[13px] text-ink transition-colors hover:border-ink"
+                  className="flex cursor-pointer items-center gap-2 rounded-full bg-white/10 px-4 py-2.5 text-left text-[13px] font-semibold text-white transition-colors hover:bg-white/20"
                 >
-                  {t('Prøv: “{prompt}”', { prompt: filled })}
+                  <Play size={12} strokeWidth={2.5} className="shrink-0 fill-current" aria-hidden />
+                  <span className="min-w-0">{filled}</span>
                 </button>
               );
             })}
@@ -215,41 +263,20 @@ export default function ClassicWalkthrough({
         )}
 
         <div className="mt-4 flex items-center justify-between gap-3">
-          {step.final ? (
-            <>
-              <button
-                type="button"
-                onClick={() => onFinish('chat')}
-                className="cursor-pointer text-[13px] font-semibold text-muted hover:text-ink"
-              >
-                {t('Prøv chat-tilstand')}
-              </button>
-              <button
-                type="button"
-                onClick={() => onFinish('classic')}
-                className="cursor-pointer rounded-full bg-ink px-4 py-2 text-[13px] font-semibold text-canvas"
-              >
-                {t('Så er jeg klar')}
-              </button>
-            </>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => onFinish('classic')}
-                className="cursor-pointer text-[13px] font-semibold text-muted hover:text-ink"
-              >
-                {t('Spring rundvisningen over')}
-              </button>
-              <button
-                type="button"
-                onClick={onNext}
-                className="cursor-pointer rounded-full border border-line-strong px-4 py-2 text-[13px] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink"
-              >
-                {cta ? t('Spring dette trin over') : t('Videre')}
-              </button>
-            </>
-          )}
+          <button
+            type="button"
+            onClick={() => onFinish('classic')}
+            className="cursor-pointer text-[12.5px] font-semibold text-[#8fa199] transition-colors hover:text-[#e6ede8]"
+          >
+            {step.final ? t('Prøv chat-tilstand') : t('Spring rundvisningen over')}
+          </button>
+          <button
+            type="button"
+            onClick={step.final ? () => onFinish('classic') : onNext}
+            className="cursor-pointer rounded-full bg-[#e6ede8] px-4 py-2 text-[12.5px] font-semibold text-[#131a16] transition-opacity hover:opacity-90"
+          >
+            {step.final ? t('Så er jeg klar') : cta ? t('Spring dette trin over') : t('Videre')}
+          </button>
         </div>
       </div>
     </>

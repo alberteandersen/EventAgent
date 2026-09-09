@@ -54,6 +54,31 @@ export const EN: Record<string, string> = {
   'Vælg et tema, og publicér når I er klar': 'Choose a theme, and publish when you are ready',
 
   // ── Classic-mode walkthrough ────────────────────────────────────────
+  'Tryk her': 'Click here',
+  'Velkommen. Jeg viser rundt': 'Welcome. Let me show you around',
+  'Her finder I stederne': 'This is where you find the places',
+  'Budgettet holder styr på sig selv': 'The budget keeps track of itself',
+  'Gæstelisten, uden regneark': 'The guest list, without a spreadsheet',
+  'Tidslinjen regnes baglæns': 'The timeline is worked out backwards',
+  'Her lander svarene': 'This is where the replies land',
+  'Der er mere, når I når dertil': "There's more when you get there",
+  'Det var rundturen': "That's the tour",
+  'I behøver ikke lede efter knapper. Jeg åbner den rigtige side og laver arbejdet — I skal bare **sige til**.\n\nRundturen tager fem minutter, og I kan **stoppe når som helst**.':
+    "You don't need to hunt for buttons. I open the right page and do the work — you just **say the word**.\n\nThe tour takes five minutes, and you can **stop whenever you like**.",
+  'Jeg søger på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I gemmer favoritter på jeres **shortlist** og ser, hvem I har booket.':
+    'I search **the open web**, check the places exist, and put them on the board. You save favourites to your **shortlist** and see who you have booked.',
+  'Jeg fordeler beløbet på **kategorier** og siger til, **før I rammer loftet**. I kan trække i det selv — eller bede mig om at ændre det.':
+    'I split the amount across **categories** and warn you **before you hit the ceiling**. Drag it around yourself — or ask me to change it.',
+  'Importér fra **CSV** eller tilføj dem enkeltvis. Jeg holder styr på **svar**, **plus-ens** og **kostbehov** undervejs.':
+    'Import from **CSV** or add them one by one. I keep track of **replies**, **plus-ones** and **dietary needs** along the way.',
+  'Fra jeres dato og hjem, så I altid ved **hvad der haster nu** — og hvad der kan vente.':
+    'From your date backwards, so you always know **what is urgent now** — and what can wait.',
+  'Når jeg har skrevet til et sted, samler jeg tråden, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende.':
+    'Once I have written to a place, I gather the thread, pull **the price** out of the email and have **a suggested reply** ready. You just approve it.',
+  'Bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse ligger i menuen. **Én ting ad gangen** — de venter på jer.':
+    'Wedding site, invitations, registry, seating plan and honeymoon are in the menu. **One thing at a time** — they will wait.',
+  'Nu er I i gang. Jeg er her, hvis I får brug for mig — **skriv bare til mig**, når som helst.':
+    'You are up and running. I am here if you need me — **just write to me**, any time.',
   'Rundvisning': 'Guided tour',
   '{n} af {total}': '{n} of {total}',
   'Spring rundvisningen over': 'Skip the tour',

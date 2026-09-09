@@ -7,7 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
-import { WALKTHROUGH_KEY, WALKTHROUGH_STEPS, walkthroughParams } from './walkthrough';
+import { WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS, walkthroughParams } from './walkthrough';
 import GuidedTour from './GuidedTour';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
@@ -74,14 +74,16 @@ function AppInner() {
     try {
       if (new URLSearchParams(window.location.search).get('walkthrough') === '1') {
         localStorage.setItem(WALKTHROUGH_KEY, '0');
-        /* Consume the flag. Left in the address bar it re-armed the tour on
-           every reload, so finishing it and coming back started it over —
-           the tour ran in a ring and never let them out. */
+        localStorage.removeItem(WALKTHROUGH_DONE_KEY);
+        /* Consume the flag: left in the address bar it re-armed the tour on
+           every reload. */
         const url = new URL(window.location.href);
         url.searchParams.delete('walkthrough');
         window.history.replaceState(null, '', url.toString());
         return true;
       }
+      // Once they are through it, they are through it.
+      if (localStorage.getItem(WALKTHROUGH_DONE_KEY)) return false;
       return localStorage.getItem(WALKTHROUGH_KEY) !== null;
     } catch { return false; }
   });
@@ -167,7 +169,10 @@ function AppInner() {
 
   // End of the walkthrough: the couple's mode choice is the real one from here.
   const finishWalkthrough = useCallback((mode: 'chat' | 'classic') => {
-    try { localStorage.removeItem(WALKTHROUGH_KEY); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(WALKTHROUGH_KEY);
+      localStorage.setItem(WALKTHROUGH_DONE_KEY, '1');
+    } catch { /* ignore */ }
     setWalkthroughActive(false);
     toggleChatMode(mode === 'chat');
     if (mode === 'classic') {

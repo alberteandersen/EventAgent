@@ -126,14 +126,15 @@ export default function GuidedTour({
     seenTick.current = promptDoneTick;
     setAwaiting(false);
     setDone(true);
-    const timer = window.setTimeout(() => {
-      setDone(false);
-      setIdx((i) => Math.min(i + 1, WALKTHROUGH_STEPS.length - 1));
-    }, 2600);
-    return () => window.clearTimeout(timer);
-  }, [promptDoneTick, setIdx]);
+  }, [promptDoneTick]);
+
+  /* Deliberately no timer here. Moving on by itself meant the couple watched
+     the result for two seconds and then had the card change under them before
+     they had read what had happened — the whole point of running the prompt
+     for real. The confirmation stays until they press on. */
 
   const advance = useCallback(() => {
+    setDone(false);
     setIdx((i) => Math.min(i + 1, WALKTHROUGH_STEPS.length - 1));
   }, [setIdx]);
 
@@ -361,10 +362,13 @@ export default function GuidedTour({
         </div>
 
         {done && (
-          <p className="mt-4 flex items-center gap-2 rounded-full bg-sage-tint px-4 py-2.5 text-[13px] font-semibold text-sage-strong">
-            <Check size={14} strokeWidth={2.5} className="shrink-0" aria-hidden />
-            {t('Sådan — det er på plads. Vi går videre.')}
-          </p>
+          <div className="mt-4 flex items-start gap-2 rounded-2xl bg-sage-tint px-4 py-3 text-[13px] text-sage-strong">
+            <Check size={14} strokeWidth={2.5} className="mt-0.5 shrink-0" aria-hidden />
+            <span>
+              <span className="font-semibold">{t('Sådan — det er på plads.')}</span>{' '}
+              {t('Kig på resultatet, og tryk videre når I er klar.')}
+            </span>
+          </div>
         )}
 
         {!done && !awaiting && tries.length > 0 && (
@@ -407,7 +411,7 @@ export default function GuidedTour({
             >
               <span className="text-[13px] font-semibold text-ink">{t('Med Ava ved siden af')}</span>
               <span className="text-[12.5px] leading-snug text-muted">
-                {t('I skriver til mig, og jeg åbner siderne og laver arbejdet.')}
+                {t('I skriver, hvad I vil have. Jeg søger på nettet, skriver til stederne, retter budgettet og åbner den rigtige side undervejs.')}
               </span>
             </button>
             <button
@@ -417,7 +421,7 @@ export default function GuidedTour({
             >
               <span className="text-[13px] font-semibold text-ink">{t('Klassisk, med menuen')}</span>
               <span className="text-[12.5px] leading-snug text-muted">
-                {t('I klikker jer rundt selv. Jeg er stadig et klik væk.')}
+                {t('Alt ligger i menuen — venues, budget, gæster, hjemmeside. I styrer selv, og kan altid tilkalde mig.')}
               </span>
             </button>
             <p className="mt-1 text-[12px] text-muted">{t('I kan skifte når som helst oppe i hjørnet.')}</p>
@@ -437,7 +441,7 @@ export default function GuidedTour({
               disabled={awaiting}
               className="cursor-pointer rounded-full bg-ink px-4 py-2 text-[12.5px] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:opacity-40"
             >
-              {pointing ? t('Spring dette trin over') : t('Videre')}
+              {done ? t('Videre') : pointing ? t('Spring dette trin over') : t('Videre')}
             </button>
           </div>
         )}

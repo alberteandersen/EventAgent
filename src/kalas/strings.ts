@@ -59,19 +59,20 @@ export const EN: Record<string, string> = {
     "She's searching the web now. Follow along in **the conversation on the right** — I'll say when she's done.",
   'Hvordan vil I helst arbejde?': 'How would you rather work?',
   'Med Ava ved siden af': 'With Ava alongside',
-  'I skriver til mig, og jeg åbner siderne og laver arbejdet.':
-    'You write to me, and I open the pages and do the work.',
+  'I skriver, hvad I vil have. Jeg søger på nettet, skriver til stederne, retter budgettet og åbner den rigtige side undervejs.':
+    'You say what you want. I search the web, write to the places, adjust the budget and open the right page as we go.',
   'Klassisk, med menuen': 'Classic, with the menu',
-  'I klikker jer rundt selv. Jeg er stadig et klik væk.':
-    'You click around yourself. I am still one click away.',
+  'Alt ligger i menuen — venues, budget, gæster, hjemmeside. I styrer selv, og kan altid tilkalde mig.':
+    'Everything is in the menu — venues, budget, guests, website. You drive, and can call me in any time.',
   'I kan skifte når som helst oppe i hjørnet.': 'You can switch any time, up in the corner.',
   'Det her er jeres side': 'This is your page',
-  'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nLad mig vise resten — det tager to minutter, og I kan **stoppe når som helst**.':
-    'Your names, your date and how long there is to go. Everything you told me is already here.\n\nLet me show you the rest — it takes two minutes, and you can **stop whenever you like**.',
+  'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nKalas kan bruges på to måder: **med mig ved siden af**, hvor I skriver og jeg gør arbejdet, eller **klassisk**, hvor I klikker jer rundt selv. I vælger til sidst — og kan skifte når som helst.':
+    'Your names, your date and how long there is to go. Everything you told me is already here.\n\nKalas works two ways: **with me alongside**, where you write and I do the work, or **classic**, where you click around yourself. You choose at the end — and can switch any time.',
   'Her står næste skridt': 'Your next step lives here',
   'Jeg holder **Kom godt i gang** opdateret, ét skridt ad gangen, og krydser af efterhånden som I kommer videre.':
     'I keep **Kom godt i gang** up to date, one step at a time, and tick things off as you go.',
-  'Sådan — det er på plads. Vi går videre.': 'There it is, sorted. Moving on.',
+  'Sådan — det er på plads.': 'There it is, sorted.',
+  'Kig på resultatet, og tryk videre når I er klar.': 'Have a look, and press on when you are ready.',
   'Tryk her': 'Click here',
   'Velkommen. Jeg viser rundt': 'Welcome. Let me show you around',
   'Her finder I stederne': 'This is where you find the places',

@@ -13,6 +13,12 @@ import type { ScreenId } from './Shell';
 /** localStorage key holding the current step index — also the "armed" marker. */
 export const WALKTHROUGH_KEY = 'kalas_walkthrough';
 
+/** Set once the couple has finished or skipped. Nothing re-arms past this
+ *  except an explicit `?walkthrough=1`, which clears it. Without the marker
+ *  the tour only had to be re-armed once by any means — a stale key, a fresh
+ *  mount — to start over, and it ran in a ring. */
+export const WALKTHROUGH_DONE_KEY = 'kalas_walkthrough_done';
+
 export type WalkthroughStep = {
   id: string;
   /** Where "Videre" takes them when they do not press the control itself. */
@@ -48,7 +54,7 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     anchor: 'home-hero',
     title: 'Det her er jeres side',
     body:
-      'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nLad mig vise resten — det tager to minutter, og I kan **stoppe når som helst**.',
+      'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nKalas kan bruges på to måder: **med mig ved siden af**, hvor I skriver og jeg gør arbejdet, eller **klassisk**, hvor I klikker jer rundt selv. I vælger til sidst — og kan skifte når som helst.',
   },
   {
     id: 'start',

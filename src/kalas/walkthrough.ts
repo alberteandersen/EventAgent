@@ -164,3 +164,26 @@ export function walkthroughParams(
   if (when) p.dateHint = when;
   return p;
 }
+
+/** What the app should do about the tour on load, given what is in storage.
+ *
+ * Pulled out of KalasRoot so the rule can be proven rather than asserted: the
+ * tour kept coming back, and "it should not" was not good enough twice in a
+ * row. Pure — the caller does the reading and writing.
+ */
+export function armTour(input: {
+  /** The `walkthrough` query param, if any. */
+  param: string | null;
+  /** Current value of WALKTHROUGH_KEY. */
+  progress: string | null;
+  /** Current value of WALKTHROUGH_DONE_KEY. */
+  done: string | null;
+}): { active: boolean; setProgress?: string; clearDone?: boolean; stripParam?: boolean } {
+  // An explicit replay beats everything, and clears the done marker on purpose.
+  if (input.param === '1') {
+    return { active: true, setProgress: '0', clearDone: true, stripParam: true };
+  }
+  // Been through it once: never again on its own.
+  if (input.done) return { active: false };
+  return { active: input.progress !== null };
+}

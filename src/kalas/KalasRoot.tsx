@@ -7,7 +7,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
-import { WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS, walkthroughParams } from './walkthrough';
+import { tourFact } from './tourFacts';
+import { armTour, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS, walkthroughParams } from './walkthrough';
 import GuidedTour from './GuidedTour';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
@@ -47,7 +48,7 @@ export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }
 
 function AppInner() {
   const { pendingCount } = useKalas();
-  const { replies, event, couple } = useWedding();
+  const { replies, event, couple, venues, guests, timelineTasks } = useWedding();
   const inboxBadge = replies.filter((r) => !r.read_at).length;
   const [hubTick, setHubTick] = useState(0);
   // Chat mode: collapsed icon-rail + Ava-driven stage. Sticky across visits.
@@ -72,19 +73,19 @@ function AppInner() {
   // only ran in classic was a tour nobody was shown.
   const [walkthroughActive, setWalkthroughActive] = useState(() => {
     try {
-      if (new URLSearchParams(window.location.search).get('walkthrough') === '1') {
-        localStorage.setItem(WALKTHROUGH_KEY, '0');
-        localStorage.removeItem(WALKTHROUGH_DONE_KEY);
-        /* Consume the flag: left in the address bar it re-armed the tour on
-           every reload. */
+      const decision = armTour({
+        param: new URLSearchParams(window.location.search).get('walkthrough'),
+        progress: localStorage.getItem(WALKTHROUGH_KEY),
+        done: localStorage.getItem(WALKTHROUGH_DONE_KEY),
+      });
+      if (decision.setProgress !== undefined) localStorage.setItem(WALKTHROUGH_KEY, decision.setProgress);
+      if (decision.clearDone) localStorage.removeItem(WALKTHROUGH_DONE_KEY);
+      if (decision.stripParam) {
         const url = new URL(window.location.href);
         url.searchParams.delete('walkthrough');
         window.history.replaceState(null, '', url.toString());
-        return true;
       }
-      // Once they are through it, they are through it.
-      if (localStorage.getItem(WALKTHROUGH_DONE_KEY)) return false;
-      return localStorage.getItem(WALKTHROUGH_KEY) !== null;
+      return decision.active;
     } catch { return false; }
   });
 
@@ -117,7 +118,7 @@ function AppInner() {
       if (!on) { try { localStorage.setItem('kalas_chat_mode', '1'); } catch { /* ignore */ } }
       return true;
     });
-  }, []);
+  }, [setPendingPrompt, setChatMode]);
 
   const toggleChatMode = useCallback((on: boolean) => {
     setChatMode(on);
@@ -206,6 +207,16 @@ function AppInner() {
       onAskAva={askAva}
       onFinish={finishWalkthrough}
       promptDoneTick={promptDoneTick}
+      fact={tourFact(WALKTHROUGH_STEPS[Math.min(tourStep, WALKTHROUGH_STEPS.length - 1)].id, {
+        region: couple.region,
+        guestEstimate: couple.guests,
+        budgetTotal: couple.budgetTotal,
+        dateISO: couple.dateISO,
+        venues,
+        guests,
+        tasks: timelineTasks,
+        unreadReplies: inboxBadge,
+      })}
       chatMode={chatMode}
       idx={Math.min(tourStep, WALKTHROUGH_STEPS.length - 1)}
       setIdx={setTourStep}

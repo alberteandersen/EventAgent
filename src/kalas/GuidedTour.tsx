@@ -82,6 +82,7 @@ export default function GuidedTour({
   onAskAva,
   onFinish,
   promptDoneTick = 0,
+  fact = null,
   chatMode = false,
   idx,
   setIdx,
@@ -92,6 +93,8 @@ export default function GuidedTour({
   onAskAva: (prompt: string) => void;
   /** Bumped when a prompt this tour handed over has finished running. */
   promptDoneTick?: number;
+  /** One concrete line about this couple's wedding for the current step. */
+  fact?: string | null;
   /* Step state is owned by the parent. Kept here it was re-read from storage
      whenever the couple changed mode, because that swaps which shell the tour
      is mounted under — which showed them the same step a second time. */
@@ -360,6 +363,16 @@ export default function GuidedTour({
             ? t('Hun søger på nettet nu. Følg med i **samtalen til højre** — jeg siger til, når hun er færdig.')
             : body} />
         </div>
+
+        {/* Their wedding, not the feature. Describing what a page is for is
+            true of every couple and therefore about none of them; the next
+            task with its date is something they did not already know, and it
+            is on the screen behind the card. */}
+        {fact && !awaiting && !done && (
+          <p className="mt-3 rounded-xl bg-shell px-3 py-2 text-[13px] leading-snug text-ink">
+            {fact}
+          </p>
+        )}
 
         {done && (
           <div className="mt-4 flex items-start gap-2 rounded-2xl bg-sage-tint px-4 py-3 text-[13px] text-sage-strong">

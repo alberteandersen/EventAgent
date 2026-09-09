@@ -6,6 +6,8 @@
 
 import { useState } from 'react';
 import GuidedTour from '@/kalas/GuidedTour';
+import { tourFact } from '@/kalas/tourFacts';
+import { WALKTHROUGH_STEPS } from '@/kalas/walkthrough';
 import RichText from '@/kalas/chat/RichText';
 import { LanguageProvider } from '@/kalas/i18n';
 import type { ScreenId } from '@/kalas/Shell';
@@ -93,6 +95,16 @@ export default function DevWalkthroughPage() {
             onAskAva={(p: string) => note(`askAva: ${p}`)}
             onFinish={(mode: 'chat' | 'classic') => { note(`finish: ${mode}`); setRunning(false); }}
             promptDoneTick={doneTick}
+            fact={tourFact(WALKTHROUGH_STEPS[step].id, {
+              region: 'Fyn',
+              guestEstimate: 75,
+              budgetTotal: 225000,
+              dateISO: '2028-05-20',
+              venues: [{ category: 'venue', swipe_status: 'liked' }],
+              guests: [],
+              tasks: [{ title: 'Book fotograf', due_date: '2026-10-12', done: false }],
+              unreadReplies: 2,
+            })}
             idx={step}
             setIdx={setStep}
           />

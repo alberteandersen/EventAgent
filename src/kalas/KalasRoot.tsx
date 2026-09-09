@@ -3,11 +3,11 @@
 /* Authenticated Kalas app. Mounted at /home via next/dynamic with ssr:false,
    so sessionStorage/window access in the screens is safe. Onboarding lives
    on its own Next route (/onboarding), no phase state here. */
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
-import { WALKTHROUGH_KEY, walkthroughParams } from './walkthrough';
+import { WALKTHROUGH_KEY, WALKTHROUGH_STEPS, walkthroughParams } from './walkthrough';
 import GuidedTour from './GuidedTour';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
@@ -86,6 +86,21 @@ function AppInner() {
      React state, not sessionStorage: writing to storage notifies nobody, so an
      Ava that was already mounted never noticed the prompt arrive. */
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
+  const [promptDoneTick, setPromptDoneTick] = useState(0);
+  /* The tour's step lives here rather than inside it: switching mode swaps
+     which shell the tour is mounted under, and state inside it would be read
+     back from storage each time — replaying the step they had just done. */
+  const [tourStep, setTourStep] = useState(() => {
+    try {
+      const raw = localStorage.getItem(WALKTHROUGH_KEY);
+      const n = raw === null ? 0 : Number.parseInt(raw, 10);
+      return Number.isFinite(n) ? Math.max(n, 0) : 0;
+    } catch { return 0; }
+  });
+  useEffect(() => {
+    if (!walkthroughActive) return;
+    try { localStorage.setItem(WALKTHROUGH_KEY, String(tourStep)); } catch { /* ignore */ }
+  }, [walkthroughActive, tourStep]);
   const askAva = useCallback((prompt: string) => {
     setPendingPrompt(prompt);
     // Already in chat: the prompt lands in the thread they are looking at.
@@ -162,7 +177,10 @@ function AppInner() {
       onNavigate={navigate}
       onAskAva={askAva}
       onFinish={finishWalkthrough}
+      promptDoneTick={promptDoneTick}
       chatMode={chatMode}
+      idx={Math.min(tourStep, WALKTHROUGH_STEPS.length - 1)}
+      setIdx={setTourStep}
     />
   ) : null;
 
@@ -183,6 +201,7 @@ function AppInner() {
             variant="drawer"
             pendingPrompt={pendingPrompt}
             onPendingPromptSent={() => setPendingPrompt(null)}
+            onPendingPromptDone={() => setPromptDoneTick((n) => n + 1)}
           />
         }
         hideModeToggle={walkthroughActive}

@@ -269,7 +269,10 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
         transition={{ delay: 0.04 }}
         className="flex flex-col gap-7"
       >
-        <div className="flex w-full flex-col gap-8 rounded-[28px] border border-[#dcdfdb] bg-[#e6e9e6] p-7 lg:flex-row">
+        <div
+          data-tour="home-hero"
+          className="flex w-full flex-col gap-8 rounded-[28px] border border-[#dcdfdb] bg-[#e6e9e6] p-7 lg:flex-row"
+        >
           <HeroPhoto fallback={HERO_IMG} alt={coupleLabel} />
           <div className="flex flex-1 flex-col justify-center gap-4">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7d938a]">

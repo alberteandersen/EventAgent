@@ -54,6 +54,13 @@ export const EN: Record<string, string> = {
   'Vælg et tema, og publicér når I er klar': 'Choose a theme, and publish when you are ready',
 
   // ── Classic-mode walkthrough ────────────────────────────────────────
+  'Det her er jeres side': 'This is your page',
+  'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nLad mig vise resten — det tager to minutter, og I kan **stoppe når som helst**.':
+    'Your names, your date and how long there is to go. Everything you told me is already here.\n\nLet me show you the rest — it takes two minutes, and you can **stop whenever you like**.',
+  'Her står næste skridt': 'Your next step lives here',
+  'Jeg holder **Kom godt i gang** opdateret, ét skridt ad gangen, og krydser af efterhånden som I kommer videre.':
+    'I keep **Kom godt i gang** up to date, one step at a time, and tick things off as you go.',
+  'Sådan — det er på plads. Vi går videre.': 'There it is, sorted. Moving on.',
   'Tryk her': 'Click here',
   'Velkommen. Jeg viser rundt': 'Welcome. Let me show you around',
   'Her finder I stederne': 'This is where you find the places',

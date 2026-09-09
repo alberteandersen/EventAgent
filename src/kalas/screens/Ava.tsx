@@ -28,6 +28,7 @@ export default function Ava({
   variant = 'page',
   pendingPrompt = null,
   onPendingPromptSent,
+  onPendingPromptDone,
 }: {
   onNavigate?: (s: NavigateTarget) => void;
   onClose?: () => void;
@@ -38,6 +39,8 @@ export default function Ava({
   /** A prompt handed over by the guided tour, sent once the history is in. */
   pendingPrompt?: string | null;
   onPendingPromptSent?: () => void;
+  /** Fires when that prompt's turn has finished, so the tour can react. */
+  onPendingPromptDone?: () => void;
 }) {
   const { loading, event, couple } = useWedding();
   const { t } = useLang();
@@ -80,6 +83,7 @@ export default function Ava({
       variant={variant}
       pendingPrompt={pendingPrompt}
       onPendingPromptSent={onPendingPromptSent}
+      onPendingPromptDone={onPendingPromptDone}
     />
   );
 }
@@ -94,6 +98,7 @@ function AvaChat({
   variant,
   pendingPrompt,
   onPendingPromptSent,
+  onPendingPromptDone,
 }: {
   eventId: string;
   coupleA: string;
@@ -104,12 +109,22 @@ function AvaChat({
   variant: 'page' | 'drawer';
   pendingPrompt?: string | null;
   onPendingPromptSent?: () => void;
+  onPendingPromptDone?: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const { refresh, venues } = useWedding();
+  /* Set while a tour prompt is in flight, so its completion can be reported
+     back without every other turn in the chat looking like one. */
+  const tourTurnRef = useRef(false);
   const { messages, agentStatus, sendMessage, setMessages } = useAgentChat({
     initialEventId: eventId,
-    onTurnComplete: () => void refresh(),
+    onTurnComplete: () => {
+      void refresh();
+      if (tourTurnRef.current) {
+        tourTurnRef.current = false;
+        onPendingPromptDone?.();
+      }
+    },
     onUiAction,
     uiMode,
   });
@@ -172,6 +187,7 @@ function AvaChat({
     if (!historyLoaded || !pendingPrompt) return;
     if (sentRef.current === pendingPrompt) return;
     sentRef.current = pendingPrompt;
+    tourTurnRef.current = true;
     void sendMessage(pendingPrompt);
     onPendingPromptSent?.();
   }, [historyLoaded, pendingPrompt, sendMessage, onPendingPromptSent]);

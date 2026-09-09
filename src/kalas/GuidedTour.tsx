@@ -14,13 +14,13 @@
  * nothing about whether they are shown around.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { X, Play } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { X, Play, Check } from 'lucide-react';
 import { NAV, type ScreenId } from './Shell';
+import { cn } from './ui';
 import { useLang } from './i18n';
 import RichText from './chat/RichText';
 import {
-  WALKTHROUGH_KEY,
   WALKTHROUGH_STEPS,
   stepTries,
   type WalkthroughParams,
@@ -41,21 +41,39 @@ type Box = { top: number; left: number; width: number; height: number };
 const PAD = 6;
 const CARD_W = 340;
 const GAP = 18;
+/** Room the "Tryk her" tag needs to the right of the target. */
+const TAG_W = 104;
+const EDGE = 16;
 
-/** Card beside the spotlight where it fits, below it otherwise. */
-function placeCard(box: Box): { top: number; left: number } {
+/* The card moves out of its own way. It used to sit wherever there was room
+   next to the target, which meant it covered the budget it had just told them
+   to look at — and once it covered the "Tryk her" tag, the one instruction on
+   screen was hidden behind the thing giving it. Sides are tried in order and
+   the first that clears both the target and the tag wins. */
+function placeCard(box: Box, cardH: number): { top: number; left: number } {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const right = box.left + box.width + GAP;
+  const clampY = (y: number) => Math.max(EDGE, Math.min(y, vh - cardH - EDGE));
+  const clampX = (x: number) => Math.max(EDGE, Math.min(x, vw - CARD_W - EDGE));
 
-  const left = right + CARD_W <= vw - 16
-    ? right
-    : Math.max(16, Math.min(box.left, vw - CARD_W - 16));
+  const candidates = [
+    // Right of the target, clear of the tag — the usual case for the nav rail.
+    { left: box.left + box.width + TAG_W + GAP, top: box.top },
+    // Under it, for a wide target like the hero.
+    { left: box.left, top: box.top + box.height + GAP },
+    // Over it.
+    { left: box.left, top: box.top - cardH - GAP },
+    // Left, for a target hard against the right edge.
+    { left: box.left - CARD_W - GAP, top: box.top },
+  ];
 
-  // Roughly centred on the target, then kept inside the viewport.
-  const wanted = left === right ? box.top - 12 : box.top + box.height + GAP;
-  const top = Math.max(16, Math.min(wanted, vh - 260));
-  return { top, left };
+  for (const c of candidates) {
+    const fits = c.left >= EDGE && c.left + CARD_W <= vw - EDGE
+      && c.top >= EDGE && c.top + cardH <= vh - EDGE;
+    if (fits) return { left: c.left, top: clampY(c.top) };
+  }
+  // Nothing clears it: bottom-right, as far from the target as the screen allows.
+  return { left: clampX(vw - CARD_W - EDGE), top: clampY(vh - cardH - EDGE) };
 }
 
 export default function GuidedTour({
@@ -63,38 +81,54 @@ export default function GuidedTour({
   onNavigate,
   onAskAva,
   onFinish,
+  promptDoneTick = 0,
   chatMode = false,
+  idx,
+  setIdx,
 }: {
   params: Partial<WalkthroughParams>;
   onNavigate: (s: ScreenId) => void;
   /** Runs a try-prompt for real: switches to chat mode and sends it. */
   onAskAva: (prompt: string) => void;
+  /** Bumped when a prompt this tour handed over has finished running. */
+  promptDoneTick?: number;
+  /* Step state is owned by the parent. Kept here it was re-read from storage
+     whenever the couple changed mode, because that swaps which shell the tour
+     is mounted under — which showed them the same step a second time. */
+  idx: number;
+  setIdx: Dispatch<SetStateAction<number>>;
   onFinish: (mode: 'chat' | 'classic') => void;
   /** Which mode the couple is in, so the last step offers them the other one. */
   chatMode?: boolean;
 }) {
   const { t } = useLang();
-  const [idx, setIdx] = useState(() => {
-    try {
-      const raw = localStorage.getItem(WALKTHROUGH_KEY);
-      const n = raw === null ? 0 : Number.parseInt(raw, 10);
-      return Number.isFinite(n) ? Math.min(Math.max(n, 0), WALKTHROUGH_STEPS.length - 1) : 0;
-    } catch {
-      return 0;
-    }
-  });
 
   const step = WALKTHROUGH_STEPS[idx];
   const tries = stepTries(step, params);
   const [box, setBox] = useState<Box | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [cardH, setCardH] = useState(260);
 
+  /* Asking them to try something and then saying nothing when it works is the
+     tour dropping the thread. Ava's answer is in the chat; this is the tour
+     acknowledging it and moving on by itself, so they are not left wondering
+     whether that counted. */
+  const [done, setDone] = useState(false);
+  const seenTick = useRef(promptDoneTick);
   useEffect(() => {
-    try { localStorage.setItem(WALKTHROUGH_KEY, String(idx)); } catch { /* ignore */ }
-  }, [idx]);
+    if (promptDoneTick === seenTick.current) return;
+    seenTick.current = promptDoneTick;
+    setDone(true);
+    const timer = window.setTimeout(() => {
+      setDone(false);
+      setIdx((i) => Math.min(i + 1, WALKTHROUGH_STEPS.length - 1));
+    }, 2600);
+    return () => window.clearTimeout(timer);
+  }, [promptDoneTick, setIdx]);
 
   const advance = useCallback(() => {
     setIdx((i) => Math.min(i + 1, WALKTHROUGH_STEPS.length - 1));
-  }, []);
+  }, [setIdx]);
 
   const navigateRef = useRef(onNavigate);
   useEffect(() => { navigateRef.current = onNavigate; });
@@ -154,13 +188,13 @@ export default function GuidedTour({
     };
   }, [step.anchor, advance]);
 
-  /* The last step points at the checklist, so the checklist has to be on
-     screen. Every other step waits for the couple to navigate themselves —
-     this one cannot, because the tour is over and there is nothing left to
-     press. */
+  /* The page follows the step. Waiting for the couple to click meant hearing
+     about the guest list while still looking at the budget — the tour has to
+     show the thing it is describing. The spotlight still points at the menu
+     item so they learn where it lives, and pressing it moves on. */
   useEffect(() => {
-    if (step.final && step.page) navigateRef.current?.(step.page);
-  }, [step.final, step.page]);
+    if (step.page) navigateRef.current?.(step.page);
+  }, [step.page, step.id]);
 
   const onNext = () => {
     // Escape hatch: they didn't click the control, so take them there ourselves.
@@ -196,7 +230,27 @@ export default function GuidedTour({
     return () => mq.removeEventListener('change', sync);
   }, []);
 
-  const placed = wide && box ? placeCard(box) : null;
+  /* Measured, not assumed: the card's height changes with the copy and with
+     whether the step has a prompt to try, and placement that guesses it puts
+     the card half off the bottom of the screen. */
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setCardH(el.getBoundingClientRect().height));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const placed = wide && box ? placeCard(box, cardH) : null;
+
+  /* The tag rides on the right of its target, and flips under it when the
+     target is wide enough to reach the edge — the hero does, and the tag was
+     sitting off-screen where nobody could follow it. */
+  const tag = box
+    ? box.left + box.width + TAG_W + EDGE <= window.innerWidth
+      ? { top: box.top + box.height / 2 - 14, left: box.left + box.width + 10, below: false }
+      : { top: box.top + box.height + 8, left: Math.max(EDGE, box.left + 12), below: true }
+    : null;
 
   const pct = Math.round(((idx + 1) / total) * 100);
 
@@ -213,15 +267,25 @@ export default function GuidedTour({
       {/* "Tryk her", welded to the control itself. The card explains; this
           says where the finger goes, and it travels with the target rather
           than describing its location in words. */}
-      {pointing && box && (
+      {pointing && tag && (
         <div
           aria-hidden
-          className="pointer-events-none fixed z-40 flex items-center transition-all duration-300"
-          style={{ top: box.top + box.height / 2 - 14, left: box.left + box.width + 10 }}
+          className={cn(
+            'pointer-events-none fixed z-40 flex transition-all duration-300',
+            tag.below ? 'flex-col items-start' : 'items-center',
+          )}
+          style={{ top: tag.top, left: tag.left }}
         >
           <span
-            className="h-0 w-0 border-y-[6px] border-r-[7px] border-y-transparent"
-            style={{ borderRightColor: 'var(--color-ink)' }}
+            className={cn(
+              'h-0 w-0',
+              tag.below
+                ? 'ml-3 border-x-[6px] border-b-[7px] border-x-transparent'
+                : 'border-y-[6px] border-r-[7px] border-y-transparent',
+            )}
+            style={tag.below
+              ? { borderBottomColor: 'var(--color-ink)' }
+              : { borderRightColor: 'var(--color-ink)' }}
           />
           <span className="rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold whitespace-nowrap text-canvas shadow-[0_4px_14px_rgba(36,65,58,0.3)]">
             {t('Tryk her')}
@@ -230,6 +294,7 @@ export default function GuidedTour({
       )}
 
       <div
+        ref={cardRef}
         role="dialog"
         aria-label={t('Rundvisning')}
         className="fixed inset-x-4 bottom-24 z-50 overflow-hidden rounded-[20px] rule bg-card p-5 shadow-[0_14px_40px_rgba(36,65,58,0.18)] lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[352px]"
@@ -264,7 +329,14 @@ export default function GuidedTour({
           <RichText text={body} />
         </div>
 
-        {tries.length > 0 && (
+        {done && (
+          <p className="mt-4 flex items-center gap-2 rounded-full bg-sage-tint px-4 py-2.5 text-[13px] font-semibold text-sage-strong">
+            <Check size={14} strokeWidth={2.5} className="shrink-0" aria-hidden />
+            {t('Sådan — det er på plads. Vi går videre.')}
+          </p>
+        )}
+
+        {!done && tries.length > 0 && (
           <div className="mt-4 flex flex-col gap-2">
             {tries.map((prompt) => {
               const filled = t(prompt, params as Record<string, string | number>);

@@ -42,10 +42,21 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'intro',
     page: 'home',
-    anchor: 'home-checklist',
-    title: 'Velkommen. Jeg viser rundt',
+    /* Opens on their own wedding rather than on a menu: the names, the date
+       and the countdown are the couple's own answers handed back to them, and
+       that is a better first frame than a checklist. */
+    anchor: 'home-hero',
+    title: 'Det her er jeres side',
     body:
-      'I behøver ikke lede efter knapper. Jeg åbner den rigtige side og laver arbejdet — I skal bare **sige til**.\n\nRundturen tager fem minutter, og I kan **stoppe når som helst**.',
+      'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nLad mig vise resten — det tager to minutter, og I kan **stoppe når som helst**.',
+  },
+  {
+    id: 'start',
+    page: 'home',
+    anchor: 'home-checklist',
+    title: 'Her står næste skridt',
+    body:
+      'Jeg holder **Kom godt i gang** opdateret, ét skridt ad gangen, og krydser af efterhånden som I kommer videre.',
   },
   {
     id: 'vendors',

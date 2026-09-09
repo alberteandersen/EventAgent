@@ -8,7 +8,6 @@ import { useState } from 'react';
 import GuidedTour from '@/kalas/GuidedTour';
 import RichText from '@/kalas/chat/RichText';
 import { LanguageProvider } from '@/kalas/i18n';
-import { WALKTHROUGH_KEY } from '@/kalas/walkthrough';
 import type { ScreenId } from '@/kalas/Shell';
 
 const ANCHORS: { id: string; label: string }[] = [
@@ -32,11 +31,11 @@ Venuet forankrer alt det andet — blomster, musik og catering er alle lokale ti
 Skal jeg begynde at researche venues nær **Denmark**?`;
 
 export default function DevWalkthroughPage() {
-  // Armed during init so GuidedTour reads step 0 on its first render.
-  const [running, setRunning] = useState(() => {
-    try { localStorage.setItem(WALKTHROUGH_KEY, '0'); } catch { /* ignore */ }
-    return true;
-  });
+  const [running, setRunning] = useState(true);
+  // The step lives with the parent in the app too, so the harness mirrors that.
+  const [step, setStep] = useState(0);
+  // Stands in for "Ava finished the prompt this step handed her".
+  const [doneTick, setDoneTick] = useState(0);
   const [log, setLog] = useState<string[]>([]);
   const note = (line: string) => setLog((l) => [...l, line]);
 
@@ -44,6 +43,12 @@ export default function DevWalkthroughPage() {
     <LanguageProvider initialLang="da">
       <div className="theme-kalas min-h-screen bg-canvas px-8 py-12 text-ink">
         <p className="eyebrow mb-6">Dev · GuidedTour</p>
+
+        {/* Stand-in for the home hero: a wide target, which is the case the
+            card's placement has to get out of the way of. */}
+        <div data-tour="home-hero" className="mb-4 flex h-[120px] max-w-[520px] items-center rounded-[20px] border border-line bg-shell px-6">
+          <span className="font-serif text-[1.4rem] text-ink">Alberte &amp; Espen · 584 dage</span>
+        </div>
 
         <div className="flex max-w-[240px] flex-col gap-1">
           <button data-tour="home-checklist" className="rounded-[10px] border border-line px-3 py-2.5 text-left text-sm font-semibold">
@@ -61,6 +66,14 @@ export default function DevWalkthroughPage() {
           ))}
         </div>
 
+        <button
+          type="button"
+          onClick={() => setDoneTick((n) => n + 1)}
+          className="mt-6 rounded-full border border-line px-3 py-1.5 text-[0.78rem] font-semibold hover:border-ink cursor-pointer"
+        >
+          Simulér: Ava blev færdig
+        </button>
+
         <pre className="mt-8 text-[12px] text-ink-soft">{log.join('\n') || 'ingen klik endnu'}</pre>
 
         <p className="eyebrow mt-12 mb-3">Dev · RichText (Avas velkomst)</p>
@@ -74,6 +87,9 @@ export default function DevWalkthroughPage() {
             onNavigate={(s: ScreenId) => note(`navigate: ${s}`)}
             onAskAva={(p: string) => note(`askAva: ${p}`)}
             onFinish={(mode: 'chat' | 'classic') => { note(`finish: ${mode}`); setRunning(false); }}
+            promptDoneTick={doneTick}
+            idx={step}
+            setIdx={setStep}
           />
         )}
       </div>

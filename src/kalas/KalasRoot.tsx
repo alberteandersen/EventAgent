@@ -74,6 +74,12 @@ function AppInner() {
     try {
       if (new URLSearchParams(window.location.search).get('walkthrough') === '1') {
         localStorage.setItem(WALKTHROUGH_KEY, '0');
+        /* Consume the flag. Left in the address bar it re-armed the tour on
+           every reload, so finishing it and coming back started it over —
+           the tour ran in a ring and never let them out. */
+        const url = new URL(window.location.href);
+        url.searchParams.delete('walkthrough');
+        window.history.replaceState(null, '', url.toString());
         return true;
       }
       return localStorage.getItem(WALKTHROUGH_KEY) !== null;

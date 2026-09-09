@@ -116,10 +116,15 @@ export default function GuidedTour({
      acknowledging it and moving on by itself, so they are not left wondering
      whether that counted. */
   const [done, setDone] = useState(false);
+  /* While Ava works, the tour follows her: the spotlight moves to the chat
+     column, because that is where the answer is appearing and the couple were
+     otherwise left staring at the page they had just left. */
+  const [awaiting, setAwaiting] = useState(false);
   const seenTick = useRef(promptDoneTick);
   useEffect(() => {
     if (promptDoneTick === seenTick.current) return;
     seenTick.current = promptDoneTick;
+    setAwaiting(false);
     setDone(true);
     const timer = window.setTimeout(() => {
       setDone(false);
@@ -138,8 +143,9 @@ export default function GuidedTour({
   /* ── Spotlight the step's control, and let a click on it advance ───── */
   // The nav item is the target, so navigation happens because they clicked it —
   // not because we moved the page under them.
+  const anchor = awaiting ? 'ava-chat' : step.anchor;
+
   useEffect(() => {
-    const anchor = step.anchor;
     let el: HTMLElement | null = null;
     let raf = 0;
     let timer = 0;
@@ -180,17 +186,24 @@ export default function GuidedTour({
       return () => window.clearTimeout(timer);
     }
 
+    /* Measured straight away as well as on the loop. Waiting for the first
+       interval tick meant that if anything re-ran this effect inside 250 ms —
+       a re-render for any reason — the interval was cleared before it ever
+       fired, and the spotlight stayed on the previous step's target for the
+       rest of the tour. */
+    const first = window.setTimeout(measure, 0);
     const tick = () => { raf = requestAnimationFrame(tick); measure(); };
     raf = requestAnimationFrame(tick);
     timer = window.setInterval(measure, 250);
 
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(first);
       window.clearInterval(timer);
       el?.removeEventListener('click', onClick);
       anchorElRef.current = null;
     };
-  }, [step.anchor, advance]);
+  }, [anchor, step.id, advance]);
 
   /* Opening the step's page is KalasRoot's job, not this component's. Done
      here it re-fired whenever the tour re-rendered or was re-mounted, which
@@ -209,7 +222,7 @@ export default function GuidedTour({
 
   // The nav owns its label, so the eyebrow and the "Tryk her" tag stay in step
   // with whatever the menu is called.
-  const navLabel = NAV.find((n) => n.id === step.anchor)?.label;
+  const navLabel = NAV.find((n) => n.id === anchor)?.label;
   const eyebrow = navLabel ? t(navLabel) : t('Hjem');
   /* Both halves have to hold: the step must name a control, and it must have
      been found on screen. The step alone is not enough — chat mode on a phone
@@ -217,7 +230,7 @@ export default function GuidedTour({
      is worse than falling back to the button. The box alone is not enough
      either: it outlives its step by a frame, which left the last two steps —
      which point at nothing — still lighting up the previous target. */
-  const pointing = Boolean(step.anchor) && box !== null;
+  const pointing = Boolean(anchor) && box !== null;
 
   /* Only the desktop layout follows the target; on a phone the card is a
      sheet above the bottom nav, so inline coordinates would fight the class. */
@@ -260,6 +273,7 @@ export default function GuidedTour({
       {pointing && box && (
         <div
           aria-hidden
+          data-tour-target={anchor}
           className="kalas-tour-spot pointer-events-none fixed z-40 rounded-[14px] border-2 border-sage-strong transition-all duration-300"
           style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
         />
@@ -336,10 +350,14 @@ export default function GuidedTour({
           </div>
         </div>
 
-        <h2 className="mt-2 font-serif text-[1.4rem] leading-tight text-ink">{title}</h2>
+        <h2 className="mt-2 font-serif text-[1.4rem] leading-tight text-ink">
+          {awaiting ? t('Ava er i gang') : title}
+        </h2>
 
         <div aria-live="polite" className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">
-          <RichText text={body} />
+          <RichText text={awaiting
+            ? t('Hun søger på nettet nu. Følg med i **samtalen til højre** — jeg siger til, når hun er færdig.')
+            : body} />
         </div>
 
         {done && (
@@ -349,7 +367,7 @@ export default function GuidedTour({
           </p>
         )}
 
-        {!done && tries.length > 0 && (
+        {!done && !awaiting && tries.length > 0 && (
           <div className="mt-4 flex flex-col gap-2">
             {tries.map((prompt) => {
               const filled = t(prompt, params as Record<string, string | number>);
@@ -360,10 +378,9 @@ export default function GuidedTour({
                   onClick={() => {
                     /* Open the page the prompt is about before sending it, so
                        the couple watches the board fill up instead of reading
-                       that it happened. The agent navigates too, but only once
-                       it has finished — that is twenty seconds of staring at
-                       the wrong screen. */
+                       that it happened. */
                     if (step.page) navigateRef.current?.(step.page);
+                    setAwaiting(true);
                     onAskAva(filled);
                   }}
                   className="flex cursor-pointer items-center gap-2 rounded-full bg-sage-tint px-4 py-2.5 text-left text-[13px] font-semibold text-sage-strong transition-colors hover:bg-sage"
@@ -376,24 +393,54 @@ export default function GuidedTour({
           </div>
         )}
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={() => onFinish(step.final ? (chatMode ? 'classic' : 'chat') : chatMode ? 'chat' : 'classic')}
-            className="cursor-pointer text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
-          >
-            {step.final
-              ? chatMode ? t('Skift til klassisk') : t('Prøv chat-tilstand')
-              : t('Spring rundvisningen over')}
-          </button>
-          <button
-            type="button"
-            onClick={step.final ? () => onFinish(chatMode ? 'chat' : 'classic') : onNext}
-            className="cursor-pointer rounded-full bg-ink px-4 py-2 text-[12.5px] font-semibold text-canvas transition-opacity hover:opacity-90"
-          >
-            {step.final ? t('Så er jeg klar') : pointing ? t('Spring dette trin over') : t('Videre')}
-          </button>
-        </div>
+        {/* The tour ends on a decision, not a dismissal. The two modes are a
+            real fork in how the couple will use Kalas every day, and until
+            now it was a text link next to a button — the choice was there,
+            the difference was not. */}
+        {step.final ? (
+          <div className="mt-5 flex flex-col gap-2">
+            <p className="eyebrow">{t('Hvordan vil I helst arbejde?')}</p>
+            <button
+              type="button"
+              onClick={() => onFinish('chat')}
+              className="flex cursor-pointer flex-col gap-0.5 rounded-2xl rule bg-shell px-4 py-3 text-left transition-colors hover:border-ink"
+            >
+              <span className="text-[13px] font-semibold text-ink">{t('Med Ava ved siden af')}</span>
+              <span className="text-[12.5px] leading-snug text-muted">
+                {t('I skriver til mig, og jeg åbner siderne og laver arbejdet.')}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onFinish('classic')}
+              className="flex cursor-pointer flex-col gap-0.5 rounded-2xl rule bg-shell px-4 py-3 text-left transition-colors hover:border-ink"
+            >
+              <span className="text-[13px] font-semibold text-ink">{t('Klassisk, med menuen')}</span>
+              <span className="text-[12.5px] leading-snug text-muted">
+                {t('I klikker jer rundt selv. Jeg er stadig et klik væk.')}
+              </span>
+            </button>
+            <p className="mt-1 text-[12px] text-muted">{t('I kan skifte når som helst oppe i hjørnet.')}</p>
+          </div>
+        ) : (
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <button
+              type="button"
+              onClick={() => onFinish(chatMode ? 'chat' : 'classic')}
+              className="cursor-pointer text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
+            >
+              {t('Spring rundvisningen over')}
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={awaiting}
+              className="cursor-pointer rounded-full bg-ink px-4 py-2 text-[12.5px] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:opacity-40"
+            >
+              {pointing ? t('Spring dette trin over') : t('Videre')}
+            </button>
+          </div>
+        )}
       </div>
     </>
   );

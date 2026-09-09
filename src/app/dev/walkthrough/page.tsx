@@ -66,6 +66,11 @@ export default function DevWalkthroughPage() {
           ))}
         </div>
 
+        {/* Stand-in for the chat column the tour points at while Ava works. */}
+        <div data-tour="ava-chat" className="mt-6 flex h-[90px] max-w-[280px] items-center rounded-[16px] rule bg-shell px-4">
+          <span className="text-[13px] text-ink-soft">Ava-samtalen</span>
+        </div>
+
         <button
           type="button"
           onClick={() => setDoneTick((n) => n + 1)}

@@ -54,6 +54,17 @@ export const EN: Record<string, string> = {
   'Vælg et tema, og publicér når I er klar': 'Choose a theme, and publish when you are ready',
 
   // ── Classic-mode walkthrough ────────────────────────────────────────
+  'Ava er i gang': 'Ava is working',
+  'Hun søger på nettet nu. Følg med i **samtalen til højre** — jeg siger til, når hun er færdig.':
+    "She's searching the web now. Follow along in **the conversation on the right** — I'll say when she's done.",
+  'Hvordan vil I helst arbejde?': 'How would you rather work?',
+  'Med Ava ved siden af': 'With Ava alongside',
+  'I skriver til mig, og jeg åbner siderne og laver arbejdet.':
+    'You write to me, and I open the pages and do the work.',
+  'Klassisk, med menuen': 'Classic, with the menu',
+  'I klikker jer rundt selv. Jeg er stadig et klik væk.':
+    'You click around yourself. I am still one click away.',
+  'I kan skifte når som helst oppe i hjørnet.': 'You can switch any time, up in the corner.',
   'Det her er jeres side': 'This is your page',
   'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nLad mig vise resten — det tager to minutter, og I kan **stoppe når som helst**.':
     'Your names, your date and how long there is to go. Everything you told me is already here.\n\nLet me show you the rest — it takes two minutes, and you can **stop whenever you like**.',
@@ -90,8 +101,6 @@ export const EN: Record<string, string> = {
   'Rundvisning': 'Guided tour',
   '{n} af {total}': '{n} of {total}',
   'Spring rundvisningen over': 'Skip the tour',
-  'Prøv chat-tilstand': 'Try chat mode',
-  'Så er jeg klar': "I'm ready",
   'Så er I inde, velkommen! Lad mig vise jer rundt på fem minutter. I trykker selv undervejs, og I kan stoppe når som helst.':
     "You're in, welcome! Let me show you around in five minutes. You do the clicking, and you can stop whenever you like.",
   'Der er mere i menuen når I når dertil: jeres bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse.':
@@ -107,7 +116,6 @@ export const EN: Record<string, string> = {
   'Hjælp os videre, hvad mangler vi at få på plads?': 'Help us move forward, what do we still need to sort out?',
       'Spring guiden over': 'Skip the guide',
   'Bliv i chatten': 'Stay in chat',
-  'Skift til klassisk': 'Switch to classic',
 
   // ── Navigation ──────────────────────────────────────────────────────
   'Hjem': 'Home',

@@ -9,7 +9,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { AlertTriangle, Check, Lightbulb, Loader2, X } from 'lucide-react';
+import { AlertTriangle, Check, Lightbulb, Loader2, MessageCircle, X } from 'lucide-react';
 import { resolveBudgetIcon } from '../lib/budget-style';
 import { useLang } from '../i18n';
 import { cn } from '../ui';
@@ -103,7 +103,7 @@ export default function BudgetAvaAssistant({
         <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#12332b]">
-              <span className="font-serif text-[1.2rem] leading-none text-white">K</span>
+              <MessageCircle size={17} className="text-white" strokeWidth={2.25} />
             </span>
             <div className="min-w-0">
               <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-sage">

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Plus, X, Pencil, Bell, StickyNote, ChevronRight } from 'lucide-react';
+import { Plus, X, Pencil, Bell, StickyNote, ChevronRight, ChevronDown, MessageCircle } from 'lucide-react';
 import BudgetLineDetail from './BudgetLineDetail';
 import BudgetAvaAssistant from './BudgetAvaAssistant';
 import { budgetLines, type BudgetLine } from '../data';
@@ -73,6 +73,15 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   // actual/paid figures all live there now instead of three inline toggles.
   const [detailId, setDetailId] = useState<string | null>(null);
   const [assistOpen, setAssistOpen] = useState(false);
+  // Categories whose sub-items are folded open, on the row itself — a quick
+  // glance at what makes up "Venue" without leaving the list for Detaljer.
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+  const toggleExpanded = (id: string) =>
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
 
   // Once anything is persisted, `budget_items` is the source of truth for which
   // categories exist and what they're called — so removing or renaming a
@@ -366,7 +375,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
             className="flex shrink-0 items-center gap-2 rounded-full bg-[#12332b] py-2.5 pl-2.5 pr-4 text-[0.82rem] font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer"
           >
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15">
-              <span className="font-serif text-[0.85rem] leading-none">K</span>
+              <MessageCircle size={13} strokeWidth={2.25} />
             </span>
             {t('Spørg Ava om fordelingen')}
           </button>
@@ -436,6 +445,22 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
             className="py-7">
             <div className="flex items-baseline justify-between gap-4">
               <div className="flex items-center gap-2.5 min-w-0">
+                {/* Only a category that actually has sub-items gets a
+                    chevron — nothing to fold out otherwise. */}
+                {subCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => toggleExpanded(b.id)}
+                    aria-label={expandedIds.has(b.id) ? t('Skjul underposter') : t('Vis underposter')}
+                    aria-expanded={expandedIds.has(b.id)}
+                    className="shrink-0 -ml-1 rounded-full p-1 text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
+                  >
+                    <ChevronDown
+                      size={15}
+                      className={cn('transition-transform duration-200', expandedIds.has(b.id) && 'rotate-180')}
+                    />
+                  </button>
+                )}
                 <span
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
                   style={{ background: b.color }}
@@ -523,6 +548,26 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                 />
               </span>
             </button>
+
+            {/* Folded open on the row itself — a glance at what makes up this
+                category without leaving the list for Detaljer. Read-only
+                here; adding/editing/deleting a sub-item still happens in
+                Detaljer, where the full Underposter section already lives. */}
+            {expandedIds.has(b.id) && subCount > 0 && (
+              <div className="mt-3 space-y-1.5 border-l border-line pl-4">
+                {budgetSubItems
+                  .filter((s) => s.category === b.id)
+                  .map((s) => (
+                    <div key={s.id} className="flex items-center justify-between gap-3 text-[0.82rem]">
+                      <span className="min-w-0 truncate text-ink-soft">
+                        {s.label}
+                        {s.vendor && <span className="text-muted"> · {s.vendor}</span>}
+                      </span>
+                      <span className="shrink-0 font-medium text-ink tabular-nums">{kr(s.amount)} kr</span>
+                    </div>
+                  ))}
+              </div>
+            )}
 
             {hubCat && (
               <button onClick={() => goFind(b.id)}

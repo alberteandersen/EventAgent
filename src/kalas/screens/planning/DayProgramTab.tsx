@@ -164,10 +164,16 @@ export function DayProgram({
     return `${String(Math.floor((end % 1440) / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
   };
 
+  // The field always shows a real time — the slot right after the day's
+  // current end — instead of an empty "--:--" the couple has to fill in
+  // before they can type what they actually came to type. Clearing newTime
+  // after an add re-derives it against the moment just added.
+  const timeValue = newTime || nextTime();
+
   const addItem = () => {
     const cleanTitle = newTitle.trim();
     if (!cleanTitle) return;
-    onAdd({ time: newTime || nextTime(), title: cleanTitle, duration_min: 0 });
+    onAdd({ time: timeValue, title: cleanTitle, duration_min: 0 });
     setNewTitle('');
     setNewTime('');
     titleRef.current?.focus();
@@ -491,46 +497,74 @@ export function DayProgram({
         </div>
       )}
 
-      {/* ── Add ─────────────────────────────────────────────────────────── */}
-      <div className={cn(items.length > 0 ? 'mt-2 pl-[4.6rem]' : 'mt-5')}>
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="time"
-            value={newTime}
-            onChange={(e) => setNewTime(e.target.value)}
-            aria-label={t('Klokkeslæt')}
-            className={cn(fieldCls, 'w-[6.5rem] shrink-0 tabular-nums')}
-          />
-          <input
-            ref={titleRef}
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') addItem(); }}
-            placeholder={t('Fx ceremoni, middag, første dans…')}
-            aria-label={t('Nyt øjeblik')}
-            className={cn(fieldCls, 'min-w-[10rem] flex-1')}
-          />
-          <button
-            type="button" onClick={addItem} disabled={!newTitle.trim()}
-            className="flex shrink-0 items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[0.8rem] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-          >
-            <Plus size={14} /> {t('Tilføj')}
-          </button>
-        </div>
+      {/* ── Add ──────────────────────────────────────────────────────────
+          Laid out on the same three columns as a real row, with a dashed
+          ghost dot where the next moment's dot would land — so this reads as
+          the next stop on the day rather than a form parked underneath it. */}
+      <div className={cn('flex items-stretch gap-3', items.length > 0 ? 'mt-1' : 'mt-5')}>
+        {items.length > 0 && (
+          <>
+            <div className="w-[4.6rem] shrink-0" aria-hidden />
+            <div className="flex w-6 shrink-0 justify-center pt-3.5" aria-hidden>
+              <span className="size-[1.15rem] rounded-full border-2 border-dashed border-line-strong" />
+            </div>
+          </>
+        )}
 
-        {/* One tap for the moments almost every wedding has */}
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-          <span className="text-[0.7rem] text-faint">{t('Hurtigt:')}</span>
-          {QUICK_MOMENTS.filter((q) => !items.some((i) => i.title === q.title)).map((q) => (
+        <div className="min-w-0 flex-1">
+          {/* One control, not three boxes: the time, the title and the action
+              share a single field, divided by hairlines. */}
+          {/* focus-shell, not a per-input ring: the app's global focus rule
+              deliberately beats `focus:outline-none`, so a bare input in a
+              rounded shell gets a hard rectangle cutting across it. Same
+              class the Ava chat composer uses, for the same reason. */}
+          <div className="focus-shell flex items-center gap-1 rounded-2xl border border-line bg-card p-1.5 transition-colors focus-within:border-[var(--color-sage-strong)]">
+            <input
+              type="time"
+              value={timeValue}
+              onChange={(e) => setNewTime(e.target.value)}
+              aria-label={t('Klokkeslæt')}
+              className="w-[5.6rem] shrink-0 rounded-xl bg-transparent px-2 py-2 text-center text-[0.84rem] font-semibold text-ink tabular-nums [color-scheme:light] focus:bg-shell focus:outline-none"
+            />
+            <span className="h-5 w-px shrink-0 bg-line" aria-hidden />
+            <input
+              ref={titleRef}
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') addItem(); }}
+              placeholder={t('Fx ceremoni, middag, første dans…')}
+              aria-label={t('Nyt øjeblik')}
+              className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-[0.88rem] text-ink placeholder:text-muted/70 focus:outline-none"
+            />
             <button
-              key={q.title}
-              type="button"
-              onClick={() => onAdd({ time: q.time, title: q.title, duration_min: q.duration_min })}
-              className="rounded-full border border-line bg-card px-2.5 py-1 text-[0.72rem] text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
+              type="button" onClick={addItem} disabled={!newTitle.trim()}
+              className={cn(
+                'flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-[0.8rem] font-semibold transition-colors',
+                newTitle.trim()
+                  ? 'bg-ink text-canvas hover:opacity-90 cursor-pointer'
+                  : 'bg-shell text-muted cursor-not-allowed',
+              )}
             >
-              + {t(q.title)}
+              <Plus size={14} /> {t('Tilføj')}
             </button>
-          ))}
+          </div>
+
+          {/* One tap for the moments almost every wedding has */}
+          {QUICK_MOMENTS.some((q) => !items.some((i) => i.title === q.title)) && (
+            <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 pl-0.5">
+              <span className="text-[0.68rem] uppercase tracking-[0.12em] text-faint">{t('Hurtigt')}</span>
+              {QUICK_MOMENTS.filter((q) => !items.some((i) => i.title === q.title)).map((q) => (
+                <button
+                  key={q.title}
+                  type="button"
+                  onClick={() => onAdd({ time: q.time, title: q.title, duration_min: q.duration_min })}
+                  className="inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-[0.73rem] text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
+                >
+                  <Plus size={11} strokeWidth={2.5} /> {t(q.title)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

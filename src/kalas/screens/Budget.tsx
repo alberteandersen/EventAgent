@@ -189,8 +189,6 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   const [newIcon, setNewIcon] = useState<BudgetIconId>('sparkles');
   const [newColor, setNewColor] = useState<string>(BUDGET_COLORS[0]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editLabel, setEditLabel] = useState('');
 
   const allocated = useMemo(() => Object.values(amounts).reduce((a, b) => a + b, 0), [amounts]);
   const remaining = total - allocated;
@@ -219,28 +217,10 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
     const remaining = lines.filter((b) => b.id !== id);
     setLines(remaining);
     setAmounts((prev) => { const next = { ...prev }; delete next[id]; return next; });
-    if (editingId === id) setEditingId(null);
     // When nothing is persisted yet, seed everything *except* the removed line
     // so the removal sticks; otherwise delete the persisted row.
     if (budgetItems.length === 0) void seedAll(remaining, amounts);
     else void deleteBudgetItem(id);
-  };
-
-  const startEditLabel = (id: string, label: string) => { setEditingId(id); setEditLabel(label); };
-  const commitEditLabel = () => {
-    const id = editingId;
-    if (!id) return;
-    const label = editLabel.trim();
-    setEditingId(null);
-    if (!label) return;
-    const renamed = lines.map((b) => (b.id === id ? { ...b, label } : b));
-    setLines(renamed);
-    if (budgetItems.length === 0) void seedAll(renamed, amounts);
-    else void saveBudgetItem({
-      category: id, label, planned_amount: amounts[id] ?? 0,
-      icon: lines.find((l) => l.id === id)?.icon,
-      color: lines.find((l) => l.id === id)?.color,
-    });
   };
 
   /** Applies a whole Detaljer draft at once — label, style, the actual/paid
@@ -459,26 +439,13 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                 >
                   <Icon size={15} className="text-white" strokeWidth={2.25} />
                 </span>
-                {editingId === b.id ? (
-                  <input
-                    autoFocus
-                    value={editLabel}
-                    onChange={(e) => setEditLabel(e.target.value)}
-                    onBlur={commitEditLabel}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') commitEditLabel();
-                      if (e.key === 'Escape') setEditingId(null);
-                    }}
-                    aria-label={t('Omdøb {label}', { label: t(b.label) })}
-                    className="min-w-0 flex-1 bg-transparent font-serif text-[1.2rem] text-ink focus:outline-none border-b border-[var(--color-line-strong)] pb-0.5"
-                  />
-                ) : (
-                  <button onClick={() => startEditLabel(b.id, b.label)}
-                    className="group flex items-center gap-1.5 text-left cursor-pointer" title={t('Omdøb kategori')}>
-                    <span className="font-serif text-[1.2rem] text-ink">{t(b.label)}</span>
-                    <Pencil size={12} className="text-muted/0 group-hover:text-muted transition-colors" />
-                  </button>
-                )}
+                {/* Opens the same Detaljer panel as the chevron below — one
+                    place to rename a category, not two competing ones. */}
+                <button onClick={() => setDetailId(b.id)}
+                  className="group flex items-center gap-1.5 text-left cursor-pointer" title={t('Åbn detaljer')}>
+                  <span className="font-serif text-[1.2rem] text-ink">{t(b.label)}</span>
+                  <Pencil size={12} className="text-muted/0 group-hover:text-muted transition-colors" />
+                </button>
                 {state === 'full' && <Chip tone="success">{t('Fuldt betalt')}</Chip>}
                 {state === 'partial' && (
                   <Chip tone="success">{t('{paid} af {actual} betalt', { paid: kr(paid), actual: kr(actual) })}</Chip>

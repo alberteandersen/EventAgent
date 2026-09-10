@@ -161,12 +161,7 @@ export default function BudgetLineDetail({
             </span>
             <div className="min-w-0">
               <Eyebrow>{t('Budgetpost')}</Eyebrow>
-              <input
-                value={dLabel}
-                onChange={(e) => setDLabel(e.target.value)}
-                aria-label={t('Navn')}
-                className="mt-0.5 w-full min-w-0 bg-transparent font-serif text-[1.35rem] text-ink focus:outline-none"
-              />
+              <h2 className="mt-0.5 truncate font-serif text-[1.35rem] text-ink">{dLabel || label}</h2>
             </div>
           </div>
           <button
@@ -181,6 +176,22 @@ export default function BudgetLineDetail({
 
         {/* Body */}
         <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-6">
+          {/* Oplysninger */}
+          <section>
+            <Eyebrow>{t('Oplysninger')}</Eyebrow>
+            <div className="mt-3">
+              <Field label={t('Navn')}>
+                <input
+                  value={dLabel}
+                  onChange={(e) => setDLabel(e.target.value)}
+                  placeholder={label}
+                  aria-label={t('Navn')}
+                  className={fieldCls}
+                />
+              </Field>
+            </div>
+          </section>
+
           {custom && (
             <section>
               <Eyebrow>{t('Ikon & farve')}</Eyebrow>

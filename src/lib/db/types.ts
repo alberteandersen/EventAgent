@@ -458,7 +458,16 @@ export interface GuestRow {
   meal: string | null;
   plus_one: boolean;
   notes: string | null;
+  /** Free text — what the public RSVP form writes, and the "anything else"
+   *  box next to the structured tags below. */
   dietary: string | null;
+  /** Stable ascii ids, never Danish labels — see screens/guests/dietary.ts. */
+  dietary_tags: string[];
+  /** Who the guest is to the couple. Deliberately not folded into `side`,
+   *  which Seating groups tables by. */
+  relation: string | null;
+  overnight: boolean;
+  no_alcohol: boolean;
   plus_one_name: string | null;
   responded_at: string | null;
   rsvp_token: string;

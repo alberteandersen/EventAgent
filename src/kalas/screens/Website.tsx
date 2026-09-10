@@ -6,7 +6,7 @@ import {
   Camera, Clock, BookOpen, Image, QrCode, ChevronDown, RotateCcw,
 } from 'lucide-react';
 import { IMAGES as IMG, guests } from '../data';
-import { Eyebrow, cn } from '../ui';
+import { Eyebrow, Toggle, cn } from '../ui';
 import { useWedding, type Couple } from '../useWedding';
 import { SiteRenderer } from '../site/SiteRenderer';
 import {
@@ -1068,17 +1068,6 @@ function Textarea({ value, onChange, rows, placeholder }: {
       onChange={(e) => onChange(e.target.value)}
       className="w-full resize-none rounded-xl rule bg-card px-4 py-3 text-[0.88rem] text-ink placeholder:text-muted leading-relaxed focus:outline-none focus:ring-1 focus:ring-ink/20"
     />
-  );
-}
-
-function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <button onClick={() => onChange(!value)} role="switch" aria-checked={value}
-      className={cn('relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer shrink-0',
-        value ? 'bg-ink' : 'bg-shell')}>
-      <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-canvas shadow-sm transition-all duration-200',
-        value ? 'translate-x-[18px]' : 'translate-x-0.5')} />
-    </button>
   );
 }
 

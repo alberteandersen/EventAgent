@@ -131,6 +131,50 @@ export function Chip({
   );
 }
 
+/* ── Selectable pill ─────────────────────────────────────────────────────
+   A chip you can turn on and off — dietary needs, an owner, a duration.
+   Distinct from `Pill` above, which is an uppercase CTA button, and from
+   `Chip`, which is a read-only status badge. */
+export function SelectPill({
+  children,
+  active,
+  onClick,
+}: {
+  children: React.ReactNode;
+  active?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        'rounded-full border px-2.5 py-1 text-[0.72rem] transition-colors cursor-pointer',
+        active
+          ? 'border-ink bg-ink text-canvas'
+          : 'border-line bg-shell text-ink-soft hover:border-ink hover:text-ink',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+/* ── Toggle ──────────────────────────────────────────────────────────────
+   Lifted out of Website.tsx, which had it local while two more one-off
+   copies sat in Home.tsx and further down Website itself. */
+export function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button onClick={() => onChange(!value)} role="switch" aria-checked={value} type="button"
+      className={cn('relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer shrink-0',
+        value ? 'bg-ink' : 'bg-shell')}>
+      <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-canvas shadow-sm transition-all duration-200',
+        value ? 'translate-x-[18px]' : 'translate-x-0.5')} />
+    </button>
+  );
+}
+
 /* ── Task check dot ──────────────────────────────────────────────────────
    The circle used by every completable row (Tidslinje, Tjekliste, Home).
    Non-interactive on purpose: Home wraps whole rows in a <button>, so it can

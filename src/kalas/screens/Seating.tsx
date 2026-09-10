@@ -28,6 +28,7 @@ import { Eyebrow, cn } from '../ui';
 import { useLang } from '../i18n';
 import { useWedding } from '../useWedding';
 import { TableNode } from './seating/TableNode';
+import { dietarySummary } from './guests/dietary';
 import {
   MAX_SEATS, MIN_SEATS, SHAPES, changeShape, firstFreeSeat, freeSeats, initials,
   makeTable, pruneToGuests, readPlan, seatGuest, seatOf, seatedIds, setSeatCount,
@@ -96,7 +97,9 @@ export default function Seating() {
     id: g.id,
     name: g.name,
     group: g.side?.trim() || t('Gæster'),
-    dietary: g.dietary?.trim() || null,
+    // Tags and free text together, so a guest whose needs were set with the
+    // chips still shows a badge and still counts under Kostbehov.
+    dietary: dietarySummary(g.dietary_tags, g.dietary) || null,
     // The RSVP values are Danish: afventer / ja / nej.
     attending: g.rsvp !== 'nej',
   })), [guests, t]);

@@ -568,6 +568,14 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
           meal: guest.meal ?? null,
           plus_one: guest.plus_one ?? false,
           notes: guest.notes ?? null,
+          // Previously dropped on the floor even when passed, which lost
+          // anything the add form captured beyond the four basics.
+          dietary: guest.dietary ?? null,
+          dietary_tags: guest.dietary_tags ?? [],
+          plus_one_name: guest.plus_one_name ?? null,
+          relation: guest.relation ?? null,
+          overnight: guest.overnight ?? false,
+          no_alcohol: guest.no_alcohol ?? false,
         })
         .select()
         .single();

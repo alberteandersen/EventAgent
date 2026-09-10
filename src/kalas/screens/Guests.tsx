@@ -1,7 +1,9 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil, Salad } from 'lucide-react';
+import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil } from 'lucide-react';
 import { Pill, Chip, cn } from '../ui';
+import GuestDialog, { type GuestDraft } from './GuestDialog';
+import { dietarySummary } from './guests/dietary';
 import AnimateNumber from '../AnimateNumber';
 import { useLang } from '../i18n';
 import { useWedding } from '../useWedding';
@@ -45,12 +47,9 @@ export default function Guests() {
   const [tab, setTab] = useState<Tab>('gæsteliste');
   const [filter, setFilter] = useState<Filter>('alle');
   const [query, setQuery] = useState('');
-  const [adding, setAdding] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newSide, setNewSide] = useState('Fælles');
-  const [newEmail, setNewEmail] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  const addInputRef = useRef<HTMLInputElement>(null);
+  // null = closed, 'new' = the add form, otherwise the guest being edited.
+  // One dialog for both, so a guest is described in a single place.
+  const [dialog, setDialog] = useState<'new' | GuestRecord | null>(null);
 
   const rsvpStats = useMemo(() => ({
     invited: guestList.length,
@@ -64,21 +63,11 @@ export default function Guests() {
     .filter((g) => filter === 'alle' || g.rsvp === rsvpFilter)
     .filter((g) => !query.trim() || g.name.toLowerCase().includes(query.trim().toLowerCase()));
 
-  const startAdding = () => { setAdding(true); setTimeout(() => addInputRef.current?.focus(), 60); };
+  const startAdding = () => setDialog('new');
 
-  const addGuest = () => {
-    const name = newName.trim();
-    if (!name) { setAdding(false); return; }
-    void addGuestRow({
-      name,
-      side: newSide,
-      email: newEmail.trim() || null,
-      phone: newPhone.trim() || null,
-    });
-    setNewName('');
-    setNewEmail('');
-    setNewPhone('');
-    setAdding(false);
+  const saveDialog = (draft: GuestDraft) => {
+    if (dialog === 'new') void addGuestRow(draft);
+    else if (dialog) void updateGuest(dialog.id, draft);
   };
 
   const removeGuest = (id: string) => void deleteGuest(id);
@@ -150,59 +139,6 @@ export default function Guests() {
               </motion.div>
             )}
 
-            {/* Add guest inline */}
-            <AnimatePresence>
-              {adding && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.22 }}
-                  className="overflow-hidden">
-                  <div className="mt-6 rounded-2xl rule bg-card px-5 py-4">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <input ref={addInputRef} value={newName} onChange={(e) => setNewName(e.target.value)}
-                        onKeyDown={(e) => { if (e.key === 'Enter') addGuest(); if (e.key === 'Escape') setAdding(false); }}
-                        placeholder={t('Gæstens navn…')} aria-label={t('Gæstens navn')}
-                        className="flex-1 min-w-[160px] bg-transparent font-serif text-[1.05rem] text-ink placeholder:text-muted border-b border-[var(--color-line)] pb-1 focus:outline-none focus:border-ink" />
-                      <div className="flex gap-1.5">
-                        {sides.map((s) => (
-                          <button key={s} onClick={() => setNewSide(s)}
-                            className={cn('rounded-full px-3 py-1.5 text-[0.72rem] transition-colors cursor-pointer',
-                              newSide === s ? 'bg-ink text-canvas' : 'rule text-ink-soft hover:bg-shell')}>
-                            {t(s)}
-                          </button>
-                        ))}
-                      </div>
-                      <button onClick={addGuest} aria-label={t('Gem gæst')}
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-canvas hover:opacity-90 transition-opacity cursor-pointer"
-                        style={{ background: 'var(--color-ink)' }}>
-                        <Check size={14} />
-                      </button>
-                      <button onClick={() => setAdding(false)} aria-label={t('Annuller')}
-                        className="text-muted hover:text-ink transition-colors cursor-pointer">
-                        <X size={15} />
-                      </button>
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
-                      <label className="flex flex-1 min-w-[150px] items-center gap-2 border-b border-[var(--color-line)] pb-1">
-                        <Mail size={13} className="shrink-0 text-muted" />
-                        <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') addGuest(); if (e.key === 'Escape') setAdding(false); }}
-                          placeholder={t('Email (valgfri)')} aria-label={t('Gæstens email')}
-                          className="w-full bg-transparent text-[0.85rem] text-ink placeholder:text-muted focus:outline-none" />
-                      </label>
-                      <label className="flex flex-1 min-w-[150px] items-center gap-2 border-b border-[var(--color-line)] pb-1">
-                        <Phone size={13} className="shrink-0 text-muted" />
-                        <input type="tel" value={newPhone} onChange={(e) => setNewPhone(e.target.value)}
-                          onKeyDown={(e) => { if (e.key === 'Enter') addGuest(); if (e.key === 'Escape') setAdding(false); }}
-                          placeholder={t('Telefon (valgfri)')} aria-label={t('Gæstens telefon')}
-                          className="w-full bg-transparent text-[0.85rem] text-ink placeholder:text-muted focus:outline-none" />
-                      </label>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
             {/* Search + mobile add */}
             <div className="mt-6 flex items-center gap-3">
               <div className="flex flex-1 items-center gap-2 rounded-full rule bg-card px-4 py-2.5">
@@ -246,7 +182,7 @@ export default function Guests() {
               <span className="text-[0.62rem] font-semibold tracking-[0.2em] uppercase text-muted">-</span>
             </div>
             <div className="divide-y divide-[var(--color-line)]">
-              {list.map((g, i) => <GuestRow key={g.id} g={g} i={i} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g.id)} onCycle={() => cycleRsvp(g)} onSave={(patch) => updateGuest(g.id, patch)} />)}
+              {list.map((g, i) => <GuestRow key={g.id} g={g} i={i} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g.id)} onCycle={() => cycleRsvp(g)} onEdit={() => setDialog(g)} />)}
             </div>
             {list.length === 0 && (
               <p className="py-10 text-center font-serif text-[1.1rem] italic text-muted">
@@ -260,45 +196,36 @@ export default function Guests() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {dialog && (
+        <GuestDialog
+          guest={dialog === 'new' ? null : dialog}
+          sides={sides}
+          onClose={() => setDialog(null)}
+          onSave={saveDialog}
+          onDelete={dialog === 'new' ? undefined : () => { removeGuest(dialog.id); setDialog(null); }}
+        />
+      )}
     </div>
   );
 }
 
-function GuestRow({ g, i, link, onRemove, onCycle, onSave }: { g: GuestRecord; i: number; link: string | null; onRemove: () => void; onCycle: () => void; onSave: (patch: Partial<GuestRecord>) => void }) {
+function GuestRow({ g, i, link, onRemove, onCycle, onEdit }: { g: GuestRecord; i: number; link: string | null; onRemove: () => void; onCycle: () => void; onEdit: () => void }) {
   const { t } = useLang();
   const isAfbud = g.rsvp === 'nej';
   const rsvpLabel = isAfbud ? t('afbud') : t(g.rsvp);
   const tone = g.rsvp === 'ja' ? 'success' : g.rsvp === 'afventer' ? 'clay' : 'neutral';
   const [copied, setCopied] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [editEmail, setEditEmail] = useState(g.email ?? '');
-  const [editPhone, setEditPhone] = useState(g.phone ?? '');
-  /* Dietary notes only ever arrived from the guest's own RSVP. The couple
-     could read them and never write one, which is no good for the aunt who
-     told them over the phone, and it is their guest list. */
-  const [editDiet, setEditDiet] = useState(g.dietary ?? '');
-  const detail = [g.plus_one_name && `+ ${g.plus_one_name}`, g.dietary && g.dietary].filter(Boolean).join(' · ');
+  const detail = [
+    g.plus_one_name && `+ ${g.plus_one_name}`,
+    dietarySummary(g.dietary_tags, g.dietary) || null,
+  ].filter(Boolean).join(' · ');
 
   const copyLink = () => {
     if (!link) return;
     navigator.clipboard.writeText(link).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 1600);
-  };
-
-  const openEdit = () => {
-    setEditEmail(g.email ?? '');
-    setEditPhone(g.phone ?? '');
-    setEditDiet(g.dietary ?? '');
-    setEditing(true);
-  };
-  const saveEdit = () => {
-    onSave({
-      email: editEmail.trim() || null,
-      phone: editPhone.trim() || null,
-      dietary: editDiet.trim() || null,
-    });
-    setEditing(false);
   };
 
   return (
@@ -340,8 +267,8 @@ function GuestRow({ g, i, link, onRemove, onCycle, onSave }: { g: GuestRecord; i
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <button onClick={editing ? () => setEditing(false) : openEdit} aria-label={t('Rediger kontakt for {name}', { name: g.name })} title={t('Rediger kontakt og kostbehov')}
-            className={cn('transition-colors cursor-pointer', editing ? 'text-ink' : 'text-muted/50 hover:text-ink')}>
+          <button onClick={onEdit} aria-label={t('Rediger {name}', { name: g.name })} title={t('Rediger gæsten')}
+            className="text-muted/50 transition-colors hover:text-ink cursor-pointer">
             <Pencil size={13} />
           </button>
           {link && (
@@ -357,43 +284,6 @@ function GuestRow({ g, i, link, onRemove, onCycle, onSave }: { g: GuestRecord; i
         </div>
       </div>
 
-      <AnimatePresence>
-        {editing && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }}
-            className="overflow-hidden">
-            <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl rule bg-card px-4 py-3">
-              <label className="flex flex-1 min-w-[150px] items-center gap-2 border-b border-[var(--color-line)] pb-1">
-                <Mail size={13} className="shrink-0 text-muted" />
-                <input type="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditing(false); }}
-                  placeholder={t('Email')} aria-label={t('Email for {name}', { name: g.name })}
-                  className="w-full bg-transparent text-[0.85rem] text-ink placeholder:text-muted focus:outline-none" />
-              </label>
-              <label className="flex flex-1 min-w-[150px] items-center gap-2 border-b border-[var(--color-line)] pb-1">
-                <Phone size={13} className="shrink-0 text-muted" />
-                <input type="tel" value={editPhone} onChange={(e) => setEditPhone(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditing(false); }}
-                  placeholder={t('Telefon')} aria-label={t('Telefon for {name}', { name: g.name })}
-                  className="w-full bg-transparent text-[0.85rem] text-ink placeholder:text-muted focus:outline-none" />
-              </label>
-              <label className="flex flex-1 min-w-[150px] items-center gap-2 border-b border-[var(--color-line)] pb-1">
-                <Salad size={13} className="shrink-0 text-muted" />
-                <input type="text" value={editDiet} onChange={(e) => setEditDiet(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditing(false); }}
-                  placeholder={t('Kostbehov, fx vegetar')} aria-label={t('Kostbehov for {name}', { name: g.name })}
-                  className="w-full bg-transparent text-[0.85rem] text-ink placeholder:text-muted focus:outline-none" />
-              </label>
-              <button onClick={saveEdit} aria-label={t('Gem kontakt')}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-canvas hover:opacity-90 transition-opacity cursor-pointer"
-                style={{ background: 'var(--color-ink)' }}>
-                <Check size={14} />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 }

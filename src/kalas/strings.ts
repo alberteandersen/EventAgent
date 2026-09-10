@@ -2190,6 +2190,7 @@ export const EN: Record<string, string> = {
     'Notes for vendors — what happens, and who does what?',
   '{n} øjeblikke': '{n} moments',
   'Ét øjeblik — en dag er begyndt': 'One moment — a day has begun',
+  'Tidsrum': 'Time span',
   'Punkter': 'Moments',
   'Pauser': 'Breaks',
   '1 overlap': '1 overlap',

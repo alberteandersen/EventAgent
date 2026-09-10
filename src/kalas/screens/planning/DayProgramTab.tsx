@@ -309,7 +309,7 @@ export function DayProgram({
           loose numbers that have to be decoded — "1 pauser" least of all. */}
       {span && (
         <div className="mt-4 flex flex-wrap items-end gap-x-7 gap-y-3 rounded-2xl rule bg-card px-4 py-3">
-          <Stat label={t('Dagen')}>
+          <Stat label={t('Tidsrum')}>
             <span className="font-serif text-[1.05rem] text-ink tabular-nums">{span.start} – {span.end}</span>
           </Stat>
           <Stat label={t('Varighed')}>{formatDuration(span.totalMin)}</Stat>

@@ -382,6 +382,21 @@ export interface BudgetItemRow {
   created_at: string;
 }
 
+/** One priced line within a budget category — a tent, chairs, tables, each
+ *  possibly from a different vendor — linked by (event_id, category), not a
+ *  FK to a specific budget_items row (see budget_sub_items migration). */
+export interface BudgetSubItemRow {
+  id: string;
+  event_id: string;
+  user_id: string;
+  category: string;
+  label: string;
+  vendor: string | null;
+  amount: number;
+  sort: number;
+  created_at: string;
+}
+
 /** Ava's structured contract review (Gemini output), stored on budget_contracts.review. */
 export interface ContractReview {
   vendorName?: string;

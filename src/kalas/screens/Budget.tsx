@@ -51,7 +51,10 @@ function daysUntil(dateStr: string): number | null {
 
 export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget) => void }) {
   const { t } = useLang();
-  const { loading, couple, event, budgetItems, saveBudgetItem, deleteBudgetItem, updateEvent } = useWedding();
+  const {
+    loading, couple, event, budgetItems, saveBudgetItem, deleteBudgetItem, updateEvent,
+    budgetSubItems, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem,
+  } = useWedding();
 
   // What the estimate is built on. Their own figure wins; a headcount is the
   // fallback. Zero means we know neither, and nothing is guessed.
@@ -425,6 +428,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           const note = noteById[b.id] ?? '';
           const Icon = resolveBudgetIcon(b.icon);
           const custom = isCustomLine(b.id);
+          const subCount = budgetSubItems.filter((s) => s.category === b.id).length;
           return (
           <motion.div key={b.id}
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -509,6 +513,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               </span>
 
               <span className="flex shrink-0 items-center gap-1.5">
+                {subCount > 0 && <span className="text-[0.72rem] text-muted">{t('{n} poster', { n: subCount })}</span>}
                 {reminder && <Bell size={12} className="text-clay" aria-hidden />}
                 {note && <StickyNote size={12} className="text-clay" aria-hidden />}
                 <ChevronRight
@@ -667,6 +672,10 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               if (patch.reminder_at) setReminderById((r) => ({ ...r, [b.id]: patch.reminder_at! }));
               persistField(b.id, patch);
             }}
+            subItems={budgetSubItems.filter((s) => s.category === b.id)}
+            onAddSubItem={(item) => void addBudgetSubItem({ category: b.id, ...item })}
+            onUpdateSubItem={(id, patch) => void updateBudgetSubItem(id, patch)}
+            onDeleteSubItem={(id) => void deleteBudgetSubItem(id)}
           />
         );
       })()}

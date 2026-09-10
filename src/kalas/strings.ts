@@ -2141,4 +2141,19 @@ export const EN: Record<string, string> = {
     "Amounts you've already spent or paid are never reduced.",
   'Brug forslaget': "Use this suggestion",
   'Brugt': 'Applied',
+
+  // ── Budget: sub-items nested under one category ─────────────────────
+  'Underposter': 'Sub-items',
+  'Beløb': 'Amount',
+  'Sum af underposter': 'Sum of sub-items',
+  'Brug summen': 'Use the sum',
+  'Tilføj underpost': 'Add sub-item',
+  'Navn på underpost': 'Sub-item name',
+  'Navn på ny underpost': 'New sub-item name',
+  'Sæt Faktisk pris til summen af underposterne': 'Set Actual cost to the sub-items total',
+  'Fx telt, stole, borde…': 'E.g. tent, chairs, tables…',
+  'Underposterne summer til {sum} kr — Faktisk pris er {actual} kr.':
+    'The sub-items sum to {sum} kr — Actual cost is {actual} kr.',
+  'Slet {label}': 'Delete {label}',
+  '{n} poster': '{n} items',
 };

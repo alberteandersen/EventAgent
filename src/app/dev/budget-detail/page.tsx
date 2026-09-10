@@ -9,11 +9,18 @@
 import { useState } from 'react';
 import { LanguageProvider } from '@/kalas/i18n';
 import BudgetLineDetail from '@/kalas/screens/BudgetLineDetail';
+import type { BudgetSubItemRow } from '@/lib/db/types';
+
+const now = new Date().toISOString();
 
 export default function DevBudgetDetailPage() {
   const [open, setOpen] = useState(true);
   const [log, setLog] = useState<string[]>([]);
   const note = (line: string) => setLog((l) => [...l, line]);
+  const [subItems, setSubItems] = useState<BudgetSubItemRow[]>([
+    { id: 's1', event_id: 'dev', user_id: 'dev', category: 'custom-1', label: 'Telt', vendor: 'Partytelte ApS', amount: 15000, sort: 0, created_at: now },
+    { id: 's2', event_id: 'dev', user_id: 'dev', category: 'custom-1', label: 'Stole', vendor: 'Møbeludlejning Fyn', amount: 3000, sort: 1, created_at: now },
+  ]);
 
   return (
     <LanguageProvider initialLang="da">
@@ -47,6 +54,23 @@ export default function DevBudgetDetailPage() {
             onSave={(patch) => note(`save: ${JSON.stringify(patch)}`)}
             onDelete={() => { note('delete'); setOpen(false); }}
             onContractApply={(patch) => note(`contract: ${JSON.stringify(patch)}`)}
+            subItems={subItems}
+            onAddSubItem={(item) => {
+              const row: BudgetSubItemRow = {
+                id: `s${Date.now()}`, event_id: 'dev', user_id: 'dev', category: 'custom-1',
+                label: item.label, vendor: item.vendor ?? null, amount: item.amount, sort: subItems.length, created_at: now,
+              };
+              setSubItems((rows) => [...rows, row]);
+              note(`add sub-item: ${JSON.stringify(item)}`);
+            }}
+            onUpdateSubItem={(id, patch) => {
+              setSubItems((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+              note(`update sub-item ${id}: ${JSON.stringify(patch)}`);
+            }}
+            onDeleteSubItem={(id) => {
+              setSubItems((rows) => rows.filter((r) => r.id !== id));
+              note(`delete sub-item ${id}`);
+            }}
           />
         )}
       </div>

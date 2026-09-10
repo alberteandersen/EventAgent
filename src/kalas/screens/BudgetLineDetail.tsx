@@ -11,12 +11,13 @@
    Edits are a draft until "Gem ændringer": nothing here calls the parent's
    persist functions until Save is pressed, so a stray keystroke in the note
    field before closing the panel can't silently commit. The contract panel
-   is the one exception — it manages its own upload/review calls to its own
-   API, same as it always has, independent of this draft. */
+   and the sub-items list are the exceptions — each manages its own rows with
+   its own ids, independent of this draft, same as it always has for the
+   contract panel. */
 
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Trash2, Check, ExternalLink } from 'lucide-react';
+import { X, Trash2, Check, ExternalLink, Plus } from 'lucide-react';
 import BudgetContractPanel from './BudgetContractPanel';
 import {
   BUDGET_COLORS,
@@ -26,6 +27,7 @@ import {
 } from '../lib/budget-style';
 import { Eyebrow, cn } from '../ui';
 import { useLang } from '../i18n';
+import type { BudgetSubItemRow } from '@/lib/db/types';
 
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
 
@@ -51,6 +53,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const fieldCls =
   'w-full rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 tabular-nums focus:outline-none focus:border-[var(--color-sage-strong)]';
+// Same look, no baked-in `w-full` — for a field that shares a flex row with
+// others, since `w-full` fights `flex-1`/a fixed width utility for which one
+// wins, and which one wins isn't reliable.
+const rowFieldCls =
+  'min-w-0 rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 tabular-nums focus:outline-none focus:border-[var(--color-sage-strong)]';
 
 export default function BudgetLineDetail({
   eventId,
@@ -65,11 +72,15 @@ export default function BudgetLineDetail({
   reminder,
   note,
   findLabel,
+  subItems,
   onClose,
   onSave,
   onDelete,
   onFindVendors,
   onContractApply,
+  onAddSubItem,
+  onUpdateSubItem,
+  onDeleteSubItem,
 }: {
   eventId: string | null;
   categoryId: string;
@@ -86,6 +97,8 @@ export default function BudgetLineDetail({
   note: string;
   /** "Se venues der matcher jer" for the venue line, "Se top matches" otherwise. */
   findLabel?: string;
+  /** Already filtered to this category, from Budget.tsx. */
+  subItems: BudgetSubItemRow[];
   onClose: () => void;
   onSave: (patch: {
     label: string; icon: string; color: string;
@@ -94,6 +107,9 @@ export default function BudgetLineDetail({
   onDelete: () => void;
   onFindVendors?: () => void;
   onContractApply: (patch: { actual_cost?: number; reminder_at?: string }) => void;
+  onAddSubItem: (item: { label: string; vendor?: string | null; amount: number }) => void;
+  onUpdateSubItem: (id: string, patch: { label?: string; vendor?: string | null; amount?: number }) => void;
+  onDeleteSubItem: (id: string) => void;
 }) {
   const { t } = useLang();
 
@@ -107,6 +123,9 @@ export default function BudgetLineDetail({
   const [dReminder, setDReminder] = useState(reminder);
   const [dNote, setDNote] = useState(note);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [newSubLabel, setNewSubLabel] = useState('');
+  const [newSubVendor, setNewSubVendor] = useState('');
+  const [newSubAmount, setNewSubAmount] = useState('');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -124,6 +143,16 @@ export default function BudgetLineDetail({
     const cleanLabel = dLabel.trim() || label;
     onSave({ label: cleanLabel, icon: dIcon, color: dColor, actual: dActual, paid: dPaid, reminder: dReminder, note: dNote });
     onClose();
+  };
+
+  const subTotal = subItems.reduce((a, s) => a + s.amount, 0);
+  const addSubItem = () => {
+    const cleanLabel = newSubLabel.trim();
+    if (!cleanLabel) return;
+    onAddSubItem({ label: cleanLabel, vendor: newSubVendor.trim() || null, amount: Math.max(0, Number(newSubAmount) || 0) });
+    setNewSubLabel('');
+    setNewSubVendor('');
+    setNewSubAmount('');
   };
 
   return (
@@ -243,11 +272,23 @@ export default function BudgetLineDetail({
             <Eyebrow>{t('Betalinger')}</Eyebrow>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <Field label={t('Faktisk pris')}>
-                <input
-                  type="number" min={0} step={500} value={dActual || ''} placeholder="0"
-                  onChange={(e) => setDActual(Math.max(0, Number(e.target.value)))}
-                  className={fieldCls}
-                />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number" min={0} step={500} value={dActual || ''} placeholder="0"
+                    onChange={(e) => setDActual(Math.max(0, Number(e.target.value)))}
+                    className={fieldCls}
+                  />
+                  {subItems.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setDActual(subTotal)}
+                      title={t('Sæt Faktisk pris til summen af underposterne')}
+                      className="shrink-0 whitespace-nowrap rounded-full border border-line px-2.5 py-2 text-[0.72rem] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
+                    >
+                      {t('Brug summen')}
+                    </button>
+                  )}
+                </div>
               </Field>
               <Field label={t('Betalt')}>
                 <input
@@ -273,6 +314,108 @@ export default function BudgetLineDetail({
                 </span>
               )}
             </div>
+            {/* Not an error state — the two numbers are allowed to genuinely
+                differ (a rebate, a deposit not yet in the sub-items, a rough
+                guess before every vendor is confirmed). Just surface both. */}
+            {subTotal > 0 && dActual !== subTotal && (
+              <p className="mt-2 text-[0.76rem] text-muted">
+                {t('Underposterne summer til {sum} kr — Faktisk pris er {actual} kr.', { sum: kr(subTotal), actual: kr(dActual) })}
+              </p>
+            )}
+          </section>
+
+          {/* Underposter — several vendors under one category: a tent from
+              one place, chairs and tables from another. Fires immediately,
+              same exception as the contract panel below: each row is its own
+              id, so there's nothing to reconcile on Save, and an immediate
+              write means Annuller can't undo an already-saved sub-item. */}
+          <section>
+            <Eyebrow>{t('Underposter')}</Eyebrow>
+            <div className="mt-3 space-y-2">
+              {subItems.map((s) => (
+                <div key={s.id} className="flex items-center gap-2">
+                  <input
+                    defaultValue={s.label}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v && v !== s.label) onUpdateSubItem(s.id, { label: v });
+                      else e.target.value = s.label;
+                    }}
+                    aria-label={t('Navn på underpost')}
+                    className={cn(rowFieldCls, 'flex-1')}
+                  />
+                  <input
+                    defaultValue={s.vendor ?? ''}
+                    placeholder={t('Leverandør')}
+                    onBlur={(e) => {
+                      const v = e.target.value.trim();
+                      if (v !== (s.vendor ?? '')) onUpdateSubItem(s.id, { vendor: v || null });
+                    }}
+                    aria-label={t('Leverandør')}
+                    className={cn(rowFieldCls, 'w-32 shrink-0')}
+                  />
+                  <input
+                    type="number" min={0} step={100}
+                    defaultValue={s.amount || ''}
+                    placeholder="0"
+                    onBlur={(e) => {
+                      const v = Math.max(0, Number(e.target.value));
+                      if (v !== s.amount) onUpdateSubItem(s.id, { amount: v });
+                    }}
+                    aria-label={t('Beløb')}
+                    className={cn(rowFieldCls, 'w-24 shrink-0 tabular-nums')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => onDeleteSubItem(s.id)}
+                    aria-label={t('Slet {label}', { label: s.label })}
+                    className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-shell hover:text-[var(--color-terracotta)] cursor-pointer"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+
+              <div className="flex items-center gap-2">
+                <input
+                  value={newSubLabel}
+                  onChange={(e) => setNewSubLabel(e.target.value)}
+                  placeholder={t('Fx telt, stole, borde…')}
+                  aria-label={t('Navn på ny underpost')}
+                  className={cn(rowFieldCls, 'flex-1')}
+                />
+                <input
+                  value={newSubVendor}
+                  onChange={(e) => setNewSubVendor(e.target.value)}
+                  placeholder={t('Leverandør')}
+                  aria-label={t('Leverandør')}
+                  className={cn(rowFieldCls, 'w-32 shrink-0')}
+                />
+                <input
+                  type="number" min={0} step={100}
+                  value={newSubAmount}
+                  onChange={(e) => setNewSubAmount(e.target.value)}
+                  placeholder="0"
+                  aria-label={t('Beløb')}
+                  className={cn(rowFieldCls, 'w-24 shrink-0 tabular-nums')}
+                />
+                <button
+                  type="button"
+                  onClick={addSubItem}
+                  disabled={!newSubLabel.trim()}
+                  aria-label={t('Tilføj underpost')}
+                  className="shrink-0 rounded-full bg-ink p-1.5 text-canvas transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                >
+                  <Plus size={14} />
+                </button>
+              </div>
+            </div>
+
+            {subItems.length > 0 && (
+              <p className="mt-3 text-[0.78rem] text-muted">
+                {t('Sum af underposter')} <b className="text-ink tabular-nums">{kr(subTotal)} kr</b>
+              </p>
+            )}
           </section>
 
           {/* Betalingsplan */}

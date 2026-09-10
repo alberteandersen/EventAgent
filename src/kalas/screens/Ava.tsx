@@ -18,9 +18,7 @@ import {
   batchLabel,
   batchSupplierFilter,
 } from '@/lib/vendor-batch';
-import { useWalkthrough } from '../useWalkthrough';
-import WalkthroughChips from '../WalkthroughChips';
-import type { WalkthroughParams } from '../walkthrough';
+import RichText from '../chat/RichText';
 
 export default function Ava({
   onNavigate,
@@ -28,8 +26,9 @@ export default function Ava({
   onUiAction,
   uiMode = 'classic',
   variant = 'page',
-  walkthroughActive = false,
-  onWalkthroughFinish,
+  pendingPrompt = null,
+  onPendingPromptSent,
+  onPendingPromptDone,
 }: {
   onNavigate?: (s: NavigateTarget) => void;
   onClose?: () => void;
@@ -37,20 +36,14 @@ export default function Ava({
   onUiAction?: (action: AgentUiAction) => void;
   uiMode?: 'chat' | 'classic';
   variant?: 'page' | 'drawer';
-  /** Runs Ava's post-onboarding walkthrough inside this chat. */
-  walkthroughActive?: boolean;
-  onWalkthroughFinish?: (mode: 'chat' | 'classic') => void;
+  /** A prompt handed over by the guided tour, sent once the history is in. */
+  pendingPrompt?: string | null;
+  onPendingPromptSent?: () => void;
+  /** Fires when that prompt's turn has finished, so the tour can react. */
+  onPendingPromptDone?: () => void;
 }) {
   const { loading, event, couple } = useWedding();
   const { t } = useLang();
-
-  // The walkthrough runs inside the chat, which needs a wedding to attach to.
-  // If there is none, release the flag rather than pinning them in chat mode
-  // with the mode toggle hidden and no way to finish.
-  const stuck = walkthroughActive && !loading && !event;
-  useEffect(() => {
-    if (stuck) onWalkthroughFinish?.('chat');
-  }, [stuck, onWalkthroughFinish]);
 
   const shellClass = variant === 'drawer'
     ? 'flex h-full flex-col'
@@ -88,29 +81,11 @@ export default function Ava({
       onUiAction={onUiAction}
       uiMode={uiMode}
       variant={variant}
-      walkthroughActive={walkthroughActive}
-      onWalkthroughFinish={onWalkthroughFinish}
+      pendingPrompt={pendingPrompt}
+      onPendingPromptSent={onPendingPromptSent}
+      onPendingPromptDone={onPendingPromptDone}
     />
   );
-}
-
-/** Placeholders for the walkthrough's try-prompts, from the couple's own answers. */
-function walkthroughParams(
-  event: { location: string | null; date_hint: string | null } | null,
-  couple: { guests: number; budgetTotal: number; dateLabel: string },
-): Partial<WalkthroughParams> {
-  const p: Partial<WalkthroughParams> = {};
-  if (event?.location) p.city = event.location;
-  if (couple.guests > 0) p.guests = couple.guests;
-  if (couple.budgetTotal > 0) {
-    // ~30 % of the total is the usual food-and-drink share; round to 5.000 kr
-    // so the suggested prompt reads like something a person would type.
-    const food = Math.round((couple.budgetTotal * 0.3) / 5_000) * 5_000;
-    if (food > 0) p.foodBudget = food.toLocaleString('da-DK');
-  }
-  const when = event?.date_hint || couple.dateLabel;
-  if (when) p.dateHint = when;
-  return p;
 }
 
 function AvaChat({
@@ -121,8 +96,9 @@ function AvaChat({
   onUiAction,
   uiMode,
   variant,
-  walkthroughActive,
-  onWalkthroughFinish,
+  pendingPrompt,
+  onPendingPromptSent,
+  onPendingPromptDone,
 }: {
   eventId: string;
   coupleA: string;
@@ -131,22 +107,32 @@ function AvaChat({
   onUiAction?: (action: AgentUiAction) => void;
   uiMode: 'chat' | 'classic';
   variant: 'page' | 'drawer';
-  walkthroughActive?: boolean;
-  onWalkthroughFinish?: (mode: 'chat' | 'classic') => void;
+  pendingPrompt?: string | null;
+  onPendingPromptSent?: () => void;
+  onPendingPromptDone?: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
-  const { refresh, venues, event, couple } = useWedding();
+  const { refresh, venues } = useWedding();
+  /* Set while a tour prompt is in flight, so its completion can be reported
+     back without every other turn in the chat looking like one. */
+  const tourTurnRef = useRef(false);
   const { messages, agentStatus, sendMessage, setMessages } = useAgentChat({
     initialEventId: eventId,
-    onTurnComplete: () => void refresh(),
+    onTurnComplete: () => {
+      void refresh();
+      if (tourTurnRef.current) {
+        tourTurnRef.current = false;
+        onPendingPromptDone?.();
+      }
+    },
     onUiAction,
     uiMode,
   });
   const { t } = useLang();
   const [draft, setDraft] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
-  // The history load replaces the message array wholesale, so the walkthrough
-  // must wait for it — otherwise its bubbles get wiped on arrival.
+  // The history load replaces the message array wholesale, so a handed-over
+  // prompt must wait for it — otherwise its reply is wiped on arrival.
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
   // Load the real chat history, then subscribe for live agent/cron messages.
@@ -193,17 +179,21 @@ function AvaChat({
     };
   }, [supabase, eventId, setMessages]);
 
-  const wt = useWalkthrough({
-    active: Boolean(walkthroughActive),
-    historyLoaded,
-    params: useMemo(() => walkthroughParams(event, couple), [event, couple]),
-    onNavigate,
-    sendMessage,
-    setMessages,
-    onFinish: (mode) => onWalkthroughFinish?.(mode),
-  });
+  /* A prompt the guided tour handed over — its "prøv" buttons live on the tour
+     card, outside this component, in both modes. Waits for the history, then
+     clears through the callback so it is sent exactly once. */
+  const sentRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!historyLoaded || !pendingPrompt) return;
+    if (sentRef.current === pendingPrompt) return;
+    sentRef.current = pendingPrompt;
+    tourTurnRef.current = true;
+    void sendMessage(pendingPrompt);
+    onPendingPromptSent?.();
+  }, [historyLoaded, pendingPrompt, sendMessage, onPendingPromptSent]);
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, agentStatus, wt.step]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, agentStatus]);
 
   const visible = messages.filter((m) => m.role === 'user' || m.role === 'assistant');
 
@@ -241,13 +231,12 @@ function AvaChat({
             <Bubble key={m.id} msg={m} onNavigate={onNavigate} venues={venues} onRefresh={refresh} />
           ))}
           {agentStatus && <TypingDots label={agentStatus} />}
-          {!agentStatus && wt.step && <WalkthroughChips wt={wt} />}
           <div ref={endRef} />
         </div>
       </div>
 
       <div className="border-t border-[#d9ded9] pb-3 pt-2">
-        <form onSubmit={(e) => { e.preventDefault(); const msg = draft; setDraft(''); wt.noteTurn(); void sendMessage(msg); }}
+        <form onSubmit={(e) => { e.preventDefault(); const msg = draft; setDraft(''); void sendMessage(msg); }}
           className="focus-shell flex items-center gap-2 rounded-full rule bg-card px-2 py-2">
           <button type="button" aria-label={t('Vedhæft fil')} disabled
             className="flex h-10 w-10 items-center justify-center rounded-full text-faint cursor-not-allowed">
@@ -283,9 +272,11 @@ function Bubble({
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
       className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}>
       {msg.content && (
-        <div className={cn('max-w-[80%] whitespace-pre-line rounded-3xl px-5 py-3.5 text-[0.97rem] leading-relaxed',
+        <div className={cn('max-w-[80%] rounded-3xl px-5 py-3.5 text-[0.97rem] leading-relaxed',
           mine ? 'rounded-br-lg bg-ink text-canvas' : 'rounded-bl-lg rule bg-card text-ink')}>
-          {msg.content}
+          {/* The couple's own line is short and literal; Ava's is the one that
+              needs paragraphs and bullets to stay skimmable. */}
+          {mine ? <span className="whitespace-pre-line">{msg.content}</span> : <RichText text={msg.content} />}
         </div>
       )}
       {msg.payload && (

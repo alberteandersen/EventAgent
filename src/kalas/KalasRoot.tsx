@@ -3,11 +3,13 @@
 /* Authenticated Kalas app. Mounted at /home via next/dynamic with ssr:false,
    so sessionStorage/window access in the screens is safe. Onboarding lives
    on its own Next route (/onboarding), no phase state here. */
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
-import { WALKTHROUGH_KEY } from './walkthrough';
+import { tourFact } from './tourFacts';
+import { armTour, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS, walkthroughParams } from './walkthrough';
+import GuidedTour from './GuidedTour';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
 import { LanguageProvider, type Lang } from './i18n';
@@ -46,7 +48,7 @@ export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }
 
 function AppInner() {
   const { pendingCount } = useKalas();
-  const { replies } = useWedding();
+  const { replies, event, couple, venues, guests, timelineTasks } = useWedding();
   const inboxBadge = replies.filter((r) => !r.read_at).length;
   const [hubTick, setHubTick] = useState(0);
   // Chat mode: collapsed icon-rail + Ava-driven stage. Sticky across visits.
@@ -65,18 +67,42 @@ function AppInner() {
     if (saved === 'ava' || saved === 'inspiration') return 'home';
     return migrateSavedScreen(saved) || 'home';
   });
-  // Ava's one-time walkthrough, armed by onboarding completion (or `?walkthrough=1`
-  // so it can be replayed on demand). It runs inside the chat, so it forces chat
-  // mode until the couple picks a mode at the end.
+  // Ava's one-time guided tour, armed by onboarding completion (or
+  // `?walkthrough=1` so it can be replayed on demand). One tour, mounted below
+  // both shells: onboarding lands every couple in chat mode, so a tour that
+  // only ran in classic was a tour nobody was shown.
   const [walkthroughActive, setWalkthroughActive] = useState(() => {
     try {
-      if (new URLSearchParams(window.location.search).get('walkthrough') === '1') {
-        localStorage.setItem(WALKTHROUGH_KEY, '0');
-        return true;
+      const decision = armTour({
+        param: new URLSearchParams(window.location.search).get('walkthrough'),
+        progress: localStorage.getItem(WALKTHROUGH_KEY),
+        done: localStorage.getItem(WALKTHROUGH_DONE_KEY),
+      });
+      if (decision.setProgress !== undefined) localStorage.setItem(WALKTHROUGH_KEY, decision.setProgress);
+      if (decision.clearDone) localStorage.removeItem(WALKTHROUGH_DONE_KEY);
+      if (decision.stripParam) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('walkthrough');
+        window.history.replaceState(null, '', url.toString());
       }
-      return localStorage.getItem(WALKTHROUGH_KEY) !== null;
+      return decision.active;
     } catch { return false; }
   });
+
+  /* The tour's step lives here rather than inside it: switching mode swaps
+     which shell the tour is mounted under, and state inside it would be read
+     back from storage each time — replaying the step they had just done. */
+  const [tourStep, setTourStep] = useState(() => {
+    try {
+      const raw = localStorage.getItem(WALKTHROUGH_KEY);
+      const n = raw === null ? 0 : Number.parseInt(raw, 10);
+      return Number.isFinite(n) ? Math.max(n, 0) : 0;
+    } catch { return 0; }
+  });
+  useEffect(() => {
+    if (!walkthroughActive) return;
+    try { localStorage.setItem(WALKTHROUGH_KEY, String(tourStep)); } catch { /* ignore */ }
+  }, [walkthroughActive, tourStep]);
 
   const toggleChatMode = useCallback((on: boolean) => {
     setChatMode(on);
@@ -100,6 +126,22 @@ function AppInner() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  /* The page follows the tour, exactly once per step. It lives up here with
+     the step it belongs to: inside the tour it re-fired on re-render and on
+     the re-mount a mode change causes, so the couple was pulled back to Hjem
+     the instant they clicked a checklist row — the row navigated, and the
+     tour navigated straight back. */
+  const navigateRef = useRef<(s: NavigateTarget) => void>(() => {});
+  useEffect(() => { navigateRef.current = navigate; });
+  const navigatedForStep = useRef<number | null>(null);
+  useEffect(() => {
+    if (!walkthroughActive) return;
+    if (navigatedForStep.current === tourStep) return;
+    navigatedForStep.current = tourStep;
+    const page = WALKTHROUGH_STEPS[tourStep]?.page;
+    if (page) navigateRef.current(page);
+  }, [walkthroughActive, tourStep]);
+
   // Agent-fired navigation (streamed `ui` frames).
   const applyUiAction = useCallback((action: AgentUiAction) => {
     if (action.kind !== 'navigate') return;
@@ -112,7 +154,10 @@ function AppInner() {
 
   // End of the walkthrough: the couple's mode choice is the real one from here.
   const finishWalkthrough = useCallback((mode: 'chat' | 'classic') => {
-    try { localStorage.removeItem(WALKTHROUGH_KEY); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(WALKTHROUGH_KEY);
+      localStorage.setItem(WALKTHROUGH_DONE_KEY, '1');
+    } catch { /* ignore */ }
     setWalkthroughActive(false);
     toggleChatMode(mode === 'chat');
     if (mode === 'classic') {
@@ -139,9 +184,28 @@ function AppInner() {
 
   const activeScreen = screen === 'ava' ? 'home' : screen;
 
-  // The walkthrough lives in the chat, so it pins the app to chat mode until
-  // the couple makes their choice on the last step.
-  if (chatMode || walkthroughActive) {
+  const tour = walkthroughActive ? (
+    <GuidedTour
+      params={walkthroughParams(event, couple)}
+      onNavigate={navigate}
+      onFinish={finishWalkthrough}
+      fact={tourFact(WALKTHROUGH_STEPS[Math.min(tourStep, WALKTHROUGH_STEPS.length - 1)].id, {
+        region: couple.region,
+        guestEstimate: couple.guests,
+        budgetTotal: couple.budgetTotal,
+        dateISO: couple.dateISO,
+        venues,
+        guests,
+        tasks: timelineTasks,
+        unreadReplies: inboxBadge,
+      })}
+      chatMode={chatMode}
+      idx={Math.min(tourStep, WALKTHROUGH_STEPS.length - 1)}
+      setIdx={setTourStep}
+    />
+  ) : null;
+
+  if (chatMode) {
     return (
       <ChatShell
         current={activeScreen}
@@ -150,19 +214,18 @@ function AppInner() {
         stageSignal={stageTick}
         pendingCount={pendingCount}
         inboxBadge={inboxBadge}
-        hideModeToggle={walkthroughActive}
         chat={
           <Ava
             onNavigate={navigate}
             onUiAction={applyUiAction}
             uiMode="chat"
             variant="drawer"
-            walkthroughActive={walkthroughActive}
-            onWalkthroughFinish={finishWalkthrough}
           />
         }
+        hideModeToggle={walkthroughActive}
       >
         {screens[activeScreen as AppScreen]}
+        {tour}
       </ChatShell>
     );
   }
@@ -179,6 +242,7 @@ function AppInner() {
       <AnimatePresence mode="wait">
         <div key={activeScreen}>{screens[activeScreen as AppScreen]}</div>
       </AnimatePresence>
+      {tour}
     </Shell>
   );
 }

@@ -6,13 +6,18 @@
    panel of cities & wedding destinations for it. Country shapes are bundled
    Natural Earth data (countries-110m), no runtime fetches.
 
-   It also drills. Give it `places` and it draws a marker per region or town at
+   It does not draw place markers. Ten Danish regions sat on top of each other
+   as a clump of dots that read as damage on the map, and the panel beside the
+   globe already lists the same regions and towns with more room and a
+   breadcrumb. Countries are picked here, everything below that is picked
+   there. `focus` still flies the camera to whatever the panel selects, so the
+   two stay in step. It drills at
    the level the parent is on, and `focus` flies the camera there; the parent
-   owns the level, the breadcrumb and what a marker means. Both are optional,
+   owns the level and the breadcrumb. Both are optional,
    so the two screens that only ever wanted a country picker (Onboarding,
    Honeymoon) pass neither and get exactly what they had. */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Globe, { type GlobeMethods } from 'react-globe.gl';
 import * as THREE from 'three';
 import { feature } from 'topojson-client';
@@ -53,17 +58,12 @@ const countryName = (f: object) => (f as CountryFeature).properties.name;
 export default function DestinationGlobe({
   selectedCountry,
   onCountryPick,
-  places,
   focus,
-  onPlacePick,
 }: {
   selectedCountry: string | null;
   onCountryPick: (country: string, coords: { lat: number; lng: number }) => void;
-  /** Markers for the level the parent is showing. */
-  places?: GlobePlace[];
   /** Controlled camera. The globe flies whenever this changes. */
   focus?: GlobeFocus | null;
-  onPlacePick?: (place: GlobePlace) => void;
 }) {
   const { t } = useLang();
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
@@ -96,14 +96,10 @@ export default function DestinationGlobe({
     if (g) g.controls().autoRotate = false;
   };
 
-  /* Latest-value refs, so a marker element built once keeps calling the
-     current handlers instead of the ones that existed when it was made. */
-  const pickRef = useRef(onPlacePick);
+  /* Latest-value ref, so the fly-to effect reads the current focus instead of
+     the one that existed when it was made. */
   const focusRef = useRef(focus);
-  useEffect(() => {
-    pickRef.current = onPlacePick;
-    focusRef.current = focus;
-  }, [onPlacePick, focus]);
+  useEffect(() => { focusRef.current = focus; }, [focus]);
 
   const onReady = () => {
     const g = globeRef.current;
@@ -161,57 +157,6 @@ export default function DestinationGlobe({
     return 'rgba(169,179,128,0.22)';
   };
 
-  /* One marker: a dot, the name, and a heart. Built as real DOM because
-     react-globe.gl positions elements itself, it takes a node, not JSX.
-
-     Only the dot is drawn; the name rides in on hover. Labels
-     that are always on pile into an unreadable heap the moment the places are
-     close together, ten Danish regions on one small country, five towns in
-     one region, and no zoom level fixes that. The dot is the click target
-     either way, which is what keeps it usable on a touch screen, and the panel
-     beside the globe lists the same places in full. */
-  const marker = useCallback((d: object) => {
-    const p = d as GlobePlace;
-    const el = document.createElement('div');
-    el.style.pointerEvents = 'auto';
-    el.style.transform = 'translate(-50%, -50%)';
-    /* globe.gl raycasts from pointer events on the shared container, so a
-       click on a marker would also select the country underneath it. Stopping
-       `click` is not enough, the raycast runs on pointerdown/up. */
-    for (const type of ['pointerdown', 'pointerup', 'mousedown', 'mouseup'] as const) {
-      el.addEventListener(type, (e) => e.stopPropagation());
-    }
-    el.className = 'group relative flex items-center hover:z-10';
-
-    const dot = document.createElement('button');
-    dot.type = 'button';
-    dot.title = p.name;
-    dot.setAttribute('aria-label', p.name);
-    dot.className = p.kind === 'region'
-      ? 'block h-3 w-3 shrink-0 cursor-pointer rounded-full border-2 border-[#fffdf7] bg-[#24413a] shadow-[0_1px_4px_rgba(18,51,43,0.4)]'
-      : 'block h-3 w-3 shrink-0 cursor-pointer rounded-full border-2 border-[#fffdf7] bg-[#b34e37] shadow-[0_1px_4px_rgba(18,51,43,0.4)]';
-    dot.addEventListener('click', (e) => { e.stopPropagation(); pickRef.current?.(p); });
-    el.append(dot);
-
-    const pill = document.createElement('div');
-    pill.className = [
-      'absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 whitespace-nowrap',
-      'rounded-full border border-[#24413a]/25 bg-[#fffdf7]/95 py-0.5 pl-2 pr-1',
-      'shadow-[0_2px_10px_rgba(18,51,43,0.18)] backdrop-blur-sm',
-      'hidden group-hover:flex',
-    ].join(' ');
-
-    const open = document.createElement('button');
-    open.type = 'button';
-    open.className = 'cursor-pointer pr-0.5 text-[0.72rem] font-semibold text-[#24413a]';
-    // textContent, not innerHTML — these names come back from a model.
-    open.textContent = p.name;
-    open.addEventListener('click', (e) => { e.stopPropagation(); pickRef.current?.(p); });
-    pill.append(open);
-
-    el.append(pill);
-    return el;
-  }, []);
 
   return (
     <div
@@ -245,9 +190,6 @@ export default function DestinationGlobe({
             setHovered(f ? countryName(f as object) : null);
             if (wrapRef.current) wrapRef.current.style.cursor = f ? 'pointer' : 'grab';
           }}
-          htmlElementsData={places ?? []}
-          htmlAltitude={0.02}
-          htmlElement={marker}
           onGlobeReady={onReady}
         />
       )}

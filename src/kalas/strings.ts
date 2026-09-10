@@ -3,34 +3,135 @@
    Use {name} placeholders for interpolation via t(str, { name }). */
 
 export const EN: Record<string, string> = {
+  'Områder': 'Areas',
+
+  'Sæt i kalenderen': 'Add to calendar',
+
+  // ── Bryllupsrejse ───────────────────────────────────────────────────
+  'Se priser på Booking': 'See prices on Booking',
+
+  // ── Ønskeliste ──────────────────────────────────────────────────────
+  'Vores ønskeliste': 'Our wishlist',
+  '{n} ønsker på listen': '{n} wishes on the list',
+  'Del listen': 'Share the list',
+  'Link kopieret': 'Link copied',
+  'Udgiv jeres bryllupsside, så kan I dele listen.': 'Publish your wedding site to share the list.',
+  'Gæsterne kan se, hvad der er reserveret, så to ikke køber det samme. I kan ikke — det er hele overraskelsen.':
+    "Guests can see what's reserved, so two people don't buy the same thing. You can't — that's the whole surprise.",
+  'Under 300 kr': 'Under 300 kr',
+  '300–800 kr': '300–800 kr',
+  'Over 800 kr': 'Over 800 kr',
+  'Ingen ønsker i denne prisklasse.': 'No wishes in this price range.',
+
+  // ── Home: getting started ───────────────────────────────────────────
+  'Sæt jeres budget': 'Set your budget',
+  'Sæt jeres dato': 'Set your date',
+  'Ava fordeler det på kategorier bagefter': 'Ava splits it across categories afterwards',
+  'Tryk på datoen øverst på siden': 'Press the date at the top of the page',
+  'Ret datoen': 'Change the date',
+  'Tryk på {label} i menuen': 'Press {label} in the menu',
+  'Spring dette trin over': 'Skip this step',
+  'Fortæl Ava om jeres bryllup': 'Tell Ava about your wedding',
+  'Vi foreslår kr {amount}': 'We suggest kr {amount}',
+  '{n} af 3 på shortlisten': '{n} of 3 shortlisted',
+  'Ava søger på nettet og lægger dem på tavlen': 'Ava searches the web and puts them on the board',
+  '{n} af 10 tilføjet': '{n} of 10 added',
+  'Tilføj de første 10 gæster': 'Add the first 10 guests',
+  'I har været hele vejen igennem. Resten holder jeg øje med.':
+    "You've been all the way through. I'll keep an eye on the rest.",
+  'Resten af tjeklisten ligger under Tidslinje & tjekliste →':
+    'The rest of the checklist is under Timeline & checklist →',
+  'Forslag': 'Suggested',
+  'Brancheestimat for et dansk bryllup. Ret det hele.':
+    'Industry estimate for a Danish wedding. Change all of it.',
+  'Fortæl Ava jeres gæsteantal, så regner jeg et forslag':
+    'Tell Ava your headcount and I\'ll work out a suggestion',
+  'Importér fra CSV, eller tilføj de første ti i hånden':
+    'Import from CSV, or add the first ten by hand',
+  'Ava søger steder i {region} på det åbne web': 'Ava searches the open web for places in {region}',
+  'Ava søger steder på det åbne web og verificerer dem':
+    'Ava searches the open web for places and verifies them',
+  'Vælg et tema, og publicér når I er klar': 'Choose a theme, and publish when you are ready',
+
+  // ── Nygift: takkekort ───────────────────────────────────────────────
+  'Samme designs som jeres invitation, med teksten vendt om: I inviterede dem, nu takker I dem.':
+    'The same designs as your invitation, with the words turned around: you invited them, now you thank them.',
+  'Jeres egen hilsen': 'Your own words',
+  '{n} designs er skjult — de har ikke plads til jeres egen hilsen.':
+    '{n} designs are hidden — they have no room for your own words.',
+  'Fx: Tak fordi I dansede til den lyse morgen.': 'E.g. Thank you for dancing until dawn.',
+  '{n} mangler stadig en tak': '{n} still to thank',
+  'Alle har fået tak': 'Everyone has been thanked',
+  'Navnene står som de skal skrives på kortet.': 'The names read as they should be written on the card.',
+  'Kopiér hilsener': 'Copy greetings',
+  '+{n} flere': '+{n} more',
+  '{name} er valgt.': '{name} selected.',
+  'Send det med mail': 'Send it by email',
+
+  // ── Classic-mode walkthrough ────────────────────────────────────────
+  'Ava er i gang': 'Ava is working',
+  'Hun søger på nettet nu. Følg med i **samtalen til højre** — jeg siger til, når hun er færdig.':
+    "She's searching the web now. Follow along in **the conversation on the right** — I'll say when she's done.",
+  'Hvordan vil I helst arbejde?': 'How would you rather work?',
+  'Med Ava ved siden af': 'With Ava alongside',
+  'I skriver, hvad I vil have. Jeg søger på nettet, skriver til stederne, retter budgettet og åbner den rigtige side undervejs.':
+    'You say what you want. I search the web, write to the places, adjust the budget and open the right page as we go.',
+  'Klassisk, med menuen': 'Classic, with the menu',
+  'Alt ligger i menuen — venues, budget, gæster, hjemmeside. I styrer selv, og kan altid tilkalde mig.':
+    'Everything is in the menu — venues, budget, guests, website. You drive, and can call me in any time.',
+  'I kan skifte når som helst oppe i hjørnet.': 'You can switch any time, up in the corner.',
+  'Det her er jeres side': 'This is your page',
+  'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nKalas kan bruges på to måder: **med mig ved siden af**, hvor I skriver og jeg gør arbejdet, eller **klassisk**, hvor I klikker jer rundt selv. I vælger til sidst — og kan skifte når som helst.':
+    'Your names, your date and how long there is to go. Everything you told me is already here.\n\nKalas works two ways: **with me alongside**, where you write and I do the work, or **classic**, where you click around yourself. You choose at the end — and can switch any time.',
+  'Her står næste skridt': 'Your next step lives here',
+  'Jeg holder **Kom godt i gang** opdateret, ét skridt ad gangen, og krydser af efterhånden som I kommer videre.':
+    'I keep **Kom godt i gang** up to date, one step at a time, and tick things off as you go.',
+  'Sådan — det er på plads.': 'There it is, sorted.',
+  'Kig på resultatet, og tryk videre når I er klar.': 'Have a look, and press on when you are ready.',
+  'Tryk her': 'Click here',
+  'Velkommen. Jeg viser rundt': 'Welcome. Let me show you around',
+  'Her finder I stederne': 'This is where you find the places',
+  'Budgettet holder styr på sig selv': 'The budget keeps track of itself',
+  'Gæstelisten, uden regneark': 'The guest list, without a spreadsheet',
+  'Tidslinjen regnes baglæns': 'The timeline is worked out backwards',
+  'Her lander svarene': 'This is where the replies land',
+  'Der er mere, når I når dertil': "There's more when you get there",
+  'Sådan kommer I i gang': 'Where to start',
+  'Hvad skal vi gøre først?': 'What should we do first?',
+  'I behøver ikke lede efter knapper. Jeg åbner den rigtige side og laver arbejdet — I skal bare **sige til**.\n\nRundturen tager fem minutter, og I kan **stoppe når som helst**.':
+    "You don't need to hunt for buttons. I open the right page and do the work — you just **say the word**.\n\nThe tour takes five minutes, and you can **stop whenever you like**.",
+  'Jeg søger på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I gemmer favoritter på jeres **shortlist** og ser, hvem I har booket.':
+    'I search **the open web**, check the places exist, and put them on the board. You save favourites to your **shortlist** and see who you have booked.',
+  'Jeg fordeler beløbet på **kategorier** og siger til, **før I rammer loftet**. I kan trække i det selv — eller bede mig om at ændre det.':
+    'I split the amount across **categories** and warn you **before you hit the ceiling**. Drag it around yourself — or ask me to change it.',
+  'Importér fra **CSV** eller tilføj dem enkeltvis. Jeg holder styr på **svar**, **plus-ens** og **kostbehov** undervejs.':
+    'Import from **CSV** or add them one by one. I keep track of **replies**, **plus-ones** and **dietary needs** along the way.',
+  'Fra jeres dato og hjem, så I altid ved **hvad der haster nu** — og hvad der kan vente.':
+    'From your date backwards, so you always know **what is urgent now** — and what can wait.',
+  'Når jeg har skrevet til et sted, samler jeg tråden, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende.':
+    'Once I have written to a place, I gather the thread, pull **the price** out of the email and have **a suggested reply** ready. You just approve it.',
+  'Bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse ligger i menuen. **Én ting ad gangen** — de venter på jer.':
+    'Wedding site, invitations, registry, seating plan and honeymoon are in the menu. **One thing at a time** — they will wait.',
+  'Start i **Kom godt i gang** — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.':
+    'Start with **Kom godt i gang** — the next steps are there, one at a time, and I tick them off as you go.\n\nIf you are unsure, just ask me.',
+  'Rundvisning': 'Guided tour',
+  '{n} af {total}': '{n} of {total}',
+  'Spring rundvisningen over': 'Skip the tour',
+  'Så er I inde, velkommen! Lad mig vise jer rundt på fem minutter. I trykker selv undervejs, og I kan stoppe når som helst.':
+    "You're in, welcome! Let me show you around in five minutes. You do the clicking, and you can stop whenever you like.",
+  'Der er mere i menuen når I når dertil: jeres bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse.':
+    "There's more in the menu when you get there: your wedding site, invitations, registry, seating plan and honeymoon.",
+  'Det var rundturen. Nu er I i gang, jeg er her, hvis I får brug for mig.':
+    "That's the tour. You're up and running, I'm here if you need me.",
+
   // ── Ava's onboarding walkthrough ────────────────────────────────────
-  'Så er I inde, velkommen! Lad mig vise jer rundt. Det korte af det lange: I behøver ikke lede efter knapper. Skriv til mig her, så åbner jeg den rigtige side og laver arbejdet.':
-    "You're in, welcome! Let me show you around. The short version: you don't need to hunt for buttons. Write to me here and I'll open the right page and do the work.",
-  'Det her er leverandører. Her udforsker I steder og folk, gemmer favoritter på jeres shortlist, og ser hvem I har booket. Prøv at bede mig om noget, jeg søger på nettet og lægger rigtige steder på tavlen.':
-    "This is vendors. Here you explore places and people, save favourites to your shortlist, and see who you've booked. Try asking me for something, I search the web and put real places on the board.",
-  'Budgettet. Jeg fordeler det på kategorier og siger til, før I rammer loftet. I kan trække i det selv, eller bare bede mig om at ændre det.':
-    'The budget. I split it across categories and warn you before you hit the ceiling. You can drag it around yourself, or just ask me to change it.',
-  'Gæstelisten. Importér fra CSV eller tilføj dem enkeltvis, jeg holder styr på svar, plus-ens og kostbehov undervejs. I kan også bare spørge mig om status.':
-    'The guest list. Import from CSV or add them one by one, I keep track of replies, plus-ones and dietary needs along the way. You can also just ask me for the status.',
-  'Tidslinjen lægger jeg baglæns fra jeres dato, så I altid ved hvad der haster. Spørg mig endelig.':
-    'I lay the timeline out backwards from your date, so you always know what is urgent. Do ask me.',
-  'Og her lander svarene. Når jeg har skrevet til et sted, samler jeg tråden, trækker prisen ud af mailen og lægger et forslag til svar klar, I skal bare godkende.':
-    "And this is where replies land. Once I've written to a place, I gather the thread, pull the price out of the email and have a suggested reply ready, you just approve it.",
-  'Der er mere når I når dertil: jeres bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse. Bed mig om at åbne en af dem, når I er klar.':
-    "There's more when you get there: your wedding site, invitations, registry, seating plan and honeymoon. Ask me to open any of them when you're ready.",
-  'Det var rundturen. Hvordan vil I helst arbejde? I kan altid skifte oppe i hjørnet.':
-    "That's the tour. How would you rather work? You can always switch up in the corner.",
-  'Find et bryllupssted i {city} til {guests} gæster': 'Find a wedding venue in {city} for {guests} guests',
+                  'Find et bryllupssted i {city} til {guests} gæster': 'Find a wedding venue in {city} for {guests} guests',
   'Sæt budgettet for mad og drikke til {foodBudget} kr': 'Set the food and drink budget to {foodBudget} kr',
-  'Hvem mangler at svare på invitationen?': 'Who still needs to reply to the invitation?',
+  'Hvordan får vi gæstelisten i gang?': 'How do we get the guest list started?',
   'Hvad bør vi have på plads inden {dateHint}?': 'What should we have in place before {dateHint}?',
   'Hjælp os videre, hvad mangler vi at få på plads?': 'Help us move forward, what do we still need to sort out?',
-  'Prøv: “{prompt}”': 'Try: “{prompt}”',
-  'Kig på skærmen, jeg bliver her, til I siger videre.':
-    'Take a look at the screen, I\'ll wait here until you say continue.',
-  'Spring guiden over': 'Skip the guide',
+      'Spring guiden over': 'Skip the guide',
   'Bliv i chatten': 'Stay in chat',
-  'Skift til klassisk': 'Switch to classic',
 
   // ── Navigation ──────────────────────────────────────────────────────
   'Hjem': 'Home',

@@ -1097,8 +1097,10 @@ function DiscoverView({
     }));
   })();
 
-  /** Markers for the level the globe is on. */
-  const globePlaces = ((): GlobePlace[] => {
+  /* The country's areas. These used to be the dots on the globe; the globe
+     carries no place markers any more, so they are a chip row in the panel —
+     the one place that still has room to name them. */
+  const regionChoices = ((): GlobePlace[] => {
     if (level === 'earth' || !country) return [];
     if (level === 'country') {
       if (curatedRegions.length > 0) {
@@ -1281,11 +1283,7 @@ function DiscoverView({
           <DestinationGlobe
             selectedCountry={country}
             onCountryPick={pickCountry}
-            places={globePlaces}
             focus={focus}
-            onPlacePick={(pl) => (pl.kind === 'region'
-              ? openRegionLevel(pl.id)
-              : openTown(pl.id, { lat: pl.lat, lng: pl.lng }))}
           />
         </div>
 
@@ -1456,10 +1454,26 @@ function DiscoverView({
               <PanelError label={t('Kunne ikke hente destinationer.')} onRetry={() => void loadDestinations(country)} />
             ) : (
               <div className="flex flex-col gap-4">
-                {/* The areas used to be listed here as a second chip picker.
-                    They are the markers on the globe to the left and the
-                    "Område" pill over the results, a third copy in the middle
-                    of the city list was just a wall of chips. */}
+                {regionChoices.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[0.64rem] font-bold uppercase tracking-[0.08em] text-muted">
+                      {t('Områder')}
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {regionChoices.map((r) => (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => openRegionLevel(r.id)}
+                          className="rounded-full border border-[#e6e9e5] bg-white px-3 py-1.5 text-[0.76rem] font-medium text-ink transition-colors hover:border-[#24413a] cursor-pointer"
+                        >
+                          {r.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-3">
                   {activeDest.map((s) => (
                     <DiscoverDestCard

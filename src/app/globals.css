@@ -156,9 +156,52 @@ html {
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
+/* ── Walkthrough spotlight ───────────────────────────────────────────────
+   A light that travels around the border rather than a pulse that throbs in
+   place. The ring is drawn as a rotating conic gradient masked to the border
+   box, so only the outline is painted and the control underneath is untouched.
+   @property is what makes the angle animatable at all — a plain custom
+   property is a string to the interpolator and would jump, not sweep. */
+@property --kalas-tour-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.kalas-tour-spot {
+  padding: 2px;
+  background:
+    conic-gradient(
+      from var(--kalas-tour-angle),
+      transparent 0deg,
+      var(--color-sage-strong) 45deg,
+      var(--color-sage) 80deg,
+      transparent 130deg,
+      transparent 360deg
+    ),
+    /* A quiet ring underneath, so the target stays outlined between sweeps. */
+    linear-gradient(var(--color-sage-tint), var(--color-sage-tint));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: kalas-tour-chase 2.4s linear infinite;
+}
+
+@keyframes kalas-tour-chase {
+  to { --kalas-tour-angle: 360deg; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  /* Still outlined, just not travelling. */
+  .kalas-tour-spot { background: linear-gradient(var(--color-sage-strong), var(--color-sage-strong)); }
 }
+
 /* ── Printing the seating plan ───────────────────────────────────────────
    The chart is printed from its own sheet, portalled to <body>, so a
    printout carries the plan and nothing else — no nav rail, no guest list,

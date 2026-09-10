@@ -8,10 +8,11 @@
    claims, countdown) is a coded component with injected handlers. All
    design-authored strings render as React text only. */
 
+import { useState } from 'react';
 import { IMAGES } from '../data';
 import { useLang } from '../i18n';
 import GiftCard from '../registry/GiftCard';
-import { sortGifts } from '../registry/gifts';
+import { sortGifts, PRICE_BANDS, inBand } from '../registry/gifts';
 import type { SiteConfig } from './config';
 import { mergeSections, type SiteDesign, type DesignSection } from './design';
 import { fontStack } from './fonts';
@@ -42,10 +43,13 @@ const TRACK: Record<string, string> = { tight: '-0.02em', normal: '0em', wide: '
 
 export function SiteRenderer({
   couple, config, design, photoUrls = {}, registryItems = [], claimedByItem = {}, onRsvp, onClaim,
+  icsUrl,
 }: {
   couple: PublicCouple;
   config: SiteConfig;
   design: SiteDesign;
+  /** Calendar file for the day. Absent when the date is not firm yet. */
+  icsUrl?: string | null;
   /** site_photos id → display URL (signed). Stock IMAGES keys resolve too. */
   photoUrls?: Record<string, string>;
   registryItems?: RegistryItemRow[];
@@ -133,7 +137,24 @@ export function SiteRenderer({
         break;
       case 'program':
         if (config.program.length === 0) return null;
-        body = <ProgramSection s={s} config={config} tone={tone} display={display} hairline={hairline} />;
+        body = (
+          <>
+            <ProgramSection s={s} config={config} tone={tone} display={display} hairline={hairline} />
+            {/* The thing a guest actually wants to do with a date and an
+                address, right where both are on screen. */}
+            {icsUrl && (
+              <div className="mt-10 text-center">
+                <a
+                  href={icsUrl}
+                  className="inline-flex items-center gap-2 px-6 py-3 text-[0.78rem] font-semibold uppercase tracking-[0.14em] transition-opacity hover:opacity-85"
+                  style={{ border: `1px solid ${hairline}`, color: tone.text }}
+                >
+                  {t('Sæt i kalenderen')}
+                </a>
+              </div>
+            )}
+          </>
+        );
         break;
       case 'gallery':
         if (galleryImgs.length === 0) return null;
@@ -504,16 +525,40 @@ function GiftsSection({ s, config, tone, display, btn, registryItems, claimedByI
   t: (s: string, p?: Record<string, string | number>) => string;
 }) {
   const list = s.variant === 'list';
+  /* A guest arrives with an amount in mind, not a product. Only worth showing
+     once the list is long enough that scrolling it is a chore. */
+  const [band, setBand] = useState('all');
+  const all = sortGifts(registryItems);
+  const shown = all.filter((it) => inBand(it.price_cents, band));
   return (
     <>
       {config.giftsText && <p className="mx-auto mb-8 max-w-xl text-center text-[0.98rem] leading-relaxed opacity-80">{config.giftsText}</p>}
+      {all.length >= 6 && (
+        <div className="mx-auto mb-6 flex flex-wrap justify-center gap-1.5">
+          {PRICE_BANDS.map((b) => {
+            const count = all.filter((it) => inBand(it.price_cents, b.id)).length;
+            if (count === 0) return null;
+            return (
+              <button
+                key={b.id}
+                type="button"
+                onClick={() => setBand(b.id)}
+                className="rounded-full border px-3 py-1.5 text-[0.74rem] font-medium transition-opacity"
+                style={band === b.id ? btn() : { borderColor: 'currentColor', opacity: 0.6 }}
+              >
+                {t(b.label)}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {/* Both variants now show the same GiftCard, the point of the redesign
           is that the couple's screen and the guest's page look alike. `list`
           only narrows it to one column. Tone is inherited so the card takes
           this site's palette rather than the app's. */}
-      {registryItems.length > 0 && (
+      {shown.length > 0 && (
         <div className={list ? 'mx-auto max-w-sm space-y-4' : 'grid gap-4 grid-cols-2 lg:grid-cols-3'}>
-          {sortGifts(registryItems).map((it) => {
+          {shown.map((it) => {
             const claimed = claimedByItem[it.id] ?? 0;
             const left = Math.max(0, it.quantity - claimed);
             return (

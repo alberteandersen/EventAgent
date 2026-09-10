@@ -1,7 +1,7 @@
-export type NygiftTab = 'takkeliste' | 'album' | 'anmeldelser' | 'del';
+export type NygiftTab = 'takkeliste' | 'takkekort' | 'album' | 'anmeldelser' | 'del';
 
 const TAB_KEY = 'kalas_nygift_tab';
-const TABS: NygiftTab[] = ['takkeliste', 'album', 'anmeldelser', 'del'];
+const TABS: NygiftTab[] = ['takkeliste', 'takkekort', 'album', 'anmeldelser', 'del'];
 
 export function readNygiftTab(): NygiftTab {
   if (typeof window === 'undefined') return 'takkeliste';

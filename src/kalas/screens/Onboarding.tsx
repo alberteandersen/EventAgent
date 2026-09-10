@@ -124,9 +124,15 @@ const STEP_LABELS = ['Jeres historie', 'Destination', 'Datoen', 'Omfang', 'Partn
 const wonderInputCls =
   'h-[62px] w-full rounded-[14px] border bg-card px-[18px] text-base text-ink placeholder:text-muted transition-shadow focus:outline-none';
 
-export default function Onboarding({ onEnter }: { onEnter: (form: FormState, s?: ScreenId) => void }) {
+export default function Onboarding({ onEnter, initialStep = 0 }: {
+  onEnter: (form: FormState, s?: ScreenId) => void;
+  /* A seam for /dev/onboarding: every step has to fit the viewport, and the
+     only way to check the later ones is to open on them — reaching step 3 for
+     real needs a country picked off the auth-gated globe. Unused in the app. */
+  initialStep?: number;
+}) {
   const { t, lang, setLang } = useLang();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(initialStep);
   const [dir, setDir] = useState(1);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
 
@@ -152,7 +158,12 @@ export default function Onboarding({ onEnter }: { onEnter: (form: FormState, s?:
     step === 4;
 
   return (
-    <div className="flex min-h-screen flex-col bg-canvas text-ink">
+    /* Locked to the viewport instead of growing past it: five short questions
+       should never make the page scroll, and when the footer scrolled away
+       with it the "Fortsæt" button went with it. h-dvh, not h-screen, so the
+       mobile address bar does not push it out of view. Only the step itself
+       scrolls, and only when a step genuinely needs the room. */
+    <div className="flex h-dvh flex-col overflow-hidden bg-canvas text-ink">
       <OnboardingHeader
         step={step}
         stepLabel={t(STEP_LABELS[step])}
@@ -167,11 +178,14 @@ export default function Onboarding({ onEnter }: { onEnter: (form: FormState, s?:
       </div>
 
       <div className={cn(
-        'flex flex-1 flex-col px-6 lg:px-14',
-        step === 1 ? 'py-3 lg:py-4' : 'gap-8 py-8 lg:flex-row lg:gap-[52px] lg:py-[42px]',
+        'flex min-h-0 flex-1 flex-col px-6 lg:px-14',
+        step === 1 ? 'py-3 lg:py-4' : 'gap-8 py-6 lg:flex-row lg:gap-[52px] lg:py-8',
       )}>
         {step !== 1 && <ContextPanel step={step} t={t} />}
-        <div className={cn('flex min-w-0 flex-1 flex-col py-2', step === 1 ? 'justify-start' : 'justify-center')}>
+        <div className={cn(
+          'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto py-2',
+          step === 1 ? 'justify-start' : 'justify-center',
+        )}>
           <AnimatePresence mode="wait" custom={dir}>
             <motion.div
               key={step}
@@ -287,7 +301,7 @@ function ContextPanel({ step, t }: { step: number; t: (s: string) => string }) {
   const benefits = [t('Anbefalinger formet omkring jer'), t('Ændr ethvert svar senere')];
 
   return (
-    <aside className="hidden w-full max-w-[430px] shrink-0 flex-col justify-between rounded-3xl bg-ink p-[38px] shadow-[0px_18px_50px_rgba(36,65,58,0.16)] lg:flex lg:min-h-[620px]">
+    <aside className="hidden w-full max-w-[430px] shrink-0 flex-col justify-between rounded-3xl bg-ink p-[38px] shadow-[0px_18px_50px_rgba(36,65,58,0.16)] lg:flex lg:h-full lg:overflow-hidden">
       <div className="flex flex-col gap-6">
         <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-terracotta">
           <WeddingRings size={22} className="text-card" />
@@ -459,7 +473,10 @@ function NamesStep({ form, set, onNext }: { form: FormState; set: any; onNext: (
 /* ══════════════════════════════════════════════════════════════════════
    STEP 2, DESTINATION (interactive globe + country panel)
 ══════════════════════════════════════════════════════════════════════ */
-const GLOBE_H = 'h-[min(72vh,640px)]';
+/* Sized against what is left after the header and the footer, not against the
+   whole viewport: at 72vh the globe alone pushed the "Fortsæt" button off a
+   laptop screen. */
+const GLOBE_H = 'h-[min(calc(100dvh-260px),560px)] min-h-[300px]';
 /** Matches OnboardingHeader h-[92px]; mobile adds lang row below header. */
 const DRAWER_TOP = 'top-[92px] max-sm:top-[136px]';
 const DRAWER_BOTTOM = 'bottom-[96px]';

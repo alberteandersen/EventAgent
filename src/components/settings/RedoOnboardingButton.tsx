@@ -32,7 +32,7 @@ export function RedoOnboardingButton() {
       type="button"
       onClick={redo}
       disabled={loading}
-      className="rounded-full border border-[#D4D6C0] px-4 py-2 text-sm font-medium text-[#4A4E3C] transition-colors hover:bg-[#ddd6c0] disabled:cursor-not-allowed disabled:opacity-60"
+      className="rounded-full border border-[var(--color-line)] px-4 py-2 text-sm font-medium text-[var(--color-ink)] transition-colors hover:bg-[var(--color-shell)] disabled:cursor-not-allowed disabled:opacity-60"
     >
       {loading ? "Opening…" : "Redo onboarding"}
     </button>

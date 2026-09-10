@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { sortGifts, claimedCount, formatPrice } from './gifts';
+import { sortGifts, claimedCount, formatPrice, inBand } from './gifts';
 
 const gift = (sort: number, favourite?: boolean | null, created_at = '2026-01-01') =>
   ({ sort, favourite, created_at, id: `${sort}-${favourite}-${created_at}` });
@@ -61,5 +61,32 @@ describe('formatPrice', () => {
 
   it('keeps øre when the price actually has them', () => {
     expect(formatPrice(69950, 'DKK')).toBe('699,5 DKK');
+  });
+});
+
+describe('inBand', () => {
+  it('lets everything through the "all" band', () => {
+    expect(inBand(29900, 'all')).toBe(true);
+    expect(inBand(null, 'all')).toBe(true);
+  });
+
+  it('splits on the boundary consistently — the band owns its lower edge', () => {
+    expect(inBand(29900, 'under300')).toBe(true);
+    expect(inBand(30000, 'under300')).toBe(false);
+    expect(inBand(30000, '300to800')).toBe(true);
+    expect(inBand(79900, '300to800')).toBe(true);
+    expect(inBand(80000, '300to800')).toBe(false);
+    expect(inBand(80000, 'over800')).toBe(true);
+  });
+
+  it('keeps a gift with no price out of every priced band', () => {
+    // Guessing a band for it would put it in front of the wrong guest.
+    expect(inBand(null, 'under300')).toBe(false);
+    expect(inBand(undefined, 'over800')).toBe(false);
+    expect(inBand(Number.NaN, '300to800')).toBe(false);
+  });
+
+  it('falls back to showing the gift when the band id is unknown', () => {
+    expect(inBand(29900, 'nonsense')).toBe(true);
   });
 });

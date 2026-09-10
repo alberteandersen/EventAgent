@@ -12,11 +12,11 @@ export function LanguageSetting({ initial }: { initial: AppLanguage }) {
   const choose = (l: AppLanguage) => { setLang(l); persistLanguage(l); };
 
   return (
-    <div className="inline-flex items-center rounded-full border border-[#D4D6C0] p-0.5">
+    <div className="inline-flex items-center rounded-full border border-[var(--color-line)] p-0.5">
       {LANGUAGES.map(({ code, label }) => (
         <button key={code} type="button" onClick={() => choose(code)}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
-            lang === code ? "bg-[#4A4E3C] text-[#F6F0E8]" : "text-[#7A8066] hover:text-[#4A4E3C]"
+            lang === code ? "bg-[var(--color-ink)] text-[var(--color-card)]" : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
           }`}>
           {label}
         </button>

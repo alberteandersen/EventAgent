@@ -123,9 +123,14 @@ interface WeddingData {
   updateBudgetSubItem: (id: string, patch: Partial<Pick<BudgetSubItemRow, 'label' | 'vendor' | 'amount' | 'sort'>>) => Promise<void>;
   deleteBudgetSubItem: (id: string) => Promise<void>;
 
-  addDayProgramItem: (item: { time: string; title: string; subtitle?: string | null; sort?: number }) => Promise<DayProgramItemRow | null>;
-  updateDayProgramItem: (id: string, patch: Partial<Pick<DayProgramItemRow, 'time' | 'title' | 'subtitle' | 'sort'>>) => Promise<void>;
+  addDayProgramItem: (item: {
+    time: string; title: string; subtitle?: string | null;
+    duration_min?: number; owner?: string | null; notes?: string | null; sort?: number;
+  }) => Promise<DayProgramItemRow | null>;
+  updateDayProgramItem: (id: string, patch: Partial<Pick<DayProgramItemRow, 'time' | 'title' | 'subtitle' | 'duration_min' | 'owner' | 'notes' | 'sort'>>) => Promise<void>;
   deleteDayProgramItem: (id: string) => Promise<void>;
+  /** Seeds a whole day in one round-trip — the classic-day template. */
+  seedDayProgram: (items: { time: string; title: string; subtitle?: string | null; duration_min?: number; owner?: string | null }[]) => Promise<void>;
 
   addGuest: (guest: Partial<GuestRow> & { name: string }) => Promise<GuestRow | null>;
   updateGuest: (id: string, patch: Partial<GuestRow>) => Promise<void>;
@@ -484,7 +489,10 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   );
 
   const addDayProgramItem = useCallback(
-    async (item: { time: string; title: string; subtitle?: string | null; sort?: number }) => {
+    async (item: {
+      time: string; title: string; subtitle?: string | null;
+      duration_min?: number; owner?: string | null; notes?: string | null; sort?: number;
+    }) => {
       if (!eventId || !userId) return null;
       const { data } = await supabase
         .from("day_program_items")
@@ -494,6 +502,9 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
           time: item.time,
           title: item.title,
           subtitle: item.subtitle ?? null,
+          duration_min: item.duration_min ?? 0,
+          owner: item.owner ?? null,
+          notes: item.notes ?? null,
           sort: item.sort ?? 0,
         })
         .select()
@@ -504,8 +515,29 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     [supabase, eventId, userId]
   );
 
+  const seedDayProgram = useCallback(
+    async (items: { time: string; title: string; subtitle?: string | null; duration_min?: number; owner?: string | null }[]) => {
+      if (!eventId || !userId || items.length === 0) return;
+      const { data } = await supabase
+        .from("day_program_items")
+        .insert(items.map((item, i) => ({
+          event_id: eventId,
+          user_id: userId,
+          time: item.time,
+          title: item.title,
+          subtitle: item.subtitle ?? null,
+          duration_min: item.duration_min ?? 0,
+          owner: item.owner ?? null,
+          sort: i,
+        })))
+        .select();
+      if (data) setDayProgramItems((rows) => (data as DayProgramItemRow[]).reduce((acc, r) => upsertById(acc, r), rows));
+    },
+    [supabase, eventId, userId]
+  );
+
   const updateDayProgramItem = useCallback(
-    async (id: string, patch: Partial<Pick<DayProgramItemRow, 'time' | 'title' | 'subtitle' | 'sort'>>) => {
+    async (id: string, patch: Partial<Pick<DayProgramItemRow, 'time' | 'title' | 'subtitle' | 'duration_min' | 'owner' | 'notes' | 'sort'>>) => {
       const { data } = await supabase.from("day_program_items").update(patch).eq("id", id).select().single();
       if (data) setDayProgramItems((rows) => upsertById(rows, data as DayProgramItemRow));
     },
@@ -1099,6 +1131,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       addDayProgramItem,
       updateDayProgramItem,
       deleteDayProgramItem,
+      seedDayProgram,
       addGuest,
       updateGuest,
       deleteGuest,
@@ -1126,7 +1159,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       thankYous, saveThankYou, saveVenueReview,
       websiteDesigns, sitePhotos, websiteOrders, load, updateEvent, saveBudgetItem,
       deleteBudgetItem, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem,
-      addDayProgramItem, updateDayProgramItem, deleteDayProgramItem,
+      addDayProgramItem, updateDayProgramItem, deleteDayProgramItem, seedDayProgram,
       addGuest, updateGuest, deleteGuest, addTask, updateTask, deleteTask, seedTasks, clearTasks,
       addMoodboardItem, removeMoodboardItem, saveSite, saveSeating,
       addRegistryItem, updateRegistryItem, deleteRegistryItem,

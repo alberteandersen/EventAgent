@@ -407,6 +407,11 @@ export interface DayProgramItemRow {
   time: string;
   title: string;
   subtitle: string | null;
+  /** Minutes the moment lasts. 0 = a point in time, not a block. */
+  duration_min: number;
+  /** Who is responsible — "Fotograf", "Toastmaster", the couple themselves. */
+  owner: string | null;
+  notes: string | null;
   sort: number;
   created_at: string;
 }

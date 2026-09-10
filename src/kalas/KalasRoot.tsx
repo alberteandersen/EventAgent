@@ -7,8 +7,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
-import { tourFact } from './tourFacts';
-import { armTour, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS, walkthroughParams } from './walkthrough';
+import { armTour, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS } from './walkthrough';
 import GuidedTour from './GuidedTour';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
@@ -48,7 +47,7 @@ export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }
 
 function AppInner() {
   const { pendingCount } = useKalas();
-  const { replies, event, couple, venues, guests, timelineTasks } = useWedding();
+  const { replies } = useWedding();
   const inboxBadge = replies.filter((r) => !r.read_at).length;
   const [hubTick, setHubTick] = useState(0);
   // Chat mode: collapsed icon-rail + Ava-driven stage. Sticky across visits.
@@ -193,19 +192,8 @@ function AppInner() {
 
   const tour = walkthroughActive ? (
     <GuidedTour
-      params={walkthroughParams(event, couple)}
       onNavigate={navigate}
       onFinish={finishWalkthrough}
-      fact={tourFact(WALKTHROUGH_STEPS[Math.min(tourStep, WALKTHROUGH_STEPS.length - 1)].id, {
-        region: couple.region,
-        guestEstimate: couple.guests,
-        budgetTotal: couple.budgetTotal,
-        dateISO: couple.dateISO,
-        venues,
-        guests,
-        tasks: timelineTasks,
-        unreadReplies: inboxBadge,
-      })}
       chatMode={chatMode}
       idx={Math.min(tourStep, WALKTHROUGH_STEPS.length - 1)}
       setIdx={setTourStep}

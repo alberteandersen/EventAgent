@@ -407,7 +407,7 @@ export default function Website() {
             className="grid lg:grid-cols-[1fr_400px] lg:min-h-[calc(100vh-76px)]">
 
             {/* Left: live preview */}
-            <div data-tour="website-preview" className="px-6 py-10 sm:px-9 lg:px-12 lg:py-12 lg:rule-r">
+            <div className="px-6 py-10 sm:px-9 lg:px-12 lg:py-12 lg:rule-r">
               <div className="sticky top-20">
                 <div className="flex items-center justify-between mb-5">
                   <p className="eyebrow">{t('Live forhåndsvisning')}</p>

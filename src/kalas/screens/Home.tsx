@@ -273,7 +273,6 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
         className="flex flex-col gap-7"
       >
         <div
-          data-tour="home-hero"
           className="flex w-full flex-col gap-8 rounded-[28px] border border-[#dcdfdb] bg-[#e6e9e6] p-7 lg:flex-row"
         >
           <HeroPhoto fallback={HERO_IMG} alt={coupleLabel} />
@@ -336,7 +335,6 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
 
         {/* Checklist */}
         <div
-          data-tour="home-checklist"
           className="flex flex-col gap-5 rounded-[28px] border border-line bg-card p-7"
         >
           <div className="flex items-end justify-between gap-4">

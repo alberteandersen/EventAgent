@@ -28,29 +28,14 @@ export type WalkthroughStep = {
   title: string;
   /** `**bold**` renders through the same RichText as the chat bubbles. */
   body: string;
-  /** The page region the step points at — a `data-tour` value. Page content,
-   *  not a nav item: the tour already opens the page itself, so spotlighting
-   *  the menu button for the page they are already on said nothing. */
-  anchor?: string;
   /** Overrides the card's eyebrow. Needed now that anchors are page regions
    *  rather than nav items, which used to supply the label. */
   eyebrow?: string;
   /** Forces chat open or closed as the step opens. Left undefined, the
    *  couple's current mode stands. */
   chat?: boolean;
-  /** "Try writing…" — shown as an example, never sent from here. */
-  tries?: string[];
-  /** Prompts that only make sense once every placeholder resolved. */
-  needs?: ReadonlyArray<keyof WalkthroughParams>;
   /** Renders the chat-vs-classic choice, and ends the tour. */
   final?: boolean;
-};
-
-export type WalkthroughParams = {
-  city: string;
-  guests: number;
-  foodBudget: string;
-  dateHint: string;
 };
 
 export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
@@ -60,7 +45,6 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     /* Opens on their own wedding rather than on a menu: the names, the date
        and the countdown are the couple's own answers handed back to them, and
        that is a better first frame than a checklist. */
-    anchor: 'home-hero',
     eyebrow: 'Hjem',
     /* Classic to begin with. Onboarding lands every couple in chat, so the
        tour opened on a chat column covering the page it was describing. */
@@ -72,7 +56,6 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'start',
     page: 'home',
-    anchor: 'home-checklist',
     eyebrow: 'Hjem',
     title: 'Her står næste skridt',
     body:
@@ -81,10 +64,7 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'vendors',
     page: 'team',
-    anchor: 'team-globe',
     eyebrow: 'Venue & leverandører',
-    tries: ['Find et bryllupssted i {city} til {guests} gæster'],
-    needs: ['city', 'guests'],
     title: 'Her finder I stederne',
     body:
       'Jeg søger på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I gemmer favoritter på jeres **shortlist** og ser, hvem I har booket.',
@@ -92,10 +72,7 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'budget',
     page: 'budget',
-    anchor: 'budget-categories',
     eyebrow: 'Budget',
-    tries: ['Sæt budgettet for mad og drikke til {foodBudget} kr'],
-    needs: ['foodBudget'],
     title: 'Budgettet holder styr på sig selv',
     body:
       'Jeg fordeler beløbet på **kategorier** og siger til, **før I rammer loftet**. I kan trække i det selv — eller bede mig om at ændre det.',
@@ -103,12 +80,10 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'guests',
     page: 'guests',
-    anchor: 'guests-rsvp',
     eyebrow: 'Gæster',
     /* Not "who hasn't replied yet": the walkthrough runs on day one, when the
        list is empty and the honest answer is "nobody, there are no guests".
        A prompt that only works months later is a prompt that fails now. */
-    tries: ['Hvordan får vi gæstelisten i gang?'],
     title: 'Gæstelisten, uden regneark',
     body:
       'Importér fra **CSV** eller tilføj dem enkeltvis. Jeg holder styr på **svar**, **plus-ens** og **kostbehov** undervejs.',
@@ -116,10 +91,7 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'planning',
     page: 'planning',
-    anchor: 'planning-content',
     eyebrow: 'Tidslinje & tjekliste',
-    tries: ['Hvad bør vi have på plads inden {dateHint}?'],
-    needs: ['dateHint'],
     title: 'Tidslinjen regnes baglæns',
     body:
       'Fra jeres dato og hjem, så I altid ved **hvad der haster nu** — og hvad der kan vente.',
@@ -127,7 +99,6 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'inbox',
     page: 'inbox',
-    anchor: 'inbox-threads',
     eyebrow: 'Inbox',
     title: 'Her lander svarene',
     body:
@@ -139,7 +110,6 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
        nothing to press, and since the skip buttons went the tag is the only
        way forward — a step with no anchor would be a dead end. */
     page: 'website',
-    anchor: 'website-preview',
     eyebrow: 'Hjemmeside',
     title: 'Der er mere, når I når dertil',
     body:
@@ -151,13 +121,11 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     /* The one anchor that was already in the app and never used
        (ChatShell.tsx). Opening chat here shows the thing the step is about
        rather than describing it. */
-    anchor: 'ava-chat',
     eyebrow: 'Ava',
     chat: true,
     title: 'Alt det her kan I også bare bede om',
     body:
       'Hver eneste side I lige har set, kan jeg styre for jer herfra. **Sæt budgettet**, **find et sted**, **tilføj en gæst** — skriv det, som I ville sige det til et menneske, så gør jeg det og viser jer resultatet.\n\nI behøver ikke lære menuen at kende først.',
-    tries: ['Hvad mangler vi at få styr på?'],
   },
   {
     id: 'choose',
@@ -165,43 +133,12 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     /* Ends on the checklist rather than on a goodbye. "That was the tour" and
        then an empty screen leaves them exactly where they were before it
        started — the last thing a tour owes them is the first thing to do. */
-    anchor: 'home-checklist',
     final: true,
     title: 'Sådan kommer I i gang',
     body:
       'Start i **Kom godt i gang** — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.',
-    tries: ['Hvad skal vi gøre først?'],
   },
 ] as const;
-
-/** Fills {placeholders} that resolved; a step whose needs are unmet drops its tries. */
-export function stepTries(
-  step: WalkthroughStep,
-  params: Partial<WalkthroughParams>,
-): string[] {
-  if (!step.tries) return [];
-  const unmet = (step.needs ?? []).some((k) => params[k] === undefined || params[k] === '');
-  return unmet ? [] : step.tries;
-}
-
-/** Placeholders for the try-prompts, from the couple's own answers. */
-export function walkthroughParams(
-  event: { location: string | null; date_hint: string | null } | null,
-  couple: { guests: number; budgetTotal: number; dateLabel: string },
-): Partial<WalkthroughParams> {
-  const p: Partial<WalkthroughParams> = {};
-  if (event?.location) p.city = event.location;
-  if (couple.guests > 0) p.guests = couple.guests;
-  if (couple.budgetTotal > 0) {
-    // ~30 % of the total is the usual food-and-drink share; round to 5.000 kr
-    // so the suggested prompt reads like something a person would type.
-    const food = Math.round((couple.budgetTotal * 0.3) / 5_000) * 5_000;
-    if (food > 0) p.foodBudget = food.toLocaleString('da-DK');
-  }
-  const when = event?.date_hint || couple.dateLabel;
-  if (when) p.dateHint = when;
-  return p;
-}
 
 /** What onboarding writes to hand the couple over to the tour.
  *

@@ -1279,7 +1279,7 @@ function DiscoverView({
 
       <div className="grid gap-[18px] xl:grid-cols-[minmax(0,1fr)_400px]">
         {/* Globe */}
-        <div data-tour="team-globe" className="relative h-[min(62vh,560px)] overflow-hidden rounded-[28px] border border-[#dcdfdb] bg-[#f8f9f8]">
+        <div className="relative h-[min(62vh,560px)] overflow-hidden rounded-[28px] border border-[#dcdfdb] bg-[#f8f9f8]">
           <DestinationGlobe
             selectedCountry={country}
             onCountryPick={pickCountry}

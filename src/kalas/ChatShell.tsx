@@ -172,7 +172,6 @@ export default function ChatShell({
 
             {/* Chat column, always mounted so the stream survives view flips */}
             <section
-              data-tour="ava-chat"
               aria-label={t('Tal med Ava')}
               className={cn(
                 'h-full min-h-0 flex-col',

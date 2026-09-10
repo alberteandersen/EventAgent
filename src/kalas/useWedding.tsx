@@ -14,6 +14,7 @@ import { resolveWeddingDate } from "@/lib/wedding-date";
 import type {
   BudgetItemRow,
   BudgetSubItemRow,
+  DayProgramItemRow,
   EmailAttachmentRow,
   EmailDraftRow,
   EmailReplyRow,
@@ -78,6 +79,8 @@ interface WeddingData {
   /** Priced lines nested under one budget category (migration 0028) — a
    *  tent, chairs, tables, each possibly from a different vendor. */
   budgetSubItems: BudgetSubItemRow[];
+  /** The wedding day itself, minute by minute (migration 0029). */
+  dayProgramItems: DayProgramItemRow[];
   guests: GuestRow[];
   timelineTasks: TimelineTaskRow[];
   moodboardItems: MoodboardItemRow[];
@@ -119,6 +122,10 @@ interface WeddingData {
   addBudgetSubItem: (item: { category: string; label: string; vendor?: string | null; amount: number; sort?: number }) => Promise<BudgetSubItemRow | null>;
   updateBudgetSubItem: (id: string, patch: Partial<Pick<BudgetSubItemRow, 'label' | 'vendor' | 'amount' | 'sort'>>) => Promise<void>;
   deleteBudgetSubItem: (id: string) => Promise<void>;
+
+  addDayProgramItem: (item: { time: string; title: string; subtitle?: string | null; sort?: number }) => Promise<DayProgramItemRow | null>;
+  updateDayProgramItem: (id: string, patch: Partial<Pick<DayProgramItemRow, 'time' | 'title' | 'subtitle' | 'sort'>>) => Promise<void>;
+  deleteDayProgramItem: (id: string) => Promise<void>;
 
   addGuest: (guest: Partial<GuestRow> & { name: string }) => Promise<GuestRow | null>;
   updateGuest: (id: string, patch: Partial<GuestRow>) => Promise<void>;
@@ -252,6 +259,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [budgetItems, setBudgetItems] = useState<BudgetItemRow[]>([]);
   const [budgetSubItems, setBudgetSubItems] = useState<BudgetSubItemRow[]>([]);
+  const [dayProgramItems, setDayProgramItems] = useState<DayProgramItemRow[]>([]);
   const [guests, setGuests] = useState<GuestRow[]>([]);
   const [timelineTasks, setTimelineTasks] = useState<TimelineTaskRow[]>([]);
   const [moodboardItems, setMoodboardItems] = useState<MoodboardItemRow[]>([]);
@@ -302,7 +310,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     setEvent(ev);
 
     if (ev) {
-      const [v, d, o, r, at, p, io, idz, bi, bsi, g, tt, mb, ws, sp, ri, rc, wd, sph, wo, inv, hs, ty] = await Promise.all([
+      const [v, d, o, r, at, p, io, idz, bi, bsi, dpi, g, tt, mb, ws, sp, ri, rc, wd, sph, wo, inv, hs, ty] = await Promise.all([
         supabase.from("venues").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("email_drafts").select("*").eq("event_id", ev.id),
         supabase.from("outbound_emails").select("*").eq("event_id", ev.id).order("created_at"),
@@ -313,6 +321,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         supabase.from("invite_designs").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
         supabase.from("budget_items").select("*").eq("event_id", ev.id).order("sort"),
         supabase.from("budget_sub_items").select("*").eq("event_id", ev.id).order("sort").order("created_at"),
+        supabase.from("day_program_items").select("*").eq("event_id", ev.id).order("time"),
         supabase.from("guests").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("timeline_tasks").select("*").eq("event_id", ev.id).order("sort").order("due_date"),
         supabase.from("moodboard_items").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
@@ -337,6 +346,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       setInviteDesigns((idz.data ?? []) as InviteDesignRow[]);
       setBudgetItems((bi.data ?? []) as BudgetItemRow[]);
       setBudgetSubItems((bsi.data ?? []) as BudgetSubItemRow[]);
+      setDayProgramItems((dpi.data ?? []) as DayProgramItemRow[]);
       setGuests((g.data ?? []) as GuestRow[]);
       setTimelineTasks((tt.data ?? []) as TimelineTaskRow[]);
       setMoodboardItems((mb.data ?? []) as MoodboardItemRow[]);
@@ -469,6 +479,43 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     async (id: string) => {
       await supabase.from("budget_sub_items").delete().eq("id", id);
       setBudgetSubItems((rows) => removeById(rows, id));
+    },
+    [supabase]
+  );
+
+  const addDayProgramItem = useCallback(
+    async (item: { time: string; title: string; subtitle?: string | null; sort?: number }) => {
+      if (!eventId || !userId) return null;
+      const { data } = await supabase
+        .from("day_program_items")
+        .insert({
+          event_id: eventId,
+          user_id: userId,
+          time: item.time,
+          title: item.title,
+          subtitle: item.subtitle ?? null,
+          sort: item.sort ?? 0,
+        })
+        .select()
+        .single();
+      if (data) setDayProgramItems((rows) => upsertById(rows, data as DayProgramItemRow));
+      return (data as DayProgramItemRow) ?? null;
+    },
+    [supabase, eventId, userId]
+  );
+
+  const updateDayProgramItem = useCallback(
+    async (id: string, patch: Partial<Pick<DayProgramItemRow, 'time' | 'title' | 'subtitle' | 'sort'>>) => {
+      const { data } = await supabase.from("day_program_items").update(patch).eq("id", id).select().single();
+      if (data) setDayProgramItems((rows) => upsertById(rows, data as DayProgramItemRow));
+    },
+    [supabase]
+  );
+
+  const deleteDayProgramItem = useCallback(
+    async (id: string) => {
+      await supabase.from("day_program_items").delete().eq("id", id);
+      setDayProgramItems((rows) => removeById(rows, id));
     },
     [supabase]
   );
@@ -883,6 +930,14 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       )
       .on(
         "postgres_changes",
+        { event: "*", schema: "public", table: "day_program_items", filter: `event_id=eq.${eventId}` },
+        (p) =>
+          p.eventType === "DELETE"
+            ? setDayProgramItems((rows) => removeById(rows, (p.old as { id: string }).id))
+            : setDayProgramItems((rows) => upsertById(rows, p.new as DayProgramItemRow))
+      )
+      .on(
+        "postgres_changes",
         { event: "*", schema: "public", table: "guests", filter: `event_id=eq.${eventId}` },
         (p) =>
           p.eventType === "DELETE"
@@ -1017,6 +1072,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       journey,
       budgetItems,
       budgetSubItems,
+      dayProgramItems,
       guests,
       timelineTasks,
       moodboardItems,
@@ -1040,6 +1096,9 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       addBudgetSubItem,
       updateBudgetSubItem,
       deleteBudgetSubItem,
+      addDayProgramItem,
+      updateDayProgramItem,
+      deleteDayProgramItem,
       addGuest,
       updateGuest,
       deleteGuest,
@@ -1062,11 +1121,12 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       loading, event, profile, email, venues, drafts, outbound, replies, attachments, proposals,
-      inviteOrders, inviteDesigns, invitations, journey, budgetItems, budgetSubItems, guests, timelineTasks,
+      inviteOrders, inviteDesigns, invitations, journey, budgetItems, budgetSubItems, dayProgramItems, guests, timelineTasks,
       moodboardItems, weddingSite, seatingPlan, registryItems, registryClaims, honeymoonSaves,
       thankYous, saveThankYou, saveVenueReview,
       websiteDesigns, sitePhotos, websiteOrders, load, updateEvent, saveBudgetItem,
       deleteBudgetItem, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem,
+      addDayProgramItem, updateDayProgramItem, deleteDayProgramItem,
       addGuest, updateGuest, deleteGuest, addTask, updateTask, deleteTask, seedTasks, clearTasks,
       addMoodboardItem, removeMoodboardItem, saveSite, saveSeating,
       addRegistryItem, updateRegistryItem, deleteRegistryItem,

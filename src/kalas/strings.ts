@@ -2158,4 +2158,19 @@ export const EN: Record<string, string> = {
   '{n} poster': '{n} items',
   'Vis underposter': 'Show sub-items',
   'Skjul underposter': 'Hide sub-items',
+
+  // ── Planning: Bryllupsdagen (the wedding day itself, minute by minute) ──
+  'Bryllupsdagen': 'The wedding day',
+  'Nu': 'Now',
+  'Kopiér programmet': 'Copy the program',
+  'Klokkeslæt': 'Time',
+  'Titel': 'Title',
+  'Sted, detaljer…': 'Location, details…',
+  'Nyt øjeblik': 'New moment',
+  'Fx ceremoni, middag, første dans…': 'E.g. ceremony, dinner, first dance…',
+  'Tilføj øjeblik': 'Add moment',
+  'Byg jeres dags program minut for minut': 'Build your day, minute by minute',
+  '{n} øjeblikke, én smukt koordineret dag': '{n} moments, one beautifully coordinated day',
+  'Læg jeres dag time for time — fra gæsternes ankomst til den sidste dans — så alle, fotografen, familien, leverandørerne, kender planen.':
+    'Lay out your day hour by hour — from the guests arriving to the last dance — so everyone, the photographer, the family, the vendors, knows the plan.',
 };

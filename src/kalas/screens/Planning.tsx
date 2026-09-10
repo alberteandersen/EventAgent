@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ListChecks, CheckSquare } from 'lucide-react';
+import { ListChecks, CheckSquare, PartyPopper } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { cn } from '../ui';
 import type { ScreenId } from '../Shell';
 import { useLang } from '../i18n';
 import TimelineTab, { defaultMilestones } from './planning/TimelineTab';
 import ChecklistTab from './planning/ChecklistTab';
+import DayProgramTab from './planning/DayProgramTab';
 import { isMilestone, isCheck, readPlanTab, writePlanTab, type PlanTab } from './planning/shared';
 
 const AVA_CELEBRATION = 'Godt klaret. Ava har opdateret jeres fremdrift.';
@@ -53,6 +54,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
   const TABS: { id: PlanTab; label: string; Icon: typeof ListChecks; open: number }[] = [
     { id: 'tidslinje', label: 'Tidslinje', Icon: ListChecks, open: milestones.filter((r) => !r.done).length },
     { id: 'tjekliste', label: 'Tjekliste', Icon: CheckSquare, open: checks.filter((r) => !r.done).length },
+    { id: 'bryllupsdagen', label: 'Bryllupsdagen', Icon: PartyPopper, open: 0 },
   ];
 
   return (
@@ -98,9 +100,13 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
       </div>
 
       <AnimatePresence mode="wait">
-        {tab === 'tidslinje'
-          ? <TimelineTab key="tidslinje" onCelebrate={celebrate} />
-          : <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />}
+        {tab === 'tidslinje' ? (
+          <TimelineTab key="tidslinje" onCelebrate={celebrate} />
+        ) : tab === 'tjekliste' ? (
+          <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />
+        ) : (
+          <DayProgramTab key="bryllupsdagen" />
+        )}
       </AnimatePresence>
 
       {/* celebration toast */}

@@ -397,6 +397,20 @@ export interface BudgetSubItemRow {
   created_at: string;
 }
 
+/** One moment in the wedding day itself — a private, ordered schedule,
+ *  distinct from wedding_sites.config.program (public, no status) and
+ *  timeline_tasks (date-only milestones months out). */
+export interface DayProgramItemRow {
+  id: string;
+  event_id: string;
+  user_id: string;
+  time: string;
+  title: string;
+  subtitle: string | null;
+  sort: number;
+  created_at: string;
+}
+
 /** Ava's structured contract review (Gemini output), stored on budget_contracts.review. */
 export interface ContractReview {
   vendorName?: string;

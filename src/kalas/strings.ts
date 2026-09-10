@@ -2189,8 +2189,11 @@ export const EN: Record<string, string> = {
   'Noter til leverandører — hvad skal der ske, og hvem gør hvad?':
     'Notes for vendors — what happens, and who does what?',
   '{n} øjeblikke': '{n} moments',
-  '{n} pauser': '{n} breaks',
-  '{n} overlapper': '{n} overlaps',
+  'Ét øjeblik — en dag er begyndt': 'One moment — a day has begun',
+  'Punkter': 'Moments',
+  'Pauser': 'Breaks',
+  '1 overlap': '1 overlap',
+  '{n} overlap': '{n} overlaps',
   '{d} pause': '{d} break',
   'overlapper {d}': 'overlaps by {d}',
   'Toastmaster': 'Toastmaster',

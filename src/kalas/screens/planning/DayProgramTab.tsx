@@ -170,6 +170,14 @@ export function DayProgram({
   // after an add re-derives it against the moment just added.
   const timeValue = newTime || nextTime();
 
+  // One line, two readers: the tab's own heading and the printed programme.
+  const dayHeadline =
+    items.length === 0
+      ? t('Byg jeres dags program minut for minut')
+      : items.length === 1
+        ? t('Ét øjeblik — en dag er begyndt')
+        : t('{n} øjeblikke, én smukt koordineret dag', { n: items.length });
+
   const addItem = () => {
     const cleanTitle = newTitle.trim();
     if (!cleanTitle) return;
@@ -272,9 +280,7 @@ export function DayProgram({
         <div>
           <Eyebrow>{t('Bryllupsdagen')}</Eyebrow>
           <h2 className="mt-1 font-serif text-[1.5rem] leading-tight text-ink">
-            {items.length > 0
-              ? t('{n} øjeblikke, én smukt koordineret dag', { n: items.length })
-              : t('Byg jeres dags program minut for minut')}
+            {dayHeadline}
           </h2>
         </div>
 
@@ -289,7 +295,7 @@ export function DayProgram({
             </button>
             <button
               type="button"
-              onClick={() => printProgram(t('Bryllupsdagen'), t('{n} øjeblikke, én smukt koordineret dag', { n: items.length }), items)}
+              onClick={() => printProgram(t('Bryllupsdagen'), dayHeadline, items)}
               className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-2 text-[0.78rem] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
             >
               <FileDown size={14} /> {t('PDF')}
@@ -298,18 +304,23 @@ export function DayProgram({
         )}
       </div>
 
-      {/* ── The shape of the day, in one line ───────────────────────────── */}
+      {/* ── The shape of the day ────────────────────────────────────────
+          Every figure carries its own label. Unlabelled they read as four
+          loose numbers that have to be decoded — "1 pauser" least of all. */}
       {span && (
-        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-2xl rule bg-card px-4 py-3 text-[0.78rem]">
-          <span className="font-serif text-[1.05rem] text-ink tabular-nums">{span.start} – {span.end}</span>
-          <span className="text-muted">{formatDuration(span.totalMin)}</span>
-          <span className="text-muted">{t('{n} øjeblikke', { n: items.length })}</span>
-          {span.gaps > 0 && (
-            <span className="text-muted">{t('{n} pauser', { n: span.gaps })}</span>
-          )}
+        <div className="mt-4 flex flex-wrap items-end gap-x-7 gap-y-3 rounded-2xl rule bg-card px-4 py-3">
+          <Stat label={t('Dagen')}>
+            <span className="font-serif text-[1.05rem] text-ink tabular-nums">{span.start} – {span.end}</span>
+          </Stat>
+          <Stat label={t('Varighed')}>{formatDuration(span.totalMin)}</Stat>
+          <Stat label={t('Punkter')}>{items.length}</Stat>
+          <Stat label={t('Pauser')}>{span.gaps}</Stat>
           {span.overlaps > 0 && (
-            <span className="ml-auto inline-flex items-center gap-1.5 font-semibold text-[var(--color-terracotta)]">
-              <AlertTriangle size={13} /> {t('{n} overlapper', { n: span.overlaps })}
+            <span className="ml-auto inline-flex items-center gap-1.5 pb-0.5 text-[0.78rem] font-semibold text-[var(--color-terracotta)]">
+              <AlertTriangle size={13} />
+              {span.overlaps === 1
+                ? t('1 overlap')
+                : t('{n} overlap', { n: span.overlaps })}
             </span>
           )}
         </div>
@@ -595,6 +606,17 @@ function NowMarker({ clock, label }: { clock: string; label: string }) {
       </span>
       <span className="h-px flex-1 bg-[var(--color-terracotta)]/25" />
     </div>
+  );
+}
+
+/** A figure with its label above it, so the summary strip reads without
+ *  being decoded. */
+function Stat({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <span className="flex flex-col gap-0.5">
+      <span className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-faint">{label}</span>
+      <span className="text-[0.82rem] text-ink-soft tabular-nums">{children}</span>
+    </span>
   );
 }
 

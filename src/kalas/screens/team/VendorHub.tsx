@@ -88,7 +88,12 @@ export default function VendorHub({ onNavigate }: { onNavigate?: (s: NavigateTar
         <LocationChip className="shrink-0" />
       </div>
 
-      <HubTabBar tab={tab} badges={badges} onChange={onTabChange} />
+      {/* Carries the same tour value as the globe below. findAnchor takes the
+          first match with a width, so this only becomes the target when the
+          globe is absent — a shortlist/booked tab, or the loading state. */}
+      <div data-tour="team-globe">
+        <HubTabBar tab={tab} badges={badges} onChange={onTabChange} />
+      </div>
 
       {/* Category chips live on the page chrome (under tabs), not under panel titles. */}
       {tab !== 'booked' && (

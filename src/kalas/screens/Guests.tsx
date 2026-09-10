@@ -99,7 +99,7 @@ export default function Guests() {
       </div>
 
       {/* RSVP rings */}
-      <div className="mt-6 grid gap-10 sm:grid-cols-3">
+      <div data-tour="guests-rsvp" className="mt-6 grid gap-10 sm:grid-cols-3">
         <Ring value={rsvpStats.ja}       total={rsvpStats.invited} label={t('Bekræftet')}    color="var(--color-sage)" />
         <Ring value={rsvpStats.afventer} total={rsvpStats.invited} label={t('Mangler svar')} color="var(--color-line-strong)" track />
         <Ring value={rsvpStats.nej}      total={rsvpStats.invited} label={t('Afbud')}        color="var(--color-clay)" />

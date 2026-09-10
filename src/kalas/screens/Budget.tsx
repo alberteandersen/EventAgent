@@ -426,7 +426,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
       </div>
 
       {/* Editable lines */}
-      <div className="mt-10 divide-y divide-[var(--color-line)]">
+      <div data-tour="budget-categories" className="mt-10 divide-y divide-[var(--color-line)]">
         {lines.map((b) => {
           const est = amounts[b.id] ?? 0;
           const actual = actuals[b.id] ?? 0;

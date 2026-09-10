@@ -99,15 +99,19 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
         })}
       </div>
 
-      <AnimatePresence mode="wait">
-        {tab === 'tidslinje' ? (
-          <TimelineTab key="tidslinje" onCelebrate={celebrate} />
-        ) : tab === 'tjekliste' ? (
-          <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />
-        ) : (
-          <DayProgramTab key="bryllupsdagen" />
-        )}
-      </AnimatePresence>
+      {/* A real element for the tour to point at — AnimatePresence renders
+          no DOM of its own. */}
+      <div data-tour="planning-content">
+        <AnimatePresence mode="wait">
+          {tab === 'tidslinje' ? (
+            <TimelineTab key="tidslinje" onCelebrate={celebrate} />
+          ) : tab === 'tjekliste' ? (
+            <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />
+          ) : (
+            <DayProgramTab key="bryllupsdagen" />
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* celebration toast */}
       <AnimatePresence>

@@ -12,13 +12,16 @@ import RichText from '@/kalas/chat/RichText';
 import { LanguageProvider } from '@/kalas/i18n';
 import type { ScreenId } from '@/kalas/Shell';
 
+/* The anchors are page regions now, not nav items. These stand in for the
+   small-to-medium ones; the globe gets its own large block below, since a
+   region that fills the page is the case the card placement has to survive. */
 const ANCHORS: { id: string; label: string }[] = [
-  { id: 'team', label: 'Venue & leverandører' },
-  { id: 'budget', label: 'Budget' },
-  { id: 'guests', label: 'Gæster' },
-  { id: 'planning', label: 'Tidslinje & tjekliste' },
-  { id: 'inbox', label: 'Inbox' },
-  { id: 'website', label: 'Hjemmeside' },
+  { id: 'budget-categories', label: 'Budget · kategorier' },
+  { id: 'guests-rsvp', label: 'Gæster · RSVP' },
+  { id: 'planning-content', label: 'Tidslinje · indhold' },
+  { id: 'inbox-threads', label: 'Inbox · tråde' },
+  { id: 'website-preview', label: 'Hjemmeside · forhåndsvisning' },
+  { id: 'ava-chat', label: 'Ava · chat' },
 ];
 
 const SAMPLE = `Hej Alberte & Espen! Jeg er Ava, jeres bryllupsplanlægger.
@@ -49,6 +52,15 @@ export default function DevWalkthroughPage() {
             card's placement has to get out of the way of. */}
         <div data-tour="home-hero" className="mb-4 flex h-[120px] max-w-[520px] items-center rounded-[20px] border border-line bg-shell px-6">
           <span className="font-serif text-[1.4rem] text-ink">Alberte &amp; Espen · 584 dage</span>
+        </div>
+
+        {/* The globe: a region filling most of the page. The card must retreat
+            to a corner here rather than land in the middle of it. */}
+        <div
+          data-tour="team-globe"
+          className="mb-4 flex h-[min(58vh,520px)] w-full max-w-[980px] items-center justify-center rounded-[28px] border border-line bg-shell"
+        >
+          <span className="text-[0.8rem] text-muted">team-globe · stor region</span>
         </div>
 
         <div className="flex max-w-[240px] flex-col gap-1">

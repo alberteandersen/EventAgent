@@ -28,8 +28,16 @@ export type WalkthroughStep = {
   title: string;
   /** `**bold**` renders through the same RichText as the chat bubbles. */
   body: string;
-  /** What the couple clicks to advance in classic — a `data-tour` value. */
+  /** The page region the step points at — a `data-tour` value. Page content,
+   *  not a nav item: the tour already opens the page itself, so spotlighting
+   *  the menu button for the page they are already on said nothing. */
   anchor?: string;
+  /** Overrides the card's eyebrow. Needed now that anchors are page regions
+   *  rather than nav items, which used to supply the label. */
+  eyebrow?: string;
+  /** Forces chat open or closed as the step opens. Left undefined, the
+   *  couple's current mode stands. */
+  chat?: boolean;
   /** "Try writing…" — shown as an example, never sent from here. */
   tries?: string[];
   /** Prompts that only make sense once every placeholder resolved. */
@@ -53,6 +61,10 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
        and the countdown are the couple's own answers handed back to them, and
        that is a better first frame than a checklist. */
     anchor: 'home-hero',
+    eyebrow: 'Hjem',
+    /* Classic to begin with. Onboarding lands every couple in chat, so the
+       tour opened on a chat column covering the page it was describing. */
+    chat: false,
     title: 'Det her er jeres side',
     body:
       'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nKalas kan bruges på to måder: **med mig ved siden af**, hvor I skriver og jeg gør arbejdet, eller **klassisk**, hvor I klikker jer rundt selv. I vælger til sidst — og kan skifte når som helst.',
@@ -61,6 +73,7 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     id: 'start',
     page: 'home',
     anchor: 'home-checklist',
+    eyebrow: 'Hjem',
     title: 'Her står næste skridt',
     body:
       'Jeg holder **Kom godt i gang** opdateret, ét skridt ad gangen, og krydser af efterhånden som I kommer videre.',
@@ -68,7 +81,8 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'vendors',
     page: 'team',
-    anchor: 'team',
+    anchor: 'team-globe',
+    eyebrow: 'Venue & leverandører',
     tries: ['Find et bryllupssted i {city} til {guests} gæster'],
     needs: ['city', 'guests'],
     title: 'Her finder I stederne',
@@ -78,7 +92,8 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'budget',
     page: 'budget',
-    anchor: 'budget',
+    anchor: 'budget-categories',
+    eyebrow: 'Budget',
     tries: ['Sæt budgettet for mad og drikke til {foodBudget} kr'],
     needs: ['foodBudget'],
     title: 'Budgettet holder styr på sig selv',
@@ -88,7 +103,8 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'guests',
     page: 'guests',
-    anchor: 'guests',
+    anchor: 'guests-rsvp',
+    eyebrow: 'Gæster',
     /* Not "who hasn't replied yet": the walkthrough runs on day one, when the
        list is empty and the honest answer is "nobody, there are no guests".
        A prompt that only works months later is a prompt that fails now. */
@@ -100,7 +116,8 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'planning',
     page: 'planning',
-    anchor: 'planning',
+    anchor: 'planning-content',
+    eyebrow: 'Tidslinje & tjekliste',
     tries: ['Hvad bør vi have på plads inden {dateHint}?'],
     needs: ['dateHint'],
     title: 'Tidslinjen regnes baglæns',
@@ -110,7 +127,8 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   {
     id: 'inbox',
     page: 'inbox',
-    anchor: 'inbox',
+    anchor: 'inbox-threads',
+    eyebrow: 'Inbox',
     title: 'Her lander svarene',
     body:
       'Når jeg har skrevet til et sted, samler jeg tråden, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende.',
@@ -121,10 +139,25 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
        nothing to press, and since the skip buttons went the tag is the only
        way forward — a step with no anchor would be a dead end. */
     page: 'website',
-    anchor: 'website',
+    anchor: 'website-preview',
+    eyebrow: 'Hjemmeside',
     title: 'Der er mere, når I når dertil',
     body:
       'Bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse ligger i menuen. **Én ting ad gangen** — de venter på jer.',
+  },
+  {
+    id: 'chat',
+    page: 'home',
+    /* The one anchor that was already in the app and never used
+       (ChatShell.tsx). Opening chat here shows the thing the step is about
+       rather than describing it. */
+    anchor: 'ava-chat',
+    eyebrow: 'Ava',
+    chat: true,
+    title: 'Alt det her kan I også bare bede om',
+    body:
+      'Hver eneste side I lige har set, kan jeg styre for jer herfra. **Sæt budgettet**, **find et sted**, **tilføj en gæst** — skriv det, som I ville sige det til et menneske, så gør jeg det og viser jer resultatet.\n\nI behøver ikke lære menuen at kende først.',
+    tries: ['Hvad mangler vi at få styr på?'],
   },
   {
     id: 'choose',

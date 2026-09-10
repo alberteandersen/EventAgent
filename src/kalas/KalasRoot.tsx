@@ -133,13 +133,20 @@ function AppInner() {
      tour navigated straight back. */
   const navigateRef = useRef<(s: NavigateTarget) => void>(() => {});
   useEffect(() => { navigateRef.current = navigate; });
+  const toggleChatModeRef = useRef(toggleChatMode);
+  useEffect(() => { toggleChatModeRef.current = toggleChatMode; });
   const navigatedForStep = useRef<number | null>(null);
   useEffect(() => {
     if (!walkthroughActive) return;
     if (navigatedForStep.current === tourStep) return;
     navigatedForStep.current = tourStep;
-    const page = WALKTHROUGH_STEPS[tourStep]?.page;
-    if (page) navigateRef.current(page);
+    const step = WALKTHROUGH_STEPS[tourStep];
+    if (step?.page) navigateRef.current(step.page);
+    /* A step can insist on a mode. The first one opens in classic so the tour
+       is not explaining a page from behind the chat column, and the chat step
+       opens chat so it can show what it is talking about. The couple's real
+       choice is the one they make on the last step. */
+    if (step?.chat !== undefined) toggleChatModeRef.current(step.chat);
   }, [walkthroughActive, tourStep]);
 
   // Agent-fired navigation (streamed `ui` frames).

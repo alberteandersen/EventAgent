@@ -48,7 +48,7 @@ export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: Navig
 
   if (contacted.length === 0 && replies.length === 0) {
     return (
-      <div className={cn('flex flex-col items-center justify-center text-center', embedded ? 'min-h-[40vh] px-0' : 'min-h-[60vh] px-6')}>
+      <div data-tour="inbox-threads" className={cn('flex flex-col items-center justify-center text-center', embedded ? 'min-h-[40vh] px-0' : 'min-h-[60vh] px-6')}>
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ink">
           <InboxIcon size={20} className="text-canvas" />
         </div>
@@ -104,7 +104,7 @@ export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: Navig
       </div>
 
       {tab === 'threads' && (
-        <div className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div data-tour="inbox-threads" className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
           {/* Vendor list */}
           <div className={cn('min-w-0', selected && 'hidden lg:block')}>
             {cats.length > 1 && (

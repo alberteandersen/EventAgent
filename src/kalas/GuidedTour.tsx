@@ -15,9 +15,9 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { X, MessageCircle } from 'lucide-react';
+import { X, MessageCircle, MousePointer2, ArrowRight } from 'lucide-react';
 import { NAV, type ScreenId } from './Shell';
-import { cn } from './ui';
+import { EDGE, placeCard, type Box } from './tourPlacement';
 import { useLang } from './i18n';
 import RichText from './chat/RichText';
 import {
@@ -36,45 +36,10 @@ function prefersReducedMotion(): boolean {
   try { return window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; }
 }
 
-type Box = { top: number; left: number; width: number; height: number };
 
 const PAD = 6;
-const CARD_W = 340;
-const GAP = 18;
-/** Room the "Tryk her" tag needs to the right of the target. */
-const TAG_W = 104;
-const EDGE = 16;
-
-/* The card moves out of its own way. It used to sit wherever there was room
-   next to the target, which meant it covered the budget it had just told them
-   to look at — and once it covered the "Tryk her" tag, the one instruction on
-   screen was hidden behind the thing giving it. Sides are tried in order and
-   the first that clears both the target and the tag wins. */
-function placeCard(box: Box, cardH: number): { top: number; left: number } {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const clampY = (y: number) => Math.max(EDGE, Math.min(y, vh - cardH - EDGE));
-  const clampX = (x: number) => Math.max(EDGE, Math.min(x, vw - CARD_W - EDGE));
-
-  const candidates = [
-    // Right of the target, clear of the tag — the usual case for the nav rail.
-    { left: box.left + box.width + TAG_W + GAP, top: box.top },
-    // Under it, for a wide target like the hero.
-    { left: box.left, top: box.top + box.height + GAP },
-    // Over it.
-    { left: box.left, top: box.top - cardH - GAP },
-    // Left, for a target hard against the right edge.
-    { left: box.left - CARD_W - GAP, top: box.top },
-  ];
-
-  for (const c of candidates) {
-    const fits = c.left >= EDGE && c.left + CARD_W <= vw - EDGE
-      && c.top >= EDGE && c.top + cardH <= vh - EDGE;
-    if (fits) return { left: c.left, top: clampY(c.top) };
-  }
-  // Nothing clears it: bottom-right, as far from the target as the screen allows.
-  return { left: clampX(vw - CARD_W - EDGE), top: clampY(vh - cardH - EDGE) };
-}
+/** How far the cursor sits from the spotlight's edge. */
+const CURSOR_GAP = 10;
 
 export default function GuidedTour({
   params,
@@ -139,8 +104,10 @@ export default function GuidedTour({
         el = anchor ? findAnchor(anchor) : null;
         anchorElRef.current = el;
         if (!el) return;
-        el.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-        el.addEventListener('click', onClick);
+        /* 'center', not 'nearest': the anchors are page regions now, and
+           "nearest" for something already partly in view is no scroll at
+           all — which left the step pointing off the bottom of the screen. */
+        el.scrollIntoView({ block: 'center', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
       }
       const r = el.getBoundingClientRect();
       const next: Box = {
@@ -151,7 +118,6 @@ export default function GuidedTour({
       last = next;
       setBox(next);
     };
-    const onClick = () => advance();
 
     // A step with nothing to point at clears the last one's spotlight — on a
     // timer like everything else here, so no setState runs synchronously in
@@ -175,10 +141,9 @@ export default function GuidedTour({
       cancelAnimationFrame(raf);
       window.clearTimeout(first);
       window.clearInterval(timer);
-      el?.removeEventListener('click', onClick);
       anchorElRef.current = null;
     };
-  }, [anchor, step.id, advance]);
+  }, [anchor, step.id]);
 
   /* Opening the step's page is KalasRoot's job, not this component's. Done
      here it re-fired whenever the tour re-rendered or was re-mounted, which
@@ -190,10 +155,11 @@ export default function GuidedTour({
   const body = t(step.body, params as Record<string, string | number>);
   const title = t(step.title);
 
-  // The nav owns its label, so the eyebrow and the "Tryk her" tag stay in step
-  // with whatever the menu is called.
+  /* The step's own label first, then the nav's — the anchors point at page
+     content now, so "Hjem" as a blanket fallback was wrong for every one of
+     them. The nav still owns its label where a step does point at it. */
   const navLabel = NAV.find((n) => n.id === anchor)?.label;
-  const eyebrow = navLabel ? t(navLabel) : t('Hjem');
+  const eyebrow = step.eyebrow ? t(step.eyebrow) : navLabel ? t(navLabel) : t('Hjem');
   /* Both halves have to hold: the step must name a control, and it must have
      been found on screen. The step alone is not enough — chat mode on a phone
      hides the nav rail, and promising a "Tryk her" that is nowhere to be seen
@@ -225,7 +191,9 @@ export default function GuidedTour({
     return () => ro.disconnect();
   }, []);
 
-  const placed = wide && box ? placeCard(box, cardH) : null;
+  const placed = wide && box
+    ? placeCard(box, cardH, { width: window.innerWidth, height: window.innerHeight })
+    : null;
 
   /* The four panels that fence off everything except the target. With no
      target the whole screen is fenced, which is right: those steps have
@@ -249,13 +217,12 @@ export default function GuidedTour({
     return () => { document.body.style.overflow = prev; };
   }, []);
 
-  /* The tag rides on the right of its target, and flips under it when the
-     target is wide enough to reach the edge — the hero does, and the tag was
-     sitting off-screen where nobody could follow it. */
-  const tag = box
-    ? box.left + box.width + TAG_W + EDGE <= window.innerWidth
-      ? { top: box.top + box.height / 2 - 14, left: box.left + box.width + 10, below: false }
-      : { top: box.top + box.height + 8, left: Math.max(EDGE, box.left + 12), below: true }
+  /* The cursor sits just off the spotlight's edge — right of it when there is
+     room, under it when the target reaches the edge, which the hero does. */
+  const cursor = box
+    ? box.left + box.width + 28 + EDGE <= window.innerWidth
+      ? { top: box.top + box.height / 2 - 10, left: box.left + box.width + CURSOR_GAP }
+      : { top: box.top + box.height + CURSOR_GAP, left: Math.max(EDGE, box.left + 12) }
     : null;
 
   const pct = Math.round(((idx + 1) / total) * 100);
@@ -283,44 +250,23 @@ export default function GuidedTour({
       {/* "Tryk her", welded to the control itself. The card explains; this
           says where the finger goes, and it travels with the target rather
           than describing its location in words. */}
-      {/* No tag on the last step: the highlight still shows them where to
-          start, but the action there is choosing a mode, and a "Tryk her"
-          that clamps against the end of the tour does nothing. */}
-      {pointing && tag && !step.final && (
+      {/* A cursor, not a label. The tour opens the page itself, so telling
+          them to press the menu button for the page they are already on was
+          an instruction that did nothing when obeyed. This just points; the
+          card's own button is what moves the tour on. */}
+      {pointing && cursor && !step.final && (
         <div
-          className={cn(
-            'pointer-events-none fixed z-40 flex transition-all duration-300',
-            tag.below ? 'flex-col items-start' : 'items-center',
-          )}
-          style={{ top: tag.top, left: tag.left }}
+          aria-hidden
+          className="pointer-events-none fixed z-40 transition-all duration-300"
+          style={{ top: cursor.top, left: cursor.left }}
         >
-          <span
-            className={cn(
-              'h-0 w-0',
-              tag.below
-                ? 'ml-3 border-x-[6px] border-b-[7px] border-x-transparent'
-                : 'border-y-[6px] border-r-[7px] border-y-transparent',
-            )}
-            style={tag.below
-              ? { borderBottomColor: 'var(--color-ink)' }
-              : { borderRightColor: 'var(--color-ink)' }}
+          <MousePointer2
+            size={20}
+            className="kalas-tour-cursor -scale-x-100 text-ink"
+            strokeWidth={2}
+            style={{ filter: 'drop-shadow(0 2px 6px rgba(36,65,58,0.35))' }}
+            fill="var(--color-canvas)"
           />
-          {/* It says "press here", so pressing it has to work. It used to be
-              decoration with pointer-events off, and a label that does nothing
-              when you obey it is the worst thing on the screen. Pressing it
-              presses the real control, so the app does exactly what it would
-              have done — navigation included — and the tour moves on. */}
-          <button
-            type="button"
-            onClick={() => {
-              const el = anchorElRef.current;
-              if (el) el.click();
-              else advance();
-            }}
-            className="pointer-events-auto cursor-pointer rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold whitespace-nowrap text-canvas shadow-[0_4px_14px_rgba(36,65,58,0.3)] transition-opacity hover:opacity-90"
-          >
-            {t('Tryk her')}
-          </button>
         </div>
       )}
 
@@ -383,6 +329,20 @@ export default function GuidedTour({
               <span className="font-semibold">{t(tries[0], params as Record<string, string | number>)}</span>
             </span>
           </p>
+        )}
+
+        {/* The only way forward. The anchor used to be the advance button —
+            but it points at page content now, where a click should do its own
+            job. Without this the tour was a dead end whenever the anchor was
+            not on screen, which is every nav-anchored step on a phone. */}
+        {!step.final && (
+          <button
+            type="button"
+            onClick={advance}
+            className="mt-5 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-ink px-4 py-2.5 text-[13px] font-semibold text-canvas transition-opacity hover:opacity-90"
+          >
+            {t('Videre')} <ArrowRight size={14} />
+          </button>
         )}
 
         {/* The tour ends on a decision, not a dismissal. The two modes are a

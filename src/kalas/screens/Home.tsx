@@ -12,15 +12,18 @@ import { navigateToHub } from '../lib/hub-nav';
 import { useLang } from '../i18n';
 import { daysUntilWedding } from '@/lib/wedding-date';
 import { estimatedTotal } from './budget/estimate';
-import { budgetLines } from '../data';
+import { budgetLines, IMAGES } from '../data';
 import type { HubCat } from './team/shared';
 import HeroPhoto from './home/HeroPhoto';
+import { venueCardImage } from './home/venueImage';
 import WeddingDatePicker from '../onboarding/WeddingDatePicker';
 
 const HERO_IMG =
   'https://cdn.wonder.so/images/019d9110-e1f2-74f3-85e8-c89f82be5a63/6d0cada0901a800c9f43a2cf68a9d52f6cf2620687565337240b2d069d261834.jpg';
-const VENUE_IMG =
-  'https://cdn.wonder.so/images/019d9110-e1f2-74f3-85e8-c89f82be5a63/9c6724b9dd201927b422364b58caeef1463b9c321cb5eaca024140a917889110.jpg';
+/* Only used until the couple has a venue of their own. The photo it replaces
+   was an American ballroom — chandeliers and gold chiavari chairs — on a card
+   inviting a Danish couple to find somewhere that matches their mood. */
+const VENUE_FALLBACK_IMG = IMAGES.orangeri;
 
 type CheckStatus = 'completed' | 'in_progress' | 'todo';
 
@@ -457,7 +460,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
           type="button"
           onClick={() => goHub('explore', 'venue')}
           className="relative flex min-h-[280px] flex-1 flex-col justify-end overflow-hidden rounded-[26px] bg-cover bg-center p-7 text-left"
-          style={{ backgroundImage: `url('${VENUE_IMG}')` }}
+          style={{ backgroundImage: `url('${venueCardImage(venues, event?.chosen_venue_id, VENUE_FALLBACK_IMG)}')` }}
         >
           <div className="absolute inset-0 bg-[linear-gradient(rgba(20,32,16,0.15)_0%,rgba(20,32,16,0.82)_100%)]" />
           <div className="relative flex flex-col gap-2">

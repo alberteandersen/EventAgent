@@ -106,7 +106,7 @@ export default function ChatShell({
 
         <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">
           {/* ── Header ───────────────────────────────────────────────── */}
-          <header className="flex h-14 shrink-0 items-center justify-between gap-3 px-4 lg:px-5">
+          <header className="flex h-12 shrink-0 items-center justify-between gap-3 px-4 lg:px-5">
             <div className="flex min-w-0 items-center gap-3">
               <span className="lg:hidden"><Wordmark /></span>
             </div>

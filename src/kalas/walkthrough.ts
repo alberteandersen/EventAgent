@@ -1,15 +1,17 @@
 /* Ava's guided tour — the script.
  *
- * One entry per page: a title, a short body, and an example of what the couple
- * could ask. The example is shown, not fired: a button that started a real
- * agent turn from inside the tour did the asking somewhere they could not see
- * it, and the asking belongs in the chat.
+ * One step per page, walked down the sidebar in the order the menu itself
+ * lists them. The order is not written here: it is derived from NAV, so the
+ * two cannot drift apart and a new menu entry cannot be silently skipped.
+ * What lives here is the only thing NAV does not know — what to say about
+ * each page.
  *
- * Copy is Danish source with {named} placeholders, resolved through the same
- * t(source, params) i18n as the rest of the app (see i18n.tsx / strings.ts).
+ * The copy rule, learned the hard way: say what Ava does for them, not what
+ * the page is called, and never describe a screen that is empty on day one —
+ * which is exactly when the tour runs.
  */
 
-import type { ScreenId } from './Shell';
+import { NAV, type ScreenId } from './Shell';
 
 /** localStorage key holding the current step index — also the "armed" marker. */
 export const WALKTHROUGH_KEY = 'kalas_walkthrough';
@@ -38,105 +40,90 @@ export type WalkthroughStep = {
   final?: boolean;
 };
 
-export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
-  {
-    id: 'intro',
-    page: 'home',
-    /* Opens on their own wedding rather than on a menu: the names, the date
-       and the countdown are the couple's own answers handed back to them, and
-       that is a better first frame than a checklist. */
-    eyebrow: 'Hjem',
-    /* Classic to begin with. Onboarding lands every couple in chat, so the
-       tour opened on a chat column covering the page it was describing. */
-    chat: false,
+/** What to say about each page. Keyed by ScreenId; the order comes from NAV.
+ *  A page with no entry gets no step. */
+const PAGE_COPY: Partial<Record<ScreenId, { title: string; body: string }>> = {
+  home: {
     title: 'Det her er jeres side',
-    body:
-      'Jeres navne, jeres dato og hvor længe der er til. Alt hvad I fortalte mig, står allerede her.\n\nKalas kan bruges på to måder: **med mig ved siden af**, hvor I skriver og jeg gør arbejdet, eller **klassisk**, hvor I klikker jer rundt selv. I vælger til sidst — og kan skifte når som helst.',
+    body: 'Jeres navne, jeres dato og hvor længe der er til — alt hvad I fortalte mig, står allerede her.\n\nJeg holder **Kom godt i gang** opdateret nedenunder, ét skridt ad gangen.',
   },
-  {
-    id: 'start',
-    page: 'home',
-    eyebrow: 'Hjem',
-    title: 'Her står næste skridt',
-    body:
-      'Jeg holder **Kom godt i gang** opdateret, ét skridt ad gangen, og krydser af efterhånden som I kommer videre.',
+  planning: {
+    title: 'Tidsplanen regnes baglæns fra jeres dato',
+    body: 'Milepælene lægger sig selv ud fra dagen og hjem, så I altid ved **hvad der haster nu**. Tjeklisten har over 200 punkter fordelt på områder — I skal ikke selv finde på dem.\n\nOg **Bryllupsdagen** er selve dagen, minut for minut, når I når dertil.',
   },
-  {
-    id: 'vendors',
-    page: 'team',
-    eyebrow: 'Venue & leverandører',
-    title: 'Her finder I stederne',
-    body:
-      'Jeg søger på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I gemmer favoritter på jeres **shortlist** og ser, hvem I har booket.',
+  inbox: {
+    title: 'Her lander svarene fra stederne',
+    body: 'Tom lige nu. Når jeg har skrevet til et sted, samler jeg tråden her, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende det.',
   },
-  {
-    id: 'budget',
-    page: 'budget',
-    eyebrow: 'Budget',
-    title: 'Budgettet holder styr på sig selv',
-    body:
-      'Jeg fordeler beløbet på **kategorier** og siger til, **før I rammer loftet**. I kan trække i det selv — eller bede mig om at ændre det.',
+  team: {
+    title: 'Jeg søger stederne frem for jer',
+    body: 'Jeg leder på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I swiper dem til jeres **shortlist**, og jeg kan skrive til dem for jer.',
   },
-  {
-    id: 'guests',
-    page: 'guests',
-    eyebrow: 'Gæster',
-    /* Not "who hasn't replied yet": the walkthrough runs on day one, when the
-       list is empty and the honest answer is "nobody, there are no guests".
-       A prompt that only works months later is a prompt that fails now. */
-    title: 'Gæstelisten, uden regneark',
-    body:
-      'Importér fra **CSV** eller tilføj dem enkeltvis. Jeg holder styr på **svar**, **plus-ens** og **kostbehov** undervejs.',
+  budget: {
+    title: 'Budgettet fordeler sig selv',
+    body: 'Jeg fordeler beløbet på kategorier og siger til, **før I rammer loftet**. Bed mig om et forslag, så regner jeg en fordeling ud fra jeres tal.\n\nUploader I en kontrakt, læser jeg prisen og betalingsdatoerne ud af den.',
   },
-  {
-    id: 'planning',
-    page: 'planning',
-    eyebrow: 'Tidslinje & tjekliste',
-    title: 'Tidslinjen regnes baglæns',
-    body:
-      'Fra jeres dato og hjem, så I altid ved **hvad der haster nu** — og hvad der kan vente.',
+  guests: {
+    title: 'Gæstelisten svarer selv',
+    body: 'Hver gæst får sit **eget svar-link**. De svarer, og listen opdaterer sig — også med kostbehov og overnatning, så I ikke skal spørge to gange.',
   },
-  {
-    id: 'inbox',
-    page: 'inbox',
-    eyebrow: 'Inbox',
-    title: 'Her lander svarene',
-    body:
-      'Når jeg har skrevet til et sted, samler jeg tråden, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende.',
+  website: {
+    title: 'En rigtig hjemmeside, ikke et udkast',
+    body: 'Jeg bygger den ud fra jeres oplysninger, og I kan udgive den på **en offentlig adresse**, I kan dele med gæsterne. Programmet og svar-formularen hænger sammen med resten her.',
   },
-  {
-    id: 'rest',
-    /* Points at one of the pages it is describing. Without a target there is
-       nothing to press, and since the skip buttons went the tag is the only
-       way forward — a step with no anchor would be a dead end. */
-    page: 'website',
-    eyebrow: 'Hjemmeside',
-    title: 'Der er mere, når I når dertil',
-    body:
-      'Bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse ligger i menuen. **Én ting ad gangen** — de venter på jer.',
+  registry: {
+    title: 'Ønskelisten, uden dobbeltgaver',
+    body: 'I skriver ønskerne, gæsterne reserverer dem på jeres side — og I kan ikke se hvem, før I selv vil.',
   },
+  invites: {
+    title: 'Invitationer, der kan sendes som et link',
+    body: 'Vælg en skabelon, så laver jeg invitationen med jeres egne oplysninger. Den får sit eget link, I kan sende.',
+  },
+  seating: {
+    title: 'Bordplanen kender jeres gæster',
+    body: 'Gæsterne kommer herover fra listen, grupperet efter side, med kostbehov markeret. I trækker dem på plads.',
+  },
+  honeymoon: {
+    title: 'Bryllupsrejsen, når I orker at tænke på den',
+    body: 'Find destinationer og gem dem, I kan lide. Den venter på jer.',
+  },
+  nygift: {
+    title: 'Og bagefter',
+    body: 'Album til billederne og en takkeliste, der holder styr på hvem I har takket. Den er der, når dagen er ovre.',
+  },
+};
+
+/* The sidebar, top to bottom, then the two steps that are not pages. */
+export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
+  ...NAV.flatMap((item): WalkthroughStep[] => {
+    const copy = PAGE_COPY[item.id];
+    if (!copy) return [];
+    return [{
+      id: item.id,
+      page: item.id,
+      eyebrow: item.label,
+      title: copy.title,
+      body: copy.body,
+      // Onboarding lands every couple in chat, so without this the tour
+      // explains a page from behind the chat column covering it.
+      ...(item.id === 'home' ? { chat: false } : {}),
+    }];
+  }),
   {
     id: 'chat',
     page: 'home',
-    /* The one anchor that was already in the app and never used
-       (ChatShell.tsx). Opening chat here shows the thing the step is about
-       rather than describing it. */
     eyebrow: 'Ava',
     chat: true,
     title: 'Alt det her kan I også bare bede om',
-    body:
-      'Hver eneste side I lige har set, kan jeg styre for jer herfra. **Sæt budgettet**, **find et sted**, **tilføj en gæst** — skriv det, som I ville sige det til et menneske, så gør jeg det og viser jer resultatet.\n\nI behøver ikke lære menuen at kende først.',
+    body: 'Hver eneste side I lige har set, kan jeg styre for jer herfra. **Sæt budgettet**, **find et sted**, **tilføj en gæst** — skriv det, som I ville sige det til et menneske, så gør jeg det og viser jer resultatet.\n\nI behøver ikke lære menuen at kende først.',
   },
   {
     id: 'choose',
     page: 'home',
-    /* Ends on the checklist rather than on a goodbye. "That was the tour" and
-       then an empty screen leaves them exactly where they were before it
-       started — the last thing a tour owes them is the first thing to do. */
+    eyebrow: 'Hjem',
     final: true,
     title: 'Sådan kommer I i gang',
-    body:
-      'Start i **Kom godt i gang** — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.',
+    body: 'Start i **Kom godt i gang** — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.',
   },
 ] as const;
 

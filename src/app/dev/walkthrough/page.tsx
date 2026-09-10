@@ -9,7 +9,7 @@
 import { useState } from 'react';
 import GuidedTour from '@/kalas/GuidedTour';
 import { LanguageProvider } from '@/kalas/i18n';
-import type { ScreenId } from '@/kalas/Shell';
+import { NAV, type ScreenId } from '@/kalas/Shell';
 
 export default function DevWalkthroughPage() {
   const [running, setRunning] = useState(true);
@@ -23,12 +23,30 @@ export default function DevWalkthroughPage() {
       <div className="theme-kalas min-h-screen bg-canvas px-8 py-12 text-ink">
         <p className="eyebrow mb-6">Dev · GuidedTour</p>
 
-        <div className="mb-4 flex h-[120px] max-w-[520px] items-center rounded-[20px] border border-line bg-shell px-6">
-          <span className="font-serif text-[1.4rem] text-ink">Alberte &amp; Espen · 584 dage</span>
-        </div>
+        {/* Stand-in sidebar carrying NAV's own ids, so the tour can find and
+            light the button for the next page exactly as it does in the app. */}
+        <div className="flex gap-8">
+          <div className="w-[220px] shrink-0 rounded-[16px] border border-line bg-shell p-2">
+            {NAV.map((n) => (
+              <button
+                key={n.id}
+                data-tour={n.id}
+                onClick={() => note(`klik: ${n.id}`)}
+                className="mb-1 flex w-full items-center rounded-[10px] px-3 py-2.5 text-left text-sm font-semibold hover:bg-card"
+              >
+                {n.label}
+              </button>
+            ))}
+          </div>
 
-        {/* Enough page to scroll, so "each step opens at the top" is visible. */}
-        <div className="mb-4 h-[1400px] w-full max-w-[980px] rounded-[28px] border border-line bg-shell" />
+          <div className="min-w-0 flex-1">
+            <div className="mb-4 flex h-[120px] items-center rounded-[20px] border border-line bg-shell px-6">
+              <span className="font-serif text-[1.4rem] text-ink">Alberte &amp; Espen · 584 dage</span>
+            </div>
+            {/* Enough page to scroll, so "each step opens at the top" is visible. */}
+            <div className="h-[1200px] rounded-[28px] border border-line bg-shell" />
+          </div>
+        </div>
 
         <pre className="mb-4 text-[12px] text-ink-soft">{log.join('\n') || 'ingen handling endnu'}</pre>
 

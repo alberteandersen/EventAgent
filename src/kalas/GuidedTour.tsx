@@ -14,7 +14,8 @@
  * nothing about whether they are shown around.
  */
 
-import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ArrowLeft, ArrowRight } from 'lucide-react';
 import type { ScreenId } from './Shell';
 import { useLang } from './i18n';
@@ -22,6 +23,15 @@ import RichText from './chat/RichText';
 import {
   WALKTHROUGH_STEPS,
 } from './walkthrough';
+
+type Box = { top: number; left: number; width: number; height: number };
+
+/** The visible nav button for a page — the rail renders twice (sidebar and,
+ *  in chat mode, the collapsed rail), and the hidden copy has no width. */
+function findNavButton(page: string): HTMLElement | null {
+  const all = Array.from(document.querySelectorAll<HTMLElement>(`[data-tour="${page}"]`));
+  return all.find((el) => el.getBoundingClientRect().width > 0) ?? null;
+}
 
 export default function GuidedTour({
   onNavigate,
@@ -55,6 +65,66 @@ export default function GuidedTour({
   const navigateRef = useRef(onNavigate);
   useEffect(() => { navigateRef.current = onNavigate; });
 
+  /* What lights up is the menu button for the NEXT page, not this one. The
+     tour has already opened the page the card describes, so highlighting its
+     own button asked them to press their way to where they already were —
+     which is why it looked like nothing happened. Skipped when the next step
+     stays on this page, since there would be nothing to travel to. */
+  const nextStep = WALKTHROUGH_STEPS[idx + 1];
+  const target = nextStep && nextStep.page && nextStep.page !== step.page ? nextStep.page : null;
+
+  const [box, setBox] = useState<Box | null>(null);
+  const targetElRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    // Cleared on a timer, not synchronously: a setState in an effect body is
+    // a cascading render, and the lint rule that catches it is right.
+    if (!target) {
+      const id = window.setTimeout(() => setBox(null), 0);
+      return () => window.clearTimeout(id);
+    }
+    let el: HTMLElement | null = null;
+    let raf = 0;
+    let last: Box | null = null;
+
+    /* Re-measured on a frame loop rather than once: the step arrives with a
+       page change, and a single measurement lands before the layout settles —
+       which used to leave the ring floating a few hundred pixels off. */
+    const measure = () => {
+      if (!el) {
+        el = findNavButton(target);
+        targetElRef.current = el;
+        if (!el) return;
+        el.addEventListener('click', onClick);
+      }
+      const r = el.getBoundingClientRect();
+      const next = { top: r.top - 6, left: r.left - 6, width: r.width + 12, height: r.height + 12 };
+      if (last && last.top === next.top && last.left === next.left
+        && last.width === next.width && last.height === next.height) return;
+      last = next;
+      setBox(next);
+    };
+    // Their click on the real button navigates; the tour just follows along.
+    const onClick = () => advance();
+
+    /* Three ways in, on purpose. requestAnimationFrame does not fire while
+       the tab is in the background, so the interval is what brings the ring
+       back when they return; and the immediate timeout means a re-render
+       inside the first frame cannot leave the ring unset. Each writes only
+       when the rectangle actually moved. */
+    const first = window.setTimeout(measure, 0);
+    const tick = () => { raf = requestAnimationFrame(tick); measure(); };
+    raf = requestAnimationFrame(tick);
+    const poll = window.setInterval(measure, 250);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(first);
+      window.clearInterval(poll);
+      el?.removeEventListener('click', onClick);
+      targetElRef.current = null;
+    };
+  }, [target, advance]);
+
   /* Every step opens on the top of its page. The step describes what the page
      leads with, and arriving halfway down it — which is where the last page
      was left — means describing something off screen. */
@@ -78,15 +148,56 @@ export default function GuidedTour({
 
   const pct = Math.round(((idx + 1) / total) * 100);
 
-  return (
+  /* Rendered into the body, not in place. The ring is positioned from
+     getBoundingClientRect — viewport coordinates — but `position: fixed`
+     resolves against the nearest ancestor carrying a transform, and this app
+     is full of them (every motion.div). In place, the ring's inline top of
+     443px landed at 268px on screen: right number, wrong origin. */
+  if (typeof document === 'undefined') return null;
+
+  return createPortal(
     <>
-      {/* Parked at the bottom. Nothing is highlighted any more, so the card
-          has no target to sit beside — and the one thing it must not do is
-          cover the top of the page, which is what each step opens on. */}
+      {/* The ring, and a label on it. The target is always a menu button, so
+          it is always on the left — which is exactly why the card lives on
+          the right and the two can never collide. */}
+      {box && (
+        <>
+          <div
+            aria-hidden
+            /* No transition on the position. Animating top/left means the ring
+               is only in the right place once the animation finishes — and
+               transitions are throttled in a background tab and skipped under
+               reduced motion, which left it sitting on the previous step's
+               button indefinitely. It should just be where it is. */
+            className="pointer-events-none fixed z-40 rounded-[12px] border-2 border-sage-strong"
+            style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              /* It says "press here", so pressing it presses the real button:
+                 the app navigates exactly as it would have, and the tour just
+                 follows. Falls back to advancing if the button went away. */
+              const el = targetElRef.current;
+              if (el) el.click();
+              else advance();
+            }}
+            className="fixed z-40 cursor-pointer rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold whitespace-nowrap text-canvas shadow-[0_4px_14px_rgba(36,65,58,0.3)] transition-opacity hover:opacity-90"
+            style={{ top: box.top + box.height / 2 - 14, left: box.left + box.width + 10 }}
+          >
+            {t('Tryk her')}
+          </button>
+        </>
+      )}
+
+      {/* Bottom right, and it stays there. The highlight is always a menu
+          button on the left, so this corner is the one place the card can
+          never cover either the menu or what the step is pointing at — and a
+          card that does not move is one that cannot land somewhere wrong. */}
       <div
         role="dialog"
         aria-label={t('Rundvisning')}
-        className="fixed inset-x-4 bottom-6 z-50 overflow-hidden rounded-[20px] rule bg-card p-4 shadow-[0_14px_40px_rgba(36,65,58,0.18)] lg:inset-x-auto lg:bottom-6 lg:left-6 lg:w-[320px]"
+        className="fixed inset-x-4 bottom-6 z-50 overflow-hidden rounded-[20px] rule bg-card p-4 shadow-[0_14px_40px_rgba(36,65,58,0.18)] lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[320px]"
       >
         <div className="flex items-center justify-between gap-3">
           <p className="eyebrow">{eyebrow}</p>
@@ -174,6 +285,7 @@ export default function GuidedTour({
           </div>
         )}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }

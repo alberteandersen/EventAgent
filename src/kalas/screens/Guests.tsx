@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil } from 'lucide-react';
-import { Pill, Chip, cn } from '../ui';
+import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil } from 'lucide-react';
+import { Pill, cn } from '../ui';
 import GuestDialog, { type GuestDraft } from './GuestDialog';
 import { dietarySummary } from './guests/dietary';
 import AnimateNumber from '../AnimateNumber';
@@ -9,7 +9,13 @@ import { useLang } from '../i18n';
 import { useWedding } from '../useWedding';
 import type { GuestRow as GuestRecord, RsvpStatus } from '@/lib/db/types';
 
-const RSVP_CYCLE: Record<RsvpStatus, RsvpStatus> = { afventer: 'ja', ja: 'nej', nej: 'afventer' };
+/** The three states a couple can set by hand, in the order they think about
+ *  them. 'nej' reads as "Afbud" everywhere in the UI. */
+const RSVP_OPTIONS: { value: RsvpStatus; label: string }[] = [
+  { value: 'ja', label: 'Ja' },
+  { value: 'afventer', label: 'Afventer' },
+  { value: 'nej', label: 'Afbud' },
+];
 
 type Tab = 'gæsteliste' | 'beskeder';
 type Filter = 'alle' | 'ja' | 'afventer' | 'afbud';
@@ -71,7 +77,7 @@ export default function Guests() {
   };
 
   const removeGuest = (id: string) => void deleteGuest(id);
-  const cycleRsvp = (g: GuestRecord) => void updateGuest(g.id, { rsvp: RSVP_CYCLE[g.rsvp] });
+  const setRsvp = (g: GuestRecord, rsvp: RsvpStatus) => void updateGuest(g.id, { rsvp });
 
   const sides = ['Fælles', couple.a || 'Partner 1', couple.b || 'Partner 2'].filter(Boolean);
 
@@ -182,7 +188,7 @@ export default function Guests() {
               <span className="text-[0.62rem] font-semibold tracking-[0.2em] uppercase text-muted">-</span>
             </div>
             <div className="divide-y divide-[var(--color-line)]">
-              {list.map((g, i) => <GuestRow key={g.id} g={g} i={i} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g.id)} onCycle={() => cycleRsvp(g)} onEdit={() => setDialog(g)} />)}
+              {list.map((g, i) => <GuestRow key={g.id} g={g} i={i} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g.id)} onSetRsvp={(v) => setRsvp(g, v)} onEdit={() => setDialog(g)} />)}
             </div>
             {list.length === 0 && (
               <p className="py-10 text-center font-serif text-[1.1rem] italic text-muted">
@@ -210,11 +216,41 @@ export default function Guests() {
   );
 }
 
-function GuestRow({ g, i, link, onRemove, onCycle, onEdit }: { g: GuestRecord; i: number; link: string | null; onRemove: () => void; onCycle: () => void; onEdit: () => void }) {
+/* The status as a dropdown, not a chip you click through. Cycling meant two
+   wrong states on the way to the right one, on a list where most rows only
+   ever get set once. A native select so it is keyboard-reachable and opens
+   the system picker on a phone; the pill styling is the Chip's, since it has
+   to keep reading as a status at a glance. */
+function RsvpSelect({ value, name, onChange }: { value: RsvpStatus; name: string; onChange: (v: RsvpStatus) => void }) {
+  const { t } = useLang();
+  const tone =
+    value === 'ja' ? 'bg-[#dde7d6] text-[#2f5a48]'
+    : value === 'afventer' ? 'bg-[#ecdcd0] text-[#7a543c]'
+    : 'rule text-muted';
+  return (
+    <span className="relative inline-flex">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as RsvpStatus)}
+        aria-label={t('Svar for {name}', { name })}
+        className={cn(
+          'cursor-pointer appearance-none rounded-full py-1 pl-2.5 pr-6 text-[0.65rem] font-medium uppercase tracking-[0.14em] focus:outline-none',
+          tone,
+        )}
+      >
+        {RSVP_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>{t(o.label)}</option>
+        ))}
+      </select>
+      <ChevronDown size={11} aria-hidden
+        className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 opacity-50" />
+    </span>
+  );
+}
+
+function GuestRow({ g, i, link, onRemove, onSetRsvp, onEdit }: { g: GuestRecord; i: number; link: string | null; onRemove: () => void; onSetRsvp: (v: RsvpStatus) => void; onEdit: () => void }) {
   const { t } = useLang();
   const isAfbud = g.rsvp === 'nej';
-  const rsvpLabel = isAfbud ? t('afbud') : t(g.rsvp);
-  const tone = g.rsvp === 'ja' ? 'success' : g.rsvp === 'afventer' ? 'clay' : 'neutral';
   const [copied, setCopied] = useState(false);
   const detail = [
     g.plus_one_name && `+ ${g.plus_one_name}`,
@@ -249,14 +285,7 @@ function GuestRow({ g, i, link, onRemove, onCycle, onEdit }: { g: GuestRecord; i
           )}
         </div>
 
-        <button onClick={onCycle} aria-label={t('Skift RSVP for {name}', { name: g.name })}
-          className="text-left cursor-pointer" title={t('Klik for at skifte svar')}>
-          {isAfbud ? (
-            <span className="text-[0.82rem] text-muted line-through">{rsvpLabel}</span>
-          ) : (
-            <Chip tone={tone}>{rsvpLabel}</Chip>
-          )}
-        </button>
+        <RsvpSelect value={g.rsvp} name={g.name} onChange={onSetRsvp} />
 
         <div>
           {g.meal ? (

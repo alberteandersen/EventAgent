@@ -437,7 +437,9 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           const note = noteById[b.id] ?? '';
           const Icon = resolveBudgetIcon(b.icon);
           const custom = isCustomLine(b.id);
-          const subCount = budgetSubItems.filter((s) => s.category === b.id).length;
+          const subs = budgetSubItems.filter((s) => s.category === b.id);
+          const subCount = subs.length;
+          const subTotal = subs.reduce((a, s) => a + s.amount, 0);
           return (
           <motion.div key={b.id}
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -554,18 +556,38 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                 here; adding/editing/deleting a sub-item still happens in
                 Detaljer, where the full Underposter section already lives. */}
             {expandedIds.has(b.id) && subCount > 0 && (
-              <div className="mt-3 space-y-1.5 border-l border-line pl-4">
-                {budgetSubItems
-                  .filter((s) => s.category === b.id)
-                  .map((s) => (
-                    <div key={s.id} className="flex items-center justify-between gap-3 text-[0.82rem]">
-                      <span className="min-w-0 truncate text-ink-soft">
-                        {s.label}
-                        {s.vendor && <span className="text-muted"> · {s.vendor}</span>}
-                      </span>
-                      <span className="shrink-0 font-medium text-ink tabular-nums">{kr(s.amount)} kr</span>
-                    </div>
-                  ))}
+              <div className="mt-3 overflow-hidden rounded-2xl rule bg-card">
+                {subs.map((s, idx) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setDetailId(b.id)}
+                    aria-label={t('Rediger {label}', { label: s.label })}
+                    className={cn(
+                      'group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-shell cursor-pointer',
+                      idx > 0 && 'border-t border-line',
+                    )}
+                  >
+                    {/* The parent's own icon and colour, so a sub-item reads as
+                        belonging to this category rather than floating loose. */}
+                    <Icon size={13} className="shrink-0" style={{ color: b.color }} strokeWidth={2.25} aria-hidden />
+                    <span className="min-w-0 flex-1 truncate text-[0.85rem] text-ink">
+                      {s.label}
+                      {s.vendor && <span className="text-muted"> · {s.vendor}</span>}
+                    </span>
+                    <span className="shrink-0 text-[0.85rem] font-semibold text-ink tabular-nums">
+                      {kr(s.amount)} kr
+                    </span>
+                    <ChevronRight size={13} aria-hidden
+                      className="shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
+                  </button>
+                ))}
+                <div className="flex items-center justify-between border-t border-line bg-shell/60 px-4 py-2.5">
+                  <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted">
+                    {t('I alt')}
+                  </span>
+                  <span className="text-[0.85rem] font-semibold text-ink tabular-nums">{kr(subTotal)} kr</span>
+                </div>
               </div>
             )}
 

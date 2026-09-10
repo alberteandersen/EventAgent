@@ -2156,6 +2156,7 @@ export const EN: Record<string, string> = {
     'The sub-items sum to {sum} kr — Actual cost is {actual} kr.',
   'Slet {label}': 'Delete {label}',
   '{n} poster': '{n} items',
+  'I alt': 'Total',
   'Vis underposter': 'Show sub-items',
   'Skjul underposter': 'Hide sub-items',
 

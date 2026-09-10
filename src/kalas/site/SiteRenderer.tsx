@@ -182,7 +182,10 @@ export function SiteRenderer({
         body = <HotelSection s={s} config={config} tone={tone} display={display} hairline={hairline} radius={RADIUS[shape.radius]} />;
         break;
       case 'faq':
-        if (config.faq.length === 0) return null;
+        /* Only the ones they answered. The defaults ship as questions with
+           blank answers now, so an untouched FAQ renders nothing rather than
+           three empty rows — or, as before, three invented ones. */
+        if (config.faq.every((f) => !f.a.trim())) return null;
         body = <FaqSection s={s} config={config} display={display} hairline={hairline} radius={RADIUS[shape.radius]} />;
         break;
       case 'rsvp':
@@ -637,13 +640,18 @@ function HotelSection({ s, config, tone, display, hairline, radius }: {
   );
 }
 
+/** The entries the couple actually filled in. */
+function answered(config: SiteConfig) {
+  return config.faq.filter((f) => f.a.trim());
+}
+
 function FaqSection({ s, config, display, hairline, radius }: {
   s: DesignSection; config: SiteConfig; display: React.CSSProperties; hairline: string; radius: string;
 }) {
   if (s.variant === 'two-col') {
     return (
       <div className="grid gap-x-10 gap-y-8 md:grid-cols-2">
-        {config.faq.map((f) => (
+        {answered(config).map((f) => (
           <div key={f.id}>
             <p style={{ ...display, fontSize: '1.02rem' }}>{f.q}</p>
             <p className="mt-2 text-[0.9rem] leading-relaxed opacity-75">{f.a}</p>
@@ -654,7 +662,7 @@ function FaqSection({ s, config, display, hairline, radius }: {
   }
   return (
     <div className="mx-auto max-w-xl space-y-3">
-      {config.faq.map((f) => (
+      {answered(config).map((f) => (
         <details key={f.id} className="px-5 py-4" style={{ border: hairline, borderRadius: radius }}>
           <summary className="cursor-pointer text-[0.98rem]" style={{ ...display, fontSize: '1rem' }}>{f.q}</summary>
           <p className="mt-2 text-[0.9rem] leading-relaxed opacity-75">{f.a}</p>

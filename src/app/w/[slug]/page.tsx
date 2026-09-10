@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -7,6 +8,7 @@ import { googleFontsHref, SITE_FONTS } from "@/kalas/site/fonts";
 import { urlMapForDesign } from "@/lib/website/buildSite";
 import { resolveHtml, familiesInHtml } from "@/lib/website/resolveHtml";
 import { siteCookieName, siteCookieValue } from "@/lib/site-auth";
+import { publicCouple, siteLanguage, siteTitle } from "@/lib/website/publicCouple";
 import type {
   EventRow, ProfileRow, RegistryItemRow, RegistryClaimRow, WeddingSiteRow,
   WebsiteDesignRow, SitePhotoRow, VenueRow, AppLanguage,
@@ -15,15 +17,50 @@ import { PublicSite } from "./PublicSite";
 
 export const dynamic = "force-dynamic";
 
-function coupleFrom(event: EventRow, profile: ProfileRow | null) {
-  const a = (profile?.display_name ?? event.title).split(/\s+/)[0] || "";
-  const b = profile?.partner_name?.split(/\s+/)[0] ?? "";
-  const dateISO = event.event_date;
-  const dateLabel = dateISO
-    ? new Date(dateISO).toLocaleDateString("da-DK", { day: "numeric", month: "long", year: "numeric" })
-    : event.date_hint ?? "";
-  return { a, b, dateISO, dateLabel };
+/* A wedding site is an invitation, not a website. The couple sends a link to
+   the people they want there — they are not publishing their full names, the
+   date and the venue's address for anyone who searches. Nothing about the
+   page said so, and with pwProtected off by default it was indexable as it
+   stood. noindex on every one of them; the guests have the link.
+   Folded into generateMetadata because Next allows only one of the two. */
+const ROBOTS = { index: false, follow: false, nocache: true } as const;
+
+/* What the link looks like when it lands in the family group chat. Without
+   this it inherited the root layout's metadata and previewed as Kalas'
+   marketing pitch — the couple's own invitation, advertising the tool that
+   made it. */
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> },
+): Promise<Metadata> {
+  const { slug } = await params;
+  const admin = createAdminClient();
+
+  const { data: siteRow } = await admin
+    .from("wedding_sites").select("*").ilike("domain", slug).maybeSingle();
+  const site = siteRow as WeddingSiteRow | null;
+  // An unpublished or missing site says nothing about whose it is.
+  if (!site || !site.published) return { robots: ROBOTS, title: "Kalas" };
+
+  const [{ data: eventRow }, { data: profileRow }] = await Promise.all([
+    admin.from("events").select("*").eq("id", site.event_id).maybeSingle(),
+    admin.from("profiles").select("*").eq("user_id", site.user_id).maybeSingle(),
+  ]);
+  const event = eventRow as EventRow | null;
+  if (!event) return { robots: ROBOTS, title: "Kalas" };
+
+  const profile = profileRow as ProfileRow | null;
+  const couple = publicCouple(event, profile);
+  const title = siteTitle(couple, siteLanguage(profile));
+
+  return {
+    robots: ROBOTS,
+    title,
+    description: couple.dateLabel || undefined,
+    openGraph: { title, description: couple.dateLabel || undefined, type: "website" },
+    twitter: { card: "summary_large_image", title, description: couple.dateLabel || undefined },
+  };
 }
+
 
 export default async function PublicWeddingSite({
   params, searchParams,
@@ -57,8 +94,8 @@ export default async function PublicWeddingSite({
   const profile = (profileRow as ProfileRow | null) ?? null;
 
   const config = parseConfig(site.config); // strips sitePassword by construction
-  const couple = coupleFrom(event, profile);
-  const lang: AppLanguage = profile?.language === "en" ? "en" : "da";
+  const couple = publicCouple(event, profile);
+  const lang: AppLanguage = siteLanguage(profile);
   const registryItems = (items as RegistryItemRow[] | null) ?? [];
   const claimedByItem: Record<string, number> = {};
   for (const c of (claims as Pick<RegistryClaimRow, "item_id" | "quantity">[] | null) ?? []) {

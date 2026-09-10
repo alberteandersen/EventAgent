@@ -37,6 +37,10 @@ export const INIT_SECTIONS: SectionMeta[] = [
   { id: 'photos',    label: 'Del billeder',       desc: 'Gæsterne uploader deres fotos',     enabled: true  },
 ];
 
+/* The programme keeps its example times: the couple sees and edits these in
+   the builder before the section renders, and a timeline with no rows is
+   harder to start from than one to adjust. Unlike the FAQ, nothing here
+   asserts a fact about their wedding that a guest could act on. */
 export const INIT_PROGRAM: ProgramEvent[] = [
   { id: 'e1', time: '14:00', label: 'Vielse',                sublabel: 'Sonnerupgaard Kapel' },
   { id: 'e2', time: '15:30', label: 'Velkomst & champagne',  sublabel: 'Terrassen'           },
@@ -44,16 +48,19 @@ export const INIT_PROGRAM: ProgramEvent[] = [
   { id: 'e4', time: '22:00', label: 'Fest, musik & dans',    sublabel: ''                    },
 ];
 
+/* Questions, no answers. These used to ship with answers — a made-up RSVP
+   deadline and a hotel in Roskilde — and a couple who switched the section on
+   without editing published both as their own. A question with a blank answer
+   is visibly unfinished; "1. august 2026" is not. */
 export const INIT_FAQ: FAQItem[] = [
-  { id: 'f1', q: 'Hvad er dresscode?',          a: 'Festligt og elegant. Kvinder bedes undgå hvid eller cremefarvet.' },
-  { id: 'f2', q: 'Er der parkering på stedet?', a: 'Ja, gratis parkering. Følg skilte fra indkørslen.'               },
-  { id: 'f3', q: 'Hvornår er RSVP-deadline?',   a: '1. august 2026.'                                                  },
+  { id: 'f1', q: 'Hvad er dresscode?',          a: '' },
+  { id: 'f2', q: 'Er der parkering på stedet?', a: '' },
+  { id: 'f3', q: 'Hvornår er RSVP-deadline?',   a: '' },
 ];
 
-export const INIT_HOTELS: HotelItem[] = [
-  { id: 'h1', name: 'Hotel Comwell Roskilde', dist: '8 km fra stedet', price: 'fra 1.200 kr/nat' },
-  { id: 'h2', name: 'Airbnb i området',       dist: '2–5 km',          price: 'fra 800 kr/nat'  },
-];
+/* Empty for the same reason: an unedited hotel list is a recommendation the
+   couple never made, with a price they never checked. */
+export const INIT_HOTELS: HotelItem[] = [];
 
 export const GALLERY_KEYS: ImageKey[] = ['florals', 'olive', 'candles', 'arch', 'ceremony', 'rings'];
 

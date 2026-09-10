@@ -15,7 +15,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { X, Play, Check } from 'lucide-react';
+import { X, MessageCircle } from 'lucide-react';
 import { NAV, type ScreenId } from './Shell';
 import { cn } from './ui';
 import { useLang } from './i18n';
@@ -79,9 +79,7 @@ function placeCard(box: Box, cardH: number): { top: number; left: number } {
 export default function GuidedTour({
   params,
   onNavigate,
-  onAskAva,
   onFinish,
-  promptDoneTick = 0,
   fact = null,
   chatMode = false,
   idx,
@@ -89,10 +87,6 @@ export default function GuidedTour({
 }: {
   params: Partial<WalkthroughParams>;
   onNavigate: (s: ScreenId) => void;
-  /** Runs a try-prompt for real: switches to chat mode and sends it. */
-  onAskAva: (prompt: string) => void;
-  /** Bumped when a prompt this tour handed over has finished running. */
-  promptDoneTick?: number;
   /** One concrete line about this couple's wedding for the current step. */
   fact?: string | null;
   /* Step state is owned by the parent. Kept here it was re-read from storage
@@ -114,30 +108,7 @@ export default function GuidedTour({
   const anchorElRef = useRef<HTMLElement | null>(null);
   const [cardH, setCardH] = useState(260);
 
-  /* Asking them to try something and then saying nothing when it works is the
-     tour dropping the thread. Ava's answer is in the chat; this is the tour
-     acknowledging it and moving on by itself, so they are not left wondering
-     whether that counted. */
-  const [done, setDone] = useState(false);
-  /* While Ava works, the tour follows her: the spotlight moves to the chat
-     column, because that is where the answer is appearing and the couple were
-     otherwise left staring at the page they had just left. */
-  const [awaiting, setAwaiting] = useState(false);
-  const seenTick = useRef(promptDoneTick);
-  useEffect(() => {
-    if (promptDoneTick === seenTick.current) return;
-    seenTick.current = promptDoneTick;
-    setAwaiting(false);
-    setDone(true);
-  }, [promptDoneTick]);
-
-  /* Deliberately no timer here. Moving on by itself meant the couple watched
-     the result for two seconds and then had the card change under them before
-     they had read what had happened — the whole point of running the prompt
-     for real. The confirmation stays until they press on. */
-
   const advance = useCallback(() => {
-    setDone(false);
     setIdx((i) => Math.min(i + 1, WALKTHROUGH_STEPS.length - 1));
   }, [setIdx]);
 
@@ -147,7 +118,7 @@ export default function GuidedTour({
   /* ── Spotlight the step's control, and let a click on it advance ───── */
   // The nav item is the target, so navigation happens because they clicked it —
   // not because we moved the page under them.
-  const anchor = awaiting ? 'ava-chat' : step.anchor;
+  const anchor = step.anchor;
 
   useEffect(() => {
     let el: HTMLElement | null = null;
@@ -214,11 +185,6 @@ export default function GuidedTour({
      yanked the couple back to Hjem the moment they clicked something on the
      page themselves — pressing a checklist row went nowhere. */
 
-  const onNext = () => {
-    // Escape hatch: they didn't click the control, so take them there ourselves.
-    if (step.page) navigateRef.current?.(step.page);
-    advance();
-  };
 
   const total = WALKTHROUGH_STEPS.length;
   const body = t(step.body, params as Record<string, string | number>);
@@ -261,6 +227,28 @@ export default function GuidedTour({
 
   const placed = wide && box ? placeCard(box, cardH) : null;
 
+  /* The four panels that fence off everything except the target. With no
+     target the whole screen is fenced, which is right: those steps have
+     nothing to press but the card. */
+  const blockers = (() => {
+    const b = pointing && box ? box : null;
+    const full = { top: 0, left: 0, right: 0, bottom: 0 } as const;
+    if (!b) return { top: { ...full }, left: { display: 'none' }, right: { display: 'none' }, bottom: { display: 'none' } };
+    return {
+      top: { top: 0, left: 0, right: 0, height: Math.max(0, b.top), bottom: 'auto' },
+      bottom: { top: b.top + b.height, left: 0, right: 0, bottom: 0 },
+      left: { top: b.top, left: 0, width: Math.max(0, b.left), height: b.height },
+      right: { top: b.top, left: b.left + b.width, right: 0, height: b.height },
+    };
+  })();
+
+  /* The page behind must not scroll away from the thing being pointed at. */
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   /* The tag rides on the right of its target, and flips under it when the
      target is wide enough to reach the edge — the hero does, and the tag was
      sitting off-screen where nobody could follow it. */
@@ -274,6 +262,15 @@ export default function GuidedTour({
 
   return (
     <>
+      {/* Everything but the highlight is out of bounds. Four panels rather
+          than one overlay with a hole: a hole punched with a mask still eats
+          the clicks, and the whole point is that the control underneath stays
+          pressable while the rest of the page does not. */}
+      <div aria-hidden className="fixed inset-0 z-30" style={blockers.top} />
+      <div aria-hidden className="fixed z-30" style={blockers.left} />
+      <div aria-hidden className="fixed z-30" style={blockers.right} />
+      <div aria-hidden className="fixed z-30" style={blockers.bottom} />
+
       {pointing && box && (
         <div
           aria-hidden
@@ -286,7 +283,10 @@ export default function GuidedTour({
       {/* "Tryk her", welded to the control itself. The card explains; this
           says where the finger goes, and it travels with the target rather
           than describing its location in words. */}
-      {pointing && tag && (
+      {/* No tag on the last step: the highlight still shows them where to
+          start, but the action there is choosing a mode, and a "Tryk her"
+          that clamps against the end of the tour does nothing. */}
+      {pointing && tag && !step.final && (
         <div
           className={cn(
             'pointer-events-none fixed z-40 flex transition-all duration-300',
@@ -355,66 +355,41 @@ export default function GuidedTour({
         </div>
 
         <h2 className="mt-2 font-serif text-[1.4rem] leading-tight text-ink">
-          {awaiting ? t('Ava er i gang') : title}
+          {title}
         </h2>
 
         <div aria-live="polite" className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">
-          <RichText text={awaiting
-            ? t('Hun søger på nettet nu. Følg med i **samtalen til højre** — jeg siger til, når hun er færdig.')
-            : body} />
+          <RichText text={body} />
         </div>
 
         {/* Their wedding, not the feature. Describing what a page is for is
             true of every couple and therefore about none of them; the next
             task with its date is something they did not already know, and it
             is on the screen behind the card. */}
-        {fact && !awaiting && !done && (
+        {fact && (
           <p className="mt-3 rounded-xl bg-shell px-3 py-2 text-[13px] leading-snug text-ink">
             {fact}
           </p>
         )}
 
-        {done && (
-          <div className="mt-4 flex items-start gap-2 rounded-2xl bg-sage-tint px-4 py-3 text-[13px] text-sage-strong">
-            <Check size={14} strokeWidth={2.5} className="mt-0.5 shrink-0" aria-hidden />
+        {/* An example of what they could ask, not a control. Firing a real
+            agent turn from a button inside the tour meant the asking happened
+            somewhere they could not see it; it belongs in the chat. */}
+        {tries.length > 0 && (
+          <p className="mt-4 flex items-start gap-2 rounded-2xl bg-sage-tint px-4 py-2.5 text-[13px] leading-snug text-sage-strong">
+            <MessageCircle size={14} strokeWidth={2} className="mt-0.5 shrink-0" aria-hidden />
             <span>
-              <span className="font-semibold">{t('Sådan — det er på plads.')}</span>{' '}
-              {t('Kig på resultatet, og tryk videre når I er klar.')}
+              {t('Prøv at skrive:')}{' '}
+              <span className="font-semibold">{t(tries[0], params as Record<string, string | number>)}</span>
             </span>
-          </div>
-        )}
-
-        {!done && !awaiting && tries.length > 0 && (
-          <div className="mt-4 flex flex-col gap-2">
-            {tries.map((prompt) => {
-              const filled = t(prompt, params as Record<string, string | number>);
-              return (
-                <button
-                  key={prompt}
-                  type="button"
-                  onClick={() => {
-                    /* Open the page the prompt is about before sending it, so
-                       the couple watches the board fill up instead of reading
-                       that it happened. */
-                    if (step.page) navigateRef.current?.(step.page);
-                    setAwaiting(true);
-                    onAskAva(filled);
-                  }}
-                  className="flex cursor-pointer items-center gap-2 rounded-full bg-sage-tint px-4 py-2.5 text-left text-[13px] font-semibold text-sage-strong transition-colors hover:bg-sage"
-                >
-                  <Play size={12} strokeWidth={2.5} className="shrink-0 fill-current" aria-hidden />
-                  <span className="min-w-0">{filled}</span>
-                </button>
-              );
-            })}
-          </div>
+          </p>
         )}
 
         {/* The tour ends on a decision, not a dismissal. The two modes are a
             real fork in how the couple will use Kalas every day, and until
             now it was a text link next to a button — the choice was there,
             the difference was not. */}
-        {step.final ? (
+        {step.final && (
           <div className="mt-5 flex flex-col gap-2">
             <p className="eyebrow">{t('Hvordan vil I helst arbejde?')}</p>
             <button
@@ -438,24 +413,6 @@ export default function GuidedTour({
               </span>
             </button>
             <p className="mt-1 text-[12px] text-muted">{t('I kan skifte når som helst oppe i hjørnet.')}</p>
-          </div>
-        ) : (
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => onFinish(chatMode ? 'chat' : 'classic')}
-              className="cursor-pointer text-[12.5px] font-semibold text-muted transition-colors hover:text-ink"
-            >
-              {t('Spring rundvisningen over')}
-            </button>
-            <button
-              type="button"
-              onClick={onNext}
-              disabled={awaiting}
-              className="cursor-pointer rounded-full bg-ink px-4 py-2 text-[12.5px] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:opacity-40"
-            >
-              {done ? t('Videre') : pointing ? t('Spring dette trin over') : t('Videre')}
-            </button>
           </div>
         )}
       </div>

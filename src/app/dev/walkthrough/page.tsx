@@ -18,6 +18,7 @@ const ANCHORS: { id: string; label: string }[] = [
   { id: 'guests', label: 'Gæster' },
   { id: 'planning', label: 'Tidslinje & tjekliste' },
   { id: 'inbox', label: 'Inbox' },
+  { id: 'website', label: 'Hjemmeside' },
 ];
 
 const SAMPLE = `Hej Alberte & Espen! Jeg er Ava, jeres bryllupsplanlægger.
@@ -36,8 +37,6 @@ export default function DevWalkthroughPage() {
   const [running, setRunning] = useState(true);
   // The step lives with the parent in the app too, so the harness mirrors that.
   const [step, setStep] = useState(0);
-  // Stands in for "Ava finished the prompt this step handed her".
-  const [doneTick, setDoneTick] = useState(0);
   const [log, setLog] = useState<string[]>([]);
   const note = (line: string) => setLog((l) => [...l, line]);
 
@@ -68,19 +67,6 @@ export default function DevWalkthroughPage() {
           ))}
         </div>
 
-        {/* Stand-in for the chat column the tour points at while Ava works. */}
-        <div data-tour="ava-chat" className="mt-6 flex h-[90px] max-w-[280px] items-center rounded-[16px] rule bg-shell px-4">
-          <span className="text-[13px] text-ink-soft">Ava-samtalen</span>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setDoneTick((n) => n + 1)}
-          className="mt-6 rounded-full border border-line px-3 py-1.5 text-[0.78rem] font-semibold hover:border-ink cursor-pointer"
-        >
-          Simulér: Ava blev færdig
-        </button>
-
         <pre className="mt-8 text-[12px] text-ink-soft">{log.join('\n') || 'ingen klik endnu'}</pre>
 
         <p className="eyebrow mt-12 mb-3">Dev · RichText (Avas velkomst)</p>
@@ -92,9 +78,7 @@ export default function DevWalkthroughPage() {
           <GuidedTour
             params={{ city: 'Fyn', guests: 80, foodBudget: '85.000', dateHint: 'juni 2027' }}
             onNavigate={(s: ScreenId) => note(`navigate: ${s}`)}
-            onAskAva={(p: string) => note(`askAva: ${p}`)}
             onFinish={(mode: 'chat' | 'classic') => { note(`finish: ${mode}`); setRunning(false); }}
-            promptDoneTick={doneTick}
             fact={tourFact(WALKTHROUGH_STEPS[step].id, {
               region: 'Fyn',
               guestEstimate: 75,

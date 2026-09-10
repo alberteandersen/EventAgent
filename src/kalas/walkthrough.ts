@@ -1,8 +1,9 @@
 /* Ava's guided tour — the script.
  *
- * One entry per page: a title, a short body, and the prompts the couple can
- * try. The prompts are sent to the agent verbatim, so they genuinely execute —
- * a venue search really lands venues on the board.
+ * One entry per page: a title, a short body, and an example of what the couple
+ * could ask. The example is shown, not fired: a button that started a real
+ * agent turn from inside the tour did the asking somewhere they could not see
+ * it, and the asking belongs in the chat.
  *
  * Copy is Danish source with {named} placeholders, resolved through the same
  * t(source, params) i18n as the rest of the app (see i18n.tsx / strings.ts).
@@ -21,7 +22,7 @@ export const WALKTHROUGH_DONE_KEY = 'kalas_walkthrough_done';
 
 export type WalkthroughStep = {
   id: string;
-  /** Where "Videre" takes them when they do not press the control itself. */
+  /** The page the tour opens for this step. */
   page: ScreenId | null;
   /** Read at a glance, so a headline rather than a paragraph. */
   title: string;
@@ -29,11 +30,11 @@ export type WalkthroughStep = {
   body: string;
   /** What the couple clicks to advance in classic — a `data-tour` value. */
   anchor?: string;
-  /** "Try asking me…" prompts — sent to the agent for real. */
+  /** "Try writing…" — shown as an example, never sent from here. */
   tries?: string[];
   /** Prompts that only make sense once every placeholder resolved. */
   needs?: ReadonlyArray<keyof WalkthroughParams>;
-  /** Renders the chat-vs-classic choice instead of chips. */
+  /** Renders the chat-vs-classic choice, and ends the tour. */
   final?: boolean;
 };
 
@@ -116,7 +117,11 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
   },
   {
     id: 'rest',
-    page: 'home',
+    /* Points at one of the pages it is describing. Without a target there is
+       nothing to press, and since the skip buttons went the tag is the only
+       way forward — a step with no anchor would be a dead end. */
+    page: 'website',
+    anchor: 'website',
     title: 'Der er mere, når I når dertil',
     body:
       'Bryllupsside, invitationer, ønskeliste, bordplan og bryllupsrejse ligger i menuen. **Én ting ad gangen** — de venter på jer.',

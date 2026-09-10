@@ -89,13 +89,6 @@ function AppInner() {
     } catch { return false; }
   });
 
-  /* A walkthrough try-prompt pressed in classic: switch to chat and hand Ava
-     the prompt to send. The search really runs — that is the point of the
-     button, and why this is a walkthrough rather than a slideshow.
-     React state, not sessionStorage: writing to storage notifies nobody, so an
-     Ava that was already mounted never noticed the prompt arrive. */
-  const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
-  const [promptDoneTick, setPromptDoneTick] = useState(0);
   /* The tour's step lives here rather than inside it: switching mode swaps
      which shell the tour is mounted under, and state inside it would be read
      back from storage each time — replaying the step they had just done. */
@@ -110,15 +103,6 @@ function AppInner() {
     if (!walkthroughActive) return;
     try { localStorage.setItem(WALKTHROUGH_KEY, String(tourStep)); } catch { /* ignore */ }
   }, [walkthroughActive, tourStep]);
-
-  const askAva = useCallback((prompt: string) => {
-    setPendingPrompt(prompt);
-    // Already in chat: the prompt lands in the thread they are looking at.
-    setChatMode((on) => {
-      if (!on) { try { localStorage.setItem('kalas_chat_mode', '1'); } catch { /* ignore */ } }
-      return true;
-    });
-  }, [setPendingPrompt, setChatMode]);
 
   const toggleChatMode = useCallback((on: boolean) => {
     setChatMode(on);
@@ -204,9 +188,7 @@ function AppInner() {
     <GuidedTour
       params={walkthroughParams(event, couple)}
       onNavigate={navigate}
-      onAskAva={askAva}
       onFinish={finishWalkthrough}
-      promptDoneTick={promptDoneTick}
       fact={tourFact(WALKTHROUGH_STEPS[Math.min(tourStep, WALKTHROUGH_STEPS.length - 1)].id, {
         region: couple.region,
         guestEstimate: couple.guests,
@@ -238,9 +220,6 @@ function AppInner() {
             onUiAction={applyUiAction}
             uiMode="chat"
             variant="drawer"
-            pendingPrompt={pendingPrompt}
-            onPendingPromptSent={() => setPendingPrompt(null)}
-            onPendingPromptDone={() => setPromptDoneTick((n) => n + 1)}
           />
         }
         hideModeToggle={walkthroughActive}

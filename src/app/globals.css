@@ -157,25 +157,51 @@ html {
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ── Walkthrough spotlight ───────────────────────────────────────────────
-   The cutout is one element: a ring around the target plus a huge spread
-   shadow that dims everything outside it. pointer-events stay off, so the
-   real control underneath is still the thing the couple clicks. */
-/* No scrim at all. Every dim we tried still hid the thing the couple was
-   supposed to be watching — the budget updating, Ava working in the chat — and
-   a tour that obscures the product is worse than one that only points. The
-   ring pulses on its own; the page behind stays exactly as it is. */
-@keyframes kalas-tour-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(95, 125, 112, 0.55); }
-  50%      { box-shadow: 0 0 0 10px rgba(95, 125, 112, 0); }
+   A light that travels around the border rather than a pulse that throbs in
+   place. The ring is drawn as a rotating conic gradient masked to the border
+   box, so only the outline is painted and the control underneath is untouched.
+   @property is what makes the angle animatable at all — a plain custom
+   property is a string to the interpolator and would jump, not sweep. */
+@property --kalas-tour-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
+
 .kalas-tour-spot {
-  animation: kalas-tour-pulse 2s ease-out infinite;
+  padding: 2px;
+  background:
+    conic-gradient(
+      from var(--kalas-tour-angle),
+      transparent 0deg,
+      var(--color-sage-strong) 45deg,
+      var(--color-sage) 80deg,
+      transparent 130deg,
+      transparent 360deg
+    ),
+    /* A quiet ring underneath, so the target stays outlined between sweeps. */
+    linear-gradient(var(--color-sage-tint), var(--color-sage-tint));
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: kalas-tour-chase 2.4s linear infinite;
+}
+
+@keyframes kalas-tour-chase {
+  to { --kalas-tour-angle: 360deg; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  .kalas-tour-spot { box-shadow: none !important; }
+  /* Still outlined, just not travelling. */
+  .kalas-tour-spot { background: linear-gradient(var(--color-sage-strong), var(--color-sage-strong)); }
 }
+
 /* ── Printing the seating plan ───────────────────────────────────────────
    The chart is printed from its own sheet, portalled to <body>, so a
    printout carries the plan and nothing else — no nav rail, no guest list,

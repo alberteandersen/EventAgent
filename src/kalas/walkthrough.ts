@@ -170,6 +170,17 @@ export function walkthroughParams(
   return p;
 }
 
+/** What onboarding writes to hand the couple over to the tour.
+ *
+ * Both halves, in one place, because they have to agree: setting the progress
+ * key alone was not enough — a done marker from an earlier run outranks it in
+ * armTour, so finishing the interview a second time armed nothing and the
+ * couple arrived to no tour at all.
+ */
+export function tourHandoff(): { setProgress: string; clearDone: true } {
+  return { setProgress: '0', clearDone: true };
+}
+
 /** What the app should do about the tour on load, given what is in storage.
  *
  * Pulled out of KalasRoot so the rule can be proven rather than asserted: the

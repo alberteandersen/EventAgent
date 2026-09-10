@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { armTour } from './walkthrough';
+import { armTour, tourHandoff } from './walkthrough';
 
 describe('armTour', () => {
   it('arms a couple who has just finished onboarding', () => {
@@ -34,5 +34,21 @@ describe('armTour', () => {
 
   it('ignores a param that is not exactly "1"', () => {
     expect(armTour({ param: '0', progress: null, done: '1' })).toEqual({ active: false });
+  });
+
+});
+
+describe('tourHandoff', () => {
+  it('arms the tour even for a couple who has been through it before', () => {
+    // The bug this pairs against: onboarding set the progress key but left an
+    // old done marker in place, and armTour rightly refused — so finishing the
+    // interview a second time started no tour at all.
+    const h = tourHandoff();
+    const armed = armTour({
+      param: null,
+      progress: h.setProgress,
+      done: h.clearDone ? null : '1',
+    });
+    expect(armed.active).toBe(true);
   });
 });

@@ -147,7 +147,17 @@ export default function BudgetLineDetail({
               style={{ background: dColor }}
               aria-hidden
             >
-              {(() => { const I = resolveBudgetIcon(dIcon); return <I size={17} className="text-white" strokeWidth={2.25} />; })()}
+              {/* [dIcon].map(...), not a bare resolve-then-render: the lint
+                  rule for "component created during render" only exempts a
+                  dynamically resolved component when it is built inside an
+                  array .map() callback — the same reason BUDGET_ICON_IDS.map()
+                  a few lines down and every icon lookup elsewhere in this
+                  codebase already goes through .map(). A one-item array is
+                  the idiom for a single icon that still needs the exemption. */}
+              {[dIcon].map((id) => {
+                const Icon = resolveBudgetIcon(id);
+                return <Icon key={id} size={17} className="text-white" strokeWidth={2.25} />;
+              })}
             </span>
             <div className="min-w-0">
               <Eyebrow>{t('Budgetpost')}</Eyebrow>

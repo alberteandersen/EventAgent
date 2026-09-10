@@ -2130,4 +2130,15 @@ export const EN: Record<string, string> = {
   'Detaljer': 'Details',
   'Slet {label}?': 'Delete {label}?',
   'Åbn detaljer for {label}': 'Open details for {label}',
+  // ── Budget: Ava's assistant ─────────────────────────────────────────
+  'Spørg Ava om fordelingen': 'Ask Ava about the split',
+  'Avas budgetforslag': "Ava's budget suggestion",
+  'Sådan ville jeg fordele jeres budget': 'How I would split your budget',
+  'Ava kigger på jeres tal og regner en fordeling ud…': "Ava is looking at your numbers and working out a split…",
+  'Ava kunne ikke regne på budgettet lige nu.': "Ava couldn't work out the budget right now.",
+  'Smarte tips': 'Smart tips',
+  'Beløb, I allerede har brugt eller betalt, bliver aldrig sat ned.':
+    "Amounts you've already spent or paid are never reduced.",
+  'Brug forslaget': "Use this suggestion",
+  'Brugt': 'Applied',
 };

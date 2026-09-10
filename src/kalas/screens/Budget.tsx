@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Plus, X, Pencil, Bell, StickyNote } from 'lucide-react';
+import { Plus, X, Pencil, Bell, StickyNote, ChevronRight } from 'lucide-react';
 import BudgetLineDetail from './BudgetLineDetail';
+import BudgetAvaAssistant from './BudgetAvaAssistant';
 import { budgetLines, type BudgetLine } from '../data';
 import {
   BUDGET_COLORS,
@@ -68,6 +69,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   // Which line's detail panel is open — reminder, note, contract and the
   // actual/paid figures all live there now instead of three inline toggles.
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [assistOpen, setAssistOpen] = useState(false);
 
   // Once anything is persisted, `budget_items` is the source of truth for which
   // categories exist and what they're called — so removing or renaming a
@@ -289,6 +291,35 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
     });
   };
 
+  /** Applies Ava's whole suggested split at once. A dedicated bulk write
+   *  rather than seven calls to `persist`: those each read `amounts` from
+   *  closure, so looping them would race — each call seeding or saving
+   *  against a version of the total that only reflects the one line before
+   *  it. One computed object, one write. Only touches lines Ava actually
+   *  advised on — a standard category the couple deleted does not come
+   *  back just because Ava has an opinion about it. */
+  const applyAdvice = (advice: { category: string; amount: number }[]) => {
+    const nextAmounts = { ...amounts };
+    for (const l of advice) nextAmounts[l.category] = l.amount;
+    setAmounts(nextAmounts);
+
+    if (budgetItems.length === 0) {
+      void seedAll(lines, nextAmounts);
+      return;
+    }
+    const advisedIds = new Set(advice.map((l) => l.category));
+    void Promise.all(
+      lines
+        .filter((l) => advisedIds.has(l.id))
+        .map((l) =>
+          saveBudgetItem({
+            category: l.id, label: l.label, planned_amount: nextAmounts[l.id] ?? 0,
+            icon: l.icon, color: l.color,
+          }),
+        ),
+    );
+  };
+
   const startAdding = () => {
     setNewColor(nextBudgetColor(lines.map((l) => l.color)));
     setNewIcon('sparkles');
@@ -324,21 +355,38 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   return (
     <div className="px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
       {/* ── Header ────────────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
-          {t('Budget')}
-        </h1>
-        <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
-          {total > 0
-            ? t('Fordelingen er lagt ud fra det I har fortalt, træk i den, så den passer jer.')
-            : t('Hold styr på hvad brylluppet koster, og hvad I har tilbage.')}
-        </p>
-        {/* Nothing to estimate from. A split of zero would just be seven empty
-            rows pretending to be a plan. */}
-        {total === 0 && (
-          <p className="mt-2 text-[13px] leading-relaxed text-[#8a7d5c]">
-            {t('Sæt et beløb eller et gæsteantal, så regner vi en fordeling ud.')}
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+            {t('Budget')}
+          </h1>
+          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
+            {total > 0
+              ? t('Fordelingen er lagt ud fra det I har fortalt, træk i den, så den passer jer.')
+              : t('Hold styr på hvad brylluppet koster, og hvad I har tilbage.')}
           </p>
+          {/* Nothing to estimate from. A split of zero would just be seven empty
+              rows pretending to be a plan. */}
+          {total === 0 && (
+            <p className="mt-2 text-[13px] leading-relaxed text-[#8a7d5c]">
+              {t('Sæt et beløb eller et gæsteantal, så regner vi en fordeling ud.')}
+            </p>
+          )}
+        </div>
+
+        {/* Ava needs a total or a headcount to reason from — the same guard
+            the API itself enforces, so the button never opens onto an error. */}
+        {total > 0 && event?.id && (
+          <button
+            type="button"
+            onClick={() => setAssistOpen(true)}
+            className="flex shrink-0 items-center gap-2 rounded-full bg-[#12332b] py-2.5 pl-2.5 pr-4 text-[0.82rem] font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer"
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15">
+              <span className="font-serif text-[0.85rem] leading-none">K</span>
+            </span>
+            {t('Spørg Ava om fordelingen')}
+          </button>
         )}
       </div>
 
@@ -462,12 +510,19 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               </span>
             </div>
 
-            {/* Betalinger, at a glance — the numbers to edit them live in
-                Detaljer now, along with the reminder, the note and the
-                contract review that used to compete for this same strip as
-                three separate icon-toggles. */}
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[0.82rem]">
+            {/* Betalinger, at a glance — click the row to open Detaljer, where
+                the reminder, the note and the contract review live now
+                instead of three separate icon-toggles. No labeled button:
+                the whole strip is the target, and the only affordance is a
+                chevron that slides in on hover — the numbers should not have
+                to share space with a control that says what they already do. */}
+            <button
+              type="button"
+              onClick={() => setDetailId(b.id)}
+              aria-label={t('Åbn detaljer for {label}', { label: t(b.label) })}
+              className="group -mx-2.5 mt-5 flex w-full flex-wrap items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-shell cursor-pointer"
+            >
+              <span className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[0.82rem]">
                 <span className="inline-flex items-baseline gap-1.5">
                   <span className="text-muted">{t('Faktisk')}</span>
                   <span className="font-semibold text-ink tabular-nums">{actual > 0 ? kr(actual) : '–'}</span>
@@ -484,19 +539,18 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                     </span>
                   </span>
                 )}
-              </div>
+              </span>
 
-              <button
-                type="button"
-                onClick={() => setDetailId(b.id)}
-                aria-label={t('Åbn detaljer for {label}', { label: t(b.label) })}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line-strong px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
-              >
+              <span className="flex shrink-0 items-center gap-1.5">
                 {reminder && <Bell size={12} className="text-clay" aria-hidden />}
                 {note && <StickyNote size={12} className="text-clay" aria-hidden />}
-                {t('Detaljer')}
-              </button>
-            </div>
+                <ChevronRight
+                  size={16}
+                  className="-translate-x-1 text-muted opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
+                  aria-hidden
+                />
+              </span>
+            </button>
 
             {hubCat && (
               <button onClick={() => goFind(b.id)}
@@ -649,6 +703,16 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           />
         );
       })()}
+
+      {assistOpen && event?.id && (
+        <BudgetAvaAssistant
+          eventId={event.id}
+          guests={couple.guests}
+          region={couple.region}
+          onClose={() => setAssistOpen(false)}
+          onApply={applyAdvice}
+        />
+      )}
 
       <style>{`
         .kalas-range { -webkit-appearance: none; appearance: none; height: 2px; background: var(--color-line-strong); border-radius: 999px; cursor: pointer; }

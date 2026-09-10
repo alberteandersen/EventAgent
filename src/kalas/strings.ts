@@ -2119,4 +2119,15 @@ export const EN: Record<string, string> = {
   'krav': 'required',
   'Tættest på jer': 'Closest to you',
   'Sat efter jeres budget til Venue & leje.': 'Set from your Venue & hire budget.',
+  // ── Budget: line detail panel ───────────────────────────────────────
+  'Budgetpost': 'Budget line',
+  'Ikon & farve': 'Icon & colour',
+  'Betalinger': 'Payments',
+  'Påmindelsesdato': 'Reminder date',
+  'Ryd': 'Clear',
+  'Budgetteret': 'Budgeted',
+  'Kontrakt': 'Contract',
+  'Detaljer': 'Details',
+  'Slet {label}?': 'Delete {label}?',
+  'Åbn detaljer for {label}': 'Open details for {label}',
 };

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Plus, X, Pencil, Bell, StickyNote, FileSignature } from 'lucide-react';
-import BudgetContractPanel from './BudgetContractPanel';
+import { Plus, X, Pencil, Bell, StickyNote } from 'lucide-react';
+import BudgetLineDetail from './BudgetLineDetail';
 import { budgetLines, type BudgetLine } from '../data';
 import {
   BUDGET_COLORS,
@@ -65,12 +65,9 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   const [paids, setPaids] = useState<Record<string, number>>({});
   const [noteById, setNoteById] = useState<Record<string, string>>({});
   const [reminderById, setReminderById] = useState<Record<string, string>>({});
-  // Which lines have their reminder / note editor toggled open (Layout A).
-  const [remOpen, setRemOpen] = useState<Record<string, boolean>>({});
-  const [noteOpen, setNoteOpen] = useState<Record<string, boolean>>({});
-  const [contractOpen, setContractOpen] = useState<Record<string, boolean>>({});
-  // Which amount cell is being edited inline, keyed `${id}:actual` | `${id}:paid`.
-  const [editCell, setEditCell] = useState<string | null>(null);
+  // Which line's detail panel is open — reminder, note, contract and the
+  // actual/paid figures all live there now instead of three inline toggles.
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   // Once anything is persisted, `budget_items` is the source of truth for which
   // categories exist and what they're called — so removing or renaming a
@@ -192,7 +189,6 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   const inputRef = useRef<HTMLInputElement>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState('');
-  const [styleEditId, setStyleEditId] = useState<string | null>(null);
 
   const allocated = useMemo(() => Object.values(amounts).reduce((a, b) => a + b, 0), [amounts]);
   const remaining = total - allocated;
@@ -217,27 +213,11 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
     else void saveBudgetItem({ category: id, label, planned_amount: 0, icon: newIcon, color: newColor });
   };
 
-  const persistStyle = (id: string, icon: string, color: string) => {
-    setLines((prev) => prev.map((l) => (l.id === id ? { ...l, icon, color } : l)));
-    const line = lines.find((l) => l.id === id);
-    if (budgetItems.length === 0) {
-      void seedAll(
-        lines.map((l) => (l.id === id ? { ...l, icon, color } : l)),
-        amounts,
-      );
-      return;
-    }
-    void saveBudgetItem({
-      category: id, label: line?.label ?? id, planned_amount: amounts[id] ?? 0, icon, color,
-    });
-  };
-
   const removeLine = (id: string) => {
     const remaining = lines.filter((b) => b.id !== id);
     setLines(remaining);
     setAmounts((prev) => { const next = { ...prev }; delete next[id]; return next; });
     if (editingId === id) setEditingId(null);
-    if (styleEditId === id) setStyleEditId(null);
     // When nothing is persisted yet, seed everything *except* the removed line
     // so the removal sticks; otherwise delete the persisted row.
     if (budgetItems.length === 0) void seedAll(remaining, amounts);
@@ -258,6 +238,54 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
       category: id, label, planned_amount: amounts[id] ?? 0,
       icon: lines.find((l) => l.id === id)?.icon,
       color: lines.find((l) => l.id === id)?.color,
+    });
+  };
+
+  /** Applies a whole Detaljer draft at once — label, style, the actual/paid
+   *  figures, the reminder and the note — as a single write, the same seed-if-
+   *  empty fallback as every other budget mutation uses. */
+  const saveDetail = (
+    id: string,
+    patch: { label: string; icon: string; color: string; actual: number; paid: number; reminder: string; note: string },
+  ) => {
+    setLines((prev) => prev.map((l) => (l.id === id ? { ...l, label: patch.label, icon: patch.icon, color: patch.color } : l)));
+    setActuals((a) => ({ ...a, [id]: patch.actual }));
+    setPaids((p) => ({ ...p, [id]: patch.paid }));
+    setReminderById((r) => ({ ...r, [id]: patch.reminder }));
+    setNoteById((n) => ({ ...n, [id]: patch.note }));
+
+    const planned = amounts[id] ?? 0;
+    const line = lines.find((l) => l.id === id);
+    if (budgetItems.length === 0 && claimSeed()) {
+      void Promise.all(
+        lines.map((l, idx) =>
+          saveBudgetItem({
+            category: l.id,
+            label: l.id === id ? patch.label : l.label,
+            planned_amount: amounts[l.id] ?? 0,
+            paid_amount: l.id === id ? patch.paid : l.spent,
+            icon: l.id === id ? patch.icon : l.icon,
+            color: l.id === id ? patch.color : l.color,
+            sort: idx,
+            ...(l.id === id
+              ? { actual_cost: patch.actual, reminder_at: patch.reminder || null, notes: patch.note }
+              : {}),
+          }),
+        ),
+      );
+      return;
+    }
+    void saveBudgetItem({
+      category: id,
+      label: patch.label,
+      planned_amount: planned,
+      icon: patch.icon,
+      color: patch.color,
+      paid_amount: patch.paid,
+      actual_cost: patch.actual,
+      reminder_at: patch.reminder || null,
+      notes: patch.note,
+      sort: line ? lines.indexOf(line) : undefined,
     });
   };
 
@@ -367,10 +395,8 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           const hubCat = BUDGET_TO_HUBCAT[b.id];
           const reminder = reminderById[b.id] ?? '';
           const note = noteById[b.id] ?? '';
-          const days = daysUntil(reminder);
           const Icon = resolveBudgetIcon(b.icon);
           const custom = isCustomLine(b.id);
-          const styleOpen = styleEditId === b.id;
           return (
           <motion.div key={b.id}
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -378,27 +404,13 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
             className="py-7">
             <div className="flex items-baseline justify-between gap-4">
               <div className="flex items-center gap-2.5 min-w-0">
-                {custom ? (
-                  <button
-                    type="button"
-                    onClick={() => setStyleEditId(styleOpen ? null : b.id)}
-                    aria-label={t('Vælg ikon og farve')}
-                    aria-expanded={styleOpen}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-opacity hover:opacity-80 cursor-pointer"
-                    style={{ background: b.color }}
-                    title={t('Vælg ikon og farve')}
-                  >
-                    <Icon size={15} className="text-white" strokeWidth={2.25} />
-                  </button>
-                ) : (
-                  <span
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                    style={{ background: b.color }}
-                    aria-hidden
-                  >
-                    <Icon size={15} className="text-white" strokeWidth={2.25} />
-                  </span>
-                )}
+                <span
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                  style={{ background: b.color }}
+                  aria-hidden
+                >
+                  <Icon size={15} className="text-white" strokeWidth={2.25} />
+                </span>
                 {editingId === b.id ? (
                   <input
                     autoFocus
@@ -435,15 +447,6 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               </div>
             </div>
 
-            {styleOpen && (
-              <StylePicker
-                icon={b.icon}
-                color={b.color}
-                onIcon={(icon) => persistStyle(b.id, icon, b.color)}
-                onColor={(color) => persistStyle(b.id, b.icon, color)}
-              />
-            )}
-
             {/* Estimate slider (primary) */}
             <div className="mt-4 flex items-center gap-4">
               <input
@@ -459,127 +462,49 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               </span>
             </div>
 
-            {/* Always-visible tracking line: faktisk · betalt · rest · vendor · reminder · note */}
-            <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-3 text-[0.82rem]">
-              <span className="inline-flex items-baseline gap-2">
-                <span className="text-muted">{t('Faktisk')}</span>
-                {editCell === `${b.id}:actual` ? (
-                  <input autoFocus type="number" min={0} step={500} value={actual || ''} placeholder="0"
-                    onChange={(e) => setActuals((a) => ({ ...a, [b.id]: Math.max(0, Number(e.target.value)) }))}
-                    onBlur={(e) => { persistField(b.id, { actual_cost: Math.max(0, Number(e.target.value)) }); setEditCell(null); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') (e.target as HTMLInputElement).blur(); }}
-                    aria-label={t('Faktisk pris for {label}', { label: t(b.label) })}
-                    className="w-20 bg-transparent font-semibold text-ink tabular-nums border-b border-[var(--color-line-strong)] focus:outline-none" />
-                ) : (
-                  <button onClick={() => setEditCell(`${b.id}:actual`)}
-                    aria-label={t('Faktisk pris for {label}', { label: t(b.label) })}
-                    className="font-semibold text-ink tabular-nums hover:opacity-60 transition-opacity cursor-pointer">
-                    {actual > 0 ? kr(actual) : '-'}
-                  </button>
-                )}
-              </span>
-              <span className="inline-flex items-baseline gap-2">
-                <span className="text-muted">{t('Betalt')}</span>
-                {editCell === `${b.id}:paid` ? (
-                  <input autoFocus type="number" min={0} step={500} value={paid || ''} placeholder="0"
-                    onChange={(e) => setPaids((p) => ({ ...p, [b.id]: Math.max(0, Number(e.target.value)) }))}
-                    onBlur={(e) => { persistField(b.id, { paid_amount: Math.max(0, Number(e.target.value)) }); setEditCell(null); }}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') (e.target as HTMLInputElement).blur(); }}
-                    aria-label={t('Betalt for {label}', { label: t(b.label) })}
-                    className="w-20 bg-transparent font-semibold text-ink tabular-nums border-b border-[var(--color-line-strong)] focus:outline-none" />
-                ) : (
-                  <button onClick={() => setEditCell(`${b.id}:paid`)}
-                    aria-label={t('Betalt for {label}', { label: t(b.label) })}
-                    className="font-semibold text-ink tabular-nums hover:opacity-60 transition-opacity cursor-pointer">
-                    {paid > 0 ? kr(paid) : '-'}
-                  </button>
-                )}
-              </span>
-              {actual > 0 && (
-                <span className="inline-flex items-baseline gap-2">
-                  <span className="text-muted">{t('Rest')}</span>
-                  <span className={cn('font-semibold tabular-nums', actual - paid > 0 ? 'text-[var(--color-terracotta)]' : 'text-success')}>
-                    {kr(Math.max(0, actual - paid))}
-                  </span>
+            {/* Betalinger, at a glance — the numbers to edit them live in
+                Detaljer now, along with the reminder, the note and the
+                contract review that used to compete for this same strip as
+                three separate icon-toggles. */}
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[0.82rem]">
+                <span className="inline-flex items-baseline gap-1.5">
+                  <span className="text-muted">{t('Faktisk')}</span>
+                  <span className="font-semibold text-ink tabular-nums">{actual > 0 ? kr(actual) : '–'}</span>
                 </span>
-              )}
-
-              <span className="flex-1" />
-
-              <span className="flex items-center gap-5">
-                {hubCat && (
-                  <button onClick={() => goFind(b.id)}
-                    className="text-ink underline underline-offset-2 hover:text-ink-soft transition-colors cursor-pointer">
-                    {b.id === 'venue' ? t('Se venues der matcher jer') : t('Se top matches')}
-                  </button>
-                )}
-                <span className="flex items-center gap-4">
-                  <button onClick={() => setRemOpen((s) => ({ ...s, [b.id]: !s[b.id] }))}
-                    aria-label={t('Påmindelse for {label}', { label: t(b.label) })} aria-pressed={Boolean(remOpen[b.id] || reminder)}
-                    className={cn('transition-colors cursor-pointer', reminder ? 'text-ink' : 'text-muted hover:text-ink')}>
-                    <Bell size={16} />
-                  </button>
-                  <button onClick={() => setNoteOpen((s) => ({ ...s, [b.id]: !s[b.id] }))}
-                    aria-label={t('Note for {label}', { label: t(b.label) })} aria-pressed={Boolean(noteOpen[b.id] || note)}
-                    className={cn('transition-colors cursor-pointer', note ? 'text-ink' : 'text-muted hover:text-ink')}>
-                    <StickyNote size={16} />
-                  </button>
-                  <button onClick={() => setContractOpen((s) => ({ ...s, [b.id]: !s[b.id] }))}
-                    aria-label={t('Kontrakt for {label}', { label: t(b.label) })} aria-pressed={Boolean(contractOpen[b.id])}
-                    className={cn('transition-colors cursor-pointer', contractOpen[b.id] ? 'text-[#6a5acd]' : 'text-muted hover:text-[#6a5acd]')}>
-                    <FileSignature size={16} />
-                  </button>
+                <span className="inline-flex items-baseline gap-1.5">
+                  <span className="text-muted">{t('Betalt')}</span>
+                  <span className="font-semibold text-ink tabular-nums">{paid > 0 ? kr(paid) : '–'}</span>
                 </span>
-              </span>
-            </div>
-
-            {/* Reminder editor, shown when toggled or already set */}
-            {(remOpen[b.id] || reminder) && (
-              <div className="mt-4 flex items-center gap-3">
-                <input type="date" value={reminder}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setReminderById((r) => ({ ...r, [b.id]: v }));
-                    persistField(b.id, { reminder_at: v || null });
-                  }}
-                  aria-label={t('Påmindelsesdato for {label}', { label: t(b.label) })}
-                  className="kalas-date rule rounded-lg bg-shell px-2.5 py-1.5 text-[0.85rem] font-semibold [color-scheme:light] focus:outline-none focus:border-[var(--color-sage-strong)]" />
-                {days != null && (
-                  <span className={cn('text-[0.76rem]', days < 0 ? 'text-[var(--color-terracotta)]' : 'text-muted')}>
-                    {days < 0
-                      ? t('forfaldt for {n} dage siden', { n: Math.abs(days) })
-                      : days === 0 ? t('forfalder i dag')
-                      : t('forfalder om {n} dage', { n: days })}
+                {actual > 0 && (
+                  <span className="inline-flex items-baseline gap-1.5">
+                    <span className="text-muted">{t('Rest')}</span>
+                    <span className={cn('font-semibold tabular-nums', actual - paid > 0 ? 'text-[var(--color-terracotta)]' : 'text-success')}>
+                      {kr(Math.max(0, actual - paid))}
+                    </span>
                   </span>
                 )}
               </div>
+
+              <button
+                type="button"
+                onClick={() => setDetailId(b.id)}
+                aria-label={t('Åbn detaljer for {label}', { label: t(b.label) })}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line-strong px-3 py-1.5 text-[0.76rem] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
+              >
+                {reminder && <Bell size={12} className="text-clay" aria-hidden />}
+                {note && <StickyNote size={12} className="text-clay" aria-hidden />}
+                {t('Detaljer')}
+              </button>
+            </div>
+
+            {hubCat && (
+              <button onClick={() => goFind(b.id)}
+                className="mt-3 text-[0.82rem] text-ink underline underline-offset-2 hover:text-ink-soft transition-colors cursor-pointer">
+                {b.id === 'venue' ? t('Se venues der matcher jer') : t('Se top matches')}
+              </button>
             )}
 
-            {/* Note editor, shown when toggled or already set */}
-            {(noteOpen[b.id] || note) && (
-              <textarea rows={2} value={note}
-                placeholder={t('Fx aftaler, kontaktperson, hvad prisen dækker…')}
-                onChange={(e) => setNoteById((n) => ({ ...n, [b.id]: e.target.value }))}
-                onBlur={(e) => persistField(b.id, { notes: e.target.value })}
-                aria-label={t('Note for {label}', { label: t(b.label) })}
-                className="mt-4 w-full resize-none rule rounded-lg bg-shell px-3 py-2.5 text-[0.82rem] text-ink placeholder:text-muted/60 focus:outline-none" />
-            )}
-
-            {/* Contract upload + Ava review, toggled by the ✨ icon */}
-            {contractOpen[b.id] && (
-              <BudgetContractPanel
-                eventId={event?.id ?? null}
-                category={b.id}
-                onApply={(patch) => {
-                  if (patch.actual_cost != null) setActuals((a) => ({ ...a, [b.id]: patch.actual_cost! }));
-                  if (patch.reminder_at) {
-                    setReminderById((r) => ({ ...r, [b.id]: patch.reminder_at! }));
-                    setRemOpen((s) => ({ ...s, [b.id]: true }));
-                  }
-                  persistField(b.id, patch);
-                }}
-              />
-            )}
 
             {b.hint && <p className="mt-1.5 text-[0.78rem] text-muted">{b.hint}</p>}
           </motion.div>
@@ -693,6 +618,37 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           </>
         )}
       </div>
+
+      {detailId && (() => {
+        const b = lines.find((l) => l.id === detailId);
+        if (!b) return null;
+        const hubCat = BUDGET_TO_HUBCAT[b.id];
+        return (
+          <BudgetLineDetail
+            eventId={event?.id ?? null}
+            categoryId={b.id}
+            label={t(b.label)}
+            icon={b.icon}
+            color={b.color}
+            custom={isCustomLine(b.id)}
+            planned={amounts[b.id] ?? 0}
+            actual={actuals[b.id] ?? 0}
+            paid={paids[b.id] ?? 0}
+            reminder={reminderById[b.id] ?? ''}
+            note={noteById[b.id] ?? ''}
+            findLabel={hubCat ? (b.id === 'venue' ? t('Se venues der matcher jer') : t('Se top matches')) : undefined}
+            onFindVendors={hubCat ? () => { goFind(b.id); setDetailId(null); } : undefined}
+            onClose={() => setDetailId(null)}
+            onSave={(patch) => saveDetail(b.id, patch)}
+            onDelete={() => { removeLine(b.id); setDetailId(null); }}
+            onContractApply={(patch) => {
+              if (patch.actual_cost != null) setActuals((a) => ({ ...a, [b.id]: patch.actual_cost! }));
+              if (patch.reminder_at) setReminderById((r) => ({ ...r, [b.id]: patch.reminder_at! }));
+              persistField(b.id, patch);
+            }}
+          />
+        );
+      })()}
 
       <style>{`
         .kalas-range { -webkit-appearance: none; appearance: none; height: 2px; background: var(--color-line-strong); border-radius: 999px; cursor: pointer; }

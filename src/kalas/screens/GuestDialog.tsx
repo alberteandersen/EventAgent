@@ -49,8 +49,6 @@ export interface GuestDraft {
   side: string;
   relation: string | null;
   rsvp: RsvpStatus;
-  plus_one: boolean;
-  plus_one_name: string | null;
   dietary_tags: string[];
   dietary: string | null;
   overnight: boolean;
@@ -85,8 +83,6 @@ export default function GuestDialog({
   const [dSide, setDSide] = useState(guest?.side ?? sides[0] ?? 'Fælles');
   const [dRelation, setDRelation] = useState(guest?.relation ?? '');
   const [dRsvp, setDRsvp] = useState<RsvpStatus>(guest?.rsvp ?? 'afventer');
-  const [dPlusOne, setDPlusOne] = useState(guest?.plus_one ?? false);
-  const [dPlusOneName, setDPlusOneName] = useState(guest?.plus_one_name ?? '');
   const [dTags, setDTags] = useState<string[]>(
     guest?.dietary_tags?.length ? guest.dietary_tags : legacy.tags,
   );
@@ -115,8 +111,6 @@ export default function GuestDialog({
       side: dSide,
       relation: dRelation.trim() || null,
       rsvp: dRsvp,
-      plus_one: dPlusOne,
-      plus_one_name: dPlusOne ? (dPlusOneName.trim() || null) : null,
       dietary_tags: dTags,
       dietary: dDietary.trim() || null,
       overnight: dOvernight,
@@ -236,24 +230,6 @@ export default function GuestDialog({
                 </SelectPill>
               ))}
             </div>
-          </section>
-
-          {/* Ledsager */}
-          <section>
-            <Eyebrow>{t('Ledsager')}</Eyebrow>
-            <div className="mt-3 flex items-center justify-between rounded-xl bg-shell px-3.5 py-2.5">
-              <span className="text-[0.85rem] text-ink">{t('Har en ledsager med')}</span>
-              <Toggle value={dPlusOne} onChange={setDPlusOne} />
-            </div>
-            {dPlusOne && (
-              <input
-                value={dPlusOneName}
-                onChange={(e) => setDPlusOneName(e.target.value)}
-                placeholder={t('Ledsagerens navn')}
-                aria-label={t('Ledsagerens navn')}
-                className={cn(fieldCls, 'mt-2')}
-              />
-            )}
           </section>
 
           {/* Kost og catering */}

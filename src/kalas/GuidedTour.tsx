@@ -71,7 +71,8 @@ export default function GuidedTour({
      which is why it looked like nothing happened. Skipped when the next step
      stays on this page, since there would be nothing to travel to. */
   const nextStep = WALKTHROUGH_STEPS[idx + 1];
-  const target = nextStep && nextStep.page && nextStep.page !== step.page ? nextStep.page : null;
+  const target = step.target
+    ?? (nextStep && nextStep.page && nextStep.page !== step.page ? nextStep.page : null);
 
   const [box, setBox] = useState<Box | null>(null);
   const targetElRef = useRef<HTMLElement | null>(null);
@@ -95,6 +96,13 @@ export default function GuidedTour({
         el = findNavButton(target);
         targetElRef.current = el;
         if (!el) return;
+        /* The menu scrolls once it outgrows the window, and the button for a
+           page near the bottom sits outside its visible strip — the ring was
+           drawn at the button's geometric position, which is to say over the
+           footer, pointing at nothing. 'nearest' scrolls the menu the minimum
+           needed and leaves the page alone. Instant, because a smooth scroll
+           here is silently dropped in at least one browser we run in. */
+        el.scrollIntoView({ block: 'nearest' });
         el.addEventListener('click', onClick);
       }
       const r = el.getBoundingClientRect();
@@ -230,11 +238,15 @@ export default function GuidedTour({
           <RichText text={body} />
         </div>
 
-        {/* Forward and back. The anchor used to be the advance button — but
-            it points at page content now, where a click should do its own
-            job. Without this the tour was a dead end whenever the anchor was
-            not on screen, which is every nav-anchored step on a phone. */}
-        {!step.final && (
+        {/* No forward/back button while the menu is showing them where to
+            press — the ring is the instruction, and a second way to advance
+            sitting next to it just competes with it.
+
+            Kept for the case where there is nothing to press: on a phone the
+            menu rail does not exist, and without this the tour is a dead end
+            whose only exit is abandoning it. That was the state it shipped in
+            once already. */}
+        {!step.final && !box && (
           <div className="mt-4 flex items-center gap-2">
             <button
               type="button"

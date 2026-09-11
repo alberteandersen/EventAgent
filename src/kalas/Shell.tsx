@@ -408,6 +408,7 @@ export function ModeToggle({
             key={label}
             type="button"
             aria-pressed={active}
+            {...(id ? { 'data-tour': 'ava-chat' } : {})}
             aria-label={t(id ? 'Chat-tilstand' : 'Klassisk visning')}
             title={t(id ? 'Chat-tilstand' : 'Klassisk visning')}
             onClick={() => onChange(id)}

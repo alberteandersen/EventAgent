@@ -40,6 +40,15 @@ export default function DevWalkthroughPage() {
           </div>
 
           <div className="min-w-0 flex-1">
+            {/* Stand-in for the mode switch the chat step rings. */}
+            <button
+              data-tour="ava-chat"
+              onClick={() => note('klik: ava-chat')}
+              className="mb-4 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold"
+            >
+              Chat
+            </button>
+
             <div className="mb-4 flex h-[120px] items-center rounded-[20px] border border-line bg-shell px-6">
               <span className="font-serif text-[1.4rem] text-ink">Alberte &amp; Espen · 584 dage</span>
             </div>

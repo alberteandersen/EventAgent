@@ -36,6 +36,10 @@ export type WalkthroughStep = {
   /** Forces chat open or closed as the step opens. Left undefined, the
    *  couple's current mode stands. */
   chat?: boolean;
+  /** What to ring, when it should not be the next page's menu button — a
+   *  `data-tour` value. Used by the chat step, where the thing to press is
+   *  the mode switch rather than a page. */
+  target?: string;
   /** Renders the chat-vs-classic choice, and ends the tour. */
   final?: boolean;
 };
@@ -113,7 +117,11 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     id: 'chat',
     page: 'home',
     eyebrow: 'Ava',
-    chat: true,
+    /* Deliberately does NOT force chat on. The step is about the switch, so
+       they press it themselves and watch it happen — forcing it first would
+       leave the ring pointing at a control that was already on, which is the
+       exact fault this tour started with. */
+    target: 'ava-chat',
     title: 'Alt det her kan I også bare bede om',
     body: 'Hver eneste side I lige har set, kan jeg styre for jer herfra. **Sæt budgettet**, **find et sted**, **tilføj en gæst** — skriv det, som I ville sige det til et menneske, så gør jeg det og viser jer resultatet.\n\nI behøver ikke lære menuen at kende først.',
   },

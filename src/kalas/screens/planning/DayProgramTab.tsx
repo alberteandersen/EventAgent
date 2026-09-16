@@ -114,7 +114,7 @@ export default function DayProgramTab() {
     <DayProgram
       items={dayProgramItems}
       isToday={Boolean(couple.dateISO) && couple.dateISO === todayISO()}
-      onAdd={(item) => void addDayProgramItem(item)}
+      onAdd={(item) => addDayProgramItem(item)}
       onUpdate={(id, patch) => void updateDayProgramItem(id, patch)}
       onDelete={(id) => void deleteDayProgramItem(id)}
       onSeed={(rows) => void seedDayProgram(rows)}
@@ -126,7 +126,9 @@ export interface DayProgramProps {
   items: DayProgramItemRow[];
   /** Only on the actual wedding day does anything read as done or "Nu". */
   isToday: boolean;
-  onAdd: (item: { time: string; title: string; subtitle?: string | null; duration_min?: number; owner?: string | null; notes?: string | null }) => void;
+  /** May resolve to null when the write failed, which the composer reports
+   *  instead of clearing the field as if it had worked. */
+  onAdd: (item: { time: string; title: string; subtitle?: string | null; duration_min?: number; owner?: string | null; notes?: string | null }) => void | Promise<unknown>;
   onUpdate: (id: string, patch: Partial<Pick<DayProgramItemRow, 'time' | 'title' | 'subtitle' | 'duration_min' | 'owner' | 'notes'>>) => void;
   onDelete: (id: string) => void;
   onSeed: (rows: { time: string; title: string; subtitle?: string | null; duration_min?: number; owner?: string | null }[]) => void;
@@ -143,6 +145,8 @@ export function DayProgram({
   const [openId, setOpenId] = useState<string | null>(null);
   const [newTime, setNewTime] = useState('');
   const [newTitle, setNewTitle] = useState('');
+  // Why nothing was added: no title yet, or the save itself failed.
+  const [addProblem, setAddProblem] = useState<'title' | 'failed' | null>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -178,13 +182,35 @@ export function DayProgram({
         ? t('Ét øjeblik — en dag er begyndt')
         : t('{n} øjeblikke, én smukt koordineret dag', { n: items.length });
 
-  const addItem = () => {
+  /* The button used to be disabled until a title was typed, and a disabled
+     button next to an empty field reads as a broken one: couples pressed it,
+     nothing happened, and nothing said why. It always answers now, either by
+     adding the moment or by saying what is missing. */
+  const addItem = async () => {
     const cleanTitle = newTitle.trim();
-    if (!cleanTitle) return;
-    onAdd({ time: timeValue, title: cleanTitle, duration_min: 0 });
+    if (!cleanTitle) {
+      setAddProblem('title');
+      titleRef.current?.focus();
+      return;
+    }
+    setAddProblem(null);
+    const time = timeValue;
     setNewTitle('');
     setNewTime('');
     titleRef.current?.focus();
+    const saved = await onAdd({ time, title: cleanTitle, duration_min: 0 });
+    if (saved === null) {
+      // Put back what they typed, so a failed save costs them nothing.
+      setNewTitle(cleanTitle);
+      setNewTime(time);
+      setAddProblem('failed');
+    }
+  };
+
+  const addQuick = async (q: (typeof QUICK_MOMENTS)[number]) => {
+    setAddProblem(null);
+    const saved = await onAdd({ time: q.time, title: q.title, duration_min: q.duration_min });
+    if (saved === null) setAddProblem('failed');
   };
 
   const shift = (index: number, delta: number) => {
@@ -232,24 +258,35 @@ export function DayProgram({
         <input
           ref={titleRef}
           value={newTitle}
-          onChange={(e) => setNewTitle(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') addItem(); }}
+          onChange={(e) => { setNewTitle(e.target.value); if (addProblem === 'title') setAddProblem(null); }}
+          onKeyDown={(e) => { if (e.key === 'Enter') void addItem(); }}
           placeholder={t('Fx ceremoni, middag, første dans…')}
           aria-label={t('Nyt øjeblik')}
           className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-[0.88rem] text-ink placeholder:text-muted/70 focus:outline-none"
         />
         <button
-          type="button" onClick={addItem} disabled={!newTitle.trim()}
+          type="button" onClick={() => void addItem()}
           className={cn(
-            'flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-[0.8rem] font-semibold transition-colors',
+            'flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-[0.8rem] font-semibold transition-colors cursor-pointer',
             newTitle.trim()
-              ? 'bg-ink text-canvas hover:opacity-90 cursor-pointer'
-              : 'bg-shell text-muted cursor-not-allowed',
+              ? 'bg-ink text-canvas hover:opacity-90'
+              : 'bg-shell text-ink-soft hover:bg-line',
           )}
         >
           <Plus size={14} /> {t('Tilføj')}
         </button>
       </div>
+
+      {addProblem && (
+        <p role="status" className={cn(
+          'mt-2 pl-1 text-[0.76rem]',
+          addProblem === 'failed' ? 'text-[var(--color-terracotta)]' : 'text-ink-soft',
+        )}>
+          {addProblem === 'failed'
+            ? t('Øjeblikket blev ikke gemt. Prøv igen.')
+            : t('Skriv først, hvad der sker kl. {time}.', { time: timeValue })}
+        </p>
+      )}
 
       {/* One tap for the moments almost every wedding has */}
       {QUICK_MOMENTS.some((q) => !items.some((i) => i.title === q.title)) && (
@@ -259,7 +296,7 @@ export function DayProgram({
             <button
               key={q.title}
               type="button"
-              onClick={() => onAdd({ time: q.time, title: q.title, duration_min: q.duration_min })}
+              onClick={() => void addQuick(q)}
               className="inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-[0.73rem] text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
             >
               <Plus size={11} strokeWidth={2.5} /> {t(q.title)}

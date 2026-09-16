@@ -493,8 +493,11 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       time: string; title: string; subtitle?: string | null;
       duration_min?: number; owner?: string | null; notes?: string | null; sort?: number;
     }) => {
-      if (!eventId || !userId) return null;
-      const { data } = await supabase
+      if (!eventId || !userId) {
+        console.error("addDayProgramItem: no wedding loaded yet", { eventId, userId });
+        return null;
+      }
+      const { data, error } = await supabase
         .from("day_program_items")
         .insert({
           event_id: eventId,
@@ -509,6 +512,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         })
         .select()
         .single();
+      if (error) console.error("addDayProgramItem failed:", error.message);
       if (data) setDayProgramItems((rows) => upsertById(rows, data as DayProgramItemRow));
       return (data as DayProgramItemRow) ?? null;
     },

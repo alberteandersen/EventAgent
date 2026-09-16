@@ -2316,4 +2316,8 @@ export const EN: Record<string, string> = {
   'Indgang': 'Entrance',
   'Størrelse': 'Size',
   'Fjern fra planen': 'Remove from the plan',
+
+  // ── Bryllupsdagen: tilføj ───────────────────────────────────────────
+  'Øjeblikket blev ikke gemt. Prøv igen.': 'The moment was not saved. Try again.',
+  'Skriv først, hvad der sker kl. {time}.': 'First write what happens at {time}.',
 };

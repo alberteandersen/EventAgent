@@ -20,7 +20,7 @@ export function FinalCTA() {
         >
           💍
         </motion.div>
-        <h2 className="font-[family-name:var(--font-fraunces)] text-4xl font-semibold leading-tight tracking-[-0.8px] text-[#4A4E3C] sm:text-6xl">
+        <h2 className="font-[family-name:var(--font-cormorant)] text-5xl font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-7xl">
           Your wedding day,
           <br />
           <span className="text-butter-muted">basically planned already.</span>

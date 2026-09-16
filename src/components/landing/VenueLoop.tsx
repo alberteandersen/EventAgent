@@ -80,7 +80,7 @@ export function VenueLoop() {
           <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
             The venue hunt, handled
           </p>
-          <h2 className="mt-4 font-[family-name:var(--font-fraunces)] text-4xl font-semibold tracking-[-0.8px] text-[#4A4E3C] sm:text-5xl">
+          <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-6xl">
             From brief to <span className="text-accent">booked venue.</span>
           </h2>
         </BlurFade>
@@ -107,7 +107,7 @@ export function VenueLoop() {
                   {/* spine node */}
                   <div
                     aria-hidden
-                    className="absolute left-1/2 top-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#C9CDB4] bg-[#F6F0E8] font-[family-name:var(--font-fraunces)] text-xs font-semibold text-accent lg:flex"
+                    className="absolute left-1/2 top-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#C9CDB4] bg-[#F6F0E8] font-[family-name:var(--font-cormorant)] text-sm font-semibold text-accent lg:flex"
                   >
                     {step.n}
                   </div>
@@ -120,7 +120,7 @@ export function VenueLoop() {
                     <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
                       {step.n} · {step.eyebrow}
                     </p>
-                    <h3 className="mt-3 max-w-md font-[family-name:var(--font-fraunces)] text-3xl font-semibold leading-[1.12] tracking-[-0.5px] text-[#4A4E3C] sm:text-4xl">
+                    <h3 className="mt-3 max-w-md font-[family-name:var(--font-cormorant)] text-4xl font-semibold leading-[1.04] tracking-[-0.3px] text-[#4A4E3C] sm:text-[2.75rem]">
                       {step.title}
                     </h3>
                     <p className="mt-4 max-w-md text-base leading-relaxed text-[#7A8066]">

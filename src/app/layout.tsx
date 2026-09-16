@@ -1,18 +1,14 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, EB_Garamond, Fraunces, Hanken_Grotesk, Inter } from "next/font/google";
+import { Cormorant_Garamond, EB_Garamond, Hanken_Grotesk, Inter } from "next/font/google";
 import "./globals.css";
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-});
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
 
-// Kalas app typography (used inside .theme-kalas subtrees).
+// Serif for the whole product, the landing page included. Fraunces used to set
+// the marketing headlines, and its hooked display "f" read as a typo there.
 const cormorant = Cormorant_Garamond({
   variable: "--font-cormorant",
   subsets: ["latin"],
@@ -44,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable} ${cormorant.variable} ${hanken.variable} ${ebGaramond.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} ${cormorant.variable} ${hanken.variable} ${ebGaramond.variable} h-full antialiased`}>
       <body className="flex min-h-screen flex-col bg-cream font-[family-name:var(--font-inter)] text-ink">
         {children}
       </body>

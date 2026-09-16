@@ -54,7 +54,7 @@ export function LandingFooter() {
           <div className="lg:col-span-1">
             <Link
               href="/"
-              className="font-[family-name:var(--font-fraunces)] text-xl font-semibold text-ink"
+              className="font-[family-name:var(--font-wordmark)] text-[1.6rem] font-bold leading-none text-ink"
             >
               kalas
             </Link>

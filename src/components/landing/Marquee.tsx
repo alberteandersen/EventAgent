@@ -98,7 +98,7 @@ export function Marquee() {
           <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
             Your day, your way
           </p>
-          <h2 className="mt-4 font-[family-name:var(--font-fraunces)] text-4xl font-semibold leading-[1.08] tracking-[-0.04em] text-[#4A4E3C] sm:text-5xl lg:text-[3.25rem]">
+          <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.01em] text-[#4A4E3C] sm:text-6xl lg:text-[4rem]">
             Built for every kind of wedding
           </h2>
           <p className="mt-5 text-base leading-relaxed text-[#7A8066] sm:text-[17px]">

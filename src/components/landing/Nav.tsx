@@ -21,7 +21,7 @@ export function Nav() {
       >
         <Link
           href="/"
-          className={`flex items-center gap-2 font-[family-name:var(--font-fraunces)] text-xl font-semibold tracking-[-0.5px] transition-colors duration-300 ${
+          className={`flex items-center gap-2 font-[family-name:var(--font-wordmark)] text-[1.6rem] font-bold leading-none transition-colors duration-300 ${
             scrolled ? "text-ink" : "text-surface drop-shadow-[0_1px_8px_rgba(0,0,0,0.25)]"
           }`}
         >

@@ -81,7 +81,7 @@ export function IntroducingAva() {
           <p className="mt-12 text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
             Introducing Ava
           </p>
-          <h2 className="mt-4 font-[family-name:var(--font-fraunces)] text-4xl font-semibold tracking-[-0.8px] text-[#4A4E3C] sm:text-5xl">
+          <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-6xl">
             Not another checklist.
             <br />
             <span className="text-accent">A planner who works.</span>

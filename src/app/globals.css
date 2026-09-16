@@ -10,8 +10,8 @@ html {
    defaults; Kalas overrides live in .theme-kalas below. */
 @theme {
   --font-sans: var(--font-inter);
-  --font-serif: var(--font-fraunces);
-  --font-logo: var(--font-fraunces);
+  --font-serif: var(--font-cormorant);
+  --font-logo: var(--font-wordmark);
 
   /* Fig Dream · Pistachio · Laurel · Dark Green · Champagne Cream */
   --color-cream: #f6f0e8;

@@ -55,7 +55,7 @@ export function Hero() {
       />
 
       <div className="relative z-10 mx-auto max-w-4xl pb-56 text-center sm:pb-64">
-        <h1 className="font-[family-name:var(--font-fraunces)] text-5xl font-semibold leading-[1.04] tracking-[-1px] text-surface drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] sm:text-6xl xl:text-7xl">
+        <h1 className="font-[family-name:var(--font-cormorant)] text-6xl font-semibold leading-[0.98] tracking-[-0.5px] text-surface drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] sm:text-7xl xl:text-[5.5rem]">
           {headline.map((word, i) => (
             <BlurFade
               key={i}

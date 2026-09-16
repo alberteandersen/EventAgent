@@ -67,11 +67,9 @@ describe("buildPartnerInvite", () => {
     expect(en.subject).toContain("Your partner");
   });
 
-  it("never promises access that does not exist yet", () => {
-    for (const lang of ["da", "en"] as const) {
-      const { body } = buildPartnerInvite({ ...base, lang });
-      expect(body).not.toMatch(/samme plan|same plan|deler.*plan/i);
-    }
+  it("says the link joins them to the same wedding", () => {
+    expect(buildPartnerInvite({ ...base, lang: "da" }).body).toMatch(/samme bryllup/);
+    expect(buildPartnerInvite({ ...base, lang: "en" }).body).toMatch(/same wedding/);
   });
 
   it("writes its own sign-off, the transport signature is only chrome", () => {

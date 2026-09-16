@@ -23,11 +23,9 @@ export interface PartnerInviteMessage {
 }
 
 /**
- * What the partner reads. Deliberately promises only what Kalas can currently
- * do: an account of their own, and word that the wedding is being planned.
- * It must not say they will see the same plan — shared access does not exist
- * yet, and an email is a bad place to learn that. When membership lands, this
- * copy is the thing to revisit first.
+ * What the partner reads. Since 0036 the link joins them to the same wedding,
+ * so it says so: the same checklist, budget and guest list, changed by either
+ * of them.
  *
  * `inviterName` is a first name; `partnerName` may be empty, in which case the
  * greeting stays unaddressed rather than guessing at "Hi partner".
@@ -54,10 +52,10 @@ export function buildPartnerInvite({
         "",
         `${who} has started planning your wedding in Kalas, one place for the timeline, the budget, the guest list, and me writing to the vendors.`,
         "",
-        "Create your own account here:",
+        "Sign in here to plan it together:",
         url,
         "",
-        "Planning side by side in the same wedding is what we are building next. Until then, having an account means you are ready the moment it lands.",
+        "You will see the same wedding: the same checklist, budget and guest list, and whatever either of you changes, the other sees straight away.",
         "",
         "Warmly,",
         "Ava",
@@ -72,10 +70,10 @@ export function buildPartnerInvite({
       "",
       `${who} er begyndt at planlægge jeres bryllup i Kalas, ét sted til tidslinjen, budgettet, gæstelisten og mig, der skriver til leverandørerne.`,
       "",
-      "Opret din egen adgang her:",
+      "Log ind her, så planlægger I det sammen:",
       url,
       "",
-      "At planlægge side om side i det samme bryllup er det, vi bygger som det næste. Indtil da betyder en konto, at du er klar den dag det lander.",
+      "I ser det samme bryllup: den samme tjekliste, det samme budget og den samme gæsteliste, og det én af jer ændrer, ser den anden med det samme.",
       "",
       "Kærlig hilsen",
       "Ava",

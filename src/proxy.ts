@@ -42,6 +42,16 @@ export default async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // A partner who opened their invitation before signing in: once they are
+  // in, finish joining the wedding, whichever way they logged in.
+  const pendingInvite = request.cookies.get("kalas_partner_invite")?.value;
+  if (user && pendingInvite && !pathname.startsWith("/invite/") && !pathname.startsWith("/api/") && !pathname.startsWith("/auth/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/invite/${encodeURIComponent(pendingInvite)}`;
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   return response;
 }
 

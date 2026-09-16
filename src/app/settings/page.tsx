@@ -4,6 +4,8 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 import { LanguageSetting } from "@/components/settings/LanguageSetting";
 import { RedoOnboardingButton } from "@/components/settings/RedoOnboardingButton";
 import { WeddingDetailsSetting } from "@/components/settings/WeddingDetailsSetting";
+import { PlanTogetherSetting, type CoupleMember } from "@/components/settings/PlanTogetherSetting";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveEvent } from "@/lib/active-event";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateProfile } from "@/lib/db/profile";
@@ -45,6 +47,28 @@ export default async function SettingsPage({
   const platform = admin ? await getPlatformConnection() : null;
   const event = await getActiveEvent(supabase, user.id);
 
+  /* Who is on this wedding, by name. Profiles only answer to their owner, so
+     the other half's name is read with the service role, and only for people
+     who share this wedding with the signed-in user. Before migration 0036 the
+     members table does not exist; the couple is then just this user. */
+  let members: CoupleMember[] = [{ name: profile.display_name ?? "", you: true }];
+  let pendingEmail: string | null = null;
+  if (event) {
+    const admin = createAdminClient();
+    const { data: memberRows, error: membersError } = await admin
+      .from("event_members").select("user_id").eq("event_id", event.id);
+    const ids = membersError ? [] : ((memberRows as { user_id: string }[] | null) ?? []).map((m) => m.user_id);
+    if (ids.includes(user.id)) {
+      const { data: names } = await admin.from("profiles").select("user_id, display_name").in("user_id", ids);
+      const byId = new Map(((names as { user_id: string; display_name: string | null }[] | null) ?? []).map((p) => [p.user_id, p.display_name ?? ""]));
+      members = ids.map((id) => ({ name: byId.get(id) ?? "", you: id === user.id }));
+    }
+    const { data: invite } = await supabase
+      .from("partner_invites").select("email, status").eq("user_id", user.id)
+      .in("status", ["sent", "opened"]).order("sent_at", { ascending: false }).limit(1).maybeSingle();
+    pendingEmail = (invite as { email: string } | null)?.email ?? null;
+  }
+
   return (
     <main className="theme-kalas min-h-screen w-full bg-canvas font-sans text-ink">
       <div className="mx-auto w-full max-w-2xl px-6 py-10">
@@ -84,6 +108,12 @@ export default async function SettingsPage({
               budget: event.budget,
             }}
           />
+        </div>
+      )}
+
+      {event && (
+        <div className="mb-6">
+          <PlanTogetherSetting lang={profile.language ?? "da"} members={members} pendingEmail={pendingEmail} />
         </div>
       )}
 

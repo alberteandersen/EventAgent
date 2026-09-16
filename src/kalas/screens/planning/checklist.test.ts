@@ -5,6 +5,7 @@ import { DEFAULT_CHECKLIST, defaultChecklist, missingChecklistItems } from './ch
 import {
   CHECKLIST_AREAS, kindOf, areaOf, hasArea, onTimeline, groupByArea, nextSort, statusOf,
   readOpenAreas, writeOpenAreas, type ChecklistArea,
+  PRIORITIES, priorityOf, assigneeName, assigneeInitials,
 } from './shared';
 import { defaultMilestones } from './TimelineTab';
 
@@ -228,5 +229,41 @@ describe('statusOf', () => {
     expect(statusOf({ done: true, dateISO: null, weddingDay: false })).toBe('done');
     expect(statusOf({ done: false, dateISO: '2000-01-01', weddingDay: false })).toBe('overdue');
     expect(statusOf({ done: false, dateISO: '2000-01-01', weddingDay: true })).toBe('wedding');
+  });
+});
+
+describe('task detail', () => {
+  const couple = { a: 'Emma', b: 'Frederik' };
+
+  it('reads an unknown or missing priority as none', () => {
+    expect(priorityOf({ priority: 'high' })).toBe('high');
+    expect(priorityOf({ priority: null })).toBeNull();
+    expect(priorityOf({})).toBeNull();
+    expect(priorityOf({ priority: 'urgent' as never })).toBeNull();
+  });
+
+  it('names who has a task from the couple, not from what was stored', () => {
+    expect(assigneeName('a', couple)).toBe('Emma');
+    expect(assigneeName('b', couple)).toBe('Frederik');
+    expect(assigneeName('both', couple)).toBe('Begge');
+    expect(assigneeName(null, couple)).toBeNull();
+    // Renamed in Settings: the same stored 'a' follows the new name.
+    expect(assigneeName('a', { a: 'Emilie', b: 'Frederik' })).toBe('Emilie');
+  });
+
+  it('falls back to a word, never a blank chip, when a name is missing', () => {
+    expect(assigneeName('b', { a: 'Emma', b: '' })).toBe('Din partner');
+    expect(assigneeInitials('b', { a: 'Emma', b: '' })).toBe('P');
+  });
+
+  it('draws both halves of the couple as two letters', () => {
+    expect(assigneeInitials('a', couple)).toBe('E');
+    expect(assigneeInitials('both', couple)).toBe('EF');
+    expect(assigneeInitials(undefined, couple)).toBeNull();
+  });
+
+  it('has English for every word the task dialog shows', () => {
+    for (const { label } of PRIORITIES) expect(EN[label], label).toBeTruthy();
+    for (const word of ['Begge', 'Dig', 'Din partner']) expect(EN[word], word).toBeTruthy();
   });
 });

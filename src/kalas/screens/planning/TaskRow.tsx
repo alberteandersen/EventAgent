@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, MoreHorizontal, CalendarDays, CornerDownRight, Pencil, CalendarOff } from 'lucide-react';
+import { Trash2, MoreHorizontal, CalendarDays, CornerDownRight, Pencil, CalendarOff, Flag, StickyNote } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn, TaskCheckbox, taskRowTone, doneLabelClass } from '../../ui';
 import { useLang } from '../../i18n';
@@ -18,15 +18,22 @@ export type DisplayTask = {
   Icon?: LucideIcon;
   /** Small label marking a row that lives on the other tab, e.g. "Milepæl". */
   tag?: string;
+  /** Only 'high' is drawn: a flag on every row would mean nothing. */
+  priority?: 'low' | 'medium' | 'high' | null;
+  /** Who has it, as the chip's letters and as its full label. */
+  assigneeInitials?: string | null;
+  assigneeName?: string | null;
+  hasNotes?: boolean;
 };
 
 /** One completable row, shared by both tabs. The menu entries differ:
  *  the checklist is append-only (int `sort`, no fractional insert), so it
- *  passes no `onInsertAfter`; the timeline passes no `onRename`. A checklist
- *  row visiting the timeline passes `onClearDate` instead of `onDelete` —
- *  taking it off the timeline must not delete it off the checklist. */
+ *  passes no `onInsertAfter`. A checklist row visiting the timeline passes
+ *  `onClearDate` instead of `onDelete` — taking it off the timeline must not
+ *  delete it off the checklist. `onOpen` opens the task in TaskDialog, from
+ *  the title and from the menu. */
 export default function TaskRow({
-  task, deleteLabel, menuOpen, onMenu, onCloseMenu, onToggle, onDelete, onInsertAfter, onRename, onClearDate, onDateChange,
+  task, deleteLabel, menuOpen, onMenu, onCloseMenu, onToggle, onDelete, onInsertAfter, onOpen, onClearDate, onDateChange,
 }: {
   task: DisplayTask;
   deleteLabel: string;
@@ -36,7 +43,7 @@ export default function TaskRow({
   onToggle: () => void;
   onDelete?: () => void;
   onInsertAfter?: () => void;
-  onRename?: () => void;
+  onOpen?: () => void;
   onClearDate?: () => void;
   onDateChange: (dateISO: string) => void;
 }) {
@@ -61,7 +68,21 @@ export default function TaskRow({
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className={cn('flex flex-wrap items-center gap-2 text-base font-semibold', done ? doneLabelClass : 'text-[#24413a]')}>
           {task.Icon && <task.Icon size={14} strokeWidth={2} className="shrink-0 text-[#7d938a]" aria-hidden />}
-          {t(task.title)}
+          {onOpen ? (
+            <button
+              type="button"
+              onClick={onOpen}
+              className="text-left underline-offset-4 decoration-[#c6cbc6] hover:underline cursor-pointer"
+            >
+              {t(task.title)}
+            </button>
+          ) : t(task.title)}
+          {task.priority === 'high' && !done && (
+            <Flag size={12} strokeWidth={2.5} className="shrink-0 text-[#b34e37]" aria-label={t('Høj prioritet')} />
+          )}
+          {task.hasNotes && (
+            <StickyNote size={12} strokeWidth={2} className="shrink-0 text-[#9a9686]" aria-label={t('Har noter')} />
+          )}
           {task.tag && (
             <span className="rounded-full bg-[#e8f0ec] px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#5f6b66]">
               {t(task.tag)}
@@ -89,6 +110,16 @@ export default function TaskRow({
           />
         </button>
       </div>
+
+      {task.assigneeInitials && (
+        <span
+          title={task.assigneeName ?? undefined}
+          aria-label={task.assigneeName ? t('Tildelt {name}', { name: task.assigneeName }) : undefined}
+          className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#e8f0ec] px-1.5 text-[0.62rem] font-bold tracking-[0.04em] text-[#5f7d70]"
+        >
+          {task.assigneeInitials}
+        </span>
+      )}
 
       <span
         className={cn(
@@ -129,10 +160,10 @@ export default function TaskRow({
                     <CornerDownRight size={14} className="text-[#5f6b66]" /> {t('Indsæt under')}
                   </button>
                 )}
-                {onRename && (
-                  <button type="button" onClick={onRename}
+                {onOpen && (
+                  <button type="button" onClick={() => { onCloseMenu(); onOpen(); }}
                     className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer">
-                    <Pencil size={14} className="text-[#5f6b66]" /> {t('Omdøb punkt')}
+                    <Pencil size={14} className="text-[#5f6b66]" /> {t('Rediger')}
                   </button>
                 )}
                 {onClearDate && (

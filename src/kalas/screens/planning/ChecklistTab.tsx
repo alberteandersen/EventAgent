@@ -7,10 +7,12 @@ import { cn } from '../../ui';
 import { useLang } from '../../i18n';
 import type { ScreenId } from '../../Shell';
 import TaskRow, { type DisplayTask } from './TaskRow';
+import TaskDialog from './TaskDialog';
 import AddRow from './AddRow';
 import { defaultChecklist, missingChecklistItems } from './checklist-data';
 import {
   isCheck, isMilestone, hasArea, groupByArea, areaLabel, nextSort, areaOf, topUpKey,
+  assigneeInitials, assigneeName, priorityOf,
   readOpenAreas, writeOpenAreas,
   type ChecklistArea, type Filter, FILTER_LABELS, CHECKLIST_AREAS,
 } from './shared';
@@ -26,21 +28,21 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
   onNavigate?: (s: ScreenId) => void;
 }) {
   const { t } = useLang();
-  const { loading, event, timelineTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
+  const { loading, event, couple, timelineTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
 
   const [filter, setFilter] = useState<Filter>('alle');
   const [query, setQuery] = useState('');
   const [addingIn, setAddingIn] = useState<ChecklistArea | null>(null);
   const [newTitle, setNewTitle] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState('');
+  // The task open in TaskDialog. Its title, area, date and the rest are all
+  // edited there now, instead of an inline rename that only reached the title.
+  const [openId, setOpenId] = useState<string | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openAreas, setOpenAreas] = useState<Set<ChecklistArea>>(() => readOpenAreas());
   const reduce = useReducedMotion();
   const newInputRef = useRef<HTMLInputElement>(null);
-  const editInputRef = useRef<HTMLInputElement>(null);
   const toppedUpRef = useRef(false);
 
   React.useEffect(() => {
@@ -133,8 +135,12 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
   function handleToggle(row: (typeof rows)[number]) {
     const nowDone = !row.done;
     void updateTask(row.id, { done: nowDone });
-    if (!nowDone) return;
-    // At 200 items a toast per tick is noise — only celebrate a whole area.
+    if (nowDone) celebrateArea(row);
+  }
+
+  /** Called as `row` is ticked off. At 200 items a toast per tick is noise, so
+   *  only a whole area gets one. */
+  function celebrateArea(row: (typeof rows)[number]) {
     const area = areaOf(row);
     const siblings = rows.filter((r) => areaOf(r) === area);
     const remaining = siblings.filter((r) => !r.done && r.id !== row.id).length;
@@ -145,7 +151,6 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
 
   function openAdd(area: ChecklistArea) {
     setMenuId(null);
-    setEditingId(null);
     setAddingIn(area);
     setNewTitle('');
     setTimeout(() => newInputRef.current?.focus(), 60);
@@ -161,23 +166,6 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
       sort: nextSort(rows.filter((r) => areaOf(r) === addingIn)),
     });
     setAddingIn(null);
-  }
-
-  function openRename(row: (typeof rows)[number]) {
-    setMenuId(null);
-    setAddingIn(null);
-    setEditingId(row.id);
-    setEditTitle(row.title);
-    setTimeout(() => editInputRef.current?.focus(), 60);
-  }
-
-  function commitRename() {
-    const title = editTitle.trim();
-    const id = editingId;
-    setEditingId(null);
-    if (!id || !title) return;
-    if (rows.find((r) => r.id === id)?.title === title) return;
-    void updateTask(id, { title });
   }
 
   function handleReset() {
@@ -201,7 +189,13 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
     id: r.id, title: r.title, dateISO: r.due_date, done: r.done, weddingDay: false,
     // A milestone heading this area's block is only visiting from the timeline.
     tag: isMilestone(r) ? 'Milepæl' : undefined,
+    priority: priorityOf(r),
+    assigneeInitials: assigneeInitials(r.assignee, couple),
+    // Danish source words ("Begge", "Dig"), or a name t() passes through.
+    assigneeName: r.assignee ? t(assigneeName(r.assignee, couple) ?? '') : null,
+    hasNotes: !!r.notes?.trim(),
   });
+  const openTask = rows.find((r) => r.id === openId) ?? null;
 
   return (
     <motion.section
@@ -371,37 +365,22 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
                     )}
 
                     {items.map((row) => (
-                      editingId === row.id ? (
-                        <AddRow
-                          key={row.id}
-                          inputRef={editInputRef}
-                          title={editTitle}
-                          placeholder="Hvad skal huskes?"
-                          onTitleChange={setEditTitle}
-                          onSave={commitRename}
-                          onCancel={() => setEditingId(null)}
-                        />
-                      ) : (
-                        <TaskRow
-                          key={row.id}
-                          task={toDisplay(row)}
-                          deleteLabel="Slet punkt"
-                          menuOpen={menuId === row.id}
-                          onMenu={() => setMenuId((m) => (m === row.id ? null : row.id))}
-                          onCloseMenu={() => setMenuId(null)}
-                          onToggle={() => handleToggle(row)}
-                          // A milestone is only visiting: tick it or date it
-                          // here, but rename and delete belong on the timeline
-                          // where it actually lives.
-                          {...(isCheck(row)
-                            ? {
-                                onRename: () => openRename(row),
-                                onDelete: () => { setMenuId(null); void deleteTask(row.id); },
-                              }
-                            : {})}
-                          onDateChange={(d) => void updateTask(row.id, { due_date: d })}
-                        />
-                      )
+                      <TaskRow
+                        key={row.id}
+                        task={toDisplay(row)}
+                        deleteLabel="Slet punkt"
+                        menuOpen={menuId === row.id}
+                        onMenu={() => setMenuId((m) => (m === row.id ? null : row.id))}
+                        onCloseMenu={() => setMenuId(null)}
+                        onToggle={() => handleToggle(row)}
+                        onOpen={() => { setMenuId(null); setOpenId(row.id); }}
+                        // A milestone is only visiting: open, tick or date it
+                        // here, but delete it on the timeline where it lives.
+                        {...(isCheck(row)
+                          ? { onDelete: () => { setMenuId(null); void deleteTask(row.id); } }
+                          : {})}
+                        onDateChange={(d) => void updateTask(row.id, { due_date: d })}
+                      />
                     ))}
 
                     <AnimatePresence>
@@ -431,6 +410,22 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
         );
       })}
       </div>
+
+      <AnimatePresence>
+        {openTask && (
+          <TaskDialog
+            key={openTask.id}
+            task={openTask}
+            couple={couple}
+            onClose={() => setOpenId(null)}
+            onSave={(patch) => {
+              void updateTask(openTask.id, patch);
+              if (patch.done === true) celebrateArea(openTask);
+            }}
+            onDelete={isCheck(openTask) ? () => { setOpenId(null); void deleteTask(openTask.id); } : undefined}
+          />
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 }

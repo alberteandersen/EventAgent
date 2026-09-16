@@ -8,9 +8,11 @@ import { cn } from '../../ui';
 import { useLang } from '../../i18n';
 import type { DisplayTask } from './TaskRow';
 import TimelineSpine, { type RowActions } from './TimelineSpine';
+import TaskDialog from './TaskDialog';
 import AddRow from './AddRow';
 import {
   isMilestone, isCheck, onTimeline, areaOf, nextSort, buildTimelineBands, todayISO, daysDiff,
+  assigneeInitials, assigneeName, priorityOf,
   type Filter, FILTER_LABELS, CHECKLIST_AREAS,
 } from './shared';
 
@@ -76,6 +78,7 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
   const [newDate, setNewDate] = useState(new Date().toISOString().slice(0, 10));
   const [confirmReset, setConfirmReset] = useState(false);
   const [menuId, setMenuId] = useState<string | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const newInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -102,6 +105,10 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
       // spine rather than the two blurring into one list.
       Icon: isCheck(r) ? CHECKLIST_AREAS.find((a) => a.id === areaOf(r))?.Icon : undefined,
       visiting: isCheck(r),
+      priority: priorityOf(r),
+      assigneeInitials: assigneeInitials(r.assignee, couple),
+      assigneeName: r.assignee ? t(assigneeName(r.assignee, couple) ?? '') : null,
+      hasNotes: !!r.notes?.trim(),
       // Read on the spine's day marker, where there is no room for a word.
       overdue: !r.done && r.due_date != null && r.category !== 'wedding_day' && r.due_date < today,
     }))
@@ -138,13 +145,16 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
      depends on where a row lives: a visiting check comes off the spine by
      losing its date, a milestone is deleted outright. */
   function rowActions(task: (typeof tasks)[number]): RowActions {
+    const onOpen = () => { setMenuId(null); setOpenId(task.id); };
     return task.visiting
-      ? { onClearDate: () => { setMenuId(null); void updateTask(task.id, { due_date: null }); } }
+      ? { onOpen, onClearDate: () => { setMenuId(null); void updateTask(task.id, { due_date: null }); } }
       : {
+          onOpen,
           onDelete: () => { setMenuId(null); void deleteTask(task.id); },
           onInsertAfter: () => openAdd(task.id),
         };
   }
+  const openTask = rows.find((r) => r.id === openId) ?? null;
 
   function handleToggle(task: DisplayTask) {
     const nowDone = !task.done;
@@ -312,6 +322,24 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
         {t('Tilføj milepæl')}
       </button>
 
+      <AnimatePresence>
+        {openTask && (
+          <TaskDialog
+            key={openTask.id}
+            task={openTask}
+            couple={couple}
+            deleteLabel="Slet milepæl"
+            onClose={() => setOpenId(null)}
+            onSave={(patch) => {
+              void updateTask(openTask.id, patch);
+              if (patch.done === true) onCelebrate(openTask.title);
+            }}
+            // A dated checklist item is only visiting: deleting it here would
+            // take it off the checklist too.
+            onDelete={isMilestone(openTask) ? () => { setOpenId(null); void deleteTask(openTask.id); } : undefined}
+          />
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 }

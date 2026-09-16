@@ -3,7 +3,7 @@ import {
   Building2, Church, UtensilsCrossed, Shirt, Mail, Scale, PartyPopper,
   HeartHandshake, CircleDashed, Wallet, Camera, Users, CalendarClock,
 } from 'lucide-react';
-import type { TaskKind, TimelineTaskRow } from '@/lib/db/types';
+import type { TaskAssignee, TaskKind, TaskPriority, TimelineTaskRow } from '@/lib/db/types';
 
 /* ── Tabs ─────────────────────────────────────────────────────────────── */
 
@@ -100,6 +100,46 @@ export function hasArea(row: Pick<TimelineTaskRow, 'category'>): boolean {
 
 export function areaLabel(id: ChecklistArea): string {
   return CHECKLIST_AREAS.find((a) => a.id === id)?.label ?? 'Øvrigt';
+}
+
+/* ── Priority & who has it ────────────────────────────────────────────── */
+
+export const PRIORITIES: { id: TaskPriority; label: string }[] = [
+  { id: 'low', label: 'Lav' },
+  { id: 'medium', label: 'Mellem' },
+  { id: 'high', label: 'Høj' },
+];
+
+/** Never trust the column, same as `kindOf`: anything else reads as unset. */
+export function priorityOf(row: Pick<TimelineTaskRow, 'priority'>): TaskPriority | null {
+  return PRIORITIES.some((p) => p.id === row.priority) ? (row.priority as TaskPriority) : null;
+}
+
+/**
+ * Who a task is on, in words, or null when nobody has it. The couple is passed
+ * in rather than read, so the stored 'a'/'b' follow a rename in Settings; an
+ * empty name falls back to "Dig"/"Din partner" instead of a blank chip.
+ */
+export function assigneeName(
+  assignee: TaskAssignee | null | undefined,
+  couple: { a: string; b: string },
+): string | null {
+  if (assignee === 'a') return couple.a.trim() || 'Dig';
+  if (assignee === 'b') return couple.b.trim() || 'Din partner';
+  if (assignee === 'both') return 'Begge';
+  return null;
+}
+
+/** One or two letters for the row's chip: "E", "F", or "EF" for both. */
+export function assigneeInitials(
+  assignee: TaskAssignee | null | undefined,
+  couple: { a: string; b: string },
+): string | null {
+  const first = (name: string, fallback: string) => (name.trim()[0] ?? fallback).toUpperCase();
+  if (assignee === 'a') return first(couple.a, 'D');
+  if (assignee === 'b') return first(couple.b, 'P');
+  if (assignee === 'both') return first(couple.a, 'D') + first(couple.b, 'P');
+  return null;
 }
 
 /* ── Which areas are unfolded ─────────────────────────────────────────── */

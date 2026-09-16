@@ -17,6 +17,7 @@ export type RowActions = {
   onDelete?: () => void;
   onInsertAfter?: () => void;
   onClearDate?: () => void;
+  onOpen?: () => void;
 };
 
 /** The "you are here" line, drawn between the rows it falls between. */

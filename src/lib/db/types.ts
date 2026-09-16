@@ -477,6 +477,11 @@ export interface GuestRow {
 /** Two levels of detail in the same table — see 0020_task_kind.sql. */
 export type TaskKind = "milestone" | "check";
 
+/** See 0032_task_detail.sql. */
+export type TaskPriority = "low" | "medium" | "high";
+/** 'a' and 'b' are the two halves of the couple, in the order the app shows them. */
+export type TaskAssignee = "a" | "b" | "both";
+
 export interface TimelineTaskRow {
   id: string;
   event_id: string;
@@ -488,6 +493,10 @@ export interface TimelineTaskRow {
   category: string | null;
   /** Optional so a client running ahead of the migration still parses rows. */
   kind?: TaskKind | null;
+  /** Optional for the same reason as `kind`: migration 0032. */
+  notes?: string | null;
+  priority?: TaskPriority | null;
+  assignee?: TaskAssignee | null;
   sort: number;
   created_at: string;
 }

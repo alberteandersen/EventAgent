@@ -31,6 +31,7 @@ import {
   countryView, regionView, areaPoint, centroid, TOWN_ALTITUDE, type GeoPoint,
 } from '@/lib/venue/geo';
 import type { GlobeFocus, GlobePlace } from '../onboarding/DestinationGlobe';
+import { countryFocus, countryFromLocation } from '../onboarding/countries';
 import { panelSlot } from './venues/grid';
 
 const DestinationGlobe = dynamic(() => import('../onboarding/DestinationGlobe'), {
@@ -679,17 +680,24 @@ function DiscoverView({
   /* Seeded, not null. The globe was a mandatory first step before a Danish
      couple could even see "Nordsjælland", but we usually already know where
      they are, and Danish is the app's own language. The globe still works;
-     it is just no longer a toll gate. */
-  const [country, setCountry] = useState<string | null>(
-    () => curatedCountryFromLocation(couple.region) ?? (lang === 'da' ? 'Denmark' : null),
-  );
+     it is just no longer a toll gate.
+
+     The country is the one they chose in onboarding, whichever it is. This
+     used to read only countries with curated regions, which is Denmark, so a
+     couple who picked France still opened on Denmark. Denmark is only the
+     fallback for a Danish couple whose location names no country at all. */
+  const seededCountry =
+    curatedCountryFromLocation(couple.region)
+    ?? countryFromLocation(couple.region)
+    ?? (lang === 'da' ? 'Denmark' : null);
+  const [country, setCountry] = useState<string | null>(seededCountry);
   /* Earth → land → område → by. The globe draws the markers for whichever
      level this is on; the panel beside it draws the same level as a list. */
-  const [level, setLevel] = useState<GlobeLevel>(() => (curatedCountryFromLocation(couple.region) || lang === 'da' ? 'country' : 'earth'));
+  const [level, setLevel] = useState<GlobeLevel>(seededCountry ? 'country' : 'earth');
   /** The region opened at level 'region' — a curated slug or an AI label. */
   const [openRegion, setOpenRegion] = useState<string | null>(null);
   const [focus, setFocus] = useState<GlobeFocus | null>(
-    () => countryView(curatedCountryFromLocation(couple.region) ?? (lang === 'da' ? 'Denmark' : null)),
+    () => countryView(seededCountry) ?? countryFocus(seededCountry),
   );
 
   const [destCards, setDestCards] = useState<DestinationSuggestion[]>([]);
@@ -823,7 +831,7 @@ function DiscoverView({
     setCountry(c);
     setOpenRegion(null);
     setLevel('country');
-    setFocus(countryView(c) ?? (coords ? { ...coords, altitude: 0.9 } : null));
+    setFocus(countryView(c) ?? countryFocus(c) ?? (coords ? { ...coords, altitude: 0.9 } : null));
     void loadDestinations(c);
   };
 
@@ -1176,8 +1184,7 @@ function DiscoverView({
     if (level === 'region') {
       setOpenRegion(null);
       setLevel('country');
-      const view = countryView(country);
-      setFocus(view ?? null);
+      setFocus(countryView(country) ?? countryFocus(country));
       return;
     }
     setOpenRegion(null);
@@ -1305,7 +1312,7 @@ function DiscoverView({
                     <span aria-hidden className="opacity-50">/</span>
                     <button
                       type="button"
-                      onClick={() => { setOpenRegion(null); setLevel('country'); setFocus(countryView(country) ?? null); }}
+                      onClick={() => { setOpenRegion(null); setLevel('country'); setFocus(countryView(country) ?? countryFocus(country)); }}
                       className={cn('cursor-pointer transition-colors hover:text-[#24413a]', level === 'country' && 'font-semibold text-[#24413a]')}
                     >
                       {country}

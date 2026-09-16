@@ -15,6 +15,7 @@ import { estimatedTotal } from './budget/estimate';
 import { budgetLines, IMAGES } from '../data';
 import type { HubCat } from './team/shared';
 import HeroPhoto from './home/HeroPhoto';
+import PhoneBanner from './home/PhoneBanner';
 import { venueCardImage } from './home/venueImage';
 import WeddingDatePicker from '../onboarding/WeddingDatePicker';
 
@@ -598,6 +599,8 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
           />
         </div>
       </motion.section>
+
+      <PhoneBanner />
 
       <p className="pb-4 text-center text-[13px] text-[#a6b0aa]">
         {t('Planlagt med omtanke af {names}, guidet af Ava.', { names: coupleLabel })}

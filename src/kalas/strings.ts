@@ -2380,4 +2380,11 @@ export const EN: Record<string, string> = {
   'Koden virker, når siden er udgivet.': 'The code works once the site is published.',
   'Del jeres billeder med os': 'Share your photos with us',
   'Vores bryllup': 'Our wedding',
+
+  // ── Hjem: fortsæt på telefonen ──────────────────────────────────────
+  'Kalas på telefonen': 'Kalas on your phone',
+  'Planlæg videre på telefonen': 'Keep planning on your phone',
+  'Tjekliste, budget og gæsteliste i lommen': 'Checklist, budget and guest list in your pocket',
+  'Scan koden med telefonens kamera. Vælg "Føj til hjemmeskærm", så åbner Kalas som en app.':
+    'Scan the code with your phone\'s camera. Choose "Add to Home Screen" and Kalas opens like an app.',
 };

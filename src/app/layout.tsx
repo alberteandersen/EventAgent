@@ -30,6 +30,9 @@ const ebGaramond = EB_Garamond({
 
 export const metadata: Metadata = {
   title: "Kalas, plan the wedding, skip the stress",
+  // Opened from a phone's home screen, Kalas runs full screen like an app.
+  appleWebApp: { capable: true, title: "Kalas", statusBarStyle: "default" },
+  icons: { apple: "/pwa-icon/180" },
   description:
     "Kalas is your wedding-planning agent: it finds venues, contacts them for quotes, designs invites, and tracks RSVPs, all from your own Gmail.",
 };

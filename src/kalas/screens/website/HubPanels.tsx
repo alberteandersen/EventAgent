@@ -83,7 +83,13 @@ export function SiteOverview({ published, onTogglePublished, previewHref }: {
 /* ── QR codes ─────────────────────────────────────────────────────────── */
 
 /** A real, scannable QR code for `url`, and a sheet to print it on. */
-export function QrBlock({ url, caption, size = 96 }: { url: string; caption: string; size?: number }) {
+export function QrBlock({ url, caption, size = 96, printable = true }: {
+  url: string;
+  caption: string;
+  size?: number;
+  /** A code meant for a screen, not a table card, has nothing to print. */
+  printable?: boolean;
+}) {
   const { t } = useLang();
   const [svg, setSvg] = useState<string | null>(null);
 
@@ -122,10 +128,12 @@ export function QrBlock({ url, caption, size = 96 }: { url: string; caption: str
         // Generated locally from the URL by the qrcode library, never from input markup.
         dangerouslySetInnerHTML={svg ? { __html: svg } : undefined}
       />
-      <button type="button" onClick={print} disabled={!svg}
-        className="inline-flex items-center gap-1 text-[0.68rem] text-muted transition-colors hover:text-ink disabled:opacity-40 cursor-pointer">
-        <Printer size={11} /> {t('Print')}
-      </button>
+      {printable && (
+        <button type="button" onClick={print} disabled={!svg}
+          className="inline-flex items-center gap-1 text-[0.68rem] text-muted transition-colors hover:text-ink disabled:opacity-40 cursor-pointer">
+          <Printer size={11} /> {t('Print')}
+        </button>
+      )}
     </div>
   );
 }

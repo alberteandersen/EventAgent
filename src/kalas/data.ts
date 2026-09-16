@@ -138,7 +138,8 @@ export type BudgetLine = {
 };
 
 export const budgetLines: BudgetLine[] = [
-  { id: 'venue',    label: 'Venue & leje',           pct: 33, spent: 0, hint: '', icon: 'building', color: '#4A5D3A' },
+  { id: 'venue',    label: 'Venue',                  pct: 26, spent: 0, hint: '', icon: 'building', color: '#4A5D3A' },
+  { id: 'rental',   label: 'Leje & udstyr',          pct:  7, spent: 0, hint: '', icon: 'tent',     color: '#9A8354' },
   { id: 'catering', label: 'Mad & drikke',           pct: 27, spent: 0, hint: '', icon: 'utensils', color: '#C17A4A' },
   { id: 'photo',    label: 'Foto & film',            pct: 11, spent: 0, hint: '', icon: 'camera',   color: '#5A6E7A' },
   { id: 'florals',  label: 'Blomster & dekoration',  pct:  9, spent: 0, hint: '', icon: 'flower',   color: '#A66B7A' },

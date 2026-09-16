@@ -50,11 +50,11 @@ interface RawAdvice {
 
 const ADVICE_PROMPT = `Du er Ava, brylluppets planlægger, og skal foreslå en budgetfordeling for et par.
 
-Brug PRÆCIS disse syv kategorier, ingen andre, og medtag hver af dem én gang i "lines":
+Brug PRÆCIS disse ${budgetLines.length} kategorier, ingen andre, og medtag hver af dem én gang i "lines":
 ${budgetLines.map((l) => `- ${l.id} = ${l.label}`).join("\n")}
 
 Regler:
-- pct er hver kategoris andel af totalbudgettet, som et heltal. Summen af alle syv pct skal være 100.
+- pct er hver kategoris andel af totalbudgettet, som et heltal. Summen af alle pct skal være 100.
 - Har parret allerede brugt eller betalt et beløb i en kategori, må din foreslåede pct aldrig give et
   lavere kronebeløb end det, de allerede har lagt — det ville bede dem fortryde en beslutning, de har
   truffet.

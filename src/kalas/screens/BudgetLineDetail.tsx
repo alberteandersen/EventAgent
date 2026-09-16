@@ -27,6 +27,7 @@ import {
 } from '../lib/budget-style';
 import { Eyebrow, cn } from '../ui';
 import { useLang } from '../i18n';
+import { subItemSuggestions } from './budget/estimate';
 import type { BudgetSubItemRow } from '@/lib/db/types';
 
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
@@ -146,6 +147,7 @@ export default function BudgetLineDetail({
   };
 
   const subTotal = subItems.reduce((a, s) => a + s.amount, 0);
+  const suggestions = subItemSuggestions(categoryId, subItems);
   const addSubItem = () => {
     const cleanLabel = newSubLabel.trim();
     if (!cleanLabel) return;
@@ -331,6 +333,22 @@ export default function BudgetLineDetail({
               write means Annuller can't undo an already-saved sub-item. */}
           <section>
             <Eyebrow>{t('Underposter')}</Eyebrow>
+            {/* The posts this kind of line is usually split into. A tap adds
+                one at 0 kr, and the price goes in when the quote does. */}
+            {suggestions.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {suggestions.map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => onAddSubItem({ label, vendor: null, amount: 0 })}
+                    className="inline-flex items-center gap-1 rounded-full border border-dashed border-line-strong px-2.5 py-1 text-[0.75rem] font-medium text-muted transition-colors hover:border-ink hover:text-ink cursor-pointer"
+                  >
+                    <Plus size={11} strokeWidth={2.5} /> {t(label)}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="mt-3 space-y-2">
               {subItems.map((s) => (
                 <div key={s.id} className="flex items-center gap-2">

@@ -6,7 +6,8 @@
    icon & colour swatches, the delete confirm, and that the contract panel
    mounts without an eventId (it no-ops rather than fetching). */
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { LanguageProvider } from '@/kalas/i18n';
 import BudgetLineDetail from '@/kalas/screens/BudgetLineDetail';
 import type { BudgetSubItemRow } from '@/lib/db/types';
@@ -14,6 +15,16 @@ import type { BudgetSubItemRow } from '@/lib/db/types';
 const now = new Date().toISOString();
 
 export default function DevBudgetDetailPage() {
+  return (
+    <Suspense>
+      <Harness />
+    </Suspense>
+  );
+}
+
+function Harness() {
+  /* `?category=rental` opens a standard line, to see its sub-item suggestions. */
+  const category = useSearchParams().get('category') ?? 'custom-1';
   const [open, setOpen] = useState(true);
   const [log, setLog] = useState<string[]>([]);
   const note = (line: string) => setLog((l) => [...l, line]);
@@ -38,8 +49,8 @@ export default function DevBudgetDetailPage() {
         {open && (
           <BudgetLineDetail
             eventId={null}
-            categoryId="custom-1"
-            label="Transport"
+            categoryId={category}
+            label={category === 'custom-1' ? 'Transport' : category}
             icon="sparkles"
             color="#8a7f66"
             custom

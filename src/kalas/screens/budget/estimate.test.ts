@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { budgetLines } from '../../data';
-import { estimatedTotal, estimatedLines, DK_AVG_PER_GUEST, venueBudget } from './estimate';
+import {
+  estimatedTotal, estimatedLines, DK_AVG_PER_GUEST, venueBudget,
+  LEGACY_VENUE_LABEL, rentalSplit, subItemSuggestions,
+} from './estimate';
 
 describe('estimatedTotal', () => {
   it('uses the couple’s own number when they gave one', () => {
@@ -67,16 +70,65 @@ describe('venueBudget', () => {
   });
 
   it('falls back to the benchmark share, never the total', () => {
-    expect(venueBudget([], 300_000)).toBe(99_000); // 33%
-    expect(venueBudget([{ category: 'catering', planned_amount: 80_000 }], 300_000)).toBe(99_000);
+    expect(venueBudget([], 300_000)).toBe(78_000); // 26%
+    expect(venueBudget([{ category: 'catering', planned_amount: 80_000 }], 300_000)).toBe(78_000);
   });
 
   it('ignores a venue line set to zero', () => {
-    expect(venueBudget([{ category: 'venue', planned_amount: 0 }], 300_000)).toBe(99_000);
+    expect(venueBudget([{ category: 'venue', planned_amount: 0 }], 300_000)).toBe(78_000);
   });
 
   it('is null when there is no budget to work from', () => {
     expect(venueBudget([], 0)).toBeNull();
     expect(venueBudget([{ category: 'venue', planned_amount: 0 }], 0)).toBeNull();
+  });
+});
+
+describe('rentalSplit', () => {
+  const legacy = [
+    { category: 'venue', label: LEGACY_VENUE_LABEL, sort: 0 },
+    { category: 'catering', label: 'Mad & drikke', sort: 1 },
+    { category: 'photo', label: 'Foto & film', sort: 2 },
+  ];
+
+  it('adds hire straight under the venue, at nothing', () => {
+    const split = rentalSplit(legacy);
+    expect(split?.rental).toMatchObject({ category: 'rental', label: 'Leje & udstyr', planned_amount: 0, sort: 1 });
+    expect(split?.rental.icon).toBe('tent');
+  });
+
+  it('moves every line below the venue down one place', () => {
+    expect(rentalSplit(legacy)?.shifted).toEqual([
+      { category: 'catering', label: 'Mad & drikke', sort: 2 },
+      { category: 'photo', label: 'Foto & film', sort: 3 },
+    ]);
+  });
+
+  it('leaves a budget alone once it has a hire line', () => {
+    expect(rentalSplit([...legacy, { category: 'rental', label: 'Leje', sort: 9 }])).toBeNull();
+  });
+
+  it('leaves a venue line the couple renamed alone', () => {
+    expect(rentalSplit([{ category: 'venue', label: 'Slottet', sort: 0 }])).toBeNull();
+  });
+
+  it('does nothing without a venue line', () => {
+    expect(rentalSplit([])).toBeNull();
+    expect(rentalSplit(legacy.slice(1))).toBeNull();
+  });
+});
+
+describe('subItemSuggestions', () => {
+  it('offers the common hire posts', () => {
+    expect(subItemSuggestions('rental', [])).toContain('Telt');
+  });
+
+  it('skips a post the category already has, whatever the case', () => {
+    expect(subItemSuggestions('rental', [{ label: ' telt ' }])).not.toContain('Telt');
+  });
+
+  it('is empty for a category without suggestions', () => {
+    expect(subItemSuggestions('photo', [])).toEqual([]);
+    expect(subItemSuggestions('custom-1', [])).toEqual([]);
   });
 });

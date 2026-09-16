@@ -53,7 +53,7 @@ export default function MorePanel({
         />
         {allocatedBudget != null && filters.budget_max === allocatedBudget && (
           <p className="mt-1.5 text-[0.7rem] text-sage">
-            {t('Sat efter jeres budget til Venue & leje.')}
+            {t('Sat efter jeres budget til Venue.')}
           </p>
         )}
         <RequireSwitch

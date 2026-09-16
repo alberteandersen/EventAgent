@@ -14,7 +14,8 @@ const SAMPLE = {
   headline: 'Med 225.000 kr og 80 gæster på Fyn er der plads til et rigtigt godt sted uden at gå på kompromis med maden.',
   total: 225000,
   lines: [
-    { category: 'venue', label: 'Venue & leje', pct: 33, amount: 74250, rationale: 'Fyn har flere gårde og gods i denne prisklasse med plads til 80.' },
+    { category: 'venue', label: 'Venue', pct: 26, amount: 58500, rationale: 'Fyn har flere gårde og gods i denne prisklasse med plads til 80.' },
+    { category: 'rental', label: 'Leje & udstyr', pct: 7, amount: 15750, rationale: 'Et gods med egne borde og stole holder lejen nede.' },
     { category: 'catering', label: 'Mad & drikke', pct: 30, amount: 67500, rationale: 'I har allerede lagt 60.000 kr her — vi runder op, ikke ned.' },
     { category: 'photo', label: 'Foto & film', pct: 10, amount: 22500, rationale: 'En hel dag med fotograf er realistisk i det bånd.' },
     { category: 'florals', label: 'Blomster & dekoration', pct: 9, amount: 20250, rationale: 'Sæsonblomster i juni holder prisen nede.' },

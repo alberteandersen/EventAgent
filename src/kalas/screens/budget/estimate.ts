@@ -69,3 +69,60 @@ export function venueBudget(
   if (total > 0 && pct > 0) return Math.round((total * pct) / 100);
   return null;
 }
+
+/* ── Venue and hire, apart ─────────────────────────────────────────────── */
+
+/** What the venue line was called while it also held the hire. */
+export const LEGACY_VENUE_LABEL = 'Venue & leje';
+
+/**
+ * The smaller posts a couple usually splits each of the two lines into, offered
+ * as one-tap chips above the sub-item row. Suggestions only: a tap adds the
+ * post at 0 kr, and the couple types the price when a quote comes in.
+ */
+export const SUGGESTED_SUB_ITEMS: Record<string, string[]> = {
+  venue: ['Lokaleleje', 'Vielsessted', 'Overnatning', 'Rengøring'],
+  rental: ['Telt', 'Borde & stole', 'Service & glas', 'Duge', 'Belysning', 'Dansegulv', 'Toiletvogn', 'Varmelamper'],
+};
+
+/** The suggestions for a category that it does not already have a post for. */
+export function subItemSuggestions(category: string, existing: { label: string }[]): string[] {
+  const have = new Set(existing.map((s) => s.label.trim().toLowerCase()));
+  return (SUGGESTED_SUB_ITEMS[category] ?? []).filter((label) => !have.has(label.toLowerCase()));
+}
+
+export type RentalSplit = {
+  /** The new hire line, slotted in straight after the venue. */
+  rental: EstimatedLine;
+  /** Lines below the venue, each moved one place down to make room. */
+  shifted: { category: string; label: string; sort: number }[];
+};
+
+/**
+ * Budgets saved before hire had a line of its own still carry one combined
+ * "Venue & leje" row. This works out the one-time split: rename that row to
+ * "Venue" and add "Leje & udstyr" directly under it.
+ *
+ * The new line starts at 0 kr. Moving part of the venue figure across would be
+ * guessing how much of what the couple entered was hire, so the money stays
+ * where they put it. Null when there is nothing to split: no combined row (a
+ * new budget, or one the couple renamed or removed), or a hire line already.
+ */
+export function rentalSplit(
+  items: { category: string; label: string; sort: number }[]
+): RentalSplit | null {
+  const venue = items.find((i) => i.category === 'venue');
+  if (!venue || venue.label !== LEGACY_VENUE_LABEL) return null;
+  if (items.some((i) => i.category === 'rental')) return null;
+  const std = budgetLines.find((l) => l.id === 'rental');
+  if (!std) return null;
+  return {
+    rental: {
+      category: 'rental', label: std.label, planned_amount: 0,
+      icon: std.icon, color: std.color, sort: venue.sort + 1,
+    },
+    shifted: items
+      .filter((i) => i.category !== 'venue' && i.sort > venue.sort)
+      .map((i) => ({ category: i.category, label: i.label, sort: i.sort + 1 })),
+  };
+}

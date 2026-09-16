@@ -1,7 +1,7 @@
 "use client";
 
 /* Ava's budget assistant — a real, per-couple recommendation instead of a
-   locked-behind-premium percentage table. Same seven categories the budget
+   locked-behind-premium percentage table. Same categories the budget
    screen already uses, redistributed by Gemini against the couple's own
    total, guest count, region and style, with one rule the server enforces
    no matter what the model says: a category they have already spent money
@@ -162,7 +162,7 @@ export default function BudgetAvaAssistant({
                 {region && <span>{t('Sted')} <b className="text-ink">{region}</b></span>}
               </div>
 
-              {/* The seven lines, matched by colour to the real budget screen */}
+              {/* The benchmark lines, matched by colour to the real budget screen */}
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {advice.lines.map((l) => {
                   const Icon = resolveBudgetIcon(l.category);

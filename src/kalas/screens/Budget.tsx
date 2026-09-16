@@ -16,7 +16,7 @@ import AnimateNumber from '../AnimateNumber';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
 import { navigateToHub, type NavigateTarget } from '../lib/hub-nav';
-import { estimatedTotal, estimatedLines } from './budget/estimate';
+import { estimatedTotal, estimatedLines, rentalSplit } from './budget/estimate';
 import type { HubCat } from './team/shared';
 
 const isCustomLine = (id: string) => id.startsWith('custom-');
@@ -30,8 +30,13 @@ const BUDGET_TO_HUBCAT: Record<string, HubCat> = {
 
 /** Events whose opening budget has been claimed for insertion. Module scope,
  *  not a ref: navigating away unmounts the screen, and a fresh ref would start
- *  a second batch of the same seven rows while the first is still in flight. */
+ *  a second batch of the same benchmark rows while the first is still in flight. */
 const seeding = new Set<string>();
+
+/** Events whose one-time venue/hire split is in flight. Same reason as
+ *  `seeding`: the new row lands a moment after the insert, and a remount in
+ *  that gap would otherwise add a second hire line. */
+const splitting = new Set<string>();
 
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
 
@@ -122,7 +127,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
      had actually told us with a number derived from it. */
   /* One claim guards all three write paths below. `budget_items` only lands a
      moment after the insert, so without it the auto-seed and a slider dragged
-     in that gap would both write the same seven rows. */
+     in that gap would both write the same benchmark rows. */
   const claimSeed = () => {
     if (!event || seeding.has(event.id)) return false;
     seeding.add(event.id);
@@ -137,6 +142,23 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
       .catch(() => seeding.delete(id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, event, budgetItems.length, estimate, saveBudgetItem]);
+
+  /* Hire used to share the venue's line. A budget saved back then still has
+     one "Venue & leje" row, so it is split once, on arrival: renamed to Venue,
+     with "Leje & udstyr" added underneath at 0 kr. The data says when it is
+     done, so there is no flag to keep. */
+  useEffect(() => {
+    if (loading || !event || splitting.has(event.id)) return;
+    const split = rentalSplit(budgetItems);
+    if (!split) return;
+    const id = event.id;
+    splitting.add(id);
+    void Promise.all([
+      saveBudgetItem({ category: 'venue', label: 'Venue' }),
+      saveBudgetItem(split.rental),
+      ...split.shifted.map((row) => saveBudgetItem(row)),
+    ]).catch(() => splitting.delete(id));
+  }, [loading, event, budgetItems, saveBudgetItem]);
 
   // First mutation while nothing is persisted seeds the whole current list, so
   // budget_items becomes authoritative in one batch (no partial state that the
@@ -284,7 +306,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   };
 
   /** Applies Ava's whole suggested split at once. A dedicated bulk write
-   *  rather than seven calls to `persist`: those each read `amounts` from
+   *  rather than one call to `persist` per line: those each read `amounts` from
    *  closure, so looping them would race — each call seeding or saving
    *  against a version of the total that only reflects the one line before
    *  it. One computed object, one write. Only touches lines Ava actually
@@ -357,7 +379,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               ? t('Fordelingen er lagt ud fra det I har fortalt, træk i den, så den passer jer.')
               : t('Hold styr på hvad brylluppet koster, og hvad I har tilbage.')}
           </p>
-          {/* Nothing to estimate from. A split of zero would just be seven empty
+          {/* Nothing to estimate from. A split of zero would just be a column of empty
               rows pretending to be a plan. */}
           {total === 0 && (
             <p className="mt-2 text-[13px] leading-relaxed text-[#8a7d5c]">

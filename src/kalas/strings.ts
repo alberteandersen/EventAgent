@@ -2246,4 +2246,18 @@ export const EN: Record<string, string> = {
   'Hver eneste side I lige har set, kan jeg styre for jer herfra. **Sæt budgettet**, **find et sted**, **tilføj en gæst** — skriv det, som I ville sige det til et menneske, så gør jeg det og viser jer resultatet.\n\nI behøver ikke lære menuen at kende først.':
     'Every page you just saw, I can drive for you from here. **Set the budget**, **find a venue**, **add a guest** — write it the way you would say it to a person, and I will do it and show you the result.\n\nYou do not have to learn the menu first.',
   'Hvad mangler vi at få styr på?': 'What do we still need to sort out?',
+
+  // ── Budget: venue og leje ───────────────────────────────────────────
+  'Leje & udstyr': 'Hire & equipment',
+  'Lokaleleje': 'Room hire',
+  'Vielsessted': 'Ceremony venue',
+  'Rengøring': 'Cleaning',
+  'Borde & stole': 'Tables & chairs',
+  'Service & glas': 'Tableware & glasses',
+  'Duge': 'Tablecloths',
+  'Belysning': 'Lighting',
+  'Dansegulv': 'Dance floor',
+  'Toiletvogn': 'Toilet trailer',
+  'Varmelamper': 'Patio heaters',
+  'Sat efter jeres budget til Venue.': 'Set from your Venue budget.',
 };

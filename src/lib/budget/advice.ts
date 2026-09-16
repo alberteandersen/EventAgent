@@ -57,7 +57,7 @@ function apportion(shares: number[], target: number): number[] {
  * - The known subset is rescaled to sum to 100 before rounding, and the
  *   rounding itself is apportioned rather than done line-by-line, so the
  *   result always sums to exactly 100 — never the 97 or 103 that rounding
- *   seven independent percentages would otherwise occasionally produce.
+ *   independent percentages would otherwise occasionally produce.
  * - Every line's amount is computed here, in kroner, from the couple's own
  *   total — never taken from the model.
  */
@@ -77,7 +77,7 @@ export function normaliseAdvice(
   // so the known ones must be rescaled to fill only what is left over, not
   // simply rescaled to 100 and stacked on top of the skipped ones' shares.
   // (Scaling known to 100 by itself and adding the skipped benchmarks on top
-  // is the bug a first pass at this got wrong: with two of seven categories
+  // is the bug a first pass at this got wrong: with two of the categories
   // known, the "known" pair alone would already claim the full 100, and the
   // other five would add their benchmarks on top of that.)
   const skippedBenchmarkTotal = standard

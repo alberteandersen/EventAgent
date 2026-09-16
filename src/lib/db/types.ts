@@ -35,6 +35,8 @@ export interface EventRow {
   journey_overrides: Record<string, string>;
   /** Task ids the couple turned off on the home checklist. */
   checklist_hidden: string[];
+  /** The read-only programme link's token, or null when not shared (0034). */
+  program_share_token?: string | null;
   reply_tag: string | null;
   created_at: string;
 }

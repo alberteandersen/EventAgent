@@ -2320,4 +2320,17 @@ export const EN: Record<string, string> = {
   // ── Bryllupsdagen: tilføj ───────────────────────────────────────────
   'Øjeblikket blev ikke gemt. Prøv igen.': 'The moment was not saved. Try again.',
   'Skriv først, hvad der sker kl. {time}.': 'First write what happens at {time}.',
+
+  // ── Bryllupsdagen: del programmet ───────────────────────────────────
+  'Del programmet': 'Share the programme',
+  'Del med fotograf, toastmaster og familie': 'Share with the photographer, toastmaster and family',
+  'Alle med linket kan se programmet, men ikke ændre det. De skal ikke logge ind.':
+    'Anyone with the link can see the programme but not change it. They do not need to sign in.',
+  'Linket kunne ikke laves. Prøv igen.': 'The link could not be made. Try again.',
+  'Laver linket…': 'Making the link…',
+  'Lav et nyt link (det gamle holder op med at virke)': 'Make a new link (the old one stops working)',
+  'Program for {names}s bryllup': "Programme for {names}'s wedding",
+  'Programmet er ikke lagt endnu.': 'The programme has not been planned yet.',
+  'Lavet med Kalas · kun til dem, der har fået linket': 'Made with Kalas · only for those who were given the link',
+  'Stop deling': 'Stop sharing',
 };

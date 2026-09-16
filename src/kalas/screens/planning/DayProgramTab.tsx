@@ -19,7 +19,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertTriangle, Check, ChevronDown, Clipboard, ClipboardCheck, Copy,
-  FileDown, Plus, Sparkles, Trash2, User,
+  FileDown, Link2, Plus, RefreshCw, Share2, Sparkles, Trash2, User, X,
 } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { useLang } from '../../i18n';
@@ -118,8 +118,22 @@ export default function DayProgramTab() {
       onUpdate={(id, patch) => void updateDayProgramItem(id, patch)}
       onDelete={(id) => void deleteDayProgramItem(id)}
       onSeed={(rows) => void seedDayProgram(rows)}
+      onShare={shareLink}
     />
   );
+}
+
+/** The read-only link: the existing one, a fresh one (`rotate`), or none
+ *  (`stop`). Resolves to the full URL, null when sharing is off, or throws. */
+async function shareLink(action: 'get' | 'rotate' | 'stop'): Promise<string | null> {
+  const res = await fetch('/api/day-program/share', {
+    method: action === 'stop' ? 'DELETE' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: action === 'stop' ? undefined : JSON.stringify({ rotate: action === 'rotate' }),
+  });
+  if (!res.ok) throw new Error(String(res.status));
+  const { token } = (await res.json()) as { token: string | null };
+  return token ? `${window.location.origin}/p/${token}` : null;
 }
 
 export interface DayProgramProps {
@@ -134,10 +148,13 @@ export interface DayProgramProps {
   onSeed: (rows: { time: string; title: string; subtitle?: string | null; duration_min?: number; owner?: string | null }[]) => void;
   /** Overridable so the harness can park the clock mid-day. */
   clockOverride?: string;
+  /** The read-only link for photographer, toastmaster and family. Left out,
+   *  there is no Del button. */
+  onShare?: (action: 'get' | 'rotate' | 'stop') => Promise<string | null>;
 }
 
 export function DayProgram({
-  items: rawItems, isToday, onAdd, onUpdate, onDelete, onSeed, clockOverride,
+  items: rawItems, isToday, onAdd, onUpdate, onDelete, onSeed, clockOverride, onShare,
 }: DayProgramProps) {
   const { t } = useLang();
   const [clock, setClock] = useState(clockOverride ?? nowHHMM());
@@ -147,6 +164,10 @@ export function DayProgram({
   const [newTitle, setNewTitle] = useState('');
   // Why nothing was added: no title yet, or the save itself failed.
   const [addProblem, setAddProblem] = useState<'title' | 'failed' | null>(null);
+  // The share panel: closed, loading, open on a link, or failed.
+  const [share, setShare] = useState<{ open: boolean; url: string | null; busy: boolean; failed: boolean; copied: boolean }>(
+    { open: false, url: null, busy: false, failed: false, copied: false },
+  );
   const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -224,6 +245,20 @@ export function DayProgram({
       time: item.time, title: item.title, subtitle: item.subtitle,
       duration_min: item.duration_min, owner: item.owner, notes: item.notes,
     });
+  };
+
+  const runShare = async (action: 'get' | 'rotate' | 'stop') => {
+    if (!onShare) return;
+    setShare((s) => ({ ...s, open: action !== 'stop', busy: true, failed: false, copied: false }));
+    try {
+      const url = await onShare(action);
+      setShare((s) => ({ ...s, url, busy: false }));
+      if (url && action !== 'stop') {
+        void navigator.clipboard?.writeText(url).then(() => setShare((s) => ({ ...s, copied: true })));
+      }
+    } catch {
+      setShare((s) => ({ ...s, busy: false, failed: true }));
+    }
   };
 
   const copyProgram = () => {
@@ -323,6 +358,16 @@ export function DayProgram({
 
         {items.length > 0 && (
           <div className="flex shrink-0 items-center gap-2">
+            {onShare && (
+              <button
+                type="button"
+                onClick={() => (share.open ? setShare((s) => ({ ...s, open: false })) : void runShare('get'))}
+                aria-expanded={share.open}
+                className="flex items-center gap-1.5 rounded-full bg-ink px-3.5 py-2 text-[0.78rem] font-semibold text-canvas transition-opacity hover:opacity-90 cursor-pointer"
+              >
+                <Share2 size={14} /> {t('Del programmet')}
+              </button>
+            )}
             <button
               type="button" onClick={copyProgram}
               className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-2 text-[0.78rem] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
@@ -340,6 +385,64 @@ export function DayProgram({
           </div>
         )}
       </div>
+
+      {/* ── Sharing ─────────────────────────────────────────────────────
+          A read-only page with the day on it, for the people who run it.
+          The link is copied the moment it exists, since that is what the
+          couple came here to do; the panel is for what comes after. */}
+      <AnimatePresence initial={false}>
+        {share.open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+            className="mt-4 rounded-2xl rule bg-card px-4 py-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[0.86rem] font-semibold text-ink">{t('Del med fotograf, toastmaster og familie')}</p>
+                <p className="mt-0.5 text-[0.76rem] text-muted">
+                  {t('Alle med linket kan se programmet, men ikke ændre det. De skal ikke logge ind.')}
+                </p>
+              </div>
+              <button type="button" onClick={() => setShare((s) => ({ ...s, open: false }))} aria-label={t('Luk')}
+                className="shrink-0 rounded-full p-1 text-muted hover:bg-shell hover:text-ink cursor-pointer">
+                <X size={15} />
+              </button>
+            </div>
+
+            {share.failed ? (
+              <p className="mt-3 text-[0.8rem] text-[var(--color-terracotta)]">{t('Linket kunne ikke laves. Prøv igen.')}</p>
+            ) : (
+              <div className="mt-3 flex items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-shell px-3 py-2">
+                  <Link2 size={13} className="shrink-0 text-muted" aria-hidden />
+                  <span className="truncate text-[0.8rem] text-ink-soft">{share.busy ? t('Laver linket…') : share.url}</span>
+                </div>
+                <button
+                  type="button"
+                  disabled={!share.url || share.busy}
+                  onClick={() => share.url && void navigator.clipboard?.writeText(share.url).then(() => setShare((s) => ({ ...s, copied: true })))}
+                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-line px-3 py-2 text-[0.76rem] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink disabled:opacity-40 cursor-pointer"
+                >
+                  {share.copied ? <Check size={13} className="text-success" /> : <Copy size={13} />}
+                  {share.copied ? t('Kopieret') : t('Kopiér')}
+                </button>
+              </div>
+            )}
+
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[0.74rem]">
+              <button type="button" disabled={share.busy} onClick={() => void runShare('rotate')}
+                className="inline-flex items-center gap-1 text-muted hover:text-ink disabled:opacity-40 cursor-pointer">
+                <RefreshCw size={11} /> {t('Lav et nyt link (det gamle holder op med at virke)')}
+              </button>
+              <button type="button" disabled={share.busy} onClick={() => void runShare('stop')}
+                className="text-[var(--color-terracotta)] hover:opacity-80 disabled:opacity-40 cursor-pointer">
+                {t('Stop deling')}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── The shape of the day ────────────────────────────────────────
           Every figure carries its own label. Unlabelled they read as four

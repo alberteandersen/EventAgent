@@ -2282,4 +2282,25 @@ export const EN: Record<string, string> = {
   'Høj prioritet': 'High priority',
   'Har noter': 'Has notes',
   'Tildelt {name}': 'Assigned to {name}',
+
+  // ── Gæster: alder, husstand og bord ─────────────────────────────────
+  'Voksen': 'Adult',
+  'Baby': 'Baby',
+  'Alderskategori': 'Age group',
+  'Husstand': 'Household',
+  'Egen husstand': 'Own household',
+  'Sammen med {name}': 'Together with {name}',
+  '{name} er husstandens overhoved for {members}.': '{name} heads the household for {members}.',
+  'Gæster i samme husstand får én invitation og står samlet på listen.':
+    'Guests in the same household get one invitation and are listed together.',
+  'Der er ingen andre gæster at samle i en husstand endnu.': 'There are no other guests to group into a household yet.',
+  'Bordplacering': 'Seating',
+  'Bord': 'Table',
+  'Ikke placeret': 'Not seated',
+  '{table} · {n} ledige': '{table} · {n} free',
+  'Når I har sat borde op i bordplanen, kan I placere gæsten her.':
+    'Once you have set up tables in the seating plan, you can seat the guest here.',
+  '{n} voksne': '{n} adults',
+  '{n} børn': '{n} children',
+  '{n} babyer': '{n} babies',
 };

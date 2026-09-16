@@ -230,6 +230,38 @@ export function firstFreeSeat(table: SeatingTable): number {
   return table.seated.indexOf(null);
 }
 
+/**
+ * Seat a guest at a table without choosing the chair: the first free one.
+ * `null` takes them off the plan. Used from the guest dialog, where the
+ * question is "which table", and the chair is the plan's business.
+ *
+ * Unchanged when they already sit at that table (no reshuffle to chair one),
+ * and when the table is full or does not exist.
+ */
+export function placeAtTable(plan: SeatingPlan, guestId: string, tableId: string | null): SeatingPlan {
+  if (tableId === null) return unseatGuest(plan, guestId);
+  if (seatOf(plan, guestId)?.tableId === tableId) return plan;
+  const target = plan.tables.find((t) => t.id === tableId);
+  if (!target) return plan;
+  const index = firstFreeSeat(target);
+  return index === -1 ? plan : seatGuest(plan, guestId, tableId, index);
+}
+
+/**
+ * The tables a guest could be put at, for a picker: every table with a free
+ * chair, plus the one they already sit at even when it is full, so the picker
+ * can show where they are.
+ */
+export function tableOptions(
+  plan: SeatingPlan,
+  guestId: string | null,
+): { id: string; name: string; free: number; current: boolean }[] {
+  const at = guestId ? seatOf(plan, guestId) : null;
+  return plan.tables
+    .map((t) => ({ id: t.id, name: t.name, free: freeSeats(t), current: at?.tableId === t.id }))
+    .filter((t) => t.current || t.free > 0);
+}
+
 export function setSeatCount(table: SeatingTable, next: number): SeatingTable {
   const seats = Math.max(MIN_SEATS, Math.min(MAX_SEATS, next));
   if (seats === table.seats) return table;

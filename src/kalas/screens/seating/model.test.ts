@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   freeSeats, initials, makeTable, pruneToGuests, readPlan, seatGuest, seatOf, seatPoints, seatLabel,
-  seatedIds, setSeatCount, tableSize, unseatGuest,
+  seatedIds, setSeatCount, tableSize, unseatGuest, placeAtTable, tableOptions,
   type SeatingPlan, type SeatingTable,
 } from './model';
 
@@ -253,5 +253,42 @@ describe('name helpers', () => {
   it('labels a chair with the first name, truncated', () => {
     expect(seatLabel('Margaret Whitfield')).toBe('Margaret');
     expect(seatLabel('Bartholomew Jones')).toBe('Bartholom…');
+  });
+});
+
+describe('placing a guest from the guest dialog', () => {
+  const two = () => plan(
+    table({ id: 't1', name: 'Bord 1', seated: ['a', null, null, null] }),
+    table({ id: 't2', name: 'Bord 2', seats: 2, seated: ['b', 'c'] }),
+  );
+
+  it('sits them in the first free chair', () => {
+    expect(placeAtTable(two(), 'd', 't1').tables[0].seated).toEqual(['a', 'd', null, null]);
+  });
+
+  it('moves them out of their old chair', () => {
+    const moved = placeAtTable(two(), 'a', 't1');
+    expect(moved).toEqual(two()); // already there: nothing moves
+    const p = placeAtTable(plan(table({ id: 't1', seated: [null, null, null, null] }), table({ id: 't3', seated: ['a', null, null, null] })), 'a', 't1');
+    expect(seatOf(p, 'a')).toEqual({ tableId: 't1', index: 0 });
+    expect(p.tables[1].seated).toEqual([null, null, null, null]);
+  });
+
+  it('leaves the plan alone when the table is full or gone', () => {
+    expect(placeAtTable(two(), 'd', 't2')).toEqual(two());
+    expect(placeAtTable(two(), 'd', 'nope')).toEqual(two());
+  });
+
+  it('takes them off the plan with null', () => {
+    expect(seatOf(placeAtTable(two(), 'a', null), 'a')).toBeNull();
+  });
+
+  it('offers tables with room, plus the full one they sit at', () => {
+    expect(tableOptions(two(), 'd').map((o) => o.id)).toEqual(['t1']);
+    expect(tableOptions(two(), 'b')).toEqual([
+      { id: 't1', name: 'Bord 1', free: 3, current: false },
+      { id: 't2', name: 'Bord 2', free: 0, current: true },
+    ]);
+    expect(tableOptions(two(), null).map((o) => o.id)).toEqual(['t1']);
   });
 });

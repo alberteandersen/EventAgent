@@ -446,6 +446,9 @@ export interface BudgetContractRow {
 
 export type RsvpStatus = "afventer" | "ja" | "nej";
 
+/** See 0033_guest_household.sql. */
+export type AgeGroup = "adult" | "child" | "baby";
+
 export interface GuestRow {
   id: string;
   event_id: string;
@@ -469,6 +472,11 @@ export interface GuestRow {
   overnight: boolean;
   no_alcohol: boolean;
   plus_one_name: string | null;
+  /** Optional until migration 0033 has run everywhere; read through
+   *  screens/guests/household.ts, which treats missing as an adult. */
+  age_group?: AgeGroup;
+  /** The guest who heads this one's household, or null. One level only. */
+  household_head?: string | null;
   responded_at: string | null;
   rsvp_token: string;
   created_at: string;

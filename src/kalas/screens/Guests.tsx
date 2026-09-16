@@ -4,6 +4,8 @@ import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, ChevronDown
 import { Pill, cn } from '../ui';
 import GuestDialog, { type GuestDraft } from './GuestDialog';
 import { dietarySummary } from './guests/dietary';
+import { ageCounts, ageGroupOf, AGE_GROUPS, orderByHousehold } from './guests/household';
+import { placeAtTable, readPlan, seatOf, tableOptions } from './seating/model';
 import AnimateNumber from '../AnimateNumber';
 import { useLang } from '../i18n';
 import { useWedding } from '../useWedding';
@@ -18,6 +20,8 @@ const RSVP_OPTIONS: { value: RsvpStatus; label: string }[] = [
 ];
 
 type Tab = 'gæsteliste' | 'beskeder';
+
+const AGE_COUNT_LABELS = { adult: '{n} voksne', child: '{n} børn', baby: '{n} babyer' } as const;
 type Filter = 'alle' | 'ja' | 'afventer' | 'afbud';
 
 const TAB_LABELS: Record<Tab, string> = { gæsteliste: 'Gæsteliste', beskeder: 'Beskeder' };
@@ -45,7 +49,7 @@ function makeTemplates(a: string, b: string, dateLabel: string) {
 
 export default function Guests() {
   const { t } = useLang();
-  const { couple, guests: guestList, weddingSite, addGuest: addGuestRow, updateGuest, deleteGuest } = useWedding();
+  const { couple, guests: guestList, weddingSite, seatingPlan, saveSeating, addGuest: addGuestRow, updateGuest, deleteGuest } = useWedding();
   const siteBase = weddingSite?.published && weddingSite.domain
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/w/${weddingSite.domain}`
     : null;
@@ -71,9 +75,18 @@ export default function Guests() {
 
   const startAdding = () => setDialog('new');
 
-  const saveDialog = (draft: GuestDraft) => {
-    if (dialog === 'new') void addGuestRow(draft);
-    else if (dialog) void updateGuest(dialog.id, draft);
+  const plan = useMemo(() => readPlan(seatingPlan?.data), [seatingPlan]);
+  const ages = useMemo(() => ageCounts(guestList), [guestList]);
+
+  const saveDialog = async (draft: GuestDraft) => {
+    // The table is the seating plan's, not a guest column.
+    const { table_id: tableId, ...fields } = draft;
+    const target = dialog;
+    let id: string | null = null;
+    if (target === 'new') id = (await addGuestRow(fields))?.id ?? null;
+    else if (target) { void updateGuest(target.id, fields); id = target.id; }
+    if (!id || (seatOf(plan, id)?.tableId ?? null) === tableId) return;
+    void saveSeating(placeAtTable(plan, id, tableId) as unknown as Record<string, unknown>);
   };
 
   const removeGuest = (id: string) => void deleteGuest(id);
@@ -179,6 +192,15 @@ export default function Guests() {
               ))}
             </div>
 
+            {/* Who is coming, by age: what catering and the venue ask first. */}
+            {guestList.length > 0 && (ages.child > 0 || ages.baby > 0) && (
+              <p className="mt-4 text-[0.78rem] text-muted">
+                {AGE_GROUPS.filter((a) => ages[a.id] > 0)
+                  .map((a) => t(AGE_COUNT_LABELS[a.id], { n: ages[a.id] }))
+                  .join(' · ')}
+              </p>
+            )}
+
             {/* Table header */}
             <div className="mt-4 grid items-center gap-4 pb-3 rule-b"
               style={{ gridTemplateColumns: '1fr 90px 90px 20px' }}>
@@ -188,7 +210,7 @@ export default function Guests() {
               <span className="text-[0.62rem] font-semibold tracking-[0.2em] uppercase text-muted">-</span>
             </div>
             <div className="divide-y divide-[var(--color-line)]">
-              {list.map((g, i) => <GuestRow key={g.id} g={g} i={i} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g.id)} onSetRsvp={(v) => setRsvp(g, v)} onEdit={() => setDialog(g)} />)}
+              {orderByHousehold(list).map(({ guest: g, member }, i) => <GuestRow key={g.id} g={g} i={i} member={member} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g.id)} onSetRsvp={(v) => setRsvp(g, v)} onEdit={() => setDialog(g)} />)}
             </div>
             {list.length === 0 && (
               <p className="py-10 text-center font-serif text-[1.1rem] italic text-muted">
@@ -207,6 +229,9 @@ export default function Guests() {
         <GuestDialog
           guest={dialog === 'new' ? null : dialog}
           sides={sides}
+          guests={guestList}
+          tables={tableOptions(plan, dialog === 'new' ? null : dialog.id)}
+          tableId={dialog === 'new' ? null : (seatOf(plan, dialog.id)?.tableId ?? null)}
           onClose={() => setDialog(null)}
           onSave={saveDialog}
           onDelete={dialog === 'new' ? undefined : () => { removeGuest(dialog.id); setDialog(null); }}
@@ -248,7 +273,7 @@ function RsvpSelect({ value, name, onChange }: { value: RsvpStatus; name: string
   );
 }
 
-function GuestRow({ g, i, link, onRemove, onSetRsvp, onEdit }: { g: GuestRecord; i: number; link: string | null; onRemove: () => void; onSetRsvp: (v: RsvpStatus) => void; onEdit: () => void }) {
+function GuestRow({ g, i, member, link, onRemove, onSetRsvp, onEdit }: { g: GuestRecord; i: number; member: boolean; link: string | null; onRemove: () => void; onSetRsvp: (v: RsvpStatus) => void; onEdit: () => void }) {
   const { t } = useLang();
   const isAfbud = g.rsvp === 'nej';
   const [copied, setCopied] = useState(false);
@@ -268,13 +293,20 @@ function GuestRow({ g, i, link, onRemove, onSetRsvp, onEdit }: { g: GuestRecord;
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(i * 0.03, 0.25) }}
-      className="py-4"
+      // A household member sits indented under its head, so one envelope
+      // reads as one block on the list.
+      className={cn('py-4', member && 'ml-6 border-l-2 border-l-[var(--color-sage-tint)] pl-4')}
     >
       <div className="grid items-center gap-4" style={{ gridTemplateColumns: '1fr 90px 90px 66px' }}>
         <div className="min-w-0">
           <div className={cn('flex items-center gap-1.5 font-serif text-[1.05rem] text-ink', isAfbud && 'opacity-40')}>
             <span className="truncate">{g.name}</span>
             {g.responded_at && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" title={t('Har svaret')} />}
+            {ageGroupOf(g) !== 'adult' && (
+              <span className="shrink-0 rounded-full bg-[var(--color-sage-tint)] px-2 py-0.5 font-sans text-[0.6rem] font-semibold uppercase tracking-[0.1em] text-sage-strong">
+                {t(AGE_GROUPS.find((a) => a.id === ageGroupOf(g))!.label)}
+              </span>
+            )}
           </div>
           <div className="text-[0.76rem] text-muted truncate">{t(g.side)}{detail && ` · ${detail}`}</div>
           {(g.email || g.phone) && (

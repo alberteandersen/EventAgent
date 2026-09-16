@@ -6,7 +6,8 @@
 
    Everything a couple has to plan around lives here: what the guest eats,
    whether they are staying the night, whether they drink, who they are to
-   the couple, and the note that used to have no interface at all.
+   the couple, how old they are, which household they come with, where they
+   sit, and the note that used to have no interface at all.
 
    Edits are a draft until "Gem": nothing calls the parent until Save, so
    Escape, the backdrop and Annuller all discard cleanly. Same contract as
@@ -14,11 +15,13 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { X, Trash2, UserRound } from 'lucide-react';
+import { X, Trash2, UserRound, CircleCheck, HeartHandshake, House, Armchair, Utensils, NotebookPen } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { Eyebrow, SelectPill, Toggle, cn } from '../ui';
 import { useLang } from '../i18n';
 import { DIETARY_TAGS, parseLegacyDietary } from './guests/dietary';
-import type { GuestRow, RsvpStatus } from '@/lib/db/types';
+import { AGE_GROUPS, ageGroupOf, householdHeadOptions, householdMembers } from './guests/household';
+import type { AgeGroup, GuestRow, RsvpStatus } from '@/lib/db/types';
 
 /** A labeled field wrapper, so every input in the panel lines up the same way. */
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -27,6 +30,16 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">{label}</span>
       {children}
     </label>
+  );
+}
+
+/** A section heading with its icon, so a long form can be scanned by shape. */
+function SectionTitle({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <Eyebrow className="flex items-center gap-2">
+      <Icon size={13} strokeWidth={2} aria-hidden className="text-sage" />
+      {children}
+    </Eyebrow>
   );
 }
 
@@ -54,11 +67,21 @@ export interface GuestDraft {
   overnight: boolean;
   no_alcohol: boolean;
   notes: string | null;
+  age_group: AgeGroup;
+  household_head: string | null;
+  /** Not a guest column: the table on the seating plan, applied by the caller.
+   *  Null takes the guest off the plan. */
+  table_id: string | null;
 }
+
+export type TableChoice = { id: string; name: string; free: number };
 
 export default function GuestDialog({
   guest,
   sides,
+  guests = [],
+  tables = [],
+  tableId = null,
   onClose,
   onSave,
   onDelete,
@@ -67,6 +90,12 @@ export default function GuestDialog({
   guest: GuestRow | null;
   /** ['Fælles', partner A, partner B] — built by the guest screen. */
   sides: string[];
+  /** The whole list, for the household picker. */
+  guests?: GuestRow[];
+  /** Tables on the seating plan this guest could sit at, from `tableOptions`. */
+  tables?: TableChoice[];
+  /** The table they sit at now, if any. */
+  tableId?: string | null;
   onClose: () => void;
   onSave: (draft: GuestDraft) => void;
   onDelete?: () => void;
@@ -90,6 +119,12 @@ export default function GuestDialog({
   const [dOvernight, setDOvernight] = useState(guest?.overnight ?? false);
   const [dNoAlcohol, setDNoAlcohol] = useState(guest?.no_alcohol ?? false);
   const [dNotes, setDNotes] = useState(guest?.notes ?? '');
+  const [dAge, setDAge] = useState<AgeGroup>(ageGroupOf(guest ?? {}));
+  const [dHousehold, setDHousehold] = useState<string | null>(guest?.household_head ?? null);
+  const [dTable, setDTable] = useState<string | null>(tableId);
+
+  const members = guest ? householdMembers(guests, guest.id) : [];
+  const heads = householdHeadOptions(guests, guest?.id ?? null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   useEffect(() => {
@@ -116,6 +151,9 @@ export default function GuestDialog({
       overnight: dOvernight,
       no_alcohol: dNoAlcohol,
       notes: dNotes.trim() || null,
+      age_group: dAge,
+      household_head: dHousehold,
+      table_id: dTable,
     });
     onClose();
   };
@@ -158,7 +196,7 @@ export default function GuestDialog({
         <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-6">
           {/* Grundlæggende */}
           <section>
-            <Eyebrow>{t('Grundlæggende')}</Eyebrow>
+            <SectionTitle icon={UserRound}>{t('Grundlæggende')}</SectionTitle>
             <div className="mt-3 space-y-3">
               <Field label={t('Fulde navn')}>
                 <input
@@ -183,12 +221,22 @@ export default function GuestDialog({
                   />
                 </Field>
               </div>
+              <div>
+                <span className="text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">{t('Alderskategori')}</span>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {AGE_GROUPS.map((a) => (
+                    <SelectPill key={a.id} active={dAge === a.id} onClick={() => setDAge(a.id)}>
+                      {t(a.label)}
+                    </SelectPill>
+                  ))}
+                </div>
+              </div>
             </div>
           </section>
 
           {/* Svar */}
           <section>
-            <Eyebrow>{t('Svar')}</Eyebrow>
+            <SectionTitle icon={CircleCheck}>{t('Svar')}</SectionTitle>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {RSVP_CHOICES.map((choice) => (
                 <SelectPill
@@ -209,7 +257,7 @@ export default function GuestDialog({
 
           {/* Hører til */}
           <section>
-            <Eyebrow>{t('Hører til')}</Eyebrow>
+            <SectionTitle icon={HeartHandshake}>{t('Hører til')}</SectionTitle>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <Field label={t('Side')}>
                 <select value={dSide} onChange={(e) => setDSide(e.target.value)} className={fieldCls}>
@@ -232,9 +280,71 @@ export default function GuestDialog({
             </div>
           </section>
 
+          {/* Husstand — one invitation, one envelope. One level deep: see
+              guests/household.ts for why a head cannot join another one. */}
+          <section>
+            <SectionTitle icon={House}>{t('Husstand')}</SectionTitle>
+            {members.length > 0 ? (
+              <p className="mt-3 rounded-xl bg-shell px-3.5 py-3 text-[0.82rem] leading-relaxed text-ink-soft">
+                {t('{name} er husstandens overhoved for {members}.', {
+                  name: guest?.name ?? '',
+                  members: members.map((m) => m.name).join(', '),
+                })}
+              </p>
+            ) : heads.length > 0 ? (
+              <>
+                <select
+                  value={dHousehold ?? ''}
+                  onChange={(e) => setDHousehold(e.target.value || null)}
+                  aria-label={t('Husstand')}
+                  className={cn(fieldCls, 'mt-3')}
+                >
+                  <option value="">{t('Egen husstand')}</option>
+                  {heads.map((h) => (
+                    <option key={h.id} value={h.id}>{t('Sammen med {name}', { name: h.name })}</option>
+                  ))}
+                </select>
+                <p className="mt-2 text-[0.72rem] text-muted">
+                  {t('Gæster i samme husstand får én invitation og står samlet på listen.')}
+                </p>
+              </>
+            ) : (
+              <p className="mt-3 rounded-xl bg-shell px-3.5 py-3 text-[0.82rem] leading-relaxed text-muted">
+                {t('Der er ingen andre gæster at samle i en husstand endnu.')}
+              </p>
+            )}
+          </section>
+
+          {/* Bordplacering — the table only; the chair is the seating plan's
+              business, so a guest lands in the first free one. */}
+          <section>
+            <SectionTitle icon={Armchair}>{t('Bordplacering')}</SectionTitle>
+            {tables.length > 0 ? (
+              <select
+                value={dTable ?? ''}
+                onChange={(e) => setDTable(e.target.value || null)}
+                aria-label={t('Bord')}
+                className={cn(fieldCls, 'mt-3')}
+              >
+                <option value="">{t('Ikke placeret')}</option>
+                {tables.map((tb) => (
+                  <option key={tb.id} value={tb.id}>
+                    {tb.id === tableId
+                      ? tb.name
+                      : t('{table} · {n} ledige', { table: tb.name, n: tb.free })}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="mt-3 rounded-xl bg-shell px-3.5 py-3 text-[0.82rem] leading-relaxed text-muted">
+                {t('Når I har sat borde op i bordplanen, kan I placere gæsten her.')}
+              </p>
+            )}
+          </section>
+
           {/* Kost og catering */}
           <section>
-            <Eyebrow>{t('Kost og catering')}</Eyebrow>
+            <SectionTitle icon={Utensils}>{t('Kost og catering')}</SectionTitle>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {DIETARY_TAGS.map((tag) => (
                 <SelectPill key={tag.id} active={dTags.includes(tag.id)} onClick={() => toggleTag(tag.id)}>
@@ -263,7 +373,7 @@ export default function GuestDialog({
 
           {/* Noter */}
           <section>
-            <Eyebrow>{t('Noter')}</Eyebrow>
+            <SectionTitle icon={NotebookPen}>{t('Noter')}</SectionTitle>
             <textarea
               rows={3}
               value={dNotes}

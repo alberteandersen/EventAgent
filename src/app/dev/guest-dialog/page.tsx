@@ -23,6 +23,13 @@ const EXISTING: GuestRow = {
   responded_at: new Date().toISOString(), rsvp_token: 'tok', created_at: new Date().toISOString(),
 };
 
+/* The rest of the list, for the household picker: one head the edited guest
+   can join, and one member who must not be offered as a head. */
+const OTHERS: GuestRow[] = [
+  { ...EXISTING, id: 'g2', name: 'Ida Sønderby', household_head: null, rsvp_token: 't2' },
+  { ...EXISTING, id: 'g3', name: 'Asta Sønderby', household_head: 'g2', age_group: 'child', rsvp_token: 't3' },
+];
+
 export default function DevGuestDialogPage() {
   const [mode, setMode] = useState<'add' | 'edit' | null>('edit');
   const [log, setLog] = useState<string[]>([]);
@@ -48,6 +55,12 @@ export default function DevGuestDialogPage() {
           <GuestDialog
             guest={mode === 'edit' ? EXISTING : null}
             sides={['Fælles', 'Alberte', 'Espen']}
+            guests={[EXISTING, ...OTHERS]}
+            tables={[
+              { id: 't1', name: 'Bord 1', free: 3 },
+              { id: 't2', name: 'Brudebord', free: 0 },
+            ]}
+            tableId={mode === 'edit' ? 't2' : null}
             onClose={() => { note('close'); setMode(null); }}
             onSave={(d: GuestDraft) => note('save: ' + JSON.stringify(d, null, 1))}
             onDelete={mode === 'edit' ? () => { note('delete'); setMode(null); } : undefined}

@@ -576,6 +576,8 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
           relation: guest.relation ?? null,
           overnight: guest.overnight ?? false,
           no_alcohol: guest.no_alcohol ?? false,
+          age_group: guest.age_group ?? "adult",
+          household_head: guest.household_head ?? null,
         })
         .select()
         .single();

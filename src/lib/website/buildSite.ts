@@ -12,7 +12,7 @@ import { logAgentError } from "@/lib/gemini/log";
 import { WEBSITE_HTML_PROMPT } from "@/lib/gemini/prompts";
 import { generateSectionImage } from "@/lib/gemini/image";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { parseConfig, type SiteConfig } from "@/kalas/site/config";
+import { parseConfig, HUB_SECTIONS, type SiteConfig } from "@/kalas/site/config";
 import { parseSiteDesign, DEFAULT_DESIGN, type SiteDesign } from "@/kalas/site/design";
 import { SITE_FONTS } from "@/kalas/site/fonts";
 import { findPreset } from "@/kalas/site/presets";
@@ -248,7 +248,7 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
     ? Math.ceil((new Date(`${event.event_date}T00:00:00`).getTime() - Date.now()) / 86400000)
     : null;
 
-  const enabledSections = config.sections.filter((s) => s.enabled && s.id !== "hero" && s.id !== "photos");
+  const enabledSections = config.sections.filter((s) => s.enabled && s.id !== "hero" && s.id !== "photos" && !HUB_SECTIONS.includes(s.id));
   const content = JSON.stringify({
     sections: enabledSections.map((s) => s.id),
     heroTagline: config.heroTagline,

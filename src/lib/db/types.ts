@@ -546,7 +546,20 @@ export interface WeddingSiteRow {
   config: Record<string, unknown>;
   domain: string | null;
   published: boolean;
+  /** Opened by guests, not counting the couple (0035). Optional ahead of it. */
+  view_count?: number;
   updated_at: string;
+}
+
+/** A message a guest left on the site (0035). */
+export interface GuestbookEntryRow {
+  id: string;
+  event_id: string;
+  user_id: string;
+  name: string;
+  message: string;
+  hidden: boolean;
+  created_at: string;
 }
 
 // ── AI website tables (migration 0012) ──────────────────────────────────

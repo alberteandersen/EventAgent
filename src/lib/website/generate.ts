@@ -11,7 +11,7 @@ import { logAgentError } from "@/lib/gemini/log";
 import { WEBSITE_DESIGN_PROMPT } from "@/lib/gemini/prompts";
 import { generateSiteHeroImage } from "@/lib/gemini/image";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { parseConfig } from "@/kalas/site/config";
+import { parseConfig, HUB_SECTIONS } from "@/kalas/site/config";
 import {
   parseSiteDesign,
   HERO_VARIANTS, SECTION_BGS, SECTION_VARIANTS, RADII, DENSITIES, BORDERS,
@@ -233,7 +233,7 @@ export async function generateSiteDesign(args: GenerateArgs): Promise<GenerateRe
     vibes,
     styleDirection,
     storyText: config.storyText,
-    enabledSections: config.sections.filter((s) => s.enabled && s.id !== "hero" && s.id !== "photos").map((s) => s.id),
+    enabledSections: config.sections.filter((s) => s.enabled && s.id !== "hero" && s.id !== "photos" && !HUB_SECTIONS.includes(s.id)).map((s) => s.id),
     photoAliases: aliasMeta,
     fontCatalog: SITE_FONTS.map((f) => ({ id: f.id, family: f.family, category: f.category })),
     language: profile?.language ?? "da",

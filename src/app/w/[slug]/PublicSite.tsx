@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LanguageProvider, useLang } from "@/kalas/i18n";
 import { SiteRenderer } from "@/kalas/site/SiteRenderer";
+import { GuestHub } from "./GuestHub";
 import GiftCard from "@/kalas/registry/GiftCard";
 import { sortGifts } from "@/kalas/registry/gifts";
 import type { SiteConfig } from "@/kalas/site/config";
@@ -45,6 +46,7 @@ export function PublicSite(props: Props) {
 function Site({ slug, couple, config, design, siteHtml, photoUrls, registryItems, claimedByItem = {}, rsvpToken }: Props) {
   const [rsvpOpen, setRsvpOpen] = useState(false);
   const [claimItem, setClaimItem] = useState<RegistryItemRow | null>(null);
+  const hub = <GuestHub slug={slug} config={config} rsvpToken={rsvpToken ?? null} />;
 
   return (
     <>
@@ -57,6 +59,7 @@ function Site({ slug, couple, config, design, siteHtml, photoUrls, registryItems
           claimedByItem={claimedByItem}
           onRsvp={() => setRsvpOpen(true)}
           onClaim={(it) => setClaimItem(it)}
+          extra={hub}
         />
       ) : (
         <SiteRenderer
@@ -71,6 +74,7 @@ function Site({ slug, couple, config, design, siteHtml, photoUrls, registryItems
           /* Only offered once the date is firm — a calendar entry for
              "spring 2028" would be a guess in a place people trust. */
           icsUrl={couple.dateISO ? `/api/w/${slug}/ics` : null}
+          extra={hub}
         />
       )}
       {rsvpOpen && <RsvpModal slug={slug} config={config} token={rsvpToken ?? null} onClose={() => setRsvpOpen(false)} />}
@@ -80,8 +84,10 @@ function Site({ slug, couple, config, design, siteHtml, photoUrls, registryItems
 }
 
 /* ── Model-built site: sanitized markup + our interactive slots ────────── */
-function HtmlSite({ html, couple, hideBranding, registryItems, claimedByItem, onRsvp, onClaim }: {
+function HtmlSite({ html, couple, hideBranding, registryItems, claimedByItem, onRsvp, onClaim, extra }: {
   html: string;
+  /** The guest hub, between the site and the footer. */
+  extra?: React.ReactNode;
   couple: Couple;
   hideBranding: boolean;
   registryItems: RegistryItemRow[];
@@ -154,6 +160,8 @@ function HtmlSite({ html, couple, hideBranding, registryItems, claimedByItem, on
         </div>,
         registryEl
       )}
+
+      {extra}
 
       {!hideBranding && (
         <footer style={{ padding: "2.5rem 0", textAlign: "center", borderTop: "1px solid rgba(0,0,0,0.08)" }}>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { parseConfig } from "@/kalas/site/config";
 import { parseSiteDesign, DEFAULT_DESIGN, type SiteDesign } from "@/kalas/site/design";
 import { googleFontsHref, SITE_FONTS } from "@/kalas/site/fonts";
@@ -80,6 +81,13 @@ export default async function PublicWeddingSite({
     .maybeSingle();
   const site = siteRow as WeddingSiteRow | null;
   if (!site || !site.published) notFound();
+
+  // One more guest has opened it. The couple checking their own page is not a
+  // visit, and a failed count must never cost a guest the page.
+  const { data: { user: viewer } } = await (await createClient()).auth.getUser();
+  if (viewer?.id !== site.user_id) {
+    void admin.rpc("increment_site_view", { site_id: site.id }).then(() => undefined, () => undefined);
+  }
 
   const [{ data: eventRow }, { data: profileRow }, { data: items }, { data: claims }, { data: designRow }, { data: photoRows }] = await Promise.all([
     admin.from("events").select("*").eq("id", site.event_id).maybeSingle(),

@@ -43,13 +43,15 @@ const TRACK: Record<string, string> = { tight: '-0.02em', normal: '0em', wide: '
 
 export function SiteRenderer({
   couple, config, design, photoUrls = {}, registryItems = [], claimedByItem = {}, onRsvp, onClaim,
-  icsUrl,
+  icsUrl, extra,
 }: {
   couple: PublicCouple;
   config: SiteConfig;
   design: SiteDesign;
   /** Calendar file for the day. Absent when the date is not firm yet. */
   icsUrl?: string | null;
+  /** Rendered after the sections, before the footer: the public guest hub. */
+  extra?: React.ReactNode;
   /** site_photos id → display URL (signed). Stock IMAGES keys resolve too. */
   photoUrls?: Record<string, string>;
   registryItems?: RegistryItemRow[];
@@ -267,6 +269,8 @@ export function SiteRenderer({
       />
 
       <main>{sections.map(renderSection)}</main>
+
+      {extra}
 
       {!config.hideBranding && (
         <footer className="py-10 text-center" style={{ borderTop: `1px solid ${palette.text}12` }}>

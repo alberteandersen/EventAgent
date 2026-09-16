@@ -23,9 +23,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(siteCookieName(slug), siteCookieValue(slug, stored), {
-    httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production",
-    path: `/w/${slug}`, maxAge: 60 * 60 * 24 * 90,
-  });
+  const cookie = {
+    httpOnly: true, sameSite: "lax" as const, secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 90,
+  };
+  // The page, and the guest-hub routes it calls (seat lookup, guestbook),
+  // which check the same cookie and live under /api.
+  res.cookies.set(siteCookieName(slug), siteCookieValue(slug, stored), { ...cookie, path: `/w/${slug}` });
+  res.headers.append(
+    "Set-Cookie",
+    `${siteCookieName(slug)}=${siteCookieValue(slug, stored)}; Path=/api/w/${slug}; Max-Age=${cookie.maxAge}; HttpOnly; SameSite=Lax${cookie.secure ? "; Secure" : ""}`,
+  );
   return res;
 }

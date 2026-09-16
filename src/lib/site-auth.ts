@@ -12,3 +12,18 @@ export function siteCookieValue(slug: string, password: string): string {
   const secret = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "kalas-dev-secret";
   return createHmac("sha256", secret).update(`${slug}:${password}`).digest("hex");
 }
+
+/**
+ * Whether a request may read a site's guest-only data. Open sites always may;
+ * a password-protected one needs the signed cookie. The cookie is scoped to
+ * the page and to its API routes (see verify-password), so both can check it.
+ */
+export function siteUnlocked(
+  slug: string,
+  config: Record<string, unknown> | null | undefined,
+  cookieValue: string | undefined,
+): boolean {
+  const password = typeof config?.sitePassword === "string" ? config.sitePassword : "";
+  if (config?.pwProtected !== true || !password) return true;
+  return cookieValue === siteCookieValue(slug, password);
+}

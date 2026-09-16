@@ -21,6 +21,9 @@ import { normalizeImage } from '../site/normalizeImage';
 import { websitePriceDkk } from '@/lib/website/pricing';
 import type { SitePhotoRow, WebsiteDesignRow } from '@/lib/db/types';
 import { useLang } from '../i18n';
+import { EMPTY_CONTACT, withAllSections, type GuestContact } from '../site/config';
+import { ContactEditor, GuestbookModeration, QrBlock, SeatFinderInfo, SiteOverview } from './website/HubPanels';
+import { BookHeart, Armchair, UserRound } from 'lucide-react';
 
 type WTab = 'design' | 'indhold' | 'indstillinger';
 
@@ -56,6 +59,7 @@ export default function Website() {
   const [giftsUrl,     setGiftsUrl]     = useState('');
   const [faq,          setFaq]          = useState<FAQItem[]>(INIT_FAQ);
   const [hotels,       setHotels]       = useState<HotelItem[]>(INIT_HOTELS);
+  const [contact,      setContact]      = useState<GuestContact>(EMPTY_CONTACT);
 
   /* Publish */
   const [domain,      setDomain]      = useState(`${slugify(couple.a)}-${slugify(couple.b)}`);
@@ -77,7 +81,8 @@ export default function Website() {
     readyRef.current = true;
     const c = (weddingSite?.config ?? {}) as Record<string, unknown>;
     if (weddingSite && Object.keys(c).length > 0) {
-      if (Array.isArray(c.sections)) setSections(c.sections as SectionMeta[]);
+      // Sections added since the site was saved (the guest hub) join in off.
+      if (Array.isArray(c.sections)) setSections(withAllSections(c.sections as SectionMeta[]));
       if (Array.isArray(c.aiImages)) setAiImages(c.aiImages as SectionId[]);
       if (typeof c.heroTagline === 'string') setHeroTagline(c.heroTagline);
       if (typeof c.storyText === 'string') setStoryText(c.storyText);
@@ -94,6 +99,7 @@ export default function Website() {
       if (typeof c.giftsUrl === 'string') setGiftsUrl(c.giftsUrl);
       if (Array.isArray(c.faq)) setFaq(c.faq as FAQItem[]);
       if (Array.isArray(c.hotels)) setHotels(c.hotels as HotelItem[]);
+      if (c.contact && typeof c.contact === 'object') setContact({ ...EMPTY_CONTACT, ...(c.contact as Partial<GuestContact>) });
       if (typeof c.pwProtected === 'boolean') setPwProtected(c.pwProtected);
       if (typeof c.sitePassword === 'string') setSitePassword(c.sitePassword);
       if (typeof c.hideBranding === 'boolean') setHideBranding(c.hideBranding);
@@ -106,11 +112,11 @@ export default function Website() {
     () => ({
       sections, aiImages, heroTagline, storyText, countdown,
       program, rsvpDeadline, rsvpPlusOne, rsvpMeal, rsvpDietary, galleryKeys: [...galleryKeys],
-      transport, dresscode, giftsText, giftsUrl, faq, hotels, pwProtected, sitePassword, hideBranding,
+      transport, dresscode, giftsText, giftsUrl, faq, hotels, contact, pwProtected, sitePassword, hideBranding,
     }),
     [sections, aiImages, heroTagline, storyText, countdown, program,
      rsvpDeadline, rsvpPlusOne, rsvpMeal, rsvpDietary, galleryKeys, transport, dresscode,
-     giftsText, giftsUrl, faq, hotels, pwProtected, sitePassword, hideBranding]
+     giftsText, giftsUrl, faq, hotels, contact, pwProtected, sitePassword, hideBranding]
   );
 
   useEffect(() => {
@@ -683,11 +689,38 @@ export default function Website() {
                 <p className="text-[0.84rem] text-muted leading-relaxed">
                   {t('Gæsterne får en knap til at uploade egne billeder. Alle billeder samles i jeres private galleri.')}
                 </p>
-                {/* The upload link used to be shown here as {domain}.kalas.dk/del
-                   , a URL that never existed. Ships with the album in Nygift. */}
-                <div className="mt-3 rule rounded-xl bg-shell px-4 py-3 text-[0.78rem] text-muted">
-                  {t('Gæstealbummet bor under Nygift og åbner snart.')}
+                {/* The upload page is live at /w/{domain}/del; the photos land
+                   in the album under Nygift. A code on the tables is how most
+                   guests will find it. */}
+                <div className="mt-3 flex items-center gap-4 rule rounded-xl bg-shell px-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[0.8rem] text-ink">{t('QR-kode til bordene')}</p>
+                    <p className="mt-0.5 text-[0.72rem] text-muted">
+                      {published
+                        ? t('Gæsterne scanner den og uploader deres billeder til jeres album under Nygift.')
+                        : t('Koden virker, når siden er udgivet.')}
+                    </p>
+                  </div>
+                  <QrBlock url={`${publicUrl}/del`} caption={t('Del jeres billeder med os')} size={84} />
                 </div>
+              </SectionCard>
+
+              {/* GÆSTEKONTAKT */}
+              <SectionCard id="contact" section={sections.find((s) => s.id === 'contact')!} onToggle={toggleSection}
+                icon={<UserRound size={15} />}>
+                <ContactEditor value={contact} onChange={setContact} />
+              </SectionCard>
+
+              {/* FIND MIN PLADS */}
+              <SectionCard id="seat" section={sections.find((s) => s.id === 'seat')!} onToggle={toggleSection}
+                icon={<Armchair size={15} />}>
+                <SeatFinderInfo />
+              </SectionCard>
+
+              {/* GÆSTEBOG */}
+              <SectionCard id="guestbook" section={sections.find((s) => s.id === 'guestbook')!} onToggle={toggleSection}
+                icon={<BookHeart size={15} />}>
+                <GuestbookModeration />
               </SectionCard>
             </div>
 
@@ -710,6 +743,13 @@ export default function Website() {
             <Eyebrow className="mb-8">{t('Publicering & indstillinger')}</Eyebrow>
 
             <div className="space-y-8">
+
+              {/* Overblik: where the site stands before anything else. */}
+              <SiteOverview
+                published={published}
+                onTogglePublished={() => setPublished((v) => !v)}
+                previewHref={publicPath}
+              />
 
               {/* Domæne */}
               <section className="rule rounded-2xl bg-card p-6">
@@ -783,7 +823,7 @@ export default function Website() {
 
               {/* Del link */}
               <section className="rule rounded-2xl bg-card p-6">
-                <p className="font-serif text-[1.15rem] text-ink mb-1">{t('Del med gæsterne')}</p>
+                <p className="flex items-center gap-2 font-serif text-[1.15rem] text-ink mb-1"><QrCode size={15} className="text-muted" /> {t('Del med gæsterne')}</p>
                 <p className="text-[0.8rem] text-muted mb-4">{t('Send linket i invitationen eller print QR-koden.')}</p>
                 <div className="flex items-start gap-4">
                   <div className="flex-1 space-y-2">
@@ -796,10 +836,7 @@ export default function Website() {
                       {copied ? t('Kopieret!') : t('Kopiér link')}
                     </button>
                   </div>
-                  <div className="shrink-0 rule rounded-xl bg-shell p-3 flex flex-col items-center gap-1.5">
-                    <QrCode size={40} className="text-ink" />
-                    <span className="text-[0.6rem] uppercase tracking-[0.12em] text-muted">{t('QR-kode')}</span>
-                  </div>
+                  <QrBlock url={publicUrl} caption={t('Vores bryllup')} />
                 </div>
               </section>
 

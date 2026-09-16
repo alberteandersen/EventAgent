@@ -7,6 +7,7 @@
    same model functions the screen uses. Sibling of /dev/globe. */
 import { useState } from 'react';
 import { TableNode } from '@/kalas/screens/seating/TableNode';
+import { ElementNode } from '@/kalas/screens/seating/ElementNode';
 import {
   seatGuest, unseatGuest, seatedIds, initials,
   type PlanGuest, type SeatingPlan,
@@ -39,6 +40,12 @@ const INITIAL: SeatingPlan = {
       seated: [null, 'g6', null, null, null, 'g7', null, null, null, null],
     },
   ],
+  // The rest of the room: a dance floor, the DJ at its edge, and the buffet.
+  elements: [
+    { id: 'e1', kind: 'dansegulv', label: 'Dansegulv', x: 190, y: 250, w: 260, h: 200 },
+    { id: 'e2', kind: 'dj', label: 'DJ / band', x: 190, y: 405, w: 180, h: 90 },
+    { id: 'e3', kind: 'buffet', label: 'Madbord', x: 650, y: 330, w: 260, h: 80 },
+  ],
 };
 
 export default function DevSeatingPage() {
@@ -64,6 +71,9 @@ export default function DevSeatingPage() {
           }}
         >
           <div className="relative h-[640px] w-[900px]">
+            {(plan.elements ?? []).map((el) => (
+              <ElementNode key={el.id} element={el} selected={el.id === 'e3'} onSelect={() => {}} onPointerDown={() => {}} />
+            ))}
             {plan.tables.map((tb) => (
               <TableNode
                 key={tb.id}

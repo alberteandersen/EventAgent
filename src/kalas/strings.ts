@@ -2303,4 +2303,17 @@ export const EN: Record<string, string> = {
   '{n} voksne': '{n} adults',
   '{n} børn': '{n} children',
   '{n} babyer': '{n} babies',
+
+  // ── Bordplan: resten af rummet ──────────────────────────────────────
+  'Læg på planen': 'Add to the plan',
+  'DJ / band': 'DJ / band',
+  'Madbord': 'Buffet',
+  'Kagebord': 'Cake table',
+  'Bar': 'Bar',
+  'Gavebord': 'Gift table',
+  'Scene': 'Stage',
+  'Fotoboks': 'Photo booth',
+  'Indgang': 'Entrance',
+  'Størrelse': 'Size',
+  'Fjern fra planen': 'Remove from the plan',
 };

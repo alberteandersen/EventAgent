@@ -22,18 +22,20 @@ import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import {
   Plus, Minus, Trash2, Printer, Circle, RectangleHorizontal, Crown,
-  Search, Maximize2, Users, X, CornerUpLeft,
+  Search, Maximize2, Users, X, CornerUpLeft, ChevronDown,
 } from 'lucide-react';
 import { Eyebrow, cn } from '../ui';
 import { useLang } from '../i18n';
 import { useWedding } from '../useWedding';
 import { TableNode } from './seating/TableNode';
+import { ElementNode, ELEMENT_ICON } from './seating/ElementNode';
 import { dietarySummary } from './guests/dietary';
 import {
   MAX_SEATS, MIN_SEATS, SHAPES, changeShape, firstFreeSeat, freeSeats, initials,
   makeTable, pruneToGuests, readPlan, seatGuest, seatOf, seatedIds, setSeatCount,
   tableBounds, unseatGuest,
-  type PlanGuest, type SeatingPlan, type TableShape,
+  ELEMENTS, ELEMENT_SIZES, addElement, makeElement, patchElement, removeElement, resizeElement, sizeOf,
+  type FloorElementKind, type PlanGuest, type SeatingPlan, type TableShape,
 } from './seating/model';
 
 const SHAPE_ICON: Record<TableShape, typeof Circle> = {
@@ -79,7 +81,10 @@ export default function Seating() {
   const [plan, setPlan] = useState<SeatingPlan>({ version: 2, tables: [] });
   const [held, setHeld] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ guestId: string; x: number; y: number } | null>(null);
+  // A table or a floor element, never both: one thing is selected at a time.
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedEl, setSelectedEl] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [query, setQuery] = useState('');
   const [onlyUnseated, setOnlyUnseated] = useState(true);
@@ -227,13 +232,43 @@ export default function Seating() {
     window.addEventListener('pointerup', up);
   }, [plan.tables, zoom]);
 
+  /* ── Moving a floor element ────────────────────────────────────────── */
+  const startElementDrag = useCallback((id: string) => (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    const start = plan.elements?.find((x) => x.id === id);
+    if (!start) return;
+    const x0 = e.clientX, y0 = e.clientY;
+    const ox = start.x, oy = start.y;
+    const move = (ev: PointerEvent) => {
+      setPlan((p) => patchElement(p, id, { x: ox + (ev.clientX - x0) / zoom, y: oy + (ev.clientY - y0) / zoom }));
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+  }, [plan.elements, zoom]);
+
+  const addFloorElement = (kind: FloorElementKind) => {
+    const spec = ELEMENTS.find((x) => x.id === kind)!;
+    const el = makeElement(plan, kind, t(spec.label));
+    setPlan((p) => addElement(p, el));
+    setMoreOpen(false);
+    setSelected(null);
+    setSelectedEl(el.id);
+  };
+
+  const selectTable = (id: string | null) => { setSelected(id); setSelectedEl(null); };
+  const selectElement = (id: string | null) => { setSelectedEl(id); setSelected(null); };
+
   /* ── Tables ────────────────────────────────────────────────────────── */
   const addTable = (shape: TableShape) => {
     const n = plan.tables.filter((x) => x.shape !== 'head').length + 1;
     const name = shape === 'head' ? t('Brudebord') : t('Bord {n}', { n });
     const table = makeTable(plan, shape, name);
     setPlan((p) => ({ ...p, tables: [...p.tables, table] }));
-    setSelected(table.id);
+    selectTable(table.id);
   };
 
   const patchTable = (id: string, fn: (tb: SeatingPlan['tables'][number]) => SeatingPlan['tables'][number]) =>
@@ -250,6 +285,7 @@ export default function Seating() {
   const totalSeats = plan.tables.reduce((n, tb) => n + tb.seats, 0);
   const dietaryCount = pool.filter((g) => g.dietary).length;
   const activeTable = plan.tables.find((tb) => tb.id === selected) ?? null;
+  const activeElement = plan.elements?.find((el) => el.id === selectedEl) ?? null;
 
   const visible = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -272,8 +308,12 @@ export default function Seating() {
       w = Math.max(w, tb.x + b.w / 2 + PLANE_PAD);
       h = Math.max(h, tb.y + b.h / 2 + PLANE_PAD);
     }
+    for (const el of plan.elements ?? []) {
+      w = Math.max(w, el.x + el.w / 2 + PLANE_PAD);
+      h = Math.max(h, el.y + el.h / 2 + PLANE_PAD);
+    }
     return { w, h };
-  }, [plan.tables]);
+  }, [plan.tables, plan.elements]);
 
   /* Escape drops whatever is in hand — the way out of every modal state. */
   useEffect(() => {
@@ -366,6 +406,56 @@ export default function Seating() {
               );
             })}
 
+            {/* Everything on the floor that is not a table. */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMoreOpen((o) => !o)}
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+                className={cn(
+                  'inline-flex h-9 items-center gap-1.5 rounded-full border bg-[#ffffff] px-3.5 text-[0.78rem] font-semibold transition-colors cursor-pointer',
+                  moreOpen ? 'border-[#24413a] text-[#24413a]' : 'border-[#dcdfdb] text-[#5f6b66] hover:border-[#24413a] hover:text-[#24413a]',
+                )}
+              >
+                <Plus size={13} /> {t('Mere')}
+                <ChevronDown size={13} className={cn('transition-transform', moreOpen && 'rotate-180')} />
+              </button>
+              <AnimatePresence>
+                {moreOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
+                    <motion.div
+                      role="menu"
+                      initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                      transition={{ duration: 0.14 }}
+                      className="absolute left-0 top-11 z-50 grid w-[18rem] grid-cols-2 gap-1 rounded-[18px] border border-[#dcdfdb] bg-[#ffffff] p-2 shadow-[0_16px_40px_-12px_rgba(20,26,19,0.25)]"
+                    >
+                      <p className="col-span-2 px-2 pb-1 pt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[#7d938a]">
+                        {t('Læg på planen')}
+                      </p>
+                      {ELEMENTS.map((el) => {
+                        const Icon = ELEMENT_ICON[el.id];
+                        return (
+                          <button
+                            key={el.id}
+                            type="button"
+                            role="menuitem"
+                            onClick={() => addFloorElement(el.id)}
+                            className="flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[0.8rem] text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer"
+                          >
+                            <Icon size={14} className="shrink-0 text-[#5f7d70]" aria-hidden /> {t(el.label)}
+                          </button>
+                        );
+                      })}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+
             <div className="ml-auto flex items-center gap-1 rounded-full border border-[#dcdfdb] bg-[#ffffff] px-1">
               <button
                 type="button"
@@ -420,6 +510,17 @@ export default function Seating() {
               className="absolute left-0 top-0 origin-top-left"
               style={{ width: plane.w, height: plane.h, transform: `scale(${zoom})` }}
             >
+              {/* Under the tables, so a table dragged over the dance floor
+                  stays on top and its chairs stay clickable. */}
+              {(plan.elements ?? []).map((el) => (
+                <ElementNode
+                  key={el.id}
+                  element={el}
+                  selected={selectedEl === el.id}
+                  onSelect={() => selectElement(el.id)}
+                  onPointerDown={startElementDrag(el.id)}
+                />
+              ))}
               {plan.tables.map((tb) => (
                 <TableNode
                   key={tb.id}
@@ -427,7 +528,7 @@ export default function Seating() {
                   guests={byId}
                   held={held}
                   selected={selected === tb.id}
-                  onSelect={() => setSelected(tb.id)}
+                  onSelect={() => selectTable(tb.id)}
                   onSeatClick={(i) => onSeatClick(tb.id, i)}
                   onSeatPointerDown={(gid, e) => startGesture(gid)(e)}
                   onTablePointerDown={startTableDrag(tb.id)}
@@ -440,7 +541,7 @@ export default function Seating() {
             </div>
             </div>
 
-            {plan.tables.length === 0 && (
+            {plan.tables.length === 0 && (plan.elements ?? []).length === 0 && (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
                 <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f0ec]">
                   <Circle size={22} className="text-[#24413a]" />
@@ -525,6 +626,70 @@ export default function Seating() {
                 <button
                   type="button"
                   onClick={() => setSelected(null)}
+                  aria-label={t('Luk')}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[#7d938a] hover:text-[#24413a] cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Selected floor element ───────────────────────────────── */}
+          <AnimatePresence initial={false}>
+            {activeElement && (
+              <motion.div
+                initial={reduce ? false : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={reduce ? undefined : { opacity: 0, y: 8 }}
+                transition={{ duration: 0.18 }}
+                className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#dcdfdb] bg-[#ffffff] px-4 py-3"
+              >
+                {(() => { const Icon = ELEMENT_ICON[activeElement.kind]; return <Icon size={15} className="text-[#5f7d70]" aria-hidden />; })()}
+                <input
+                  key={activeElement.id}
+                  defaultValue={activeElement.label}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim();
+                    if (v && v !== activeElement.label) setPlan((p) => patchElement(p, activeElement.id, { label: v }));
+                    else e.target.value = activeElement.label;
+                  }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                  aria-label={t('Navn')}
+                  className="h-8 min-w-0 flex-[0_1_12rem] rounded-full border border-[#dcdfdb] bg-[#f8f9f8] px-3 font-serif text-[1rem] text-[#24413a] focus:border-[#24413a] focus:outline-none"
+                />
+
+                <div className="flex items-center gap-1" role="group" aria-label={t('Størrelse')}>
+                  {ELEMENT_SIZES.map((sz) => {
+                    const on = sizeOf(activeElement) === sz.id;
+                    return (
+                      <button
+                        key={sz.id}
+                        type="button"
+                        onClick={() => setPlan((p) => resizeElement(p, activeElement.id, sz.id))}
+                        aria-pressed={on}
+                        className={cn(
+                          'flex h-8 w-8 items-center justify-center rounded-full border text-[0.72rem] font-bold transition-colors cursor-pointer',
+                          on ? 'border-[#24413a] bg-[#e8f0ec] text-[#24413a]'
+                            : 'border-[#dcdfdb] text-[#5f6b66] hover:border-[#24413a] hover:text-[#24413a]',
+                        )}
+                      >
+                        {sz.id}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => { setPlan((p) => removeElement(p, activeElement.id)); setSelectedEl(null); }}
+                  className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[0.76rem] font-semibold text-[#b34e37] transition-colors hover:bg-[#f2e3dd] cursor-pointer"
+                >
+                  <Trash2 size={13} /> {t('Fjern fra planen')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedEl(null)}
                   aria-label={t('Luk')}
                   className="flex h-8 w-8 items-center justify-center rounded-full text-[#7d938a] hover:text-[#24413a] cursor-pointer"
                 >
@@ -715,6 +880,9 @@ export default function Seating() {
             style={{ width: plane.w, height: plane.h * printScale, transform: `scale(${printScale})` }}
           >
             <div className="relative" style={{ width: plane.w, height: plane.h }}>
+              {(plan.elements ?? []).map((el) => (
+                <ElementNode key={el.id} element={el} selected={false} onSelect={() => {}} onPointerDown={() => {}} />
+              ))}
               {plan.tables.map((tb) => (
                 <TableNode
                   key={tb.id}

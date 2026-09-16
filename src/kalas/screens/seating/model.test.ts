@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import { EN } from '../../strings';
 import {
   freeSeats, initials, makeTable, pruneToGuests, readPlan, seatGuest, seatOf, seatPoints, seatLabel,
   seatedIds, setSeatCount, tableSize, unseatGuest, placeAtTable, tableOptions,
+  ELEMENTS, addElement, makeElement, patchElement, removeElement, resizeElement, sizeOf,
   type SeatingPlan, type SeatingTable,
 } from './model';
 
@@ -290,5 +292,73 @@ describe('placing a guest from the guest dialog', () => {
       { id: 't2', name: 'Bord 2', free: 0, current: true },
     ]);
     expect(tableOptions(two(), null).map((o) => o.id)).toEqual(['t1']);
+  });
+});
+
+describe('floor elements', () => {
+  it('reads a plan saved before elements existed', () => {
+    const p = readPlan({ version: 2, tables: [table()] });
+    expect(p.elements).toBeUndefined();
+    expect(p.tables).toHaveLength(1);
+  });
+
+  it('keeps the elements it knows and drops the rest', () => {
+    const p = readPlan({
+      version: 2,
+      tables: [],
+      elements: [
+        { id: 'e1', kind: 'dansegulv', label: 'Dansegulv', x: 300, y: 200, w: 260, h: 200 },
+        { id: 'e2', kind: 'hoppeborg', label: '?', x: 0, y: 0, w: 10, h: 10 },
+        { id: 'e3', kind: 'bar', x: 100, y: 100, w: 99999 },
+      ],
+    });
+    expect(p.elements?.map((e) => e.id)).toEqual(['e1', 'e3']);
+    // A missing label falls back to the kind's own, and a size is clamped.
+    expect(p.elements?.[1]).toMatchObject({ label: 'Bar', w: 800, h: 80 });
+  });
+
+  it('survives a round trip through the stored blob', () => {
+    const p = addElement(plan(table()), makeElement(plan(table()), 'buffet', 'Madbord'));
+    expect(readPlan(JSON.parse(JSON.stringify(p)))).toEqual(p);
+  });
+
+  it('drops a new element clear of the tables', () => {
+    const t = table({ x: 400, y: 300, seats: 8 });
+    const el = makeElement(plan(t), 'dj', 'DJ');
+    expect(el.x - el.w / 2).toBeGreaterThan(400);
+  });
+
+  it('keeps the guests when elements change', () => {
+    const p = plan(table({ seated: ['a', null, null, null] }));
+    const el = makeElement(p, 'bar', 'Bar');
+    const next = removeElement(addElement(p, el), el.id);
+    expect(seatOf(next, 'a')).toEqual({ tableId: 't1', index: 0 });
+    expect(seatGuest(addElement(p, el), 'b', 't1', 1).elements).toEqual([el]);
+  });
+
+  it('renames and moves, but never off the canvas', () => {
+    const p = addElement(plan(), { id: 'e', kind: 'kage', label: 'Kage', x: 300, y: 300, w: 120, h: 120 });
+    const moved = patchElement(p, 'e', { label: 'Kagebordet', x: -50, y: 20 });
+    expect(moved.elements?.[0]).toMatchObject({ label: 'Kagebordet', x: 70, y: 70 });
+  });
+
+  it('resizes around the kind\'s own proportions', () => {
+    const spec = ELEMENTS.find((e) => e.id === 'scene')!;
+    const p = addElement(plan(), { id: 'e', kind: 'scene', label: 'Scene', x: 400, y: 400, w: spec.w, h: spec.h });
+    expect(sizeOf(p.elements![0])).toBe('M');
+    const big = resizeElement(p, 'e', 'L');
+    expect(big.elements?.[0]).toMatchObject({ w: Math.round(spec.w * 1.4), h: Math.round(spec.h * 1.4) });
+    expect(sizeOf(big.elements![0])).toBe('L');
+  });
+
+  it('has English for every element on the menu', () => {
+    for (const { label } of ELEMENTS) expect(EN[label], label).toBeTruthy();
+  });
+
+  it('leaves the plan alone for an id it does not have', () => {
+    const p = plan(table());
+    expect(removeElement(p, 'x')).toBe(p);
+    expect(patchElement(p, 'x', { label: 'y' })).toBe(p);
+    expect(resizeElement(p, 'x', 'S')).toBe(p);
   });
 });

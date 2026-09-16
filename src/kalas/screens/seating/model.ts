@@ -54,7 +54,49 @@ export interface SeatingTable {
 export interface SeatingPlan {
   version: 2;
   tables: SeatingTable[];
+  /** Everything on the floor that is not a table. Optional, so every plan
+   *  saved before it existed still reads as a version 2 plan. */
+  elements?: FloorElement[];
 }
+
+/* ── The rest of the room ─────────────────────────────────────────────────
+   A venue's floor plan is not only tables: the dance floor decides where the
+   top table goes, and nobody wants to sit with their back to the buffet.
+   These carry no chairs and no guests, only a name, a place and a size. */
+
+export type FloorElementKind =
+  | 'dansegulv' | 'dj' | 'buffet' | 'kage' | 'bar' | 'gaver' | 'scene' | 'fotoboks' | 'indgang';
+
+export interface FloorElement {
+  id: string;
+  kind: FloorElementKind;
+  label: string;
+  /** Canvas position of the centre and the footprint, in plan units. */
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
+/** Order is the order of the "Mere" menu; w/h is the medium size. */
+export const ELEMENTS: { id: FloorElementKind; label: string; w: number; h: number }[] = [
+  { id: 'dansegulv', label: 'Dansegulv', w: 260, h: 200 },
+  { id: 'dj', label: 'DJ / band', w: 180, h: 90 },
+  { id: 'buffet', label: 'Madbord', w: 260, h: 80 },
+  { id: 'kage', label: 'Kagebord', w: 120, h: 120 },
+  { id: 'bar', label: 'Bar', w: 200, h: 80 },
+  { id: 'gaver', label: 'Gavebord', w: 160, h: 80 },
+  { id: 'scene', label: 'Scene', w: 280, h: 120 },
+  { id: 'fotoboks', label: 'Fotoboks', w: 120, h: 120 },
+  { id: 'indgang', label: 'Indgang', w: 140, h: 56 },
+];
+
+export type ElementSize = 'S' | 'M' | 'L';
+export const ELEMENT_SIZES: { id: ElementSize; scale: number }[] = [
+  { id: 'S', scale: 0.7 },
+  { id: 'M', scale: 1 },
+  { id: 'L', scale: 1.4 },
+];
 
 /** A chair's offset from its table's centre, and which way the guest faces. */
 export interface SeatPoint {
@@ -165,6 +207,81 @@ export function seatOf(plan: SeatingPlan, guestId: string): { tableId: string; i
 
 export function freeSeats(table: SeatingTable): number {
   return table.seated.filter((s) => s === null).length;
+}
+
+/* ── Floor elements ───────────────────────────────────────────────────── */
+
+const specOf = (kind: FloorElementKind) => ELEMENTS.find((e) => e.id === kind)!;
+
+/**
+ * A new element, dropped to the right of everything already on the plan so it
+ * never lands on top of a table the couple has already arranged.
+ */
+export function makeElement(plan: SeatingPlan, kind: FloorElementKind, label: string): FloorElement {
+  const spec = specOf(kind);
+  const elements = plan.elements ?? [];
+  const right = Math.max(
+    0,
+    ...plan.tables.map((t) => t.x + tableBounds(t).w / 2),
+    ...elements.map((e) => e.x + e.w / 2),
+  );
+  return {
+    id: `e${Date.now().toString(36)}${Math.floor(Math.random() * 1e4).toString(36)}`,
+    kind,
+    label,
+    x: right + 40 + spec.w / 2,
+    y: 60 + spec.h / 2 + (elements.length % 3) * 150,
+    w: spec.w,
+    h: spec.h,
+  };
+}
+
+export function addElement(plan: SeatingPlan, element: FloorElement): SeatingPlan {
+  return { ...plan, elements: [...(plan.elements ?? []), element] };
+}
+
+export function patchElement(
+  plan: SeatingPlan,
+  id: string,
+  patch: Partial<Pick<FloorElement, 'label' | 'x' | 'y'>>,
+): SeatingPlan {
+  const elements = plan.elements ?? [];
+  if (!elements.some((e) => e.id === id)) return plan;
+  return {
+    ...plan,
+    elements: elements.map((e) => {
+      if (e.id !== id) return e;
+      const next = { ...e, ...patch };
+      // Kept on the canvas, the same way a dragged table is.
+      return { ...next, x: Math.max(next.w / 2 + 10, next.x), y: Math.max(next.h / 2 + 10, next.y) };
+    }),
+  };
+}
+
+/** Resize to one of the three sizes, around the element's own centre. */
+export function resizeElement(plan: SeatingPlan, id: string, size: ElementSize): SeatingPlan {
+  const scale = ELEMENT_SIZES.find((s) => s.id === size)?.scale ?? 1;
+  const elements = plan.elements ?? [];
+  if (!elements.some((e) => e.id === id)) return plan;
+  return {
+    ...plan,
+    elements: elements.map((e) => {
+      if (e.id !== id) return e;
+      const spec = specOf(e.kind);
+      return { ...e, w: Math.round(spec.w * scale), h: Math.round(spec.h * scale) };
+    }),
+  };
+}
+
+/** Which of the three sizes an element is, or null when it matches none. */
+export function sizeOf(element: FloorElement): ElementSize | null {
+  const spec = specOf(element.kind);
+  return ELEMENT_SIZES.find((s) => Math.round(spec.w * s.scale) === element.w)?.id ?? null;
+}
+
+export function removeElement(plan: SeatingPlan, id: string): SeatingPlan {
+  if (!(plan.elements ?? []).some((e) => e.id === id)) return plan;
+  return { ...plan, elements: (plan.elements ?? []).filter((e) => e.id !== id) };
 }
 
 /* ── Moves ────────────────────────────────────────────────────────────── */
@@ -309,7 +426,13 @@ export function readPlan(raw: unknown): SeatingPlan {
       const parsed = readTable(t);
       return parsed ? [parsed] : [];
     });
-    return { version: 2, tables };
+    const elements = Array.isArray(data.elements)
+      ? (data.elements as unknown[]).flatMap((e) => {
+          const parsed = readElement(e);
+          return parsed ? [parsed] : [];
+        })
+      : [];
+    return elements.length > 0 ? { version: 2, tables, elements } : { version: 2, tables };
   }
 
   if (!Array.isArray(data.tables)) return EMPTY;
@@ -356,6 +479,25 @@ function readTable(raw: unknown): SeatingTable | null {
     x: typeof t.x === 'number' ? t.x : 200,
     y: typeof t.y === 'number' ? t.y : 200,
     seated: [...seated.slice(0, seats), ...Array(Math.max(0, seats - seated.length)).fill(null)],
+  };
+}
+
+/** One stored element, or null for anything this version does not know. */
+function readElement(raw: unknown): FloorElement | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const e = raw as Record<string, unknown>;
+  if (typeof e.id !== 'string' || !ELEMENTS.some((x) => x.id === e.kind)) return null;
+  const spec = specOf(e.kind as FloorElementKind);
+  const dim = (v: unknown, fallback: number) =>
+    typeof v === 'number' && Number.isFinite(v) ? Math.max(40, Math.min(800, Math.round(v))) : fallback;
+  return {
+    id: e.id,
+    kind: spec.id,
+    label: typeof e.label === 'string' && e.label.trim() ? e.label : spec.label,
+    x: typeof e.x === 'number' ? e.x : 200,
+    y: typeof e.y === 'number' ? e.y : 200,
+    w: dim(e.w, spec.w),
+    h: dim(e.h, spec.h),
   };
 }
 

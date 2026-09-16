@@ -1,12 +1,15 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import type { DatePrecision } from "@/lib/db/types";
+import { eventDetailsPatch } from "@/lib/wedding-details";
 
 const DATE_PRECISIONS: DatePrecision[] = ["exact", "month", "season", "undecided"];
 
 /**
- * PATCH /api/events/[eventId] — journey facts only (choose venue, set date,
- * manual stage overrides). Everything else goes through the chat agent.
+ * PATCH /api/events/[eventId] — journey facts (choose venue, set date, manual
+ * stage overrides) and the wedding details Settings edits: place, guest count,
+ * budget, a rough date, and the names the title is built from. Everything else
+ * goes through the chat agent.
  */
 export async function PATCH(
   request: NextRequest,
@@ -24,9 +27,11 @@ export async function PATCH(
     journey_overrides?: Record<string, string>;
     event_date?: string | null;
     date_precision?: DatePrecision;
-  };
+  } & Record<string, unknown>;
 
-  const patch: Record<string, unknown> = {};
+  const details = eventDetailsPatch(body);
+  if (details.error) return Response.json({ error: details.error }, { status: 400 });
+  const patch: Record<string, unknown> = { ...details.patch };
 
   if (body.chosen_venue_id !== undefined) {
     if (body.chosen_venue_id !== null) {
@@ -56,7 +61,12 @@ export async function PATCH(
     };
   }
 
-  if (body.event_date !== undefined) patch.event_date = body.event_date;
+  if (body.event_date !== undefined) {
+    if (body.event_date !== null && !/^\d{4}-\d{2}-\d{2}$/.test(String(body.event_date))) {
+      return Response.json({ error: "event_date must be YYYY-MM-DD" }, { status: 400 });
+    }
+    patch.event_date = body.event_date;
+  }
   if (body.date_precision && DATE_PRECISIONS.includes(body.date_precision)) {
     patch.date_precision = body.date_precision;
   }

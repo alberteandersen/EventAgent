@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { LanguageSetting } from "@/components/settings/LanguageSetting";
 import { RedoOnboardingButton } from "@/components/settings/RedoOnboardingButton";
+import { WeddingDetailsSetting } from "@/components/settings/WeddingDetailsSetting";
+import { getActiveEvent } from "@/lib/active-event";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateProfile } from "@/lib/db/profile";
 import { getPlatformConnection, isPlatformAdmin } from "@/lib/gmail/platform";
@@ -28,19 +30,20 @@ export default async function SettingsPage({
   const copy = da
     ? {
         onboarding: "Onboarding",
-        onboardingSub: "Kør interviewet igen for at ændre navne, destination, dato og stil.",
+        onboardingSub: "Kør interviewet helt forfra, fx for at skifte stil. Navne, dato og sted kan I rette under Bryllupet ovenfor.",
         tour: "Rundvisning",
         tourSub: "Ava viser jer rundt på siderne igen. Intet bliver nulstillet.",
         tourCta: "Vis mig rundt igen",
       }
     : {
         onboarding: "Onboarding",
-        onboardingSub: "Run the wedding interview again to update names, destination, date, and style.",
+        onboardingSub: "Run the whole interview again, e.g. to change your style. Names, date and place can be changed under Your wedding above.",
         tour: "Guided tour",
         tourSub: "Ava walks you through each page again. Nothing is reset.",
         tourCta: "Show me around again",
       };
   const platform = admin ? await getPlatformConnection() : null;
+  const event = await getActiveEvent(supabase, user.id);
 
   return (
     <main className="theme-kalas min-h-screen w-full bg-canvas font-sans text-ink">
@@ -62,6 +65,25 @@ export default async function SettingsPage({
       {params.gmail_error && (
         <div className="mb-6 rounded-xl border border-[var(--color-terracotta-tint)] bg-[var(--color-terracotta-tint)] px-4 py-3 text-sm text-[var(--color-terracotta)]">
           Mailbox connection failed ({params.gmail_error}). Please try again.
+        </div>
+      )}
+
+      {event && (
+        <div className="mb-6">
+          <WeddingDetailsSetting
+            lang={profile.language ?? "da"}
+            initial={{
+              eventId: event.id,
+              name: profile.display_name ?? "",
+              partner: profile.partner_name ?? "",
+              eventDate: event.event_date,
+              datePrecision: event.date_precision,
+              dateHint: event.date_hint,
+              location: event.location,
+              guestCount: event.guest_count,
+              budget: event.budget,
+            }}
+          />
         </div>
       )}
 

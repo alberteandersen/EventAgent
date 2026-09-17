@@ -19,6 +19,14 @@ export const AGE_GROUPS: { id: AgeGroup; label: string }[] = [
   { id: 'baby', label: 'Baby' },
 ];
 
+/** "1 barn", "4 børn": the Danish source string for a count of one age group. */
+export function ageCountLabel(id: AgeGroup, n: number): string {
+  const one = n === 1;
+  if (id === 'child') return one ? '{n} barn' : '{n} børn';
+  if (id === 'baby') return one ? '{n} baby' : '{n} babyer';
+  return one ? '{n} voksen' : '{n} voksne';
+}
+
 /** Missing or unknown reads as an adult, which is what the list assumed before. */
 export function ageGroupOf(guest: Partial<Pick<GuestRow, 'age_group'>>): AgeGroup {
   return guest.age_group === 'child' || guest.age_group === 'baby' ? guest.age_group : 'adult';

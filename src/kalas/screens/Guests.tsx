@@ -1,11 +1,13 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil } from 'lucide-react';
+import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil, Utensils, BedDouble, GlassWater, Baby } from 'lucide-react';
 import { Pill, cn } from '../ui';
 import GuestDialog, { type GuestDraft } from './GuestDialog';
 import { dietarySummary } from './guests/dietary';
-import { ageCounts, ageGroupOf, AGE_GROUPS, orderByHousehold } from './guests/household';
+import { ageCountLabel, ageCounts, ageGroupOf, AGE_GROUPS, orderByHousehold } from './guests/household';
 import { placeAtTable, readPlan, seatOf, tableOptions } from './seating/model';
+import CateringOverview from './guests/CateringOverview';
+import { hasNeed, type GuestNeed } from './guests/catering';
 import AnimateNumber from '../AnimateNumber';
 import { useLang } from '../i18n';
 import { useWedding } from '../useWedding';
@@ -19,12 +21,20 @@ const RSVP_OPTIONS: { value: RsvpStatus; label: string }[] = [
   { value: 'nej', label: 'Afbud' },
 ];
 
-type Tab = 'gæsteliste' | 'beskeder';
-
-const AGE_COUNT_LABELS = { adult: '{n} voksne', child: '{n} børn', baby: '{n} babyer' } as const;
+type Tab = 'gæsteliste' | 'overblik' | 'beskeder';
 type Filter = 'alle' | 'ja' | 'afventer' | 'afbud';
 
-const TAB_LABELS: Record<Tab, string> = { gæsteliste: 'Gæsteliste', beskeder: 'Beskeder' };
+const TAB_LABELS: Record<Tab, string> = { gæsteliste: 'Gæsteliste', overblik: 'Overblik', beskeder: 'Beskeder' };
+
+/* The quick filters on the list, the same needs the Overblik tab counts.
+   Combined with each other and with the RSVP tabs: "Afventer" + "Overnatning"
+   is who still has to say whether they need a room. */
+const NEED_FILTERS: { id: GuestNeed; label: string; Icon: typeof Utensils }[] = [
+  { id: 'diet', label: 'Kostbehov', Icon: Utensils },
+  { id: 'overnight', label: 'Overnatning', Icon: BedDouble },
+  { id: 'noAlcohol', label: 'Alkoholfri', Icon: GlassWater },
+  { id: 'children', label: 'Børn', Icon: Baby },
+];
 const FILTER_LABELS: Record<Filter, string> = { alle: 'Alle', ja: 'Ja', afventer: 'Afventer', afbud: 'Afbud' };
 
 type MessageThread = {
@@ -47,16 +57,26 @@ function makeTemplates(a: string, b: string, dateLabel: string) {
   ];
 }
 
-export default function Guests() {
+export default function Guests({ initialTab = 'gæsteliste' }: {
+  /** Which tab opens first; the app always opens the list, harnesses may not. */
+  initialTab?: Tab;
+} = {}) {
   const { t } = useLang();
   const { couple, guests: guestList, weddingSite, seatingPlan, saveSeating, addGuest: addGuestRow, updateGuest, deleteGuest } = useWedding();
   const siteBase = weddingSite?.published && weddingSite.domain
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/w/${weddingSite.domain}`
     : null;
   const guestLink = (token: string) => (siteBase ? `${siteBase}?rsvp=${token}` : null);
-  const [tab, setTab] = useState<Tab>('gæsteliste');
+  const [tab, setTab] = useState<Tab>(initialTab);
   const [filter, setFilter] = useState<Filter>('alle');
   const [query, setQuery] = useState('');
+  const [needs, setNeeds] = useState<Set<GuestNeed>>(new Set());
+  const toggleNeed = (need: GuestNeed) =>
+    setNeeds((prev) => {
+      const next = new Set(prev);
+      if (next.has(need)) next.delete(need); else next.add(need);
+      return next;
+    });
   // null = closed, 'new' = the add form, otherwise the guest being edited.
   // One dialog for both, so a guest is described in a single place.
   const [dialog, setDialog] = useState<'new' | GuestRecord | null>(null);
@@ -71,6 +91,7 @@ export default function Guests() {
   const rsvpFilter = filter === 'afbud' ? 'nej' : filter;
   const list = guestList
     .filter((g) => filter === 'alle' || g.rsvp === rsvpFilter)
+    .filter((g) => [...needs].every((need) => hasNeed(g, need)))
     .filter((g) => !query.trim() || g.name.toLowerCase().includes(query.trim().toLowerCase()));
 
   const startAdding = () => setDialog('new');
@@ -120,7 +141,7 @@ export default function Guests() {
 
       {/* Section tabs */}
       <div className="mt-10 flex gap-1 border-b border-[var(--color-line)]">
-        {(['gæsteliste', 'beskeder'] as Tab[]).map((tabId) => (
+        {(['gæsteliste', 'overblik', 'beskeder'] as Tab[]).map((tabId) => (
           <button key={tabId} onClick={() => setTab(tabId)}
             className={cn('relative px-5 py-3 text-[0.85rem] capitalize transition-colors cursor-pointer',
               tab === tabId ? 'text-ink' : 'text-muted hover:text-ink')}>
@@ -192,11 +213,34 @@ export default function Guests() {
               ))}
             </div>
 
+            {/* Needs, on top of the RSVP tab. */}
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {NEED_FILTERS.map(({ id, label, Icon }) => {
+                const on = needs.has(id);
+                return (
+                  <button key={id} type="button" onClick={() => toggleNeed(id)} aria-pressed={on}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.76rem] transition-colors cursor-pointer',
+                      on ? 'border-[var(--color-sage-strong)] bg-[var(--color-sage-tint)] text-sage-strong'
+                        : 'border-[var(--color-line)] bg-card text-muted hover:border-ink hover:text-ink',
+                    )}>
+                    <Icon size={13} aria-hidden /> {t(label)}
+                  </button>
+                );
+              })}
+              {needs.size > 0 && (
+                <button type="button" onClick={() => setNeeds(new Set())}
+                  className="inline-flex items-center gap-1 px-2 text-[0.74rem] text-muted hover:text-ink cursor-pointer">
+                  <X size={12} /> {t('Ryd filtre')}
+                </button>
+              )}
+            </div>
+
             {/* Who is coming, by age: what catering and the venue ask first. */}
             {guestList.length > 0 && (ages.child > 0 || ages.baby > 0) && (
               <p className="mt-4 text-[0.78rem] text-muted">
                 {AGE_GROUPS.filter((a) => ages[a.id] > 0)
-                  .map((a) => t(AGE_COUNT_LABELS[a.id], { n: ages[a.id] }))
+                  .map((a) => t(ageCountLabel(a.id, ages[a.id]), { n: ages[a.id] }))
                   .join(' · ')}
               </p>
             )}
@@ -217,6 +261,16 @@ export default function Guests() {
                 {query ? t('Ingen gæster matcher "{query}"', { query }) : t('Ingen gæster i dette filter endnu.')}
               </p>
             )}
+          </motion.div>
+        ) : tab === 'overblik' ? (
+          <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <CateringOverview
+              guests={guestList}
+              plan={plan}
+              title={[couple.a, couple.b].filter(Boolean).join(' & ')}
+              subtitle={couple.dateLabel}
+              onShowGuests={(need) => { setNeeds(new Set([need])); setFilter('alle'); setQuery(''); setTab('gæsteliste'); }}
+            />
           </motion.div>
         ) : (
           <motion.div key="messaging" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>

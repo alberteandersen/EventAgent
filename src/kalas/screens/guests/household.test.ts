@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { EN } from '../../strings';
 import {
-  AGE_GROUPS, ageCounts, ageGroupOf, householdHeadOptions, householdMembers, orderByHousehold,
+  AGE_GROUPS, ageCountLabel, ageCounts, ageGroupOf, householdHeadOptions, householdMembers, orderByHousehold,
 } from './household';
 
 const g = (id: string, name: string, extra: { age_group?: 'adult' | 'child' | 'baby'; household_head?: string | null } = {}) =>
@@ -19,7 +19,16 @@ describe('age groups', () => {
   });
 
   it('has English for every label', () => {
-    for (const { label } of AGE_GROUPS) expect(EN[label], label).toBeTruthy();
+    for (const { id, label } of AGE_GROUPS) {
+      expect(EN[label], label).toBeTruthy();
+      for (const n of [1, 2]) expect(EN[ageCountLabel(id, n)], ageCountLabel(id, n)).toBeTruthy();
+    }
+  });
+
+  it('says one child, not one children', () => {
+    expect(ageCountLabel('child', 1)).toBe('{n} barn');
+    expect(ageCountLabel('child', 3)).toBe('{n} børn');
+    expect(ageCountLabel('adult', 1)).toBe('{n} voksen');
   });
 });
 

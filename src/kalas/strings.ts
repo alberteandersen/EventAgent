@@ -2387,4 +2387,9 @@ export const EN: Record<string, string> = {
   'Tjekliste, budget og gæsteliste i lommen': 'Checklist, budget and guest list in your pocket',
   'Scan koden med telefonens kamera. Vælg "Føj til hjemmeskærm", så åbner Kalas som en app.':
     'Scan the code with your phone\'s camera. Choose "Add to Home Screen" and Kalas opens like an app.',
+
+  // ── Bordplan: pladser ved nyt bord ──────────────────────────────────
+  'Hvor mange pladser skal bordet have?': 'How many seats should the table have?',
+  'pladser': 'seats',
+  'Læg bordet ud': 'Add the table',
 };

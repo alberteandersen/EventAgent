@@ -29,6 +29,8 @@ import { useLang } from '../i18n';
 import { useWedding } from '../useWedding';
 import { TableNode } from './seating/TableNode';
 import { ElementNode, ELEMENT_ICON } from './seating/ElementNode';
+import SeatCountDialog from './seating/SeatCountDialog';
+import { DEFAULT_ZOOM, ZOOMS, fitZoom, planExtent, stepZoom } from './seating/zoom';
 import { dietarySummary } from './guests/dietary';
 import {
   MAX_SEATS, MIN_SEATS, SHAPES, changeShape, firstFreeSeat, freeSeats, initials,
@@ -44,33 +46,13 @@ const SHAPE_ICON: Record<TableShape, typeof Circle> = {
   head: Crown,
 };
 
-/* 50% is where the plan opens, not where it stops — a room with a dozen
-   tables needs to get further away than the default. */
-const ZOOMS = [0.25, 0.35, 0.5, 0.65, 0.8, 1, 1.25, 1.5];
-
-/* The plan opens zoomed out. A seating chart is read as a room before it is
-   read as a list of names, at 100% you are nose-to-nose with two tables and
-   have to scroll to find out how many there are. */
-const DEFAULT_ZOOM = 0.5;
-
-/* Step to the next zoom stop.
- *
- * Deliberately by nearest value rather than indexOf: a zoom that is not
- * exactly one of the stops made indexOf return -1, and `-1 - 1` clamped to 0 —
- * so one press of the minus button jumped straight from wherever you were to
- * 50%. Nearest-stop stepping cannot do that whatever the current value is. */
-function stepZoom(current: number, dir: 1 | -1): number {
-  let nearest = 0;
-  for (let i = 1; i < ZOOMS.length; i++) {
-    if (Math.abs(ZOOMS[i] - current) < Math.abs(ZOOMS[nearest] - current)) nearest = i;
-  }
-  return ZOOMS[Math.min(ZOOMS.length - 1, Math.max(0, nearest + dir))];
-}
 /* The scrollable plane starts near the size of the window rather than at a
    fixed 1500x1050. A plan with two tables on it used to leave most of a
    screen of empty grid to scroll through, and pushed the totals below the
    fold, the numbers a venue asks for should be on screen, not down there. */
 const PLANE_MIN = { w: 880, h: 520 };
+/** The canvas grows with the plan up to this, then scrolls. */
+const CANVAS_MAX_H = 576;
 const PLANE_PAD = 100;
 
 export default function Seating() {
@@ -85,6 +67,14 @@ export default function Seating() {
   const [selected, setSelected] = useState<string | null>(null);
   const [selectedEl, setSelectedEl] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
+  // The shape whose seat count is being asked for, before the table exists.
+  const [askingShape, setAskingShape] = useState<TableShape | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
+  // The canvas's width, kept in state so adding a table can fit the zoom to it
+  // from an event handler without reading the DOM there.
+  const [canvasW, setCanvasW] = useState(800);
+  // Where to scroll once a new zoom has reached the DOM, in canvas pixels.
+  const [scrollTo, setScrollTo] = useState<{ left: number; top: number } | null>(null);
   const [zoom, setZoom] = useState(DEFAULT_ZOOM);
   const [query, setQuery] = useState('');
   const [onlyUnseated, setOnlyUnseated] = useState(true);
@@ -232,6 +222,33 @@ export default function Seating() {
     window.addEventListener('pointerup', up);
   }, [plan.tables, zoom]);
 
+  /* Something new on the plan that the current zoom cannot show: step out
+     until the whole plan fits the canvas, then scroll the new thing into the
+     middle. Worked out from the plan as it will be, so there is nothing to
+     wait for but the new zoom reaching the DOM before the scroll. */
+  const reveal = (next: SeatingPlan, at: { x: number; y: number }) => {
+    const z = fitZoom(planExtent(next), { w: canvasW, h: CANVAS_MAX_H - 8 }, zoom);
+    if (z !== zoom) setZoom(z);
+    setScrollTo({ left: Math.max(0, at.x * z - canvasW / 2), top: Math.max(0, at.y * z - CANVAS_MAX_H / 2) });
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(([entry]) => setCanvasW(entry.contentRect.width));
+    observer.observe(canvas);
+    return () => observer.disconnect();
+    // The canvas only exists once loading is over.
+  }, [loading]);
+
+  useEffect(() => {
+    if (!scrollTo) return;
+    const id = window.setTimeout(() => {
+      canvasRef.current?.scrollTo({ ...scrollTo, behavior: reduce ? 'auto' : 'smooth' });
+    }, 30);
+    return () => window.clearTimeout(id);
+  }, [scrollTo, reduce]);
+
   /* ── Moving a floor element ────────────────────────────────────────── */
   const startElementDrag = useCallback((id: string) => (e: React.PointerEvent) => {
     if (e.button !== 0) return;
@@ -257,19 +274,22 @@ export default function Seating() {
     setMoreOpen(false);
     setSelected(null);
     setSelectedEl(el.id);
+    reveal(addElement(plan, el), el);
   };
 
   const selectTable = (id: string | null) => { setSelected(id); setSelectedEl(null); };
   const selectElement = (id: string | null) => { setSelectedEl(id); setSelected(null); };
 
   /* ── Tables ────────────────────────────────────────────────────────── */
-  const addTable = (shape: TableShape) => {
+  const addTable = (shape: TableShape, seats: number) => {
     const n = plan.tables.filter((x) => x.shape !== 'head').length + 1;
     const name = shape === 'head' ? t('Brudebord') : t('Bord {n}', { n });
-    const table = makeTable(plan, shape, name);
+    const table = setSeatCount(makeTable(plan, shape, name), seats);
     setPlan((p) => ({ ...p, tables: [...p.tables, table] }));
     selectTable(table.id);
+    reveal({ ...plan, tables: [...plan.tables, table] }, table);
   };
+
 
   const patchTable = (id: string, fn: (tb: SeatingPlan['tables'][number]) => SeatingPlan['tables'][number]) =>
     setPlan((p) => ({ ...p, tables: p.tables.map((tb) => (tb.id === id ? fn(tb) : tb)) }));
@@ -397,7 +417,7 @@ export default function Seating() {
                 <button
                   key={s.id}
                   type="button"
-                  onClick={() => addTable(s.id)}
+                  onClick={() => setAskingShape(s.id)}
                   title={t(s.hint)}
                   className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dcdfdb] bg-[#ffffff] px-3.5 text-[0.78rem] font-semibold text-[#5f6b66] transition-colors hover:border-[#24413a] hover:text-[#24413a] cursor-pointer"
                 >
@@ -492,11 +512,12 @@ export default function Seating() {
 
           {/* The plan itself */}
           <div
+            ref={canvasRef}
             className="relative overflow-auto rounded-[28px] border border-[#dcdfdb] bg-[#f8f9f8]"
             style={{
               // Hug the plan, but never take more of the page than this — the
               // totals underneath have to stay on screen.
-              height: Math.max(320, Math.min(plane.h * zoom + 8, 576)),
+              height: Math.max(320, Math.min(plane.h * zoom + 8, CANVAS_MAX_H)),
               backgroundImage:
                 'radial-gradient(circle, rgba(196,191,174,0.5) 1px, transparent 1px)',
               backgroundSize: `${24 * zoom}px ${24 * zoom}px`,
@@ -901,6 +922,15 @@ export default function Seating() {
           </div>
         </div>,
         document.body,
+      )}
+
+      {askingShape && (
+        <SeatCountDialog
+          shape={askingShape}
+          icon={SHAPE_ICON[askingShape]}
+          onCancel={() => setAskingShape(null)}
+          onConfirm={(seats) => { addTable(askingShape, seats); setAskingShape(null); }}
+        />
       )}
 
       {/* The guest under the cursor while dragging. */}

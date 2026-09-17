@@ -57,7 +57,7 @@ export interface Couple {
   email: string;
 }
 
-interface WeddingData {
+export interface WeddingData {
   loading: boolean;
   hasWedding: boolean;
   event: EventRow | null;
@@ -1183,6 +1183,10 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
+
+/** For /dev harnesses only: render a real screen against a fixture wedding
+ *  instead of a Supabase session. See src/app/dev/_fixture/wedding.tsx. */
+export const WeddingFixtureProvider = Ctx.Provider;
 
 export function useWedding(): WeddingData {
   const ctx = useContext(Ctx);

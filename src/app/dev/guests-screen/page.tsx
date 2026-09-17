@@ -11,12 +11,12 @@ import { FixtureWedding, guest } from '../_fixture/wedding';
 
 const GUESTS = [
   guest('Mette Holm', { side: 'Emma', dietary_tags: ['vegan'], overnight: true }),
-  guest('Jonas Krag', { side: 'Frederik', dietary_tags: ['vegan', 'gluten_free'], no_alcohol: true }),
+  guest('Jonas Krag', { side: 'Frederik', dietary_tags: ['vegan', 'gluten_free'], no_alcohol: true, meal: 'Fisk' }),
   guest('Asta Holm', { side: 'Emma', age_group: 'child', dietary: 'nøddeallergi' }),
   guest('Ida Sønderby', { rsvp: 'afventer', dietary_tags: ['halal'] }),
   guest('Per Lund', { rsvp: 'nej', overnight: true }),
-  guest('Sofie Lund', { dietary: 'vegetar, ingen skaldyr', overnight: true }),
-  guest('Mads Berg', { side: 'Frederik' }),
+  guest('Sofie Lund', { dietary: 'vegetar, ingen svampe', overnight: true, meal: 'fisk' }),
+  guest('Mads Berg', { side: 'Frederik', dietary_tags: ['shellfish_free'], meal: 'Kød' }),
   guest('Oscar Berg', { age_group: 'baby' }),
 ];
 

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil, Utensils, BedDouble, GlassWater, Baby } from 'lucide-react';
+import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil, Utensils, BedDouble, GlassWater, Baby, ShieldAlert } from 'lucide-react';
 import { Pill, cn } from '../ui';
 import GuestDialog, { type GuestDraft } from './GuestDialog';
 import { dietarySummary } from './guests/dietary';
@@ -30,6 +30,7 @@ const TAB_LABELS: Record<Tab, string> = { gæsteliste: 'Gæsteliste', overblik: 
    Combined with each other and with the RSVP tabs: "Afventer" + "Overnatning"
    is who still has to say whether they need a room. */
 const NEED_FILTERS: { id: GuestNeed; label: string; Icon: typeof Utensils }[] = [
+  { id: 'allergy', label: 'Allergier', Icon: ShieldAlert },
   { id: 'diet', label: 'Kostbehov', Icon: Utensils },
   { id: 'overnight', label: 'Overnatning', Icon: BedDouble },
   { id: 'noAlcohol', label: 'Alkoholfri', Icon: GlassWater },
@@ -269,7 +270,12 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
               plan={plan}
               title={[couple.a, couple.b].filter(Boolean).join(' & ')}
               subtitle={couple.dateLabel}
-              onShowGuests={(need) => { setNeeds(new Set([need])); setFilter('alle'); setQuery(''); setTab('gæsteliste'); }}
+              onShowGuests={(need) => {
+                if (need === 'pending') { setNeeds(new Set()); setFilter('afventer'); }
+                else { setNeeds(new Set([need])); setFilter('alle'); }
+                setQuery('');
+                setTab('gæsteliste');
+              }}
             />
           </motion.div>
         ) : (

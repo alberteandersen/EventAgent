@@ -74,7 +74,11 @@ html {
   --color-ink-soft: #46574f;
   --font-serif: var(--font-cormorant);
   --font-sans: var(--font-hanken);
-  font-feature-settings: "ss01", "cv01";
+  /* lnum: Cormorant's default figures are old-style, drawn for running text,
+     so a 1 read as a capital I and a 0 as a lower-case o in every count.
+     As a feature rather than font-variant-numeric so that the tabular-nums
+     utility, which rewrites that whole property, cannot undo it. */
+  font-feature-settings: "ss01", "cv01", "lnum";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }

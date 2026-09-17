@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dietarySummary, parseLegacyDietary, tagLabel } from './dietary';
+import { DIETARY_TAGS, dietarySummary, isAllergyTag, parseLegacyDietary, tagLabel } from './dietary';
 
 describe('dietarySummary', () => {
   it('is empty when there is nothing to say', () => {
@@ -48,9 +48,13 @@ describe('parseLegacyDietary', () => {
   });
 
   it('never drops what it did not understand', () => {
-    const out = parseLegacyDietary('vegan, ingen skaldyr');
+    const out = parseLegacyDietary('vegan, ingen svampe');
     expect(out.tags).toEqual(['vegan']);
-    expect(out.rest).toBe('ingen skaldyr');
+    expect(out.rest).toBe('ingen svampe');
+  });
+
+  it('knows shellfish and egg allergies as typed', () => {
+    expect(parseLegacyDietary('ingen skaldyr, ægallergi').tags).toEqual(['shellfish_free', 'egg_free']);
   });
 
   it('keeps unrecognised text whole when nothing matches', () => {
@@ -62,7 +66,20 @@ describe('parseLegacyDietary', () => {
   });
 
   it('round-trips through dietarySummary without losing the free text', () => {
-    const { tags, rest } = parseLegacyDietary('glutenfri, ingen skaldyr');
-    expect(dietarySummary(tags, rest)).toBe('Glutenfri · ingen skaldyr');
+    const { tags, rest } = parseLegacyDietary('glutenfri, ingen svampe');
+    expect(dietarySummary(tags, rest)).toBe('Glutenfri · ingen svampe');
+  });
+});
+
+describe('allergies and diets', () => {
+  it('tells an allergy from a choice of menu', () => {
+    expect(isAllergyTag('nut_free')).toBe(true);
+    expect(isAllergyTag('vegan')).toBe(false);
+    expect(isAllergyTag('unknown')).toBe(false);
+  });
+
+  it('never has two tags with the same id', () => {
+    const ids = DIETARY_TAGS.map((t) => t.id);
+    expect(new Set(ids).size).toBe(ids.length);
   });
 });

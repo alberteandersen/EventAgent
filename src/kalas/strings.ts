@@ -2441,4 +2441,20 @@ export const EN: Record<string, string> = {
   'Vielsesringe': 'Wedding rings',
   'Bordkort & menukort': 'Place cards & menus',
   'Gaver til gæsterne': 'Guest favours',
+
+  // ── Gæster: allergier og menuvalg ───────────────────────────────────
+  'Skaldyrsfri': 'Shellfish-free',
+  'Ægfri': 'Egg-free',
+  'Allergier': 'Allergies',
+  'Særlig kost': 'Special diets',
+  'Skal med til køkkenet': 'Tell the kitchen',
+  'Morgenmad til {n}': 'Breakfast for {n}',
+  'Ikke talt med endnu': 'Not counted yet',
+  'Allergier og intolerancer': 'Allergies and intolerances',
+  'Ingen allergier på listen.': 'No allergies on the list.',
+  'Ingen har valgt en særlig kost.': 'Nobody has chosen a special diet.',
+  'Menuvalg': 'Menu choices',
+  'Baby, høj stol': 'Baby, high chair',
+  '{n} høje stole': '{n} high chairs',
+  'Drikkevarer og overnatning': 'Drinks and overnight stays',
 };

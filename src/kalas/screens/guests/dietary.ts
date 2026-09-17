@@ -17,18 +17,31 @@ export interface DietaryTag {
   label: string;
   /** Words that mean this tag when a couple has typed it by hand. */
   aliases: string[];
+  /** An allergy or intolerance is a safety matter for the kitchen; a diet is
+   *  a choice of menu. The caterer's overview keeps the two apart. */
+  kind: 'diet' | 'allergy';
 }
 
 export const DIETARY_TAGS: DietaryTag[] = [
-  { id: 'vegetarian', label: 'Vegetarisk', aliases: ['vegetar', 'vegetarisk', 'vegetarian'] },
-  { id: 'vegan', label: 'Vegansk', aliases: ['vegan', 'vegansk'] },
-  { id: 'gluten_free', label: 'Glutenfri', aliases: ['gluten', 'glutenfri', 'gluten-fri', 'cøliaki'] },
-  { id: 'dairy_free', label: 'Mælkefri', aliases: ['mælkefri', 'laktose', 'laktosefri', 'dairy free'] },
-  { id: 'nut_free', label: 'Nøddefri', aliases: ['nødder', 'nøddefri', 'nøddeallergi', 'nut free'] },
-  { id: 'halal', label: 'Halal', aliases: ['halal'] },
-  { id: 'kosher', label: 'Kosher', aliases: ['kosher'] },
-  { id: 'pescatarian', label: 'Pescetarisk', aliases: ['pescetar', 'pescetarisk', 'pescatarian'] },
+  { id: 'vegetarian', label: 'Vegetarisk', kind: 'diet', aliases: ['vegetar', 'vegetarisk', 'vegetarian'] },
+  { id: 'vegan', label: 'Vegansk', kind: 'diet', aliases: ['vegan', 'vegansk'] },
+  { id: 'pescatarian', label: 'Pescetarisk', kind: 'diet', aliases: ['pescetar', 'pescetarisk', 'pescatarian'] },
+  { id: 'halal', label: 'Halal', kind: 'diet', aliases: ['halal'] },
+  { id: 'kosher', label: 'Kosher', kind: 'diet', aliases: ['kosher'] },
+  { id: 'gluten_free', label: 'Glutenfri', kind: 'allergy', aliases: ['gluten', 'glutenfri', 'gluten-fri', 'cøliaki'] },
+  { id: 'dairy_free', label: 'Mælkefri', kind: 'allergy', aliases: ['mælkefri', 'laktose', 'laktosefri', 'dairy free'] },
+  { id: 'nut_free', label: 'Nøddefri', kind: 'allergy', aliases: ['nødder', 'nøddefri', 'nøddeallergi', 'nut free'] },
+  // The two most common allergies after the three above that a Danish menu
+  // has to plan around, and the ones couples used to type as free text.
+  { id: 'shellfish_free', label: 'Skaldyrsfri', kind: 'allergy', aliases: ['skaldyr', 'skaldyrsfri', 'skaldyrsallergi', 'shellfish'] },
+  { id: 'egg_free', label: 'Ægfri', kind: 'allergy', aliases: ['ægfri', 'ægallergi', 'uden æg', 'ingen æg', 'egg free'] },
 ];
+
+/** Whether a tag id is an allergy or intolerance rather than a diet. */
+export function isAllergyTag(id: string): boolean {
+  return BY_ID_KIND.get(id) === 'allergy';
+}
+const BY_ID_KIND = new Map(DIETARY_TAGS.map((tag) => [tag.id, tag.kind]));
 
 const BY_ID = new Map(DIETARY_TAGS.map((tag) => [tag.id, tag]));
 

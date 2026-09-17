@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useWedding } from '../../useWedding';
 import { useLang } from '../../i18n';
+import { GuideLink } from '../guides/GuideLink';
 import type { NavigateTarget } from '../../lib/hub-nav';
 import type { VenueHubView } from '../Venues';
 import HubTabBar from './HubTabBar';
@@ -84,6 +85,7 @@ export default function VendorHub({ onNavigate }: { onNavigate?: (s: NavigateTar
           <p className="mt-1 max-w-xl text-[13px] text-[#5f6b66]">
             {t('Find jeres venue og leverandører, gem favoritter, og hold styr på hvem I har booket.')}
           </p>
+          <GuideLink screen="team" />
         </div>
         <LocationChip className="shrink-0" />
       </div>

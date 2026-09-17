@@ -6,6 +6,7 @@ import { useWedding } from '../useWedding';
 import { cn } from '../ui';
 import type { ScreenId } from '../Shell';
 import { useLang } from '../i18n';
+import { GuideLink } from './guides/GuideLink';
 import TimelineTab, { defaultMilestones } from './planning/TimelineTab';
 import ChecklistTab from './planning/ChecklistTab';
 import DayProgramTab from './planning/DayProgramTab';
@@ -68,6 +69,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
         <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
           {t('De store milepæle og alle småtingene, hold jer på sporet, ét skridt ad gangen.')}
         </p>
+        <GuideLink screen="planning" />
       </div>
 
       {/* Tab bar */}

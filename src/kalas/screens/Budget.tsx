@@ -15,6 +15,7 @@ import { Eyebrow, Chip, CheckDot, cn } from '../ui';
 import AnimateNumber from '../AnimateNumber';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
+import { GuideLink } from './guides/GuideLink';
 import { navigateToHub, type NavigateTarget } from '../lib/hub-nav';
 import { estimatedTotal, estimatedLines, rentalSplit, subItemSeeds } from './budget/estimate';
 import type { HubCat } from './team/shared';
@@ -413,6 +414,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               ? t('Fordelingen er lagt ud fra det I har fortalt, træk i den, så den passer jer.')
               : t('Hold styr på hvad brylluppet koster, og hvad I har tilbage.')}
           </p>
+          <GuideLink screen="budget" />
           {/* Nothing to estimate from. A split of zero would just be a column of empty
               rows pretending to be a plan. */}
           {total === 0 && (

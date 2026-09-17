@@ -4,6 +4,7 @@
    so sessionStorage/window access in the screens is safe. Onboarding lives
    on its own Next route (/onboarding), no phase state here. */
 import { useCallback, useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
@@ -28,6 +29,10 @@ import Registry from './screens/Registry';
 import Inbox from './screens/Inbox';
 import Honeymoon from './screens/Honeymoon';
 import Nygift from './screens/Nygift';
+import { OPEN_GUIDE_EVENT } from './screens/guides/links';
+
+// Every guide and FAQ answer ships with this screen; loaded when first opened.
+const Guides = dynamic(() => import('./screens/Guides'), { ssr: false });
 
 export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }) {
   return (
@@ -132,6 +137,13 @@ function AppInner() {
      tour navigated straight back. */
   const navigateRef = useRef<(s: NavigateTarget) => void>(() => {});
   useEffect(() => { navigateRef.current = navigate; });
+
+  // "Guide: …" links on the pages open the Guides screen from wherever they are.
+  useEffect(() => {
+    const onOpenGuide = () => navigateRef.current('guides');
+    window.addEventListener(OPEN_GUIDE_EVENT, onOpenGuide);
+    return () => window.removeEventListener(OPEN_GUIDE_EVENT, onOpenGuide);
+  }, []);
   const toggleChatModeRef = useRef(toggleChatMode);
   useEffect(() => { toggleChatModeRef.current = toggleChatMode; });
   const navigatedForStep = useRef<number | null>(null);
@@ -186,6 +198,7 @@ function AppInner() {
     seating:     <Seating />,
     honeymoon:   <Honeymoon onNavigate={navigate} />,
     nygift:      <Nygift onNavigate={navigate} />,
+    guides:      <Guides onNavigate={navigate} />,
   };
 
   const activeScreen = screen === 'ava' ? 'home' : screen;

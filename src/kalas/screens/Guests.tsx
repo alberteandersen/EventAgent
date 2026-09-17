@@ -10,6 +10,7 @@ import CateringOverview from './guests/CateringOverview';
 import { hasNeed, type GuestNeed } from './guests/catering';
 import AnimateNumber from '../AnimateNumber';
 import { useLang } from '../i18n';
+import { GuideLink } from './guides/GuideLink';
 import { useWedding } from '../useWedding';
 import type { GuestRow as GuestRecord, RsvpStatus } from '@/lib/db/types';
 
@@ -126,6 +127,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
           <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
             {t('Hold styr på jeres gæsteliste og RSVP, og send invitationer, når I er klar.')}
           </p>
+          <GuideLink screen="guests" />
         </div>
         <div className="hidden items-center gap-2 sm:flex">
           <Pill variant="outline"><Upload size={15} /> {t('Importér')}</Pill>

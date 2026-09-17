@@ -95,6 +95,10 @@ const PAGE_COPY: Partial<Record<ScreenId, { title: string; body: string }>> = {
     title: 'Og bagefter',
     body: 'Album til billederne og en takkeliste, der holder styr på hvem I har takket. Den er der, når dagen er ovre.',
   },
+  guides: {
+    title: 'Når I er i tvivl',
+    body: 'Guides til **budget, vielse, lokale og gæster**, og svar på det, alle par spørger om. Hver guide har en knap, der åbner det sted her, hvor I gør det.',
+  },
 };
 
 /* The sidebar, top to bottom, then the two steps that are not pages. */

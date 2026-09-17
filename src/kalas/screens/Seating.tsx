@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { Eyebrow, cn } from '../ui';
 import { useLang } from '../i18n';
+import { GuideLink } from './guides/GuideLink';
 import { useWedding } from '../useWedding';
 import { TableNode } from './seating/TableNode';
 import { ElementNode, ELEMENT_ICON } from './seating/ElementNode';
@@ -388,6 +389,7 @@ export default function Seating() {
                 ? t('Alle {n} gæster har en plads.', { n: pool.length })
                 : t('{n} af {total} gæster har en plads.', { n: seated.size, total: pool.length })}
           </p>
+          <GuideLink screen="seating" />
         </div>
         <button
           type="button"

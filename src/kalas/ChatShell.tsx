@@ -100,6 +100,16 @@ export default function ChatShell({
                   collapsed
                 />
               ))}
+              <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />
+              {NAV.filter((n) => n.group === 'help').map((n) => (
+                <NavRow
+                  key={n.id}
+                  item={n}
+                  active={current === n.id}
+                  onClick={() => navigate(n.id)}
+                  collapsed
+                />
+              ))}
             </nav>
           </div>
         </aside>

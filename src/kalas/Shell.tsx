@@ -6,7 +6,7 @@ import {
   Wallet, Users, Globe, Mail, ListChecks, LayoutDashboard,
   LayoutGrid, X, Settings, Gift, PanelLeftClose, PanelLeft,
   LogOut, UserPlus, Inbox,
-  MessageCircle, Plane,
+  MessageCircle, Plane, BookOpen,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import WeddingRings from './icons/WeddingRings';
@@ -18,9 +18,9 @@ import { SignOutButton } from '@/components/auth/SignOutButton';
 export type ScreenId =
   | 'home' | 'ava' | 'team' | 'inbox'
   | 'budget' | 'guests' | 'website' | 'registry' | 'invites' | 'planning' | 'seating' | 'honeymoon'
-  | 'nygift';
+  | 'nygift' | 'guides';
 
-export type NavItem = { id: ScreenId; label: string; icon: LucideIcon; group: 'main' | 'plan' };
+export type NavItem = { id: ScreenId; label: string; icon: LucideIcon; group: 'main' | 'plan' | 'help' };
 
 export const NAV: NavItem[] = [
   { id: 'home',        label: 'Hjem',          icon: Home,          group: 'main' },
@@ -35,6 +35,7 @@ export const NAV: NavItem[] = [
   { id: 'seating',     label: 'Bordplan',      icon: LayoutDashboard, group: 'plan' },
   { id: 'honeymoon',   label: 'Bryllupsrejse', icon: Plane,         group: 'plan' },
   { id: 'nygift',      label: 'Nygift',        icon: WeddingRings,  group: 'plan' },
+  { id: 'guides',      label: 'Guides & FAQ',  icon: BookOpen,      group: 'help' },
 ];
 
 const MOBILE_TABS: ScreenId[] = ['home', 'planning', 'inbox'];
@@ -183,6 +184,17 @@ export default function Shell({
                   collapsed={sidebarRail}
                 />
               ))}
+              {!sidebarRail && (
+                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7d938a]">
+                  {t('Hjælp')}
+                </p>
+              )}
+              {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />}
+              {NAV.filter((n) => n.group === 'help').map((n) => (
+                <NavRow key={n.id} item={n} active={current === n.id} onClick={() => navigate(n.id)}
+                  collapsed={sidebarRail}
+                />
+              ))}
             </nav>
 
             <div className={cn(
@@ -316,7 +328,7 @@ export default function Shell({
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-2.5">
-                {NAV.filter((n) => n.group === 'plan' || (n.group === 'main' && !MOBILE_TABS.includes(n.id))).map((n) => {
+                {NAV.filter((n) => n.group !== 'main' || !MOBILE_TABS.includes(n.id)).map((n) => {
                   const Icon = n.icon;
                   const active = current === n.id;
                   return (

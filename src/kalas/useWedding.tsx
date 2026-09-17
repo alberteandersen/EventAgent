@@ -116,12 +116,15 @@ export interface WeddingData {
     planned_amount?: number; paid_amount?: number; actual_cost?: number;
     notes?: string | null; reminder_at?: string | null;
     icon?: string | null; color?: string | null; sort?: number;
+    sub_items_seeded?: boolean;
   }) => Promise<void>;
   deleteBudgetItem: (category: string) => Promise<void>;
 
   addBudgetSubItem: (item: { category: string; label: string; vendor?: string | null; amount: number; sort?: number }) => Promise<BudgetSubItemRow | null>;
-  updateBudgetSubItem: (id: string, patch: Partial<Pick<BudgetSubItemRow, 'label' | 'vendor' | 'amount' | 'sort'>>) => Promise<void>;
+  updateBudgetSubItem: (id: string, patch: Partial<Pick<BudgetSubItemRow, 'label' | 'vendor' | 'amount' | 'sort' | 'paid'>>) => Promise<void>;
   deleteBudgetSubItem: (id: string) => Promise<void>;
+  /** Adds many posts in one round-trip — a category's usual posts at 0 kr. */
+  seedBudgetSubItems: (items: { category: string; label: string; amount: number; sort: number }[]) => Promise<boolean>;
 
   addDayProgramItem: (item: {
     time: string; title: string; subtitle?: string | null;
@@ -394,6 +397,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       planned_amount?: number; paid_amount?: number; actual_cost?: number;
       notes?: string | null; reminder_at?: string | null;
       icon?: string | null; color?: string | null; sort?: number;
+      sub_items_seeded?: boolean;
     }) => {
       if (!eventId || !userId) return;
       const existing = budgetItems.find((b) => b.category === item.category);
@@ -410,6 +414,8 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
             icon: item.icon !== undefined ? item.icon : existing.icon,
             color: item.color !== undefined ? item.color : existing.color,
             sort: item.sort ?? existing.sort,
+            // Only sent when set: a database older than 0037 has no such column.
+            ...(item.sub_items_seeded !== undefined ? { sub_items_seeded: item.sub_items_seeded } : {}),
           })
           .eq("id", existing.id)
           .select()
@@ -431,6 +437,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
             icon: item.icon ?? null,
             color: item.color ?? null,
             sort: item.sort ?? 0,
+            ...(item.sub_items_seeded !== undefined ? { sub_items_seeded: item.sub_items_seeded } : {}),
           })
           .select()
           .single();
@@ -473,11 +480,31 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   );
 
   const updateBudgetSubItem = useCallback(
-    async (id: string, patch: Partial<Pick<BudgetSubItemRow, 'label' | 'vendor' | 'amount' | 'sort'>>) => {
+    async (id: string, patch: Partial<Pick<BudgetSubItemRow, 'label' | 'vendor' | 'amount' | 'sort' | 'paid'>>) => {
+      // Optimistic: a tick should land the moment it is pressed.
+      setBudgetSubItems((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
       const { data } = await supabase.from("budget_sub_items").update(patch).eq("id", id).select().single();
       if (data) setBudgetSubItems((rows) => upsertById(rows, data as BudgetSubItemRow));
     },
     [supabase]
+  );
+
+  const seedBudgetSubItems = useCallback(
+    async (items: { category: string; label: string; amount: number; sort: number }[]) => {
+      if (!eventId || !userId) return false;
+      if (items.length === 0) return true;
+      const { data, error } = await supabase
+        .from("budget_sub_items")
+        .insert(items.map((item) => ({ event_id: eventId, user_id: userId, vendor: null, ...item })))
+        .select();
+      if (error) {
+        console.error("seedBudgetSubItems failed:", error.message);
+        return false;
+      }
+      if (data) setBudgetSubItems((rows) => (data as BudgetSubItemRow[]).reduce((acc, r) => upsertById(acc, r), rows));
+      return true;
+    },
+    [supabase, eventId, userId]
   );
 
   const deleteBudgetSubItem = useCallback(
@@ -1142,6 +1169,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       addBudgetSubItem,
       updateBudgetSubItem,
       deleteBudgetSubItem,
+      seedBudgetSubItems,
       addDayProgramItem,
       updateDayProgramItem,
       deleteDayProgramItem,
@@ -1172,7 +1200,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       moodboardItems, weddingSite, seatingPlan, registryItems, registryClaims, honeymoonSaves,
       thankYous, saveThankYou, saveVenueReview,
       websiteDesigns, sitePhotos, websiteOrders, load, updateEvent, saveBudgetItem,
-      deleteBudgetItem, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem,
+      deleteBudgetItem, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem, seedBudgetSubItems,
       addDayProgramItem, updateDayProgramItem, deleteDayProgramItem, seedDayProgram,
       addGuest, updateGuest, deleteGuest, addTask, updateTask, deleteTask, seedTasks, clearTasks,
       addMoodboardItem, removeMoodboardItem, saveSite, saveSeating,

@@ -11,12 +11,12 @@ import {
   resolveBudgetIcon,
   type BudgetIconId,
 } from '../lib/budget-style';
-import { Eyebrow, Chip, cn } from '../ui';
+import { Eyebrow, Chip, CheckDot, cn } from '../ui';
 import AnimateNumber from '../AnimateNumber';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
 import { navigateToHub, type NavigateTarget } from '../lib/hub-nav';
-import { estimatedTotal, estimatedLines, rentalSplit } from './budget/estimate';
+import { estimatedTotal, estimatedLines, rentalSplit, subItemSeeds } from './budget/estimate';
 import type { HubCat } from './team/shared';
 
 const isCustomLine = (id: string) => id.startsWith('custom-');
@@ -38,6 +38,10 @@ const seeding = new Set<string>();
  *  that gap would otherwise add a second hire line. */
 const splitting = new Set<string>();
 
+/** Categories whose usual posts are being added, keyed `event:category`.
+ *  Module scope for the same reason: the flag lands after the insert. */
+const subSeeding = new Set<string>();
+
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
 
 /** Paid state of a line: fully paid, partially paid, or nothing paid. */
@@ -58,7 +62,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   const { t } = useLang();
   const {
     loading, couple, event, budgetItems, saveBudgetItem, deleteBudgetItem, updateEvent,
-    budgetSubItems, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem,
+    budgetSubItems, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem, seedBudgetSubItems,
   } = useWedding();
 
   // What the estimate is built on. Their own figure wins; a headcount is the
@@ -78,15 +82,26 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   // actual/paid figures all live there now instead of three inline toggles.
   const [detailId, setDetailId] = useState<string | null>(null);
   const [assistOpen, setAssistOpen] = useState(false);
-  // Categories whose sub-items are folded open, on the row itself — a quick
-  // glance at what makes up "Venue" without leaving the list for Detaljer.
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-  const toggleExpanded = (id: string) =>
-    setExpandedIds((prev) => {
+  // Categories folded shut. Everything starts open: the posts under a
+  // category are the budget, and hiding them by default hid the budget.
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const toggleCollapsed = (id: string) =>
+    setCollapsedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  // The category whose "+ Tilføj post" row is open, and what is typed in it.
+  const [addingSubIn, setAddingSubIn] = useState<string | null>(null);
+  const [newSubLabel, setNewSubLabel] = useState('');
+  const [newSubAmount, setNewSubAmount] = useState('');
+  const commitSubItem = (category: string, count: number) => {
+    const label = newSubLabel.trim();
+    if (label) void addBudgetSubItem({ category, label, amount: Math.max(0, Number(newSubAmount) || 0), sort: count });
+    setNewSubLabel('');
+    setNewSubAmount('');
+    if (!label) setAddingSubIn(null);
+  };
 
   // Once anything is persisted, `budget_items` is the source of truth for which
   // categories exist and what they're called — so removing or renaming a
@@ -142,6 +157,25 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
       .catch(() => seeding.delete(id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, event, budgetItems.length, estimate, saveBudgetItem]);
+
+  /* Every category starts with its usual posts at 0 kr, once. The flag on the
+     row says when that has happened, so a post the couple deleted stays gone;
+     a database older than the flag has nothing to seed (see subItemSeeds). */
+  useEffect(() => {
+    if (loading || !event) return;
+    const { rows, categories } = subItemSeeds(budgetItems, budgetSubItems);
+    const fresh = categories.filter((c) => !subSeeding.has(`${event.id}:${c}`));
+    if (fresh.length === 0) return;
+    for (const c of fresh) subSeeding.add(`${event.id}:${c}`);
+    const id = event.id;
+    void seedBudgetSubItems(rows.filter((r) => fresh.includes(r.category))).then((ok) => {
+      if (!ok) { for (const c of fresh) subSeeding.delete(`${id}:${c}`); return; }
+      return Promise.all(fresh.map((category) => {
+        const line = budgetItems.find((b) => b.category === category);
+        return line ? saveBudgetItem({ category, label: line.label, sub_items_seeded: true }) : undefined;
+      }));
+    });
+  }, [loading, event, budgetItems, budgetSubItems, seedBudgetSubItems, saveBudgetItem]);
 
   /* Hire used to share the venue's line. A budget saved back then still has
      one "Venue & leje" row, so it is split once, on arrival: renamed to Venue,
@@ -469,22 +503,18 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
             className="py-7">
             <div className="flex items-baseline justify-between gap-4">
               <div className="flex items-center gap-2.5 min-w-0">
-                {/* Only a category that actually has sub-items gets a
-                    chevron — nothing to fold out otherwise. */}
-                {subCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => toggleExpanded(b.id)}
-                    aria-label={expandedIds.has(b.id) ? t('Skjul underposter') : t('Vis underposter')}
-                    aria-expanded={expandedIds.has(b.id)}
-                    className="shrink-0 -ml-1 rounded-full p-1 text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
-                  >
-                    <ChevronDown
-                      size={15}
-                      className={cn('transition-transform duration-200', expandedIds.has(b.id) && 'rotate-180')}
-                    />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => toggleCollapsed(b.id)}
+                  aria-label={collapsedIds.has(b.id) ? t('Vis underposter') : t('Skjul underposter')}
+                  aria-expanded={!collapsedIds.has(b.id)}
+                  className="shrink-0 -ml-1 rounded-full p-1 text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
+                >
+                  <ChevronDown
+                    size={15}
+                    className={cn('transition-transform duration-200', collapsedIds.has(b.id) && '-rotate-90')}
+                  />
+                </button>
                 <span
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
                   style={{ background: b.color }}
@@ -573,43 +603,101 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               </span>
             </button>
 
-            {/* Folded open on the row itself — a glance at what makes up this
-                category without leaving the list for Detaljer. Read-only
-                here; adding/editing/deleting a sub-item still happens in
-                Detaljer, where the full Underposter section already lives. */}
-            {expandedIds.has(b.id) && subCount > 0 && (
+            {/* The posts that make up this category, out by default: each with
+                a tick for paid, its vendor and its price. A row opens Detaljer
+                for the rest; a new post can be added right here. */}
+            {!collapsedIds.has(b.id) && (
               <div className="mt-3 overflow-hidden rounded-2xl rule bg-card">
                 {subs.map((s, idx) => (
-                  <button
+                  <div
                     key={s.id}
-                    type="button"
-                    onClick={() => setDetailId(b.id)}
-                    aria-label={t('Rediger {label}', { label: s.label })}
-                    className={cn(
-                      'group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-shell cursor-pointer',
-                      idx > 0 && 'border-t border-line',
-                    )}
+                    className={cn('group flex items-center gap-3 px-4 transition-colors hover:bg-shell', idx > 0 && 'border-t border-line')}
                   >
-                    {/* The parent's own icon and colour, so a sub-item reads as
-                        belonging to this category rather than floating loose. */}
-                    <Icon size={13} className="shrink-0" style={{ color: b.color }} strokeWidth={2.25} aria-hidden />
-                    <span className="min-w-0 flex-1 truncate text-[0.85rem] text-ink">
-                      {s.label}
-                      {s.vendor && <span className="text-muted"> · {s.vendor}</span>}
-                    </span>
-                    <span className="shrink-0 text-[0.85rem] font-semibold text-ink tabular-nums">
-                      {kr(s.amount)} kr
-                    </span>
-                    <ChevronRight size={13} aria-hidden
-                      className="shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
-                  </button>
+                    {/* Only once the database knows about paid (0037). */}
+                    {s.paid !== undefined && (
+                      <button
+                        type="button"
+                        role="checkbox"
+                        aria-checked={s.paid}
+                        aria-label={s.paid ? t("Markér '{title}' som ikke betalt", { title: s.label }) : t("Markér '{title}' som betalt", { title: s.label })}
+                        onClick={() => void updateBudgetSubItem(s.id, { paid: !s.paid })}
+                        className="shrink-0 cursor-pointer py-3 transition-transform hover:scale-105"
+                      >
+                        <CheckDot done={s.paid} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setDetailId(b.id)}
+                      aria-label={t('Rediger {label}', { label: s.label })}
+                      className="flex min-w-0 flex-1 items-center gap-3 py-3 text-left cursor-pointer"
+                    >
+                      {/* The parent's own icon and colour, so a post reads as
+                          belonging to this category rather than floating loose. */}
+                      <Icon size={13} className="shrink-0" style={{ color: b.color }} strokeWidth={2.25} aria-hidden />
+                      <span className={cn('min-w-0 flex-1 truncate text-[0.88rem]', s.paid ? 'text-muted line-through decoration-line-strong' : 'text-ink')}>
+                        {t(s.label)}
+                        {s.vendor && <span className="text-muted"> · {s.vendor}</span>}
+                      </span>
+                      <span className={cn('shrink-0 text-[0.88rem] font-semibold tabular-nums', s.amount > 0 ? 'text-ink' : 'text-muted')}>
+                        {kr(s.amount)} kr
+                      </span>
+                      <ChevronRight size={13} aria-hidden
+                        className="shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
+                    </button>
+                  </div>
                 ))}
-                <div className="flex items-center justify-between border-t border-line bg-shell/60 px-4 py-2.5">
-                  <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                    {t('I alt')}
-                  </span>
-                  <span className="text-[0.85rem] font-semibold text-ink tabular-nums">{kr(subTotal)} kr</span>
-                </div>
+
+                {addingSubIn === b.id ? (
+                  <form
+                    onSubmit={(e) => { e.preventDefault(); commitSubItem(b.id, subCount); }}
+                    className={cn('flex items-center gap-2 px-3 py-2', subCount > 0 && 'border-t border-line')}
+                  >
+                    <input
+                      autoFocus
+                      value={newSubLabel}
+                      onChange={(e) => setNewSubLabel(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSubIn(null); setNewSubLabel(''); setNewSubAmount(''); } }}
+                      placeholder={t('Ny post, fx sko')}
+                      aria-label={t('Navn på ny underpost')}
+                      className="min-w-0 flex-1 rounded-lg bg-shell px-3 py-2 text-[0.85rem] text-ink placeholder:text-muted/60 focus:outline-none"
+                    />
+                    <input
+                      type="number" min={0} step={100}
+                      value={newSubAmount}
+                      onChange={(e) => setNewSubAmount(e.target.value)}
+                      placeholder="0"
+                      aria-label={t('Beløb')}
+                      className="w-24 shrink-0 rounded-lg bg-shell px-3 py-2 text-right text-[0.85rem] text-ink tabular-nums placeholder:text-muted/60 focus:outline-none"
+                    />
+                    <button type="submit" disabled={!newSubLabel.trim()}
+                      className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[0.75rem] font-semibold text-canvas disabled:opacity-40 cursor-pointer">
+                      {t('Tilføj')}
+                    </button>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setAddingSubIn(b.id); setNewSubLabel(''); setNewSubAmount(''); }}
+                    className={cn('flex w-full items-center gap-2 px-4 py-2.5 text-left text-[0.8rem] text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer', subCount > 0 && 'border-t border-line')}
+                  >
+                    <Plus size={13} /> {t('Tilføj post')}
+                  </button>
+                )}
+
+                {subCount > 0 && (
+                  <div className="flex items-center justify-between border-t border-line bg-shell/60 px-4 py-2.5">
+                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted">
+                      {t('I alt')}
+                      {subs.some((x) => x.paid !== undefined) && (
+                        <span className="ml-2 normal-case tracking-normal">
+                          · {t('{n} af {total} betalt', { n: subs.filter((x) => x.paid).length, total: subCount })}
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-[0.85rem] font-semibold text-ink tabular-nums">{kr(subTotal)} kr</span>
+                  </div>
+                )}
               </div>
             )}
 

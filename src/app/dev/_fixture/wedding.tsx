@@ -90,6 +90,12 @@ export function FixtureWedding({
         setBudgetSubItems((rows) => rows.map((r) => (r.id === sid ? { ...r, ...patch } : r)));
       },
       deleteBudgetSubItem: async (sid: string) => setBudgetSubItems((rows) => rows.filter((r) => r.id !== sid)),
+      seedBudgetSubItems: async (items: { category: string; label: string; amount: number; sort: number }[]) => {
+        setBudgetSubItems((rows) => [...rows, ...items.map((item) => ({
+          id: id('s'), event_id: 'dev', user_id: 'dev', vendor: null, paid: false, created_at: now, ...item,
+        } as BudgetSubItemRow))]);
+        return true;
+      },
     };
     // Every write a harness does not model resolves and does nothing.
     return new Proxy(base, {

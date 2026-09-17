@@ -76,19 +76,48 @@ export function venueBudget(
 export const LEGACY_VENUE_LABEL = 'Venue & leje';
 
 /**
- * The smaller posts a couple usually splits each of the two lines into, offered
- * as one-tap chips above the sub-item row. Suggestions only: a tap adds the
- * post at 0 kr, and the couple types the price when a quote comes in.
+ * The smaller posts each standard category is usually made of. Every budget
+ * starts with them at 0 kr (see `subItemSeeds`), and any the couple deleted
+ * are offered again as one-tap chips in Detaljer.
  */
 export const SUGGESTED_SUB_ITEMS: Record<string, string[]> = {
   venue: ['Lokaleleje', 'Vielsessted', 'Overnatning', 'Rengøring'],
   rental: ['Telt', 'Borde & stole', 'Service & glas', 'Duge', 'Belysning', 'Dansegulv', 'Toiletvogn', 'Varmelamper'],
+  catering: ['Menu', 'Vinpakke & drikkevarer', 'Bryllupskage', 'Natmad', 'Personale'],
+  photo: ['Fotograf', 'Videograf', 'Fotoboks'],
+  florals: ['Brudebuket', 'Bordpynt', 'Ceremonipynt', 'Knaphulsblomster'],
+  music: ['Musik til vielsen', 'DJ', 'Sanger/band', 'Toastmaster', 'Fyrværkeri'],
+  attire: ['Brudekjole', 'Jakkesæt', 'Sko', 'Hår & makeup', 'Tilbehør', 'Vielsesringe'],
+  misc: ['Invitationer', 'Bordkort & menukort', 'Gaver til gæsterne', 'Transport'],
 };
 
 /** The suggestions for a category that it does not already have a post for. */
 export function subItemSuggestions(category: string, existing: { label: string }[]): string[] {
   const have = new Set(existing.map((s) => s.label.trim().toLowerCase()));
   return (SUGGESTED_SUB_ITEMS[category] ?? []).filter((label) => !have.has(label.toLowerCase()));
+}
+
+/**
+ * The usual posts to add to categories that have never had them: one row per
+ * missing post at 0 kr, and the categories to mark as done so it happens once.
+ *
+ * Only a row that says `sub_items_seeded === false` qualifies. Undefined means
+ * the database is older than the flag, and seeding then would add the posts
+ * again on every visit. A post the couple already has, under any case, is
+ * skipped; a category with no suggestions (a custom one) is still marked.
+ */
+export function subItemSeeds(
+  items: { category: string; sub_items_seeded?: boolean }[],
+  subItems: { category: string; label: string }[],
+): { rows: { category: string; label: string; amount: number; sort: number }[]; categories: string[] } {
+  const pending = items.filter((i) => i.sub_items_seeded === false);
+  const rows = pending.flatMap((item) => {
+    const existing = subItems.filter((s) => s.category === item.category);
+    return subItemSuggestions(item.category, existing).map((label, i) => ({
+      category: item.category, label, amount: 0, sort: existing.length + i,
+    }));
+  });
+  return { rows, categories: pending.map((i) => i.category) };
 }
 
 export type RentalSplit = {

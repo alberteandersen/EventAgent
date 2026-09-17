@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { budgetLines } from '../../data';
+import { EN } from '../../strings';
 import {
   estimatedTotal, estimatedLines, DK_AVG_PER_GUEST, venueBudget,
-  LEGACY_VENUE_LABEL, rentalSplit, subItemSuggestions,
+  LEGACY_VENUE_LABEL, rentalSplit, subItemSuggestions, subItemSeeds, SUGGESTED_SUB_ITEMS,
 } from './estimate';
 
 describe('estimatedTotal', () => {
@@ -128,7 +129,43 @@ describe('subItemSuggestions', () => {
   });
 
   it('is empty for a category without suggestions', () => {
-    expect(subItemSuggestions('photo', [])).toEqual([]);
     expect(subItemSuggestions('custom-1', [])).toEqual([]);
+  });
+
+  it('has suggestions for every standard category, all in English too', () => {
+    for (const line of budgetLines) expect(SUGGESTED_SUB_ITEMS[line.id]?.length, line.id).toBeGreaterThan(0);
+    for (const label of Object.values(SUGGESTED_SUB_ITEMS).flat()) expect(EN[label], label).toBeTruthy();
+  });
+});
+
+describe('subItemSeeds', () => {
+  it('adds the usual posts to a category that never had them, at 0 kr', () => {
+    const { rows, categories } = subItemSeeds([{ category: 'photo', sub_items_seeded: false }], []);
+    expect(rows.map((r) => r.label)).toEqual(['Fotograf', 'Videograf', 'Fotoboks']);
+    expect(rows.every((r) => r.amount === 0)).toBe(true);
+    expect(categories).toEqual(['photo']);
+  });
+
+  it('skips posts the category already has, and sorts after them', () => {
+    const { rows } = subItemSeeds(
+      [{ category: 'photo', sub_items_seeded: false }],
+      [{ category: 'photo', label: 'fotograf' }],
+    );
+    expect(rows).toEqual([
+      { category: 'photo', label: 'Videograf', amount: 0, sort: 1 },
+      { category: 'photo', label: 'Fotoboks', amount: 0, sort: 2 },
+    ]);
+  });
+
+  it('never seeds a category twice', () => {
+    expect(subItemSeeds([{ category: 'photo', sub_items_seeded: true }], [])).toEqual({ rows: [], categories: [] });
+  });
+
+  it('does nothing on a database older than the flag', () => {
+    expect(subItemSeeds([{ category: 'photo' }], [])).toEqual({ rows: [], categories: [] });
+  });
+
+  it('marks a custom category done without adding anything', () => {
+    expect(subItemSeeds([{ category: 'custom-1', sub_items_seeded: false }], [])).toEqual({ rows: [], categories: ['custom-1'] });
   });
 });

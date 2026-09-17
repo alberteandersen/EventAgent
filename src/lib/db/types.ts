@@ -381,6 +381,9 @@ export interface BudgetItemRow {
   icon: string | null;
   color: string | null;
   sort: number;
+  /** Whether the category has had its usual posts added once (0037).
+   *  Undefined before the migration, which means: do not seed. */
+  sub_items_seeded?: boolean;
   created_at: string;
 }
 
@@ -396,6 +399,8 @@ export interface BudgetSubItemRow {
   vendor: string | null;
   amount: number;
   sort: number;
+  /** Ticked off as paid (0037). Undefined before the migration. */
+  paid?: boolean;
   created_at: string;
 }
 

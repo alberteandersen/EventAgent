@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getTemplateMeta } from "@/kalas/invitations/templates.meta";
@@ -8,6 +9,10 @@ import type { Language } from "@/kalas/invitations/types";
 import { PublicInvitation } from "./PublicInvitation";
 
 export const dynamic = "force-dynamic";
+
+/* An invitation is for the guests who got the link, not for search: it names
+   the couple, the date and the venue. Same rule as the wedding sites in /w. */
+export const metadata: Metadata = { robots: { index: false, follow: false, nocache: true } };
 
 export default async function PublicInvitationPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

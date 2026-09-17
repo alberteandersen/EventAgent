@@ -57,5 +57,6 @@ export default async function proxy(request: NextRequest) {
 
 export const config = {
   // Run on everything except static assets; cron route authenticates itself.
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/cron|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  // The guide, share images, robots, sitemap and llms.txt are public and static.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/cron|guide(?:/|$)|og/|robots\\.txt|sitemap\\.xml|llms\\.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
 };

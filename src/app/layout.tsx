@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, EB_Garamond, Hanken_Grotesk, Inter } from "next/font/google";
+import { SITE_URL } from "@/lib/site-url";
 import "./globals.css";
 
 const inter = Inter({
@@ -29,12 +30,21 @@ const ebGaramond = EB_Garamond({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  // Ownership tags for Google Search Console and Bing Webmaster Tools; set the
+  // codes in Netlify and the tags appear, with no code change.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    ...(process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } }
+      : {}),
+  },
   title: "Kalas, plan the wedding, skip the stress",
   // Opened from a phone's home screen, Kalas runs full screen like an app.
   appleWebApp: { capable: true, title: "Kalas", statusBarStyle: "default" },
   icons: { apple: "/pwa-icon/180" },
   description:
-    "Kalas is your wedding-planning agent: it finds venues, contacts them for quotes, designs invites, and tracks RSVPs, all from your own Gmail.",
+    "Kalas is your wedding-planning agent: it finds venues, writes to them for quotes, designs invites and tracks RSVPs, and nothing is sent until you approve it.",
 };
 
 export default function RootLayout({

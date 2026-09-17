@@ -28,7 +28,6 @@ export function Hero() {
             alt="Long-table wedding dinner on a coastal terrace at dusk, string lights overhead"
             fill
             priority
-            unoptimized
             className="object-cover object-[center_62%]"
             sizes="100vw"
           />
@@ -63,7 +62,7 @@ export function Hero() {
               duration={0.5}
               className={`mr-[0.25em] inline-block ${word === "stress." ? "text-white/55" : ""}`}
             >
-              {word}
+              {word}{" "}
             </BlurFade>
           ))}
         </h1>

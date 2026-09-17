@@ -29,6 +29,14 @@ export function Nav() {
         </Link>
         <nav className="flex items-center gap-1.5">
           <Link
+            href="/guide"
+            className={`rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
+              scrolled ? "text-ink-body hover:text-ink" : "text-surface/90 hover:text-surface"
+            }`}
+          >
+            Guides
+          </Link>
+          <Link
             href="/login"
             className={`rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
               scrolled ? "text-ink-body hover:text-ink" : "text-surface/90 hover:text-surface"

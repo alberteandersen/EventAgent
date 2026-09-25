@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { RotateCcw, Plus, Search, X, ArrowRight, ChevronDown, ChevronsUpDown } from 'lucide-react';
+import { Plus, Search, X, ArrowRight, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { useRemoveWithUndo, useWithoutPending } from '../../undo';
 import { cn } from '../../ui';
@@ -10,6 +10,7 @@ import type { ScreenId } from '../../Shell';
 import TaskRow, { type DisplayTask } from './TaskRow';
 import TaskDialog from './TaskDialog';
 import AddRow from './AddRow';
+import ResetControl from './ResetControl';
 import { defaultChecklist, missingChecklistItems, phaseOf, phaseLabel, currentPhase, isDueBy, PHASES } from './checklist-data';
 import {
   isCheck, isMilestone, hasArea, groupByArea, areaLabel, nextSort, areaOf, topUpKey,
@@ -31,7 +32,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
   onCelebrate: (title: string) => void;
   onNavigate?: (s: ScreenId) => void;
 }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const { loading, event, couple, timelineTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
 
   const [filter, setFilter] = useState<ChecklistFilter>('alle');
@@ -41,19 +42,12 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
   // The task open in TaskDialog. Its title, area, date and the rest are all
   // edited there now, instead of an inline rename that only reached the title.
   const [openId, setOpenId] = useState<string | null>(null);
-  const [confirmReset, setConfirmReset] = useState(false);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [openAreas, setOpenAreas] = useState<Set<ChecklistArea>>(() => readOpenAreas());
   const reduce = useReducedMotion();
   const newInputRef = useRef<HTMLInputElement>(null);
   const toppedUpRef = useRef(false);
-
-  React.useEffect(() => {
-    if (!confirmReset) return;
-    const timer = setTimeout(() => setConfirmReset(false), 4000);
-    return () => clearTimeout(timer);
-  }, [confirmReset]);
 
   /* `checks` drives seeding and the top-up; `rows` is what the tab renders.
      They must not be the same list, milestones exist before the checklist is
@@ -197,9 +191,19 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
     setAddingIn(null);
   }
 
+  /* What a reset throws away, counted, for the confirmation: items the couple
+     wrote (or renamed, which reads the same) and every tick. */
+  const ownCount = checks.filter((r) => phaseOf(r.title) === null).length;
+  const tickCount = checks.filter((r) => r.done).length;
+  const lost = [
+    ownCount > 0 && tn(ownCount, 'jeres ene egne punkt', 'jeres {n} egne punkter'),
+    tickCount > 0 && tn(tickCount, 'ét flueben', '{n} flueben'),
+  ].filter(Boolean).join(t(' og '));
+  const resetDetail = lost
+    ? t('Listen starter forfra med standardpunkterne, og {lost} forsvinder.', { lost })
+    : t('Listen starter forfra med standardpunkterne.');
+
   function handleReset() {
-    if (!confirmReset) { setConfirmReset(true); return; }
-    setConfirmReset(false);
     // Claim the seed slot first: clearing empties `rows`, and without this the
     // auto-seed effect would fire alongside the re-seed below and double it.
     if (event) seeding.add(event.id);
@@ -253,17 +257,12 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
               {allOpen ? t('Fold alle sammen') : t('Fold alle ud')}
             </button>
           )}
-          <button
-            type="button"
-            onClick={handleReset}
-            className={cn(
-              'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors cursor-pointer',
-              confirmReset ? 'bg-[#b34e37] text-white' : 'border border-[#d9ded9] bg-white text-[#24413a]',
-            )}
-          >
-            <RotateCcw size={13} />
-            {confirmReset ? t('Sikker?') : t('Nulstil')}
-          </button>
+          <ResetControl
+            itemLabel="Gendan standardlisten…"
+            confirmTitle="Gendan standardlisten?"
+            detail={resetDetail}
+            onReset={handleReset}
+          />
         </div>
       </div>
 
@@ -293,7 +292,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
               type="button"
               onClick={() => setFilter(f)}
               className={cn(
-                'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.1em] transition-colors cursor-pointer',
+                'flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors cursor-pointer',
                 active
                   ? 'bg-[#24413a] text-[#f8f9f8]'
                   : 'border border-[#e6e9e5] bg-[#f8f9f8] text-[#5f6b66] hover:text-[#24413a]',

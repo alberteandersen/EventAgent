@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { RotateCcw, Plus, Search, X, CalendarClock } from 'lucide-react';
+import { Plus, Search, X, CalendarClock } from 'lucide-react';
 import { timeline as MOCK_TIMELINE } from '../../data';
 import { useWedding } from '../../useWedding';
 import { useRemoveWithUndo, useWithoutPending } from '../../undo';
@@ -16,6 +16,7 @@ import type { DisplayTask } from './TaskRow';
 import TimelineSpine, { type RowActions } from './TimelineSpine';
 import TaskDialog from './TaskDialog';
 import AddRow from './AddRow';
+import ResetControl from './ResetControl';
 import {
   isMilestone, isCheck, onTimeline, areaOf, nextSort, buildTimelineBands, todayISO, daysDiff, shiftPlan,
   MILESTONE_ACTIONS, type MilestoneAction,
@@ -102,16 +103,9 @@ export default function TimelineTab({ onCelebrate, onNavigate }: {
   const [addingAfter, setAddingAfter] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDate, setNewDate] = useState(new Date().toISOString().slice(0, 10));
-  const [confirmReset, setConfirmReset] = useState(false);
   const [menuId, setMenuId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
   const newInputRef = useRef<HTMLInputElement>(null);
-
-  React.useEffect(() => {
-    if (!confirmReset) return;
-    const timer = setTimeout(() => setConfirmReset(false), 4000);
-    return () => clearTimeout(timer);
-  }, [confirmReset]);
 
   /* The plan was laid out from the date the couple had then. When "Jeres
      dag" and their date part ways, they have moved the wedding (in Settings)
@@ -238,14 +232,25 @@ export default function TimelineTab({ onCelebrate, onNavigate }: {
     setAddingAfter(null);
   }
 
+  /* What a reset throws away, counted, for the confirmation: milestones the
+     couple added (or renamed) and every tick on the timeline. */
+  const defaultTitles = new Set(MOCK_TIMELINE.map((m) => m.title));
+  const ownCount = milestones.filter((m) => !defaultTitles.has(m.title)).length;
+  const tickCount = milestones.filter((m) => m.done).length;
+  const lost = [
+    ownCount > 0 && tn(ownCount, 'jeres egen milepæl', 'jeres {n} egne milepæle'),
+    tickCount > 0 && tn(tickCount, 'ét flueben', '{n} flueben'),
+  ].filter(Boolean).join(t(' og '));
+  const resetDetail = lost
+    ? t('Milepælene lægges ud fra jeres dato igen, og {lost} forsvinder.', { lost })
+    : t('Milepælene lægges ud fra jeres dato igen.');
+
   function handleReset() {
-    if (!confirmReset) { setConfirmReset(true); return; }
     void (async () => {
       // Scoped to milestones — the checklist on the other tab must survive.
       await clearTasks('milestone');
       if (couple.dateISO) await seedTasks(defaultMilestones(couple.dateISO));
     })();
-    setConfirmReset(false);
   }
 
   return (
@@ -266,17 +271,14 @@ export default function TimelineTab({ onCelebrate, onNavigate }: {
               {t('{done} af {total} klaret', { done, total: tasks.length })}
             </p>
           )}
-          <button
-            type="button"
-            onClick={handleReset}
-            className={cn(
-              'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors cursor-pointer',
-              confirmReset ? 'bg-terracotta text-canvas' : 'border border-line bg-card text-ink',
-            )}
-          >
-            <RotateCcw size={13} />
-            {confirmReset ? t('Sikker?') : t('Nulstil')}
-          </button>
+          {tasks.length > 0 && (
+            <ResetControl
+              itemLabel="Gendan standardplanen…"
+              confirmTitle="Gendan standardplanen?"
+              detail={resetDetail}
+              onReset={handleReset}
+            />
+          )}
           <button
             type="button"
             onClick={() => openAdd('bottom')}
@@ -339,7 +341,7 @@ export default function TimelineTab({ onCelebrate, onNavigate }: {
               type="button"
               onClick={() => setFilter(f)}
               className={cn(
-                'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.1em] transition-colors cursor-pointer',
+                'flex h-8 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold transition-colors cursor-pointer',
                 active
                   ? 'bg-ink text-shell'
                   : 'border border-line bg-shell text-muted hover:text-ink',

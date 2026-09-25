@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ListChecks, CheckSquare, PartyPopper } from 'lucide-react';
 import { useWedding } from '../useWedding';
+import { showNotice } from '../notice';
 import { cn } from '../ui';
 import type { ScreenId } from '../Shell';
 import { useLang } from '../i18n';
@@ -24,7 +25,6 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
   const { t } = useLang();
   const { loading, couple, timelineTasks, seedTasks } = useWedding();
   const [tab, setTab] = useState<PlanTab>(() => readPlanTab());
-  const [celebration, setCelebration] = useState<{ title: string; msg: string } | null>(null);
   const seededMilestonesRef = useRef(false);
 
   const milestones = timelineTasks.filter(isMilestone);
@@ -47,9 +47,10 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
     writePlanTab(next);
   }
 
+  // Through the shared toaster, so it stacks with a Fortryd toast instead of
+  // landing on it, and clears the phone's bottom bar.
   function celebrate(title: string) {
-    setCelebration({ title, msg: t(AVA_CELEBRATION) });
-    setTimeout(() => setCelebration(null), 3200);
+    showNotice(t(title), t(AVA_CELEBRATION));
   }
 
   const TABS: { id: PlanTab; label: string; Icon: typeof ListChecks; open: number }[] = [
@@ -108,25 +109,6 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
           <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />
         ) : (
           <DayProgramTab key="bryllupsdagen" />
-        )}
-      </AnimatePresence>
-
-      {/* celebration toast */}
-      <AnimatePresence>
-        {celebration && (
-          <motion.div
-            initial={{ opacity: 0, y: 32, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            role="status" aria-live="polite"
-            className="fixed bottom-10 left-1/2 z-50 -translate-x-1/2 w-[min(92vw,420px)]"
-          >
-            <div className="rounded-[18px] border border-[#dcdfdb] bg-[#ffffff] px-6 py-5 shadow-[0_20px_60px_-10px_rgba(36,65,58,0.18)]">
-              <p className="font-serif text-lg text-[#24413a]">{t(celebration.title)}</p>
-              <p className="mt-1.5 text-sm text-[#5f6b66]">{celebration.msg}</p>
-            </div>
-          </motion.div>
         )}
       </AnimatePresence>
     </div>

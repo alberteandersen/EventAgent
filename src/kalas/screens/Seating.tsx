@@ -32,6 +32,7 @@ import { TableNode } from './seating/TableNode';
 import { ElementNode, ELEMENT_ICON } from './seating/ElementNode';
 import SeatCountDialog from './seating/SeatCountDialog';
 import { DEFAULT_ZOOM, ZOOMS, fitZoom, planExtent, stepZoom } from './seating/zoom';
+import { findFreeSpot, type Frame } from './seating/placement';
 import { dietarySummary } from './guests/dietary';
 import {
   MAX_SEATS, MIN_SEATS, SHAPES, changeShape, firstFreeSeat, freeSeats, initials,
@@ -227,6 +228,33 @@ export default function Seating() {
      until the whole plan fits the canvas, then scroll the new thing into the
      middle. Worked out from the plan as it will be, so there is nothing to
      wait for but the new zoom reaching the DOM before the scroll. */
+  /* Where a new piece of `size` goes. First into empty space the couple can
+     already see, so the view stays exactly as they left it. The canvas grows
+     with the plan up to CANVAS_MAX_H before it scrolls, so that is the height
+     it can use. Only when that is full does it step the zoom out, one stop at
+     a time from the same corner, and stop at the first that has room. Null
+     when not even the furthest stop does. */
+  const placeInView = (size: { w: number; h: number }): { spot: { x: number; y: number }; zoom: number } | null => {
+    const el = canvasRef.current;
+    if (!el) return null;
+    const origin = { x: el.scrollLeft / zoom, y: el.scrollTop / zoom };
+    for (const z of [zoom, ...ZOOMS.filter((s) => s < zoom).reverse()]) {
+      const frame: Frame = { ...origin, w: el.clientWidth / z, h: (CANVAS_MAX_H - 8) / z };
+      const spot = findFreeSpot(plan, size, frame);
+      if (spot) return { spot, zoom: z };
+    }
+    return null;
+  };
+
+  /** Apply a placement's zoom, keeping the same corner of the plan in view. */
+  const settleZoom = (z: number) => {
+    const el = canvasRef.current;
+    if (z === zoom || !el) return;
+    const origin = { x: el.scrollLeft / zoom, y: el.scrollTop / zoom };
+    setZoom(z);
+    setScrollTo({ left: origin.x * z, top: origin.y * z });
+  };
+
   const reveal = (next: SeatingPlan, at: { x: number; y: number }) => {
     const z = fitZoom(planExtent(next), { w: canvasW, h: CANVAS_MAX_H - 8 }, zoom);
     if (z !== zoom) setZoom(z);
@@ -270,12 +298,15 @@ export default function Seating() {
 
   const addFloorElement = (kind: FloorElementKind) => {
     const spec = ELEMENTS.find((x) => x.id === kind)!;
-    const el = makeElement(plan, kind, t(spec.label));
+    let el = makeElement(plan, kind, t(spec.label));
+    const placed = placeInView({ w: el.w, h: el.h });
+    if (placed) el = { ...el, ...placed.spot };
     setPlan((p) => addElement(p, el));
     setMoreOpen(false);
     setSelected(null);
     setSelectedEl(el.id);
-    reveal(addElement(plan, el), el);
+    if (placed) settleZoom(placed.zoom);
+    else reveal(addElement(plan, el), el);
   };
 
   const selectTable = (id: string | null) => { setSelected(id); setSelectedEl(null); };
@@ -285,10 +316,13 @@ export default function Seating() {
   const addTable = (shape: TableShape, seats: number) => {
     const n = plan.tables.filter((x) => x.shape !== 'head').length + 1;
     const name = shape === 'head' ? t('Brudebord') : t('Bord {n}', { n });
-    const table = setSeatCount(makeTable(plan, shape, name), seats);
+    let table = setSeatCount(makeTable(plan, shape, name), seats);
+    const placed = placeInView(tableBounds(table));
+    if (placed) table = { ...table, ...placed.spot };
     setPlan((p) => ({ ...p, tables: [...p.tables, table] }));
     selectTable(table.id);
-    reveal({ ...plan, tables: [...plan.tables, table] }, table);
+    if (placed) settleZoom(placed.zoom);
+    else reveal({ ...plan, tables: [...plan.tables, table] }, table);
   };
 
 

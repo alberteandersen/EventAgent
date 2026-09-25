@@ -155,3 +155,59 @@ export function formatProgramText(items: ProgramItemText[], heading?: string): s
   });
   return heading ? [heading, '', ...lines].join('\n') : lines.join('\n');
 }
+
+/* ── The day as a calendar ──────────────────────────────────────────────── */
+
+/** A moment with no length, or a very short one, still needs room on the
+ *  calendar to be read and to be grabbed. */
+export const MIN_BLOCK_MIN = 30;
+
+/** Where a moment ends on the calendar: its own end, or MIN_BLOCK_MIN on. */
+export function visualEnd(item: ProgramItemLike): number {
+  return sortKey(item.time) + Math.max(item.duration_min ?? 0, MIN_BLOCK_MIN);
+}
+
+/** The hours the calendar shows, on sortKey's scale: from the hour the first
+ *  moment starts in to the hour after the last one ends. An empty day is an
+ *  afternoon and an evening, 14–24. */
+export function calendarRange(items: ProgramItemLike[]): { from: number; to: number } {
+  if (items.length === 0) return { from: 14 * 60, to: 24 * 60 };
+  const start = Math.min(...items.map((i) => sortKey(i.time)));
+  const end = Math.max(...items.map(visualEnd));
+  return { from: Math.floor(start / 60) * 60, to: Math.ceil(end / 60) * 60 };
+}
+
+/**
+ * Moments that overlap on the calendar sit side by side, like a calendar
+ * app's day view: each gets a lane, and each knows how many lanes its
+ * cluster of overlapping moments needs, so it can take its share of the
+ * width. Keyed by id.
+ */
+export function layoutLanes<T extends ProgramItemLike & { id: string }>(items: T[]): Map<string, { lane: number; lanes: number }> {
+  const out = new Map<string, { lane: number; lanes: number }>();
+  const sorted = sortByTime(items);
+  let cluster: { id: string; lane: number }[] = [];
+  let laneEnds: number[] = [];
+  let clusterEnd = -Infinity;
+  const close = () => {
+    for (const c of cluster) out.set(c.id, { lane: c.lane, lanes: laneEnds.length });
+    cluster = [];
+    laneEnds = [];
+  };
+  for (const item of sorted) {
+    const start = sortKey(item.time);
+    if (start >= clusterEnd) { close(); clusterEnd = -Infinity; }
+    let lane = laneEnds.findIndex((end) => end <= start);
+    if (lane === -1) { lane = laneEnds.length; laneEnds.push(0); }
+    laneEnds[lane] = visualEnd(item);
+    clusterEnd = Math.max(clusterEnd, visualEnd(item));
+    cluster.push({ id: item.id, lane });
+  }
+  close();
+  return out;
+}
+
+/** Rounded to the nearest `step` minutes, for dragging and clicking. */
+export function snapMinutes(minutes: number, step = 5): number {
+  return Math.round(minutes / step) * step;
+}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
-  daySpan, formatDuration, formatProgramText, gapAfter, shiftFrom, sortByTime, statusOf, toHHMM,
+  calendarRange, daySpan, formatDuration, formatProgramText, gapAfter, layoutLanes, shiftFrom, snapMinutes,
+  sortByTime, statusOf, toHHMM,
 } from './dayProgram';
 
 const items = sortByTime([
@@ -166,5 +167,38 @@ describe('formatProgramText', () => {
   it('prefixes a heading with a blank line when given', () => {
     expect(formatProgramText([{ time: '14:00', title: 'Ankomst' }], 'Bryllupsdagen'))
       .toBe('Bryllupsdagen\n\n14:00  Ankomst');
+  });
+});
+
+describe('the day as a calendar', () => {
+  const item = (id: string, time: string, duration_min = 0) => ({ id, time, duration_min });
+
+  it('shows whole hours around the day, and an evening when it is empty', () => {
+    expect(calendarRange([])).toEqual({ from: 840, to: 1440 });
+    expect(calendarRange([item('a', '14:30', 45), item('b', '00:30', 45)])).toEqual({ from: 840, to: 1440 + 120 });
+  });
+
+  it('puts overlapping moments side by side and the rest full width', () => {
+    const lanes = layoutLanes([
+      item('arrive', '14:00', 45),
+      item('photos', '16:00', 90),
+      item('dinner', '17:00', 150),
+      item('dance', '21:00', 30),
+    ]);
+    expect(lanes.get('arrive')).toEqual({ lane: 0, lanes: 1 });
+    expect(lanes.get('photos')).toEqual({ lane: 0, lanes: 2 });
+    expect(lanes.get('dinner')).toEqual({ lane: 1, lanes: 2 });
+    expect(lanes.get('dance')).toEqual({ lane: 0, lanes: 1 });
+  });
+
+  it('gives a moment without a length room enough to be seen', () => {
+    const lanes = layoutLanes([item('speech', '19:00', 0), item('cake', '19:15', 15)]);
+    expect(lanes.get('cake')).toEqual({ lane: 1, lanes: 2 });
+  });
+
+  it('snaps to five minutes', () => {
+    expect(snapMinutes(903)).toBe(905);
+    expect(snapMinutes(902)).toBe(900);
+    expect(snapMinutes(907, 15)).toBe(900);
   });
 });

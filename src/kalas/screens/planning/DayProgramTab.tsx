@@ -15,24 +15,21 @@
  * dayProgram.ts so it can be tested without a clock.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  AlertTriangle, Check, ChevronDown, Clipboard, ClipboardCheck, Copy,
-  FileDown, Link2, MoreHorizontal, Plus, RefreshCw, Share2, Sparkles, Trash2, User, X,
+  AlertTriangle, Check, Clipboard, ClipboardCheck, Copy,
+  FileDown, Link2, MoreHorizontal, Plus, RefreshCw, Share2, Sparkles, X,
 } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { useRemoveWithUndo, useWithoutPending } from '../../undo';
 import { useLang } from '../../i18n';
-import { cn } from '../../ui';
 import {
-  daySpan, formatDuration, formatProgramText, gapAfter, shiftFrom, sortByTime, sortKey, statusOf,
+  daySpan, formatDuration, formatProgramText, gapAfter, shiftFrom, sortByTime,
 } from './dayProgram';
 import { todayISO } from './shared';
+import DayCalendar from './DayCalendar';
 import type { DayProgramItemRow } from '@/lib/db/types';
-
-const fieldCls =
-  'min-w-0 rule rounded-xl bg-shell px-3 py-2 text-[0.85rem] text-ink placeholder:text-muted/60 focus:outline-none focus:border-[var(--color-sage-strong)]';
 
 /** A whole Danish wedding day, so the tab never opens on a blank page. The
  *  couple edits it down to their own — far less work than building it up. */
@@ -61,8 +58,6 @@ const QUICK_MOMENTS: { title: string; time: string; duration_min: number }[] = [
   { title: 'Natmad', time: '00:30', duration_min: 45 },
 ];
 
-const OWNERS = ['Fotograf', 'Toastmaster', 'Catering', 'Musik/DJ', 'Præst', 'Venue', 'Os selv'];
-const DURATIONS = [15, 30, 45, 60, 90, 120, 180];
 
 function nowHHMM(): string {
   const d = new Date();
@@ -168,16 +163,12 @@ export function DayProgram({
   const [blankStart, setBlankStart] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
-  const [newTime, setNewTime] = useState('');
-  const [newTitle, setNewTitle] = useState('');
-  // Why nothing was added: no title yet, or the save itself failed.
-  const [addProblem, setAddProblem] = useState<'title' | 'failed' | null>(null);
+  // Why a quick add did not land.
+  const [addFailed, setAddFailed] = useState(false);
   // The share panel: closed, loading, open on a link, or failed.
   const [share, setShare] = useState<{ open: boolean; url: string | null; busy: boolean; failed: boolean; copied: boolean }>(
     { open: false, url: null, busy: false, failed: false, copied: false },
   );
-  const titleRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (clockOverride) return;
@@ -195,22 +186,6 @@ export function DayProgram({
     }
     return null;
   })();
-  const nowIndex = items.findIndex((i) => sortKey(i.time) > sortKey(clock));
-  const markerAt = nowIndex === -1 ? items.length : nowIndex;
-
-  const nextTime = () => {
-    // A new moment lands after the day's current end, not on top of it.
-    const last = items[items.length - 1];
-    if (!last) return '14:00';
-    const end = sortKey(last.time) + (last.duration_min || 60);
-    return `${String(Math.floor((end % 1440) / 60)).padStart(2, '0')}:${String(end % 60).padStart(2, '0')}`;
-  };
-
-  // The field always shows a real time — the slot right after the day's
-  // current end — instead of an empty "--:--" the couple has to fill in
-  // before they can type what they actually came to type. Clearing newTime
-  // after an add re-derives it against the moment just added.
-  const timeValue = newTime || nextTime();
 
   // One line, two readers: the tab's own heading and the printed programme.
   const dayHeadline =
@@ -220,35 +195,10 @@ export function DayProgram({
         ? t('Ét øjeblik — en dag er begyndt')
         : t('{n} øjeblikke, én smukt koordineret dag', { n: items.length });
 
-  /* The button used to be disabled until a title was typed, and a disabled
-     button next to an empty field reads as a broken one: couples pressed it,
-     nothing happened, and nothing said why. It always answers now, either by
-     adding the moment or by saying what is missing. */
-  const addItem = async () => {
-    const cleanTitle = newTitle.trim();
-    if (!cleanTitle) {
-      setAddProblem('title');
-      titleRef.current?.focus();
-      return;
-    }
-    setAddProblem(null);
-    const time = timeValue;
-    setNewTitle('');
-    setNewTime('');
-    titleRef.current?.focus();
-    const saved = await onAdd({ time, title: cleanTitle, duration_min: 0 });
-    if (saved === null) {
-      // Put back what they typed, so a failed save costs them nothing.
-      setNewTitle(cleanTitle);
-      setNewTime(time);
-      setAddProblem('failed');
-    }
-  };
-
   const addQuick = async (q: (typeof QUICK_MOMENTS)[number]) => {
-    setAddProblem(null);
+    setAddFailed(false);
     const saved = await onAdd({ time: q.time, title: q.title, duration_min: q.duration_min });
-    if (saved === null) setAddProblem('failed');
+    if (saved === null) setAddFailed(true);
   };
 
   const shift = (index: number, delta: number) => {
@@ -285,79 +235,23 @@ export function DayProgram({
     });
   };
 
-  /* The add bar. Kept full width and above the day rather than indented at
-     the end of it: on a full programme the tail is a long scroll away, and
-     the one control you reach for repeatedly should not be the one you have
-     to hunt for. */
-  const composer = (
-    <div className="mt-4">
-      {/* One control, not three boxes: the time, the title and the action
-          share a single field, divided by a hairline.
-
-          focus-shell, not a per-input ring: the app's global focus rule
-          deliberately beats `focus:outline-none`, so a bare input in a
-          rounded shell gets a hard rectangle cutting across it. Same class
-          the Ava chat composer uses, for the same reason. */}
-      <div className="focus-shell flex items-center gap-1 rounded-2xl border border-line bg-card p-1.5 transition-colors focus-within:border-[var(--color-sage-strong)]">
-        <input
-          type="time"
-          value={timeValue}
-          onChange={(e) => setNewTime(e.target.value)}
-          aria-label={t('Klokkeslæt')}
-          className="w-[5.6rem] shrink-0 rounded-xl bg-transparent px-2 py-2 text-center text-[0.84rem] font-semibold text-ink tabular-nums [color-scheme:light] focus:bg-shell focus:outline-none"
-        />
-        <span className="h-5 w-px shrink-0 bg-line" aria-hidden />
-        <input
-          ref={titleRef}
-          value={newTitle}
-          onChange={(e) => { setNewTitle(e.target.value); if (addProblem === 'title') setAddProblem(null); }}
-          onKeyDown={(e) => { if (e.key === 'Enter') void addItem(); }}
-          placeholder={t('Fx ceremoni, middag, første dans…')}
-          aria-label={t('Nyt øjeblik')}
-          className="min-w-0 flex-1 bg-transparent px-2.5 py-2 text-[0.88rem] text-ink placeholder:text-muted/70 focus:outline-none"
-        />
+  /* One tap for the moments almost every wedding has, while the day is being
+     started from blank; once a few are in, the calendar is the way to add. */
+  const quickAdds = QUICK_MOMENTS.filter((q) => !items.some((i) => i.title === q.title));
+  const quick = items.length < 4 && quickAdds.length > 0 && (
+    <div className="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+      <span className="text-[12px] text-muted">{t('Tilføj hurtigt:')}</span>
+      {quickAdds.map((q) => (
         <button
-          type="button" onClick={() => void addItem()}
-          className={cn(
-            'flex shrink-0 items-center gap-1.5 rounded-xl px-3.5 py-2 text-[0.8rem] font-semibold transition-colors cursor-pointer',
-            newTitle.trim()
-              ? 'bg-ink text-canvas hover:opacity-90'
-              : 'bg-shell text-ink-soft hover:bg-line',
-          )}
+          key={q.title}
+          type="button"
+          onClick={() => void addQuick(q)}
+          className="inline-flex items-center gap-0.5 rounded-full border border-line px-2.5 py-1 text-[0.76rem] text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
         >
-          <Plus size={14} /> {t('Tilføj')}
+          <Plus size={11} strokeWidth={2.5} /> {t(q.title)}
         </button>
-      </div>
-
-      {addProblem && (
-        <p role="status" className={cn(
-          'mt-2 pl-1 text-[0.76rem]',
-          addProblem === 'failed' ? 'text-[var(--color-terracotta)]' : 'text-ink-soft',
-        )}>
-          {addProblem === 'failed'
-            ? t('Øjeblikket blev ikke gemt. Prøv igen.')
-            : t('Skriv først, hvad der sker kl. {time}.', { time: timeValue })}
-        </p>
-      )}
-
-      {/* One tap for the moments almost every wedding has, while the day is
-          still being started; on a laid-out day they were one more row of
-          buttons between the couple and their programme. */}
-      {items.length < 4 && QUICK_MOMENTS.some((q) => !items.some((i) => i.title === q.title)) && (
-        <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 pl-0.5">
-          <span className="text-[12px] text-muted">{t('Tilføj hurtigt:')}</span>
-          {QUICK_MOMENTS.filter((q) => !items.some((i) => i.title === q.title)).map((q) => (
-            <button
-              key={q.title}
-              type="button"
-              onClick={() => void addQuick(q)}
-              className="inline-flex items-center gap-0.5 rounded-full px-2 py-1 text-[0.73rem] text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
-            >
-              <Plus size={11} strokeWidth={2.5} /> {t(q.title)}
-            </button>
-          ))}
-        </div>
-      )}
+      ))}
+      {addFailed && <span role="status" className="text-[12px] text-terracotta">{t('Øjeblikket blev ikke gemt. Prøv igen.')}</span>}
     </div>
   );
 
@@ -502,7 +396,6 @@ export function DayProgram({
         </div>
       )}
 
-      {items.length > 0 && composer}
 
       {/* ── Empty state: one way in, and the blank page behind a link. ─── */}
       {items.length === 0 && (
@@ -518,7 +411,7 @@ export function DayProgram({
             {t('Elleve øjeblikke, fra styling til natmad. Ret dem til jeres egne bagefter.')}
           </p>
           {!blankStart && (
-            <button type="button" onClick={() => { setBlankStart(true); setTimeout(() => titleRef.current?.focus(), 50); }}
+            <button type="button" onClick={() => setBlankStart(true)}
               className="mt-5 text-[13px] font-semibold text-ink-soft underline decoration-line-strong underline-offset-4 hover:text-ink cursor-pointer">
               {t('Eller start med en tom dag')}
             </button>
@@ -526,307 +419,21 @@ export function DayProgram({
         </div>
       )}
 
-      {items.length === 0 && blankStart && composer}
+      {(items.length > 0 || blankStart) && quick}
 
-      {/* ── The day ─────────────────────────────────────────────────────── */}
-      {items.length > 0 && (
-        <div className="relative mt-6">
-          {/* Through the centre of the dots: time column + gap + half the rail. */}
-          <div aria-hidden className="absolute bottom-4 left-[66px] top-3 w-px bg-line sm:left-[6.1rem]" />
-
-          <div className="flex flex-col">
-            {items.map((item, i) => {
-              const status = statusOf(items, i, clock, isToday);
-              const gap = gapAfter(items, i);
-              const open = openId === item.id;
-              const barHeight = Math.min(Math.max(item.duration_min, 0) * 0.8, 120);
-
-              return (
-                <div key={item.id}>
-                  {isToday && markerAt === i && <NowMarker clock={clock} label={t('nu')} />}
-
-                  <motion.div layout="position" className="group flex items-stretch gap-1.5 sm:gap-3">
-                    {/* Time */}
-                    <div className="flex w-12 shrink-0 flex-col items-end pt-2.5 sm:w-[4.6rem]">
-                      <input
-                        type="time"
-                        defaultValue={item.time}
-                        onBlur={(e) => { if (e.target.value && e.target.value !== item.time) onUpdate(item.id, { time: e.target.value }); }}
-                        aria-label={t('Klokkeslæt')}
-                        className={cn(
-                          'kalas-inline-time w-full rounded-lg bg-transparent px-1 py-0.5 text-right text-[0.86rem] font-semibold tabular-nums [color-scheme:light] focus:bg-shell focus:outline-none',
-                          status === 'done' ? 'text-muted' : 'text-ink',
-                        )}
-                      />
-                      {item.duration_min > 0 && (
-                        <span className="pr-1 text-[0.64rem] text-faint tabular-nums">{formatDuration(item.duration_min)}</span>
-                      )}
-                    </div>
-
-                    {/* Rail: a dot, and a bar as long as the moment lasts */}
-                    <div className="relative z-10 flex w-6 shrink-0 flex-col items-center pt-3">
-                      <span
-                        className={cn(
-                          'flex size-[1.15rem] shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-                          status === 'done' && 'border-sage-strong bg-sage-strong',
-                          status === 'now' && 'border-sage-strong bg-card ring-4 ring-sage-tint',
-                          status === 'upcoming' && 'border-line-strong bg-card',
-                        )}
-                      >
-                        {status === 'done' && <Check size={10} className="text-canvas" strokeWidth={3.5} />}
-                      </span>
-                      {item.duration_min > 0 && (
-                        <span
-                          className={cn(
-                            'mt-1 w-[3px] shrink-0 rounded-full',
-                            status === 'done' ? 'bg-sage-strong/30' : status === 'now' ? 'bg-sage-strong' : 'bg-line-strong/60',
-                          )}
-                          style={{ height: barHeight }}
-                          aria-hidden
-                        />
-                      )}
-                    </div>
-
-                    {/* Body */}
-                    <div className="min-w-0 flex-1 pb-4">
-                      <div
-                        className={cn(
-                          'rounded-xl px-2.5 py-1.5 transition-colors',
-                          status === 'now' ? 'bg-sage-tint/50' : 'hover:bg-shell',
-                        )}
-                      >
-                        <div className="flex items-center gap-2">
-                          <input
-                            defaultValue={item.title}
-                            onBlur={(e) => {
-                              const v = e.target.value.trim();
-                              if (v && v !== item.title) onUpdate(item.id, { title: v });
-                              else e.target.value = item.title;
-                            }}
-                            aria-label={t('Titel')}
-                            className={cn(
-                              'min-w-0 flex-1 rounded-lg bg-transparent px-1 py-0.5 font-serif text-[1rem] focus:bg-card focus:outline-none sm:text-[1.05rem]',
-                              status === 'done' ? 'text-ink-soft' : 'text-ink',
-                            )}
-                          />
-
-                          {status === 'now' && (
-                            <span className="shrink-0 rounded-full bg-sage-strong px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.14em] text-canvas">
-                              {t('Nu')}
-                            </span>
-                          )}
-
-                          <div className="hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 sm:flex">
-                            <button
-                              type="button" onClick={() => duplicate(item)}
-                              aria-label={t('Dublér {label}', { label: item.title })}
-                              className="rounded-full p-1.5 text-muted transition-colors hover:bg-card hover:text-ink cursor-pointer"
-                            >
-                              <Copy size={13} />
-                            </button>
-                            <button
-                              type="button" onClick={() => onDelete(item.id)}
-                              aria-label={t('Slet {label}', { label: item.title })}
-                              className="rounded-full p-1.5 text-muted transition-colors hover:bg-card hover:text-[var(--color-terracotta)] cursor-pointer"
-                            >
-                              <Trash2 size={13} />
-                            </button>
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => setOpenId(open ? null : item.id)}
-                            aria-expanded={open}
-                            aria-label={open ? t('Skjul detaljer') : t('Vis detaljer')}
-                            className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-card hover:text-ink cursor-pointer"
-                          >
-                            <ChevronDown size={15} className={cn('transition-transform duration-200', open && 'rotate-180')} />
-                          </button>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-x-2">
-                          <input
-                            defaultValue={item.subtitle ?? ''}
-                            placeholder={t('Sted, detaljer…')}
-                            onBlur={(e) => {
-                              const v = e.target.value.trim();
-                              if (v !== (item.subtitle ?? '')) onUpdate(item.id, { subtitle: v || null });
-                            }}
-                            aria-label={t('Detaljer')}
-                            className="min-w-[6rem] flex-1 basis-full rounded-lg bg-transparent px-1 py-0.5 text-[0.78rem] text-muted focus:bg-card focus:outline-none sm:basis-0"
-                          />
-                          {item.owner && !open && (
-                            <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-shell px-2 py-0.5 text-[0.68rem] text-ink-soft">
-                              <User size={10} /> {item.owner}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Detail panel */}
-                        <AnimatePresence initial={false}>
-                          {open && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                              className="overflow-hidden"
-                            >
-                              <div className="mt-2.5 space-y-3 rounded-xl bg-card/70 p-3">
-                                <Row label={t('Varighed')}>
-                                  {DURATIONS.map((d) => (
-                                    <Pill
-                                      key={d} active={item.duration_min === d}
-                                      onClick={() => onUpdate(item.id, { duration_min: item.duration_min === d ? 0 : d })}
-                                    >
-                                      {formatDuration(d)}
-                                    </Pill>
-                                  ))}
-                                </Row>
-
-                                <Row label={t('Ansvarlig')}>
-                                  {OWNERS.map((o) => (
-                                    <Pill
-                                      key={o} active={item.owner === o}
-                                      onClick={() => onUpdate(item.id, { owner: item.owner === o ? null : o })}
-                                    >
-                                      {t(o)}
-                                    </Pill>
-                                  ))}
-                                </Row>
-
-                                <Row label={t('Ryk denne og alt efter')}>
-                                  {[-15, -5, 5, 15].map((d) => (
-                                    <Pill key={d} onClick={() => shift(i, d)}>
-                                      {d > 0 ? `+${d}` : d} {t('min')}
-                                    </Pill>
-                                  ))}
-                                </Row>
-
-                                {/* A phone has no hover, so the title line's copy and
-                                    delete buttons live here instead. */}
-                                <div className="flex gap-2 sm:hidden">
-                                  <Pill onClick={() => duplicate(item)}>
-                                    <Copy size={12} className="mr-1 inline" /> {t('Dublér')}
-                                  </Pill>
-                                  <Pill onClick={() => onDelete(item.id)}>
-                                    <Trash2 size={12} className="mr-1 inline" /> {t('Slet')}
-                                  </Pill>
-                                </div>
-
-                                <textarea
-                                  rows={2}
-                                  defaultValue={item.notes ?? ''}
-                                  placeholder={t('Noter til leverandører — hvad skal der ske, og hvem gør hvad?')}
-                                  onBlur={(e) => {
-                                    const v = e.target.value.trim();
-                                    if (v !== (item.notes ?? '')) onUpdate(item.id, { notes: v || null });
-                                  }}
-                                  aria-label={t('Noter')}
-                                  className={cn(fieldCls, 'w-full resize-none text-[0.8rem]')}
-                                />
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {/* The seam: a hole, or a collision */}
-                  {/* A short breather is the day working as planned and
-                      needs no line of its own; a real hole or a collision does. */}
-                  {gap != null && (gap < 0 || gap >= 45) && (
-                    <div className="-mt-2 mb-2 flex items-center gap-1.5 pl-12 sm:gap-3 sm:pl-[4.6rem]">
-                      <span className="flex w-6 shrink-0 justify-center">
-                        <span
-                          className={cn(
-                            'w-0 border-l border-dashed',
-                            gap < 0 ? 'border-[var(--color-terracotta)]' : 'border-line-strong',
-                          )}
-                          style={{ height: Math.min(Math.abs(gap) * 0.5, 34) + 12 }}
-                        />
-                      </span>
-                      <span
-                        className={cn(
-                          'text-[0.68rem] italic',
-                          gap < 0 ? 'font-semibold not-italic text-[var(--color-terracotta)]' : 'text-faint',
-                        )}
-                      >
-                        {gap < 0
-                          ? t('overlapper {d}', { d: formatDuration(-gap) })
-                          : t('{d} pause', { d: formatDuration(gap) })}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {isToday && markerAt === items.length && <NowMarker clock={clock} label={t('nu')} />}
-          </div>
-        </div>
-      )}
-
-      {/* The native picker indicator eats the width an inline time needs, and
-          an inline edit does not want a second affordance next to it anyway —
-          typing and the arrow keys both still work. Same scoped-style approach
-          the budget screen already uses for its date fields. */}
-      <style>{`
-        .kalas-inline-time::-webkit-calendar-picker-indicator { display: none; }
-        .kalas-inline-time::-webkit-datetime-edit { color: inherit; }
-      `}</style>
-    </motion.div>
-  );
-}
-
-/** "You are here", drawn where the clock actually falls between two moments. */
-function NowMarker({ clock, label }: { clock: string; label: string }) {
-  return (
-    <div className="flex items-center gap-1.5 py-1.5 sm:gap-3">
-      <span className="w-12 shrink-0 pr-1 text-right text-[0.7rem] font-bold tabular-nums text-[var(--color-terracotta)] sm:w-[4.6rem]">
-        {clock}
-      </span>
-      <span className="relative z-10 flex w-6 shrink-0 justify-center">
-        <motion.span
-          className="size-2.5 rounded-full bg-[var(--color-terracotta)] ring-4 ring-card"
-          animate={{ scale: [1, 1.25, 1] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+      {/* ── The day, as a calendar ──────────────────────────────────── */}
+      {(items.length > 0 || blankStart) && (
+        <DayCalendar
+          items={items}
+          clock={clock}
+          isToday={isToday}
+          onAdd={onAdd}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+          onDuplicate={duplicate}
+          onShift={shift}
         />
-      </span>
-      <span className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-[var(--color-terracotta)]">
-        {label}
-      </span>
-      <span className="h-px flex-1 bg-[var(--color-terracotta)]/25" />
-    </div>
-  );
-}
-
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="w-full text-[0.62rem] font-bold uppercase tracking-[0.14em] text-faint sm:w-auto sm:min-w-[7.5rem]">
-        {label}
-      </span>
-      {children}
-    </div>
-  );
-}
-
-function Pill({ children, active, onClick }: { children: React.ReactNode; active?: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={cn(
-        'rounded-full border px-2.5 py-1 text-[0.72rem] transition-colors cursor-pointer',
-        active
-          ? 'border-ink bg-ink text-canvas'
-          : 'border-line bg-shell text-ink-soft hover:border-ink hover:text-ink',
       )}
-    >
-      {children}
-    </button>
+    </motion.div>
   );
 }

@@ -2620,5 +2620,11 @@ export const EN: Record<string, string> = {
   'Faser': 'Phases',
   'Fra tidligere faser': 'From earlier phases',
   'én opgave': 'one to-do',
+  'Træk for at flytte · klik på et tidspunkt for at tilføje': 'Drag to move · click a time to add',
+  'Tilføj et punkt på et tidspunkt': 'Add a moment at a time',
+  'Klik på et tidspunkt for at tilføje det første punkt': 'Click a time to add the first moment',
+  'Sted og detaljer': 'Place and details',
+  'Nyt punkt kl. {time}': 'New moment at {time}',
+  'Hvad sker der?': 'What happens?',
   '{n} opgaver': '{n} to-dos',
 };

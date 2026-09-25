@@ -9,15 +9,15 @@ import type { HubCat, HubTab } from '../team/shared';
 
 /* ── Tabs ─────────────────────────────────────────────────────────────── */
 
-export type PlanTab = 'tidslinje' | 'tjekliste' | 'bryllupsdagen';
+export type PlanTab = 'planen' | 'bryllupsdagen';
 
 const PLAN_TAB_KEY = 'kalas_planning_tab';
-const PLAN_TABS: PlanTab[] = ['tidslinje', 'tjekliste', 'bryllupsdagen'];
+const PLAN_TABS: PlanTab[] = ['planen', 'bryllupsdagen'];
 
 export function readPlanTab(): PlanTab {
-  if (typeof window === 'undefined') return 'tidslinje';
+  if (typeof window === 'undefined') return 'planen';
   const stored = sessionStorage.getItem(PLAN_TAB_KEY);
-  return (PLAN_TABS as string[]).includes(stored ?? '') ? (stored as PlanTab) : 'tidslinje';
+  return (PLAN_TABS as string[]).includes(stored ?? '') ? (stored as PlanTab) : 'planen';
 }
 
 export function writePlanTab(tab: PlanTab) {
@@ -65,7 +65,7 @@ export type MilestoneAction =
 
 /** The screen (or guide) each default milestone is carried out on, so an
  *  overdue "Book venue" leads to the venues instead of just turning red.
- *  Keyed on the seeded titles, like MILESTONE_AREA in TimelineTab; the
+ *  Keyed on the seeded titles, like MILESTONE_AREA in milestones.ts; the
  *  labels are Danish source strings for t(). */
 export const MILESTONE_ACTIONS: Record<string, MilestoneAction> = {
   'Sæt budget & gæsteliste': { kind: 'screen', label: 'Åbn budgettet', screen: 'budget' },

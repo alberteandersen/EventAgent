@@ -1,9 +1,9 @@
 "use client";
 
-/* The real Tidslinje & tjekliste screen against a fixture wedding. The
-   milestones are laid out from the couple's date and the checklist seeds
-   itself on the tab, both in memory.
-     ?tab=tjekliste|bryllupsdagen  open on that tab
+/* The real Tidslinje & tjekliste screen against a fixture wedding: the plan,
+   phase by phase, and the wedding day. The milestones are laid out from the
+   couple's date and the checklist seeds itself, both in memory.
+     ?tab=bryllupsdagen           open on the wedding day
      ?moved=1                     the couple has moved the wedding since the plan was laid out
      ?nodate=1                    no wedding date yet
      ?venue=1                     a venue is chosen, so "Book venue" looks done
@@ -13,7 +13,7 @@ import { Suspense, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { LanguageProvider } from '@/kalas/i18n';
-import { defaultMilestones } from '@/kalas/screens/planning/TimelineTab';
+import { defaultMilestones } from '@/kalas/screens/planning/milestones';
 import { FixtureWedding, task } from '../_fixture/wedding';
 
 // Client-only, like the app itself (KalasRoot mounts with ssr:false): the tab

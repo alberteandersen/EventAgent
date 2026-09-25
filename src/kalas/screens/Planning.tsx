@@ -1,34 +1,32 @@
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ListChecks, CheckSquare, PartyPopper } from 'lucide-react';
+import { ListChecks, PartyPopper } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { showNotice } from '../notice';
 import { cn } from '../ui';
 import type { ScreenId } from '../Shell';
 import { useLang } from '../i18n';
 import { GuideLink } from './guides/GuideLink';
-import TimelineTab, { defaultMilestones } from './planning/TimelineTab';
-import ChecklistTab from './planning/ChecklistTab';
+import PlanView from './planning/PlanTab';
+import { defaultMilestones } from './planning/milestones';
 import DayProgramTab from './planning/DayProgramTab';
 import { isMilestone, readPlanTab, todayISO, writePlanTab, type PlanTab } from './planning/shared';
 
 const AVA_CELEBRATION = 'Godt klaret. Ava har opdateret jeres fremdrift.';
 
 const TABS: { id: PlanTab; label: string; Icon: typeof ListChecks }[] = [
-  { id: 'tidslinje', label: 'Tidslinje', Icon: ListChecks },
-  { id: 'tjekliste', label: 'Tjekliste', Icon: CheckSquare },
+  { id: 'planen', label: 'Planen', Icon: ListChecks },
   { id: 'bryllupsdagen', label: 'Bryllupsdagen', Icon: PartyPopper },
 ];
 
-/* Two lenses on the same `timeline_tasks` table, and the day itself:
-     Tidslinje,     the big date-anchored milestones, plus any checklist item
-                    the couple has dated
-     Tjekliste,     the many small to-dos grouped by area, each area headed by
-                    its milestone
-     Bryllupsdagen, the programme for the day, minute by minute
+/* The plan and the day:
+     Planen,        the milestones and the to-dos of `timeline_tasks` together,
+                    one phase at a time (PlanTab)
+     Bryllupsdagen, the programme for the day itself
    The overview of the whole wedding is Hjem's; this screen is the plan.
-   See 0020_task_kind.sql for why `kind` (not `category`) separates them. */
+   See 0020_task_kind.sql for why `kind` (not `category`) separates the two
+   kinds of row. */
 export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) => void }) {
   const { t } = useLang();
   const { loading, couple, timelineTasks, seedTasks } = useWedding();
@@ -41,7 +39,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
 
   // Only the timeline seeds from here, and only once there is a date: every
   // milestone is placed relative to the wedding day. The checklist is dateless
-  // and seeds itself (useChecklistSeed) when its tab is opened.
+  // and seeds itself (useChecklistSeed) when the plan is opened.
   useEffect(() => {
     if (loading || !couple.dateISO) return;
     if (!seededMilestonesRef.current && milestones.length === 0) {
@@ -89,7 +87,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
             >
               <Icon size={15} strokeWidth={2} className="hidden sm:block" aria-hidden />
               {t(label)}
-              {id === 'tidslinje' && anyLate && (
+              {id === 'planen' && anyLate && (
                 <>
                   <span aria-hidden className="size-1.5 rounded-full bg-terracotta" />
                   <span className="sr-only">{t('Noget er forsinket')}</span>
@@ -104,10 +102,8 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
       </nav>
 
       <AnimatePresence mode="wait">
-        {tab === 'tidslinje' ? (
-          <TimelineTab key="tidslinje" onCelebrate={celebrate} onNavigate={onNavigate} />
-        ) : tab === 'tjekliste' ? (
-          <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />
+        {tab === 'planen' ? (
+          <PlanView key="planen" onCelebrate={celebrate} onNavigate={onNavigate} onOpenDay={() => selectTab('bryllupsdagen')} />
         ) : (
           <DayProgramTab key="bryllupsdagen" />
         )}

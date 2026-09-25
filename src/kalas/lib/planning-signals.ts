@@ -41,7 +41,7 @@ export function planningSignals(input: {
 
 /** Why a default milestone looks done, as a Danish source string for t(), or
  *  null when nothing says so. Keyed on the seeded titles (see MILESTONE_AREA
- *  in TimelineTab); a milestone the couple wrote or renamed gets nothing. */
+ *  in planning/milestones.ts); a milestone the couple wrote or renamed gets nothing. */
 export function suggestedDone(title: string, s: PlanningSignals): string | null {
   switch (title) {
     case 'Sæt budget & gæsteliste':

@@ -1,8 +1,8 @@
 "use client";
 
-/* The checklist lays itself out the first time its tab is opened. Its items
+/* The checklist lays itself out the first time the plan is opened. Its items
    are dateless, so this does not wait for a wedding date; waiting only left
-   couples staring at an empty list. Seeding when the tab is opened also keeps
+   couples staring at an empty list. Seeding when the plan is opened also keeps
    ~200 rows off half-created onboarding events, which is what that gate was
    for. */
 

@@ -7,7 +7,7 @@ import {
   readOpenAreas, writeOpenAreas, type ChecklistArea,
   PRIORITIES, priorityOf, assigneeName, assigneeInitials,
 } from './shared';
-import { defaultMilestones } from './TimelineTab';
+import { defaultMilestones } from './milestones';
 
 const AREA_IDS = new Set(CHECKLIST_AREAS.map((a) => a.id));
 

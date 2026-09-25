@@ -18,6 +18,8 @@ export type RowActions = {
   onInsertAfter?: () => void;
   onClearDate?: () => void;
   onOpen?: () => void;
+  action?: { label: string; onClick: () => void };
+  suggestion?: { reason: string; onAccept: () => void };
 };
 
 /** The "you are here" line, drawn between the rows it falls between. */

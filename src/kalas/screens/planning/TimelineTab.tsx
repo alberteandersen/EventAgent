@@ -6,6 +6,10 @@ import { timeline as MOCK_TIMELINE } from '../../data';
 import { useWedding } from '../../useWedding';
 import { useRemoveWithUndo, useWithoutPending } from '../../undo';
 import { showNotice } from '../../notice';
+import type { ScreenId } from '../../Shell';
+import { navigateToHub } from '../../lib/hub-nav';
+import { planningSignals, suggestedDone } from '../../lib/planning-signals';
+import { openGuide } from '../guides/links';
 import { cn } from '../../ui';
 import { useLang } from '../../i18n';
 import type { DisplayTask } from './TaskRow';
@@ -14,6 +18,7 @@ import TaskDialog from './TaskDialog';
 import AddRow from './AddRow';
 import {
   isMilestone, isCheck, onTimeline, areaOf, nextSort, buildTimelineBands, todayISO, daysDiff, shiftPlan,
+  MILESTONE_ACTIONS, type MilestoneAction,
   assigneeInitials, assigneeName, priorityOf,
   type Filter, FILTER_LABELS, CHECKLIST_AREAS,
 } from './shared';
@@ -64,14 +69,28 @@ export function defaultMilestones(weddingISO: string) {
   });
 }
 
-export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: string) => void }) {
+export default function TimelineTab({ onCelebrate, onNavigate }: {
+  onCelebrate: (title: string) => void;
+  onNavigate?: (s: ScreenId) => void;
+}) {
   const { t, tn, lang } = useLang();
   const locale = lang === 'en' ? 'en-US' : 'da-DK';
   const monthLabel = (monthISO: string) =>
     new Date(`${monthISO}T12:00:00`).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
   const longDate = (dateISO: string) =>
     new Date(`${dateISO}T12:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
-  const { couple, timelineTasks: allTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
+  const {
+    couple, event, venues, guests, invitations, journey, seatingPlan,
+    timelineTasks: allTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks,
+  } = useWedding();
+  // What the rest of the app already knows, as evidence for the milestones.
+  const signals = React.useMemo(() => planningSignals({
+    budget: couple.budgetTotal,
+    chosenVenueId: event?.chosen_venue_id,
+    venues, guests, invitations,
+    inviteStageComplete: journey.some((s) => s.key === 'invites' && s.status === 'complete'),
+    seatingData: seatingPlan?.data,
+  }), [couple.budgetTotal, event?.chosen_venue_id, venues, guests, invitations, journey, seatingPlan]);
   // A task removed a moment ago stays off the timeline while Fortryd is offered.
   const timelineTasks = useWithoutPending(allTasks);
   const removeTask = useRemoveWithUndo();
@@ -172,13 +191,26 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
      losing its date, a milestone is deleted outright. */
   function rowActions(task: (typeof tasks)[number]): RowActions {
     const onOpen = () => { setMenuId(null); setOpenId(task.id); };
-    return task.visiting
-      ? { onOpen, onClearDate: () => { setMenuId(null); void updateTask(task.id, { due_date: null }); } }
-      : {
-          onOpen,
-          onDelete: () => { setMenuId(null); removeTask(task.id, task.title, () => deleteTask(task.id)); },
-          onInsertAfter: () => openAdd(task.id),
-        };
+    if (task.visiting) {
+      return { onOpen, onClearDate: () => { setMenuId(null); void updateTask(task.id, { due_date: null }); } };
+    }
+    const act = MILESTONE_ACTIONS[task.title];
+    const reason = suggestedDone(task.title, signals);
+    return {
+      onOpen,
+      onDelete: () => { setMenuId(null); removeTask(task.id, task.title, () => deleteTask(task.id)); },
+      onInsertAfter: () => openAdd(task.id),
+      action: act && (act.kind === 'guide' || onNavigate) ? { label: act.label, onClick: () => runAction(act) } : undefined,
+      suggestion: reason ? { reason, onAccept: () => handleToggle(task) } : undefined,
+    };
+  }
+
+  /** Go where the milestone is carried out: a screen (and the vendor hub's
+   *  tab and category, when it is one), or a guide. */
+  function runAction(act: MilestoneAction) {
+    if (act.kind === 'guide') { openGuide(act.slug); return; }
+    if (act.hub) navigateToHub(act.hub.tab, act.hub.cat);
+    onNavigate?.(act.screen);
   }
   const openTask = rows.find((r) => r.id === openId) ?? null;
 

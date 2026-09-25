@@ -103,7 +103,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
 
       <AnimatePresence mode="wait">
         {tab === 'tidslinje' ? (
-          <TimelineTab key="tidslinje" onCelebrate={celebrate} />
+          <TimelineTab key="tidslinje" onCelebrate={celebrate} onNavigate={onNavigate} />
         ) : tab === 'tjekliste' ? (
           <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />
         ) : (

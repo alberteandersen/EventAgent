@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, MoreHorizontal, CalendarDays, CornerDownRight, Pencil, CalendarOff, Flag, StickyNote } from 'lucide-react';
+import { Trash2, MoreHorizontal, CalendarDays, CornerDownRight, Pencil, CalendarOff, Flag, StickyNote, ArrowRight, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn, TaskCheckbox, taskRowTone, doneLabelClass } from '../../ui';
 import { useLang } from '../../i18n';
@@ -34,6 +34,7 @@ export type DisplayTask = {
  *  the title and from the menu. */
 export default function TaskRow({
   task, deleteLabel, menuOpen, onMenu, onCloseMenu, onToggle, onDelete, onInsertAfter, onOpen, onClearDate, onDateChange,
+  action, suggestion,
 }: {
   task: DisplayTask;
   deleteLabel: string;
@@ -46,6 +47,10 @@ export default function TaskRow({
   onOpen?: () => void;
   onClearDate?: () => void;
   onDateChange: (dateISO: string) => void;
+  /** Where the task is carried out, e.g. "Find fotograf" → the vendor hub. */
+  action?: { label: string; onClick: () => void };
+  /** The rest of the app says this looks done; `reason` is shown with it. */
+  suggestion?: { reason: string; onAccept: () => void };
 }) {
   const { t } = useLang();
   const dateInputRef = useRef<HTMLInputElement>(null);
@@ -136,6 +141,29 @@ export default function TaskRow({
             {statusText}
           </span>
           <span className="sm:hidden">{assignee}</span>
+          {!done && suggestion ? (
+            <button
+              type="button"
+              onClick={suggestion.onAccept}
+              aria-label={t("Sæt flueben ved '{title}': {reason}", { title: t(task.title), reason: t(suggestion.reason) })}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#dbe5e0] py-1 pl-2.5 pr-3 text-left text-[12px] font-semibold text-[#2f5a48] transition-colors hover:bg-[#cddbd4] cursor-pointer"
+            >
+              <Check size={12} strokeWidth={2.6} aria-hidden />
+              {t(suggestion.reason)} · {t('Sæt flueben')}
+            </button>
+          ) : !done && action ? (
+            <button
+              type="button"
+              onClick={action.onClick}
+              className={cn(
+                'group inline-flex items-center gap-1 text-[13px] font-semibold transition-colors cursor-pointer',
+                overdue ? 'text-[#b34e37] hover:text-[#8f3d2b]' : 'text-[#5f6b66] hover:text-[#24413a]',
+              )}
+            >
+              {t(action.label)}
+              <ArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden />
+            </button>
+          ) : null}
         </div>
       </div>
 

@@ -4,6 +4,8 @@ import {
   HeartHandshake, CircleDashed, Wallet, Camera, Users, CalendarClock,
 } from 'lucide-react';
 import type { TaskAssignee, TaskKind, TaskPriority, TimelineTaskRow } from '@/lib/db/types';
+import type { ScreenId } from '../../Shell';
+import type { HubCat, HubTab } from '../team/shared';
 
 /* ── Tabs ─────────────────────────────────────────────────────────────── */
 
@@ -54,6 +56,30 @@ export const isCheck = (row: Pick<TimelineTaskRow, 'kind'>) => kindOf(row) === '
 export function onTimeline(row: Pick<TimelineTaskRow, 'kind' | 'due_date'>): boolean {
   return isMilestone(row) || row.due_date != null;
 }
+
+/* ── Where a milestone is done ─────────────────────────────────────────── */
+
+export type MilestoneAction =
+  | { kind: 'screen'; label: string; screen: ScreenId; hub?: { tab: HubTab; cat?: HubCat } }
+  | { kind: 'guide'; label: string; slug: string };
+
+/** The screen (or guide) each default milestone is carried out on, so an
+ *  overdue "Book venue" leads to the venues instead of just turning red.
+ *  Keyed on the seeded titles, like MILESTONE_AREA in TimelineTab; the
+ *  labels are Danish source strings for t(). */
+export const MILESTONE_ACTIONS: Record<string, MilestoneAction> = {
+  'Sæt budget & gæsteliste': { kind: 'screen', label: 'Åbn budgettet', screen: 'budget' },
+  'Book venue': { kind: 'screen', label: 'Find lokaler', screen: 'team', hub: { tab: 'explore', cat: 'venue' } },
+  'Save-the-dates': { kind: 'screen', label: 'Åbn invitationer', screen: 'invites' },
+  'Book fotograf': { kind: 'screen', label: 'Find fotograf', screen: 'team', hub: { tab: 'explore', cat: 'fotografi' } },
+  'Florist & dekoration': { kind: 'screen', label: 'Find florist', screen: 'team', hub: { tab: 'explore', cat: 'blomster' } },
+  'Musik / DJ / band': { kind: 'screen', label: 'Find musik', screen: 'team', hub: { tab: 'explore', cat: 'musik' } },
+  'Kage & dessert': { kind: 'screen', label: 'Find konditor', screen: 'team', hub: { tab: 'explore', cat: 'kage' } },
+  'Vielsesattest & jura': { kind: 'guide', label: 'Sådan bliver I gift', slug: 'saadan-bliver-i-gift' },
+  'Bordplan & menu låst': { kind: 'screen', label: 'Åbn bordplanen', screen: 'seating' },
+  'Invitationer sendt': { kind: 'screen', label: 'Åbn invitationer', screen: 'invites' },
+  'Koordinering med leverandører': { kind: 'screen', label: 'Åbn indbakken', screen: 'inbox' },
+};
 
 /* ── Checklist areas ──────────────────────────────────────────────────── */
 

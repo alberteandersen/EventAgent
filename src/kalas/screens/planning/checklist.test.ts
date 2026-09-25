@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { timeline as MOCK_TIMELINE } from '../../data';
 import { EN } from '../../strings';
-import { DEFAULT_CHECKLIST, defaultChecklist, missingChecklistItems } from './checklist-data';
+import { DEFAULT_CHECKLIST, PHASES, currentPhase, defaultChecklist, isDueBy, missingChecklistItems, phaseOf } from './checklist-data';
 import {
   CHECKLIST_AREAS, kindOf, areaOf, hasArea, onTimeline, groupByArea, nextSort, statusOf,
   readOpenAreas, writeOpenAreas, type ChecklistArea,
@@ -265,5 +265,49 @@ describe('task detail', () => {
   it('has English for every word the task dialog shows', () => {
     for (const { label } of PRIORITIES) expect(EN[label], label).toBeTruthy();
     for (const word of ['Begge', 'Dig', 'Din partner']) expect(EN[word], word).toBeTruthy();
+  });
+});
+
+describe('checklist phases', () => {
+  it('runs from earliest to latest, with no day left out', () => {
+    const starts = PHASES.map((p) => p.minDays);
+    for (let i = 1; i < starts.length; i++) expect(starts[i]).toBeLessThan(starts[i - 1]);
+    expect(starts.at(-1)).toBe(-Infinity);
+  });
+
+  it('places a couple by the days they have left', () => {
+    expect(currentPhase(600)).toBe('12-18');
+    expect(currentPhase(365)).toBe('12-18');
+    expect(currentPhase(351)).toBe('9-12');
+    expect(currentPhase(120)).toBe('3-6');
+    expect(currentPhase(30)).toBe('maaned');
+    expect(currentPhase(7)).toBe('uge');
+    expect(currentPhase(0)).toBe('dagen');
+    expect(currentPhase(-3)).toBe('efter');
+  });
+
+  it('gives every default item a phase, and uses every phase', () => {
+    for (const item of DEFAULT_CHECKLIST) expect(phaseOf(item.title), item.title).not.toBeNull();
+    const used = new Set(DEFAULT_CHECKLIST.map((i) => i.phase));
+    for (const p of PHASES) expect(used.has(p.id), p.id).toBe(true);
+  });
+
+  it('has an English label for every phase', () => {
+    for (const p of PHASES) expect(EN[p.label], p.label).toBeTruthy();
+  });
+
+  it('keeps an item nobody seeded out of it', () => {
+    expect(phaseOf('Vores helt egen opgave')).toBeNull();
+  });
+
+  it('counts what is now or already behind them as due', () => {
+    expect(isDueBy('12-18', '9-12')).toBe(true);
+    expect(isDueBy('9-12', '9-12')).toBe(true);
+    expect(isDueBy('6-9', '9-12')).toBe(false);
+  });
+
+  it('files the paperwork where the guide does: inside the four months a prøvelsesattest lasts', () => {
+    expect(phaseOf('Bestil prøvelsesattest hos kommunen')).toBe('1-3');
+    expect(phaseOf('Find og book lokalet')).toBeNull();
   });
 });

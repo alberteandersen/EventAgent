@@ -10,13 +10,16 @@ import type { ScreenId } from '../../Shell';
 import TaskRow, { type DisplayTask } from './TaskRow';
 import TaskDialog from './TaskDialog';
 import AddRow from './AddRow';
-import { defaultChecklist, missingChecklistItems } from './checklist-data';
+import { defaultChecklist, missingChecklistItems, phaseOf, phaseLabel, currentPhase, isDueBy, PHASES } from './checklist-data';
 import {
   isCheck, isMilestone, hasArea, groupByArea, areaLabel, nextSort, areaOf, topUpKey,
   assigneeInitials, assigneeName, priorityOf,
-  readOpenAreas, writeOpenAreas,
+  readOpenAreas, writeOpenAreas, daysDiff,
   type ChecklistArea, type Filter, FILTER_LABELS, CHECKLIST_AREAS,
 } from './shared';
+
+/** The checklist's filters: the shared three, plus "Nu" once there is a date. */
+type ChecklistFilter = Filter | 'nu';
 
 /** Event ids whose default list has already been claimed for insertion.
  *  Module scope rather than a ref on purpose: switching to the Tidslinje tab
@@ -31,7 +34,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
   const { t } = useLang();
   const { loading, event, couple, timelineTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
 
-  const [filter, setFilter] = useState<Filter>('alle');
+  const [filter, setFilter] = useState<ChecklistFilter>('alle');
   const [query, setQuery] = useState('');
   const [addingIn, setAddingIn] = useState<ChecklistArea | null>(null);
   const [newTitle, setNewTitle] = useState('');
@@ -88,34 +91,56 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
     if (missing.length > 0) void seedTasks(missing);
   }, [loading, checks, event, seedTasks]);
 
+  /* Where the couple is in the plan, from their date. Without one there is
+     no "now" to speak of, so the Nu filter and the counts stay away. */
+  const now = couple.dateISO ? currentPhase(daysDiff(couple.dateISO)) : null;
+  const dueNow = (r: (typeof rows)[number]) => {
+    const phase = isCheck(r) ? phaseOf(r.title) : null;
+    return !r.done && now !== null && phase !== null && isDueBy(phase, now);
+  };
+  const phaseRank = (r: (typeof rows)[number]) => {
+    const phase = isCheck(r) ? phaseOf(r.title) : null;
+    return phase ? PHASES.findIndex((p) => p.id === phase) : PHASES.length;
+  };
+
   const done = rows.filter((r) => r.done).length;
-  const counts: Record<Filter, number> = {
+  const counts: Record<ChecklistFilter, number> = {
     alle: rows.length,
+    nu: rows.filter(dueNow).length,
     kommende: rows.length - done,
     færdige: done,
   };
+  const filters: ChecklistFilter[] = now ? ['alle', 'nu', 'kommende', 'færdige'] : ['alle', 'kommende', 'færdige'];
+  const activeFilter: ChecklistFilter = filter === 'nu' && !now ? 'alle' : filter;
 
   const q = query.trim().toLowerCase();
   const groups = groupByArea(
     rows.filter((r) => {
-      if (filter === 'kommende' && r.done) return false;
-      if (filter === 'færdige' && !r.done) return false;
+      if (activeFilter === 'nu' && !dueNow(r)) return false;
+      if (activeFilter === 'kommende' && r.done) return false;
+      if (activeFilter === 'færdige' && !r.done) return false;
       if (q && !r.title.toLowerCase().includes(q)) return false;
       return true;
     }),
   );
+  // Under Nu, what should have been done first comes first.
+  if (activeFilter === 'nu') {
+    for (const g of groups) {
+      g.items.sort((a, b) => (Number(isCheck(a)) - Number(isCheck(b))) || phaseRank(a) - phaseRank(b));
+    }
+  }
 
   /** Progress per area is counted over ALL its rows, not the filtered subset —
    *  "3/10" must not change just because a filter is on. */
   function areaProgress(area: ChecklistArea) {
     const all = rows.filter((r) => areaOf(r) === area);
-    return { done: all.filter((r) => r.done).length, total: all.length };
+    return { done: all.filter((r) => r.done).length, total: all.length, due: all.filter(dueNow).length };
   }
 
   /* Every area starts folded away, so the 12 groups fit on one screen instead
      of 205 rows. While a search or filter is on, an area with matches unfolds
      itself, otherwise searching would return twelve closed lines. */
-  const filtering = q !== '' || filter !== 'alle';
+  const filtering = q !== '' || activeFilter !== 'alle';
   const isOpen = (area: ChecklistArea) => filtering || openAreas.has(area);
   const allOpen = groups.length > 0 && groups.every(({ area }) => openAreas.has(area));
 
@@ -198,6 +223,9 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
     // Danish source words ("Begge", "Dig"), or a name t() passes through.
     assigneeName: r.assignee ? t(assigneeName(r.assignee, couple) ?? '') : null,
     hasNotes: !!r.notes?.trim(),
+    phase: (() => { const p = isCheck(r) ? phaseOf(r.title) : null; return p ? phaseLabel(p) : null; })(),
+    phaseDue: dueNow(r),
+    dateOptional: isCheck(r),
   });
   const openTask = rows.find((r) => r.id === openId) ?? null;
 
@@ -257,8 +285,8 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
             </button>
           )}
         </div>
-        {(['alle', 'kommende', 'færdige'] as Filter[]).map((f) => {
-          const active = filter === f;
+        {filters.map((f) => {
+          const active = activeFilter === f;
           return (
             <button
               key={f}
@@ -271,7 +299,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
                   : 'border border-[#e6e9e5] bg-[#f8f9f8] text-[#5f6b66] hover:text-[#24413a]',
               )}
             >
-              {t(FILTER_LABELS[f])}
+              {f === 'nu' ? t('Nu') : t(FILTER_LABELS[f])}
               <span className={active ? 'text-[#dbe5e0]' : 'text-[#9a9686]'}>{counts[f]}</span>
             </button>
           );
@@ -294,8 +322,9 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
               ? error
                 ? t('Tjeklisten er tom, tryk Nulstil for at prøve igen.')
                 : t('Henter standardlisten …')
-              : filter === 'færdige' ? t('Ingen afkrydsede punkter endnu.')
-              : filter === 'kommende' ? t('Alt er krydset af. Flot arbejde.')
+              : activeFilter === 'færdige' ? t('Ingen afkrydsede punkter endnu.')
+              : activeFilter === 'kommende' ? t('Alt er krydset af. Flot arbejde.')
+              : activeFilter === 'nu' ? t('I er med. Intet her skal gøres endnu.')
               : t('Ingen punkter matcher din søgning.')}
           </p>
         </div>
@@ -329,6 +358,11 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
                 <span className="text-xs font-bold text-[#9a9686]">
                   {progress.done}/{progress.total}
                 </span>
+                {now && progress.due > 0 && activeFilter !== 'nu' && (
+                  <span className="rounded-full bg-[#f4ecdc] px-2 py-0.5 font-sans text-[11px] font-semibold text-[#746b56]">
+                    {t('{n} nu', { n: progress.due })}
+                  </span>
+                )}
                 <span aria-hidden className="h-1 min-w-[64px] flex-1 overflow-hidden rounded-full bg-[#e6e9e5]">
                   <span className="block h-full rounded-full bg-[#7d938a] transition-[width] duration-300" style={{ width: `${pct}%` }} />
                 </span>

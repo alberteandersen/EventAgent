@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Trash2, MoreHorizontal, CalendarDays, CornerDownRight, Pencil, CalendarOff, Flag, StickyNote, ArrowRight, Check } from 'lucide-react';
+import { Trash2, MoreHorizontal, CalendarDays, CalendarPlus, CornerDownRight, Pencil, CalendarOff, Flag, StickyNote, ArrowRight, Check } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { cn, TaskCheckbox, taskRowTone, doneLabelClass } from '../../ui';
 import { useLang } from '../../i18n';
@@ -24,6 +24,13 @@ export type DisplayTask = {
   assigneeInitials?: string | null;
   assigneeName?: string | null;
   hasNotes?: boolean;
+  /** When a default checklist item is best done, as a Danish label for t(). */
+  phase?: string | null;
+  /** That phase is now, or already behind them. */
+  phaseDue?: boolean;
+  /** A checklist item: no date is its normal state, so the row says nothing
+   *  about it, and a date is set from the menu ("Sæt på tidslinjen"). */
+  dateOptional?: boolean;
 };
 
 /** One completable row, shared by both tabs. The menu entries differ:
@@ -67,6 +74,20 @@ export default function TaskRow({
     : isSoon || isToday ? 'text-[#8a7d5c]'
     : 'text-[#9a9686]';
   const statusText = statusLabel(task, t);
+  // A checklist item without a date: not "Vælg dato · INGEN DATO" 205 times over.
+  const quiet = Boolean(task.dateOptional && !task.dateISO);
+  const showStatus = !quiet || done;
+  const dateInput = (
+    <input
+      ref={dateInputRef}
+      type="date"
+      value={task.dateISO ?? ''}
+      onChange={(e) => e.target.value && onDateChange(e.target.value)}
+      className={quiet ? 'sr-only' : 'absolute inset-0 w-full cursor-pointer opacity-0'}
+      tabIndex={-1}
+      aria-hidden={quiet || undefined}
+    />
+  );
   const assignee = task.assigneeInitials && (
     <span
       title={task.assigneeName ?? undefined}
@@ -116,30 +137,35 @@ export default function TaskRow({
             </span>
           )}
         </span>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <button
-            type="button"
-            onClick={() => dateInputRef.current?.showPicker?.()}
-            aria-label={t("Ændr dato for '{title}'", { title: task.title })}
-            className={cn(
-              'relative flex w-fit items-center gap-1.5 text-[13px] hover:text-[#24413a] cursor-pointer',
-              task.dateISO ? 'text-[#5f6b66]' : 'text-[#9a9686]',
-            )}
-          >
-            <CalendarDays size={12} />
-            {task.dateISO ? formatDate(task.dateISO) : t('Vælg dato')}
-            <input
-              ref={dateInputRef}
-              type="date"
-              value={task.dateISO ?? ''}
-              onChange={(e) => e.target.value && onDateChange(e.target.value)}
-              className="absolute inset-0 w-full cursor-pointer opacity-0"
-              tabIndex={-1}
-            />
-          </button>
-          <span className={cn('text-[0.68rem] font-bold uppercase tracking-[0.12em] sm:hidden', statusTone)}>
-            {statusText}
-          </span>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 empty:hidden">
+          {task.phase && (
+            <span className={cn(
+              'rounded-full px-2 py-0.5 text-[11px] font-semibold',
+              task.phaseDue && !done ? 'bg-[#f4ecdc] text-[#746b56]' : 'bg-[#eef1ee] text-[#5f6b66]',
+            )}>
+              {t(task.phase)}
+            </span>
+          )}
+          {quiet ? dateInput : (
+            <button
+              type="button"
+              onClick={() => dateInputRef.current?.showPicker?.()}
+              aria-label={t("Ændr dato for '{title}'", { title: task.title })}
+              className={cn(
+                'relative flex w-fit items-center gap-1.5 text-[13px] hover:text-[#24413a] cursor-pointer',
+                task.dateISO ? 'text-[#5f6b66]' : 'text-[#9a9686]',
+              )}
+            >
+              <CalendarDays size={12} />
+              {task.dateISO ? formatDate(task.dateISO) : t('Vælg dato')}
+              {dateInput}
+            </button>
+          )}
+          {showStatus && (
+            <span className={cn('text-[0.68rem] font-bold uppercase tracking-[0.12em] sm:hidden', statusTone)}>
+              {statusText}
+            </span>
+          )}
           <span className="sm:hidden">{assignee}</span>
           {!done && suggestion ? (
             <button
@@ -169,9 +195,11 @@ export default function TaskRow({
 
       <span className="hidden sm:inline-flex">{assignee}</span>
 
-      <span className={cn('hidden text-xs font-bold uppercase tracking-[0.12em] sm:inline', statusTone)}>
-        {statusText}
-      </span>
+      {showStatus && (
+        <span className={cn('hidden text-xs font-bold uppercase tracking-[0.12em] sm:inline', statusTone)}>
+          {statusText}
+        </span>
+      )}
 
       <div className="relative -mr-1.5 -mt-1 shrink-0 sm:m-0">
         <button
@@ -203,6 +231,12 @@ export default function TaskRow({
                   <button type="button" onClick={() => { onCloseMenu(); onOpen(); }}
                     className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer">
                     <Pencil size={14} className="text-[#5f6b66]" /> {t('Rediger')}
+                  </button>
+                )}
+                {quiet && (
+                  <button type="button" onClick={() => { onCloseMenu(); dateInputRef.current?.showPicker?.(); }}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer">
+                    <CalendarPlus size={14} className="text-[#5f6b66]" /> {t('Sæt på tidslinjen')}
                   </button>
                 )}
                 {onClearDate && (

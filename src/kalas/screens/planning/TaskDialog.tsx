@@ -17,6 +17,7 @@ import { useLang } from '../../i18n';
 import {
   CHECKLIST_AREAS, PRIORITIES, areaOf, assigneeName, formatDate, hasArea, isCheck, priorityOf,
 } from './shared';
+import { phaseOf, phaseLabel } from './checklist-data';
 import type { TaskAssignee, TaskPriority, TimelineTaskRow } from '@/lib/db/types';
 
 const fieldCls =
@@ -60,6 +61,8 @@ export default function TaskDialog({
 }) {
   const { t } = useLang();
   const dateRef = useRef<HTMLInputElement>(null);
+  // When a default checklist item is best done, next to its deadline.
+  const recommended = isCheck(task) ? phaseOf(task.title) : null;
 
   // The area picker only makes sense where the category is an area. A
   // milestone without one, or the 'wedding_day' sentinel, keeps its category.
@@ -192,6 +195,11 @@ export default function TaskDialog({
                     </button>
                   )}
                 </div>
+                {recommended && (
+                  <p className="mt-1.5 text-[12px] text-muted">
+                    {t('Anbefalet: {phase}', { phase: t(phaseLabel(recommended)) })}
+                  </p>
+                )}
               </div>
               <div>
                 <Label>{t('Prioritet')}</Label>

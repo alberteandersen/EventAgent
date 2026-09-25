@@ -9,15 +9,15 @@ import type { HubCat, HubTab } from '../team/shared';
 
 /* ── Tabs ─────────────────────────────────────────────────────────────── */
 
-export type PlanTab = 'overblik' | 'tidslinje' | 'tjekliste' | 'bryllupsdagen';
+export type PlanTab = 'tidslinje' | 'tjekliste' | 'bryllupsdagen';
 
 const PLAN_TAB_KEY = 'kalas_planning_tab';
-const PLAN_TABS: PlanTab[] = ['overblik', 'tidslinje', 'tjekliste', 'bryllupsdagen'];
+const PLAN_TABS: PlanTab[] = ['tidslinje', 'tjekliste', 'bryllupsdagen'];
 
 export function readPlanTab(): PlanTab {
-  if (typeof window === 'undefined') return 'overblik';
+  if (typeof window === 'undefined') return 'tidslinje';
   const stored = sessionStorage.getItem(PLAN_TAB_KEY);
-  return (PLAN_TABS as string[]).includes(stored ?? '') ? (stored as PlanTab) : 'overblik';
+  return (PLAN_TABS as string[]).includes(stored ?? '') ? (stored as PlanTab) : 'tidslinje';
 }
 
 export function writePlanTab(tab: PlanTab) {

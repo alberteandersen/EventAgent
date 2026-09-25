@@ -1,11 +1,10 @@
 "use client";
 
-/* The checklist lays itself out the first time the planning screen needs it:
-   on the Tjekliste tab, and on Overblik, which reads it for "Det næste" and is
-   where the screen now opens. Its items are dateless, so this does not wait
-   for a wedding date; waiting only left couples staring at an empty list.
-   Seeding when the screen is opened also keeps ~200 rows off half-created
-   onboarding events, which is what that gate was for. */
+/* The checklist lays itself out the first time its tab is opened. Its items
+   are dateless, so this does not wait for a wedding date; waiting only left
+   couples staring at an empty list. Seeding when the tab is opened also keeps
+   ~200 rows off half-created onboarding events, which is what that gate was
+   for. */
 
 import { useEffect, useRef, useState } from 'react';
 import { useWedding } from '../../useWedding';

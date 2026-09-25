@@ -24,16 +24,14 @@ import {
 type ChecklistFilter = Filter | 'nu';
 
 
-export default function ChecklistTab({ onCelebrate, onNavigate, initialFilter }: {
+export default function ChecklistTab({ onCelebrate, onNavigate }: {
   onCelebrate: (title: string) => void;
   onNavigate?: (s: ScreenId) => void;
-  /** Where Overblik sends them: straight to what belongs to now. */
-  initialFilter?: 'nu';
 }) {
   const { t, tn } = useLang();
   const { event, couple, timelineTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
 
-  const [filter, setFilter] = useState<ChecklistFilter>(initialFilter ?? 'alle');
+  const [filter, setFilter] = useState<ChecklistFilter>('alle');
   const [query, setQuery] = useState('');
   const [addingIn, setAddingIn] = useState<ChecklistArea | null>(null);
   const [newTitle, setNewTitle] = useState('');

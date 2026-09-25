@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Compass, ListChecks, CheckSquare, PartyPopper } from 'lucide-react';
+import { ListChecks, CheckSquare, PartyPopper } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { showNotice } from '../notice';
 import { cn } from '../ui';
 import type { ScreenId } from '../Shell';
 import { useLang } from '../i18n';
 import { GuideLink } from './guides/GuideLink';
-import OverviewTab from './planning/OverviewTab';
 import TimelineTab, { defaultMilestones } from './planning/TimelineTab';
 import ChecklistTab from './planning/ChecklistTab';
 import DayProgramTab from './planning/DayProgramTab';
@@ -17,26 +16,23 @@ import { isMilestone, readPlanTab, todayISO, writePlanTab, type PlanTab } from '
 const AVA_CELEBRATION = 'Godt klaret. Ava har opdateret jeres fremdrift.';
 
 const TABS: { id: PlanTab; label: string; Icon: typeof ListChecks }[] = [
-  { id: 'overblik', label: 'Overblik', Icon: Compass },
   { id: 'tidslinje', label: 'Tidslinje', Icon: ListChecks },
   { id: 'tjekliste', label: 'Tjekliste', Icon: CheckSquare },
   { id: 'bryllupsdagen', label: 'Bryllupsdagen', Icon: PartyPopper },
 ];
 
-/* The planning screen opens on Overblik: how long is left, where that puts
-   the couple, and the few things to do next. The full lists sit behind the
-   other tabs, two lenses on the same `timeline_tasks` table:
-     Tidslinje, the big date-anchored milestones, plus any checklist item the
-                 couple has dated
-     Tjekliste, the many small to-dos grouped by area, each area headed by its
-                 milestone
+/* Two lenses on the same `timeline_tasks` table, and the day itself:
+     Tidslinje,     the big date-anchored milestones, plus any checklist item
+                    the couple has dated
+     Tjekliste,     the many small to-dos grouped by area, each area headed by
+                    its milestone
+     Bryllupsdagen, the programme for the day, minute by minute
+   The overview of the whole wedding is Hjem's; this screen is the plan.
    See 0020_task_kind.sql for why `kind` (not `category`) separates them. */
 export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) => void }) {
   const { t } = useLang();
   const { loading, couple, timelineTasks, seedTasks } = useWedding();
   const [tab, setTab] = useState<PlanTab>(() => readPlanTab());
-  // Overblik can open the checklist straight on "Nu".
-  const [checklistFilter, setChecklistFilter] = useState<'nu' | undefined>(undefined);
   const seededMilestonesRef = useRef(false);
 
   const milestones = timelineTasks.filter(isMilestone);
@@ -45,7 +41,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
 
   // Only the timeline seeds from here, and only once there is a date: every
   // milestone is placed relative to the wedding day. The checklist is dateless
-  // and seeds itself (useChecklistSeed) on Overblik and Tjekliste.
+  // and seeds itself (useChecklistSeed) when its tab is opened.
   useEffect(() => {
     if (loading || !couple.dateISO) return;
     if (!seededMilestonesRef.current && milestones.length === 0) {
@@ -54,8 +50,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
     }
   }, [loading, couple.dateISO, milestones.length, seedTasks]);
 
-  function selectTab(next: PlanTab, filter?: 'nu') {
-    setChecklistFilter(filter);
+  function selectTab(next: PlanTab) {
     setTab(next);
     writePlanTab(next);
   }
@@ -68,8 +63,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
 
   return (
     <div className="flex min-h-full flex-col gap-6 bg-canvas px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
-      {/* Header: the page's name and its guide. What used to be a line of
-          description is what Overblik now shows. */}
+      {/* Header: the page's name and its guide. */}
       <div>
         <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
           {t('Tidslinje & tjekliste')}
@@ -110,12 +104,10 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
       </nav>
 
       <AnimatePresence mode="wait">
-        {tab === 'overblik' ? (
-          <OverviewTab key="overblik" onOpenTab={selectTab} onCelebrate={celebrate} onNavigate={onNavigate} />
-        ) : tab === 'tidslinje' ? (
+        {tab === 'tidslinje' ? (
           <TimelineTab key="tidslinje" onCelebrate={celebrate} onNavigate={onNavigate} />
         ) : tab === 'tjekliste' ? (
-          <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} initialFilter={checklistFilter} />
+          <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />
         ) : (
           <DayProgramTab key="bryllupsdagen" />
         )}

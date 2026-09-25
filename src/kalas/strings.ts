@@ -2505,4 +2505,12 @@ export const EN: Record<string, string> = {
 
   // ── Tidslinje & tjekliste ──────────────────────────────────────────
   'Dublér': 'Duplicate',
+  'Brylluppet er flyttet til {date}': 'The wedding has moved to {date}',
+  'Tidslinjen er lagt ud fra {date}. Flyt den med, så der stadig er lige så lang tid til hver ting.':
+    'The timeline was laid out from {date}. Move it too, so there is still as long for each thing.',
+  'Flyt tidslinjen': 'Move the timeline',
+  'Behold datoerne': 'Keep the dates',
+  'Tidslinjen er flyttet': 'The timeline has moved',
+  'Én dato fulgte med.': 'One date came along.',
+  '{n} datoer fulgte med.': '{n} dates came along.',
 };

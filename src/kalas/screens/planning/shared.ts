@@ -217,6 +217,37 @@ export function daysDiff(dateISO: string, from: string = todayISO()): number {
   return Math.round((target - origin) / 86400000);
 }
 
+/** `dateISO` moved by `days`, counted on the calendar (noon UTC, so a
+ *  daylight-saving change can never tip it onto the neighbouring day). */
+export function addDays(dateISO: string, days: number): string {
+  const t = new Date(`${dateISO}T12:00:00Z`).getTime() + days * 86400000;
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/**
+ * The plan follows the wedding when the couple moves it. Every date still
+ * ahead of them (not done, has a date) moves by the same number of days, so
+ * "book the photographer ten months out" stays ten months out; "Jeres dag"
+ * lands on the new date itself. Ticked-off rows keep the date they were done
+ * by. Returns only the rows whose date changes.
+ */
+export function shiftPlan(
+  rows: Pick<TimelineTaskRow, 'id' | 'due_date' | 'done' | 'category'>[],
+  fromISO: string,
+  toISO: string,
+): { id: string; due_date: string }[] {
+  const days = daysDiff(toISO, fromISO);
+  const out: { id: string; due_date: string }[] = [];
+  for (const r of rows) {
+    if (r.category === 'wedding_day') {
+      if (r.due_date !== toISO) out.push({ id: r.id, due_date: toISO });
+    } else if (!r.done && r.due_date && days !== 0) {
+      out.push({ id: r.id, due_date: addDays(r.due_date, days) });
+    }
+  }
+  return out;
+}
+
 export function formatDate(dateISO: string): string {
   const [y, m, d] = dateISO.split('-');
   return `${d}.${m}.${y}`;

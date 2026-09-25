@@ -1,10 +1,11 @@
 import * as React from 'react';
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { RotateCcw, Plus, Search, X } from 'lucide-react';
+import { RotateCcw, Plus, Search, X, CalendarClock } from 'lucide-react';
 import { timeline as MOCK_TIMELINE } from '../../data';
 import { useWedding } from '../../useWedding';
 import { useRemoveWithUndo, useWithoutPending } from '../../undo';
+import { showNotice } from '../../notice';
 import { cn } from '../../ui';
 import { useLang } from '../../i18n';
 import type { DisplayTask } from './TaskRow';
@@ -12,7 +13,7 @@ import TimelineSpine, { type RowActions } from './TimelineSpine';
 import TaskDialog from './TaskDialog';
 import AddRow from './AddRow';
 import {
-  isMilestone, isCheck, onTimeline, areaOf, nextSort, buildTimelineBands, todayISO, daysDiff,
+  isMilestone, isCheck, onTimeline, areaOf, nextSort, buildTimelineBands, todayISO, daysDiff, shiftPlan,
   assigneeInitials, assigneeName, priorityOf,
   type Filter, FILTER_LABELS, CHECKLIST_AREAS,
 } from './shared';
@@ -64,10 +65,12 @@ export function defaultMilestones(weddingISO: string) {
 }
 
 export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: string) => void }) {
-  const { t, lang } = useLang();
+  const { t, tn, lang } = useLang();
   const locale = lang === 'en' ? 'en-US' : 'da-DK';
   const monthLabel = (monthISO: string) =>
     new Date(`${monthISO}T12:00:00`).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  const longDate = (dateISO: string) =>
+    new Date(`${dateISO}T12:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
   const { couple, timelineTasks: allTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
   // A task removed a moment ago stays off the timeline while Fortryd is offered.
   const timelineTasks = useWithoutPending(allTasks);
@@ -90,6 +93,25 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
     const timer = setTimeout(() => setConfirmReset(false), 4000);
     return () => clearTimeout(timer);
   }, [confirmReset]);
+
+  /* The plan was laid out from the date the couple had then. When "Jeres
+     dag" and their date part ways, they have moved the wedding (in Settings)
+     and every date below still counts down to the old one. */
+  const weddingRow = timelineTasks.find((r) => r.category === 'wedding_day');
+  const moved = couple.dateISO && weddingRow?.due_date && weddingRow.due_date !== couple.dateISO
+    ? { from: weddingRow.due_date, to: couple.dateISO }
+    : null;
+  const shifts = moved ? shiftPlan(timelineTasks, moved.from, moved.to) : [];
+
+  function followWedding() {
+    for (const s of shifts) void updateTask(s.id, { due_date: s.due_date });
+    const others = shifts.filter((s) => s.id !== weddingRow?.id).length;
+    showNotice(t('Tidslinjen er flyttet'), tn(others, 'Én dato fulgte med.', '{n} datoer fulgte med.'));
+  }
+
+  function keepDates() {
+    if (weddingRow && moved) void updateTask(weddingRow.id, { due_date: moved.to });
+  }
 
   // The milestones, plus any checklist item the couple has dated — giving a
   // check a date is how you put it in the calendar.
@@ -231,6 +253,30 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
           </button>
         </div>
       </div>
+
+      {moved && (
+        <div role="status" className="flex flex-col gap-3 rounded-[18px] border border-sage-tint bg-sage-tint/40 px-4 py-4 sm:flex-row sm:items-center sm:gap-5 sm:px-5">
+          <CalendarClock size={20} className="hidden shrink-0 text-sage-strong sm:block" aria-hidden />
+          <div className="min-w-0 flex-1">
+            <p className="font-serif text-lg leading-snug text-ink">
+              {t('Brylluppet er flyttet til {date}', { date: longDate(moved.to) })}
+            </p>
+            <p className="mt-0.5 text-[13px] leading-relaxed text-muted">
+              {t('Tidslinjen er lagt ud fra {date}. Flyt den med, så der stadig er lige så lang tid til hver ting.', { date: longDate(moved.from) })}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-2">
+            <button type="button" onClick={followWedding}
+              className="h-9 whitespace-nowrap rounded-full bg-ink px-4 text-[0.82rem] font-semibold text-canvas transition-opacity hover:opacity-90 cursor-pointer">
+              {t('Flyt tidslinjen')}
+            </button>
+            <button type="button" onClick={keepDates}
+              className="h-9 whitespace-nowrap rounded-full border border-line bg-card px-4 text-[0.82rem] font-semibold text-ink transition-colors hover:bg-shell cursor-pointer">
+              {t('Behold datoerne')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Search + filters */}
       <div className="flex flex-wrap items-center gap-2">

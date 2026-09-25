@@ -11,7 +11,8 @@ import TaskRow, { type DisplayTask } from './TaskRow';
 import TaskDialog from './TaskDialog';
 import AddRow from './AddRow';
 import ResetControl from './ResetControl';
-import { defaultChecklist, missingChecklistItems, phaseOf, phaseLabel, currentPhase, isDueBy, PHASES } from './checklist-data';
+import { seeding, useChecklistSeed } from './useChecklistSeed';
+import { defaultChecklist, phaseOf, phaseLabel, currentPhase, isDueBy, PHASES } from './checklist-data';
 import {
   isCheck, isMilestone, hasArea, groupByArea, areaLabel, nextSort, areaOf, topUpKey,
   assigneeInitials, assigneeName, priorityOf,
@@ -22,20 +23,17 @@ import {
 /** The checklist's filters: the shared three, plus "Nu" once there is a date. */
 type ChecklistFilter = Filter | 'nu';
 
-/** Event ids whose default list has already been claimed for insertion.
- *  Module scope rather than a ref on purpose: switching to the Tidslinje tab
- *  unmounts this component, and a fresh ref would start a second insert of the
- *  same 200 rows while the first is still in flight. */
-const seeding = new Set<string>();
 
-export default function ChecklistTab({ onCelebrate, onNavigate }: {
+export default function ChecklistTab({ onCelebrate, onNavigate, initialFilter }: {
   onCelebrate: (title: string) => void;
   onNavigate?: (s: ScreenId) => void;
+  /** Where Overblik sends them: straight to what belongs to now. */
+  initialFilter?: 'nu';
 }) {
   const { t, tn } = useLang();
-  const { loading, event, couple, timelineTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
+  const { event, couple, timelineTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
 
-  const [filter, setFilter] = useState<ChecklistFilter>('alle');
+  const [filter, setFilter] = useState<ChecklistFilter>(initialFilter ?? 'alle');
   const [query, setQuery] = useState('');
   const [addingIn, setAddingIn] = useState<ChecklistArea | null>(null);
   const [newTitle, setNewTitle] = useState('');
@@ -43,11 +41,9 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
   // edited there now, instead of an inline rename that only reached the title.
   const [openId, setOpenId] = useState<string | null>(null);
   const [menuId, setMenuId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [openAreas, setOpenAreas] = useState<Set<ChecklistArea>>(() => readOpenAreas());
   const reduce = useReducedMotion();
   const newInputRef = useRef<HTMLInputElement>(null);
-  const toppedUpRef = useRef(false);
 
   /* `checks` drives seeding and the top-up; `rows` is what the tab renders.
      They must not be the same list, milestones exist before the checklist is
@@ -59,31 +55,8 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
   const removeTask = useRemoveWithUndo();
   const rows = [...visible.filter(isCheck), ...visible.filter((r) => isMilestone(r) && hasArea(r))];
 
-  /* The checklist seeds itself from here rather than from Planning's mount
-     effect: its items are dateless, so waiting for a wedding date only left
-     couples staring at an empty list. Seeding on tab open also keeps ~200 rows
-     off half-created onboarding events, which is what that gate was for. */
-  React.useEffect(() => {
-    if (loading || !event || checks.length > 0 || seeding.has(event.id)) return;
-    const id = event.id;
-    seeding.add(id);
-    void seedTasks(defaultChecklist()).then((err) => {
-      if (err) { seeding.delete(id); setError(err); }
-    });
-  }, [loading, event, checks.length, seedTasks]);
-
-  /* Couples who already have a checklist get any newly added default items,
-     once per event. Their ticks and their own items are untouched, which a
-     Nulstil would not be. */
-  React.useEffect(() => {
-    if (loading || toppedUpRef.current || checks.length === 0 || !event) return;
-    toppedUpRef.current = true;
-    const key = topUpKey(event.id);
-    if (localStorage.getItem(key)) return;
-    localStorage.setItem(key, '1');
-    const missing = missingChecklistItems(checks);
-    if (missing.length > 0) void seedTasks(missing);
-  }, [loading, checks, event, seedTasks]);
+  // Lays the default list out (shared with Overblik), and says if it could not.
+  const { error, setError } = useChecklistSeed();
 
   /* Where the couple is in the plan, from their date. Without one there is
      no "now" to speak of, so the Nu filter and the counts stay away. */
@@ -239,34 +212,8 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col gap-5 rounded-[22px] border border-[#dcdfdb] bg-[#ffffff] p-4 sm:rounded-[28px] sm:p-7"
     >
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <p className="text-sm text-[#5f6b66]">
-          {t('De mange småting, samlet i bunker, så I kan tage ét område ad gangen.')}
-        </p>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <p className="shrink-0 text-sm font-bold text-[#7d938a]">
-            {t('{done} af {total} klaret', { done, total: rows.length })}
-          </p>
-          {groups.length > 0 && !filtering && (
-            <button
-              type="button"
-              onClick={toggleAll}
-              className="flex h-8 items-center gap-1.5 rounded-full border border-[#d9ded9] bg-white px-3 text-xs font-semibold text-[#24413a] transition-colors cursor-pointer"
-            >
-              <ChevronsUpDown size={13} />
-              {allOpen ? t('Fold alle sammen') : t('Fold alle ud')}
-            </button>
-          )}
-          <ResetControl
-            itemLabel="Gendan standardlisten…"
-            confirmTitle="Gendan standardlisten?"
-            detail={resetDetail}
-            onReset={handleReset}
-          />
-        </div>
-      </div>
-
-      {/* Search + filters */}
+      {/* One line of controls: find, narrow down, fold, and the rest behind
+          "⋯". How far they are lives on Overblik, not in a count up here. */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex h-11 w-full items-center gap-2.5 rounded-[14px] border border-[#e6e9e5] bg-[#f8f9f8] px-4 sm:w-[260px]">
           <Search size={15} className="shrink-0 text-[#9a9686]" />
@@ -299,10 +246,29 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
               )}
             >
               {f === 'nu' ? t('Nu') : t(FILTER_LABELS[f])}
-              <span className={active ? 'text-[#dbe5e0]' : 'text-[#9a9686]'}>{counts[f]}</span>
+              {/* Only "Nu" is worth a number: "Kommende 217" says nothing. */}
+              {f === 'nu' && <span className={active ? 'text-[#dbe5e0]' : 'text-[#9a9686]'}>{counts.nu}</span>}
             </button>
           );
         })}
+        <div className="ml-auto flex items-center gap-2">
+          {groups.length > 0 && !filtering && (
+            <button
+              type="button"
+              onClick={toggleAll}
+              className="flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[13px] font-semibold text-[#5f6b66] transition-colors hover:text-[#24413a] cursor-pointer"
+            >
+              <ChevronsUpDown size={13} />
+              {allOpen ? t('Fold alle sammen') : t('Fold alle ud')}
+            </button>
+          )}
+          <ResetControl
+            itemLabel="Gendan standardlisten…"
+            confirmTitle="Gendan standardlisten?"
+            detail={resetDetail}
+            onReset={handleReset}
+          />
+        </div>
       </div>
 
       {error && (
@@ -319,7 +285,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
           <p className="font-serif text-lg text-[#24413a]">
             {rows.length === 0
               ? error
-                ? t('Tjeklisten er tom, tryk Nulstil for at prøve igen.')
+                ? t('Tjeklisten er tom. Prøv igen med Gendan standardlisten under ⋯.')
                 : t('Henter standardlisten …')
               : activeFilter === 'færdige' ? t('Ingen afkrydsede punkter endnu.')
               : activeFilter === 'kommende' ? t('Alt er krydset af. Flot arbejde.')
@@ -334,7 +300,6 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
       <div className="flex flex-col gap-1">
       {groups.map(({ area, items }) => {
         const progress = areaProgress(area);
-        const pct = progress.total ? Math.round((progress.done / progress.total) * 100) : 0;
         const Icon = CHECKLIST_AREAS.find((a) => a.id === area)?.Icon;
         const open = isOpen(area);
         const label = t(areaLabel(area));
@@ -350,20 +315,19 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
                 type="button"
                 onClick={() => toggleArea(area)}
                 aria-expanded={open}
-                className="flex w-full flex-wrap items-center gap-3 rounded-[14px] px-1 py-2 text-left transition-colors hover:bg-[#f2efe7] cursor-pointer"
+                className="flex w-full items-center gap-3 rounded-[14px] px-1 py-2.5 text-left transition-colors hover:bg-[#f2efe7] cursor-pointer"
               >
                 {Icon && <Icon size={16} strokeWidth={2} className="shrink-0 text-[#7d938a]" />}
-                <span className="font-serif text-lg text-[#24413a]">{label}</span>
-                <span className="text-xs font-bold text-[#9a9686]">
-                  {progress.done}/{progress.total}
-                </span>
+                <span className="min-w-0 flex-1 font-serif text-lg leading-snug text-[#24413a]">{label}</span>
+                {/* What the area asks of them now, then how far it has come. A
+                    bar per area drew twelve empty lines on a new plan. */}
                 {now && progress.due > 0 && activeFilter !== 'nu' && (
-                  <span className="rounded-full bg-[#f4ecdc] px-2 py-0.5 font-sans text-[11px] font-semibold text-[#746b56]">
+                  <span className="shrink-0 rounded-full bg-[#f4ecdc] px-2 py-0.5 font-sans text-[11px] font-semibold text-[#746b56]">
                     {t('{n} nu', { n: progress.due })}
                   </span>
                 )}
-                <span aria-hidden className="h-1 min-w-[64px] flex-1 overflow-hidden rounded-full bg-[#e6e9e5]">
-                  <span className="block h-full rounded-full bg-[#7d938a] transition-[width] duration-300" style={{ width: `${pct}%` }} />
+                <span className="shrink-0 font-sans text-xs font-semibold tabular-nums text-[#6c7561]">
+                  {progress.done}/{progress.total}
                 </span>
                 <ChevronDown
                   size={16}

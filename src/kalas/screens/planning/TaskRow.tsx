@@ -76,7 +76,10 @@ export default function TaskRow({
   const statusText = statusLabel(task, t);
   // A checklist item without a date: not "Vælg dato · INGEN DATO" 205 times over.
   const quiet = Boolean(task.dateOptional && !task.dateISO);
-  const showStatus = !quiet || done;
+  // Only a status that asks something of them is shown: done reads from the
+  // tick and the strike-through, "Planlagt" from the date, and "PLANLAGT"
+  // ten times down a timeline was noise.
+  const showStatus = overdue || isToday || isSoon || status === 'wedding';
   const dateInput = (
     <input
       ref={dateInputRef}

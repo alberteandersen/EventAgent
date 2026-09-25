@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { CalendarClock } from 'lucide-react';
 import { cn } from '../../ui';
 import { useLang } from '../../i18n';
 import TaskRow, { type DisplayTask } from './TaskRow';
@@ -26,8 +25,8 @@ export type RowActions = {
 function TodayMarker({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2.5 sm:gap-4">
-      <span className="relative z-10 flex w-9 shrink-0 sm:w-12 justify-center">
-        <span className="size-3 rounded-full bg-terracotta ring-4 ring-card" />
+      <span className="relative z-10 flex w-6 shrink-0 justify-center sm:w-8">
+        <span className="size-2.5 rounded-full bg-terracotta ring-4 ring-card" />
       </span>
       <span className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-terracotta">
         {label}
@@ -35,10 +34,6 @@ function TodayMarker({ label }: { label: string }) {
       <span className="h-px flex-1 bg-terracotta/25" />
     </div>
   );
-}
-
-function dayOf(dateISO: string | null): string {
-  return dateISO ? String(Number(dateISO.slice(8, 10))) : '';
 }
 
 /**
@@ -94,14 +89,17 @@ export default function TimelineSpine<T extends SpineTask>({
       {/* One continuous rule behind every band, so the months read as a single
           stretch of time rather than as separate cards. */}
       {bands.length > 0 && (
-        <div aria-hidden className="absolute bottom-3 left-[17px] top-3 w-px bg-line sm:left-[23px]" />
+        <div aria-hidden className="absolute bottom-3 left-[11.5px] top-3 w-px bg-line sm:left-[15.5px]" />
       )}
 
       <div className="flex flex-col gap-7">
         {bands.map((band) =>
-          band.kind === 'gap' ? (
+          // A month or two between milestones is the plan breathing: the line
+          // runs on, and no gap is drawn at all.
+          band.kind === 'gap' && band.months < 3 ? null
+          : band.kind === 'gap' ? (
             <div key={band.key} className="flex items-center gap-2.5 sm:gap-4">
-              <span className="flex w-9 shrink-0 sm:w-12 justify-center">
+              <span className="flex w-6 shrink-0 justify-center sm:w-8">
                 {/* Dashed over the solid rule: time passing, nothing planned.
                     Height grows with the lull, capped so a year-long gap does
                     not push the rest of the plan off the screen. */}
@@ -111,23 +109,18 @@ export default function TimelineSpine<T extends SpineTask>({
                 />
               </span>
               <span className="text-xs italic text-faint">
-                {band.months === 1
-                  ? t('1 måned uden opgaver')
-                  : t('{n} måneder uden opgaver', { n: band.months })}
+                {t('{n} måneder uden opgaver', { n: band.months })}
               </span>
             </div>
           ) : (
             <div key={band.key}>
               <div className="flex items-center gap-2.5 sm:gap-4">
-                <span className="relative z-10 flex w-9 shrink-0 sm:w-12 justify-center">
-                  <span className="rounded-full bg-card p-1">
-                    <CalendarClock size={16} className="text-sage" aria-hidden />
-                  </span>
+                <span className="relative z-10 flex w-6 shrink-0 justify-center sm:w-8">
+                  <span className="size-2 rounded-full border border-line-strong bg-card" />
                 </span>
-                <h3 className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-muted">
+                <h3 className="font-serif text-[1.1rem] leading-none text-ink first-letter:uppercase">
                   {monthLabel(band.monthISO)}
                 </h3>
-                <span className="h-px flex-1 bg-line" />
               </div>
 
               <div className="mt-3 flex flex-col gap-3">
@@ -135,18 +128,17 @@ export default function TimelineSpine<T extends SpineTask>({
                 {band.items.map((task, i) => (
                   <React.Fragment key={task.id}>
                     <div className="flex items-start gap-2.5 sm:gap-4">
-                      <span className="relative z-10 flex w-9 shrink-0 justify-center pt-3 sm:w-12 sm:pt-4">
+                      {/* The date is on the card; the line only marks where it falls. */}
+                      <span aria-hidden className="relative z-10 flex w-6 shrink-0 justify-center pt-[22px] sm:w-8 sm:pt-[26px]">
                         <span
                           className={cn(
-                            'flex size-8 items-center justify-center rounded-full border text-[0.7rem] font-bold tabular-nums sm:size-9 sm:text-[0.72rem]',
-                            task.done ? 'border-sage-strong bg-sage-tint text-ink'
-                              : task.weddingDay ? 'border-ink bg-ink text-canvas'
-                              : task.overdue ? 'border-terracotta bg-terracotta-tint text-terracotta'
-                              : 'border-line-strong bg-card text-muted',
+                            'rounded-full',
+                            task.weddingDay ? 'size-3.5 bg-ink ring-4 ring-card'
+                              : task.done ? 'size-2.5 bg-sage-strong'
+                              : task.overdue ? 'size-2.5 bg-terracotta'
+                              : 'size-2.5 border border-line-strong bg-card',
                           )}
-                        >
-                          {dayOf(task.dateISO)}
-                        </span>
+                        />
                       </span>
                       <div className="min-w-0 flex-1">
                         {row(task)}

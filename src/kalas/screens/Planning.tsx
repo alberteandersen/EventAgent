@@ -1,21 +1,31 @@
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ListChecks, CheckSquare, PartyPopper } from 'lucide-react';
+import { Compass, ListChecks, CheckSquare, PartyPopper } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { showNotice } from '../notice';
 import { cn } from '../ui';
 import type { ScreenId } from '../Shell';
 import { useLang } from '../i18n';
 import { GuideLink } from './guides/GuideLink';
+import OverviewTab from './planning/OverviewTab';
 import TimelineTab, { defaultMilestones } from './planning/TimelineTab';
 import ChecklistTab from './planning/ChecklistTab';
 import DayProgramTab from './planning/DayProgramTab';
-import { isMilestone, isCheck, readPlanTab, writePlanTab, type PlanTab } from './planning/shared';
+import { isMilestone, readPlanTab, todayISO, writePlanTab, type PlanTab } from './planning/shared';
 
 const AVA_CELEBRATION = 'Godt klaret. Ava har opdateret jeres fremdrift.';
 
-/* Two lenses on the same `timeline_tasks` table:
+const TABS: { id: PlanTab; label: string; Icon: typeof ListChecks }[] = [
+  { id: 'overblik', label: 'Overblik', Icon: Compass },
+  { id: 'tidslinje', label: 'Tidslinje', Icon: ListChecks },
+  { id: 'tjekliste', label: 'Tjekliste', Icon: CheckSquare },
+  { id: 'bryllupsdagen', label: 'Bryllupsdagen', Icon: PartyPopper },
+];
+
+/* The planning screen opens on Overblik: how long is left, where that puts
+   the couple, and the few things to do next. The full lists sit behind the
+   other tabs, two lenses on the same `timeline_tasks` table:
      Tidslinje, the big date-anchored milestones, plus any checklist item the
                  couple has dated
      Tjekliste, the many small to-dos grouped by area, each area headed by its
@@ -25,15 +35,17 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
   const { t } = useLang();
   const { loading, couple, timelineTasks, seedTasks } = useWedding();
   const [tab, setTab] = useState<PlanTab>(() => readPlanTab());
+  // Overblik can open the checklist straight on "Nu".
+  const [checklistFilter, setChecklistFilter] = useState<'nu' | undefined>(undefined);
   const seededMilestonesRef = useRef(false);
 
   const milestones = timelineTasks.filter(isMilestone);
-  const checks = timelineTasks.filter(isCheck);
+  const today = todayISO();
+  const anyLate = milestones.some((r) => !r.done && r.category !== 'wedding_day' && r.due_date != null && r.due_date < today);
 
   // Only the timeline seeds from here, and only once there is a date: every
-  // milestone is placed relative to the wedding day. The checklist is dateless,
-  // so it seeds itself from ChecklistTab when the tab is opened — gating it on
-  // a date the couple has not set yet is what left the list empty.
+  // milestone is placed relative to the wedding day. The checklist is dateless
+  // and seeds itself (useChecklistSeed) on Overblik and Tjekliste.
   useEffect(() => {
     if (loading || !couple.dateISO) return;
     if (!seededMilestonesRef.current && milestones.length === 0) {
@@ -42,7 +54,8 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
     }
   }, [loading, couple.dateISO, milestones.length, seedTasks]);
 
-  function selectTab(next: PlanTab) {
+  function selectTab(next: PlanTab, filter?: 'nu') {
+    setChecklistFilter(filter);
     setTab(next);
     writePlanTab(next);
   }
@@ -53,60 +66,56 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
     showNotice(t(title), t(AVA_CELEBRATION));
   }
 
-  const TABS: { id: PlanTab; label: string; Icon: typeof ListChecks; open: number }[] = [
-    { id: 'tidslinje', label: 'Tidslinje', Icon: ListChecks, open: milestones.filter((r) => !r.done).length },
-    { id: 'tjekliste', label: 'Tjekliste', Icon: CheckSquare, open: checks.filter((r) => !r.done).length },
-    { id: 'bryllupsdagen', label: 'Bryllupsdagen', Icon: PartyPopper, open: 0 },
-  ];
-
   return (
-    <div className="flex min-h-full flex-col gap-6 bg-[#f4f5f3] px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
-      {/* Header */}
+    <div className="flex min-h-full flex-col gap-6 bg-canvas px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
+      {/* Header: the page's name and its guide. What used to be a line of
+          description is what Overblik now shows. */}
       <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Planlægning')}</p>
-        <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+        <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
           {t('Tidslinje & tjekliste')}
         </h1>
-        <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
-          {t('De store milepæle og alle småtingene, hold jer på sporet, ét skridt ad gangen.')}
-        </p>
         <GuideLink screen="planning" />
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b border-[#e2e6e2]">
-        {TABS.map(({ id, label, Icon, open }) => {
+      {/* Tab bar. Scrolls sideways on a narrow phone rather than wrapping. */}
+      <nav aria-label={t('Planlægning')}
+        className="-mx-6 flex gap-1 overflow-x-auto border-b border-line px-6 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+        {TABS.map(({ id, label, Icon }) => {
           const active = tab === id;
           return (
             <button
               key={id}
               type="button"
+              aria-current={active ? 'true' : undefined}
               onClick={() => selectTab(id)}
               className={cn(
-                'relative flex items-center gap-2 px-3 py-2.5 text-[0.82rem] font-semibold transition-colors cursor-pointer',
-                active ? 'text-[#24413a]' : 'text-muted hover:text-ink',
+                'relative flex shrink-0 items-center gap-2 px-3 py-2.5 text-[0.85rem] font-semibold transition-colors cursor-pointer',
+                active ? 'text-ink' : 'text-muted hover:text-ink',
               )}
             >
-              <Icon size={15} strokeWidth={2} />
+              <Icon size={15} strokeWidth={2} className="hidden sm:block" aria-hidden />
               {t(label)}
-              {open > 0 && (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-[#e8f0ec] px-1 text-[0.6rem] font-bold text-[#24413a]">
-                  {open}
-                </span>
+              {id === 'tidslinje' && anyLate && (
+                <>
+                  <span aria-hidden className="size-1.5 rounded-full bg-terracotta" />
+                  <span className="sr-only">{t('Noget er forsinket')}</span>
+                </>
               )}
               {active && (
-                <motion.span layoutId="planning-tab" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#24413a]" />
+                <motion.span layoutId="planning-tab" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-ink" />
               )}
             </button>
           );
         })}
-      </div>
+      </nav>
 
       <AnimatePresence mode="wait">
-        {tab === 'tidslinje' ? (
+        {tab === 'overblik' ? (
+          <OverviewTab key="overblik" onOpenTab={selectTab} onCelebrate={celebrate} onNavigate={onNavigate} />
+        ) : tab === 'tidslinje' ? (
           <TimelineTab key="tidslinje" onCelebrate={celebrate} onNavigate={onNavigate} />
         ) : tab === 'tjekliste' ? (
-          <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} />
+          <ChecklistTab key="tjekliste" onCelebrate={celebrate} onNavigate={onNavigate} initialFilter={checklistFilter} />
         ) : (
           <DayProgramTab key="bryllupsdagen" />
         )}

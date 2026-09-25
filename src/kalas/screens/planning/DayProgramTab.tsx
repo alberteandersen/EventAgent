@@ -19,12 +19,12 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertTriangle, Check, ChevronDown, Clipboard, ClipboardCheck, Copy,
-  FileDown, Link2, Plus, RefreshCw, Share2, Sparkles, Trash2, User, X,
+  FileDown, Link2, MoreHorizontal, Plus, RefreshCw, Share2, Sparkles, Trash2, User, X,
 } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { useRemoveWithUndo, useWithoutPending } from '../../undo';
 import { useLang } from '../../i18n';
-import { Eyebrow, cn } from '../../ui';
+import { cn } from '../../ui';
 import {
   daySpan, formatDuration, formatProgramText, gapAfter, shiftFrom, sortByTime, sortKey, statusOf,
 } from './dayProgram';
@@ -161,8 +161,12 @@ export interface DayProgramProps {
 export function DayProgram({
   items: rawItems, isToday, onAdd, onUpdate, onDelete, onSeed, clockOverride, onShare,
 }: DayProgramProps) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const [clock, setClock] = useState(clockOverride ?? nowHHMM());
+  // An empty day opens on one choice, the classic day. The blank composer
+  // waits behind "start med en tom dag" instead of competing with it.
+  const [blankStart, setBlankStart] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [newTime, setNewTime] = useState('');
@@ -183,6 +187,14 @@ export function DayProgram({
 
   const items = sortByTime(rawItems);
   const span = daySpan(items);
+  // The first place one moment runs into the next, for the notice up top.
+  const clash = (() => {
+    for (let i = 0; i < items.length - 1; i++) {
+      const g = gapAfter(items, i);
+      if (g != null && g < 0) return { index: i, a: items[i].title, b: items[i + 1].title, minutes: -g };
+    }
+    return null;
+  })();
   const nowIndex = items.findIndex((i) => sortKey(i.time) > sortKey(clock));
   const markerAt = nowIndex === -1 ? items.length : nowIndex;
 
@@ -328,10 +340,12 @@ export function DayProgram({
         </p>
       )}
 
-      {/* One tap for the moments almost every wedding has */}
-      {QUICK_MOMENTS.some((q) => !items.some((i) => i.title === q.title)) && (
+      {/* One tap for the moments almost every wedding has, while the day is
+          still being started; on a laid-out day they were one more row of
+          buttons between the couple and their programme. */}
+      {items.length < 4 && QUICK_MOMENTS.some((q) => !items.some((i) => i.title === q.title)) && (
         <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 pl-0.5">
-          <span className="text-[0.68rem] uppercase tracking-[0.12em] text-faint">{t('Hurtigt')}</span>
+          <span className="text-[12px] text-muted">{t('Tilføj hurtigt:')}</span>
           {QUICK_MOMENTS.filter((q) => !items.some((i) => i.title === q.title)).map((q) => (
             <button
               key={q.title}
@@ -351,45 +365,67 @@ export function DayProgram({
     <motion.div
       initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+      className="rounded-[22px] border border-line bg-card px-4 py-6 sm:rounded-[28px] sm:px-9 sm:py-9"
     >
-      {/* ── Header ──────────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <Eyebrow>{t('Bryllupsdagen')}</Eyebrow>
-          <h2 className="mt-1 font-serif text-[1.5rem] leading-tight text-ink">
-            {dayHeadline}
-          </h2>
-        </div>
-
-        {items.length > 0 && (
+      {/* ── Header: the day's span, said once, rather than a strip of
+          labelled figures; sharing first, the rest behind "⋯". ────────── */}
+      {span ? (
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="font-serif text-[1.7rem] leading-tight text-ink sm:text-[2rem]">
+              {t('Fra {start} til {end}', { start: span.start, end: span.end })}
+            </h2>
+            <p className="mt-1 text-[13px] text-muted">
+              {formatDuration(span.totalMin)} · {tn(items.length, 'ét punkt', '{n} punkter')}
+            </p>
+          </div>
           <div className="flex shrink-0 items-center gap-2">
             {onShare && (
               <button
                 type="button"
                 onClick={() => (share.open ? setShare((s) => ({ ...s, open: false })) : void runShare('get'))}
                 aria-expanded={share.open}
-                className="flex items-center gap-1.5 rounded-full bg-ink px-3.5 py-2 text-[0.78rem] font-semibold text-canvas transition-opacity hover:opacity-90 cursor-pointer"
+                className="flex h-9 items-center gap-1.5 rounded-full bg-ink px-4 text-[0.8rem] font-semibold text-canvas transition-opacity hover:opacity-90 cursor-pointer"
               >
-                <Share2 size={14} /> {t('Del programmet')}
+                <Share2 size={14} /> {t('Del')}
               </button>
             )}
-            <button
-              type="button" onClick={copyProgram}
-              className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-2 text-[0.78rem] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
-            >
-              {copied ? <ClipboardCheck size={14} className="text-success" /> : <Clipboard size={14} />}
-              {copied ? t('Kopieret') : t('Kopiér')}
-            </button>
-            <button
-              type="button"
-              onClick={() => printProgram(t('Bryllupsdagen'), dayHeadline, items)}
-              className="flex items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-2 text-[0.78rem] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
-            >
-              <FileDown size={14} /> {t('PDF')}
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label={t('Flere handlinger')}
+                aria-expanded={menuOpen}
+                className="flex size-9 items-center justify-center rounded-full border border-line bg-card text-muted transition-colors hover:text-ink cursor-pointer"
+              >
+                {copied ? <ClipboardCheck size={15} className="text-success" /> : <MoreHorizontal size={16} />}
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 top-11 z-50 w-[220px] overflow-hidden rounded-[14px] border border-line bg-card py-1 shadow-[0_16px_40px_-12px_rgba(20,26,19,0.25)]">
+                    <button type="button" onClick={() => { setMenuOpen(false); copyProgram(); }}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-ink transition-colors hover:bg-shell cursor-pointer">
+                      <Clipboard size={14} className="text-muted" /> {t('Kopiér som tekst')}
+                    </button>
+                    <button type="button" onClick={() => { setMenuOpen(false); printProgram(t('Bryllupsdagen'), dayHeadline, items); }}
+                      className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-ink transition-colors hover:bg-shell cursor-pointer">
+                      <FileDown size={14} className="text-muted" /> {t('Gem som PDF')}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div>
+          <h2 className="font-serif text-[1.7rem] leading-tight text-ink sm:text-[2rem]">{t('Jeres dag, time for time')}</h2>
+          <p className="mt-1.5 max-w-md text-[14px] leading-relaxed text-muted">
+            {t('Fra gæsternes ankomst til den sidste dans, så fotografen, familien og leverandørerne kender planen.')}
+          </p>
+        </div>
+      )}
 
       {/* ── Sharing ─────────────────────────────────────────────────────
           A read-only page with the day on it, for the people who run it.
@@ -400,7 +436,7 @@ export function DayProgram({
           <motion.div
             initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.18 }}
-            className="mt-4 rounded-2xl rule bg-card px-4 py-4"
+            className="mt-4 rounded-2xl bg-shell px-4 py-4"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -449,55 +485,54 @@ export function DayProgram({
         )}
       </AnimatePresence>
 
-      {/* ── The shape of the day ────────────────────────────────────────
-          Every figure carries its own label. Unlabelled they read as four
-          loose numbers that have to be decoded — "1 pauser" least of all. */}
-      {span && (
-        <div className="mt-4 flex flex-wrap items-end gap-x-7 gap-y-3 rounded-2xl rule bg-card px-4 py-3">
-          <Stat label={t('Tidsrum')}>
-            <span className="font-serif text-[1.05rem] text-ink tabular-nums">{span.start} – {span.end}</span>
-          </Stat>
-          <Stat label={t('Varighed')}>{formatDuration(span.totalMin)}</Stat>
-          <Stat label={t('Punkter')}>{items.length}</Stat>
-          <Stat label={t('Pauser')}>{span.gaps}</Stat>
-          {span.overlaps > 0 && (
-            <span className="ml-auto inline-flex items-center gap-1.5 pb-0.5 text-[0.78rem] font-semibold text-[var(--color-terracotta)]">
-              <AlertTriangle size={13} />
-              {span.overlaps === 1
-                ? t('1 overlap')
-                : t('{n} overlap', { n: span.overlaps })}
-            </span>
-          )}
+      {/* ── A collision, said in words, with the fix one tap away. The strip
+          of figures that used to sit here (tidsrum, varighed, punkter,
+          pauser) only ever needed this one of them. */}
+      {clash && (
+        <div role="status" className="mt-5 flex flex-col items-start gap-2 rounded-xl bg-terracotta-tint/70 px-4 py-3 text-[13px] sm:flex-row sm:items-center sm:gap-3">
+          <AlertTriangle size={14} className="hidden shrink-0 text-terracotta sm:block" aria-hidden />
+          <span className="min-w-0 flex-1 text-ink">
+            {t('{a} løber {d} ind i {b}.', { a: t(clash.a), b: t(clash.b), d: formatDuration(clash.minutes) })}
+            {span && span.overlaps > 1 && ` ${tn(span.overlaps - 1, 'Og ét overlap mere.', 'Og {n} overlap mere.')}`}
+          </span>
+          <button type="button" onClick={() => shift(clash.index + 1, clash.minutes)}
+            className="shrink-0 font-semibold text-terracotta underline-offset-4 hover:underline cursor-pointer">
+            {t('Ryk resten {d} senere', { d: formatDuration(clash.minutes) })}
+          </button>
         </div>
       )}
 
       {items.length > 0 && composer}
 
-      {/* ── Empty state ─────────────────────────────────────────────────── */}
+      {/* ── Empty state: one way in, and the blank page behind a link. ─── */}
       {items.length === 0 && (
-        <div className="mt-5 rounded-2xl rule bg-card px-6 py-8">
-          <p className="max-w-md text-[0.88rem] leading-relaxed text-ink-soft">
-            {t('Læg jeres dag time for time — fra gæsternes ankomst til den sidste dans — så alle, fotografen, familien, leverandørerne, kender planen.')}
-          </p>
+        <div className="mt-6 flex flex-col items-start">
           <button
             type="button"
             onClick={() => onSeed(CLASSIC_DAY)}
-            className="mt-5 flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[0.82rem] font-semibold text-canvas transition-opacity hover:opacity-90 cursor-pointer"
+            className="flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[0.85rem] font-semibold text-canvas transition-opacity hover:opacity-90 cursor-pointer"
           >
             <Sparkles size={14} /> {t('Start fra en klassisk dag')}
           </button>
-          <p className="mt-2.5 text-[0.74rem] text-muted">
+          <p className="mt-2.5 text-[13px] text-muted">
             {t('Elleve øjeblikke, fra styling til natmad. Ret dem til jeres egne bagefter.')}
           </p>
+          {!blankStart && (
+            <button type="button" onClick={() => { setBlankStart(true); setTimeout(() => titleRef.current?.focus(), 50); }}
+              className="mt-5 text-[13px] font-semibold text-ink-soft underline decoration-line-strong underline-offset-4 hover:text-ink cursor-pointer">
+              {t('Eller start med en tom dag')}
+            </button>
+          )}
         </div>
       )}
 
-      {items.length === 0 && composer}
+      {items.length === 0 && blankStart && composer}
 
       {/* ── The day ─────────────────────────────────────────────────────── */}
       {items.length > 0 && (
         <div className="relative mt-6">
-          <div aria-hidden className="absolute bottom-4 left-[6.25rem] top-3 w-px bg-line" />
+          {/* Through the centre of the dots: time column + gap + half the rail. */}
+          <div aria-hidden className="absolute bottom-4 left-[66px] top-3 w-px bg-line sm:left-[6.1rem]" />
 
           <div className="flex flex-col">
             {items.map((item, i) => {
@@ -510,9 +545,9 @@ export function DayProgram({
                 <div key={item.id}>
                   {isToday && markerAt === i && <NowMarker clock={clock} label={t('nu')} />}
 
-                  <motion.div layout="position" className="group flex items-stretch gap-2 sm:gap-3">
+                  <motion.div layout="position" className="group flex items-stretch gap-1.5 sm:gap-3">
                     {/* Time */}
-                    <div className="flex w-14 shrink-0 flex-col items-end pt-2.5 sm:w-[4.6rem]">
+                    <div className="flex w-12 shrink-0 flex-col items-end pt-2.5 sm:w-[4.6rem]">
                       <input
                         type="time"
                         defaultValue={item.time}
@@ -570,7 +605,7 @@ export function DayProgram({
                             }}
                             aria-label={t('Titel')}
                             className={cn(
-                              'min-w-0 flex-1 rounded-lg bg-transparent px-1 py-0.5 font-serif text-[1.05rem] focus:bg-card focus:outline-none',
+                              'min-w-0 flex-1 rounded-lg bg-transparent px-1 py-0.5 font-serif text-[1rem] focus:bg-card focus:outline-none sm:text-[1.05rem]',
                               status === 'done' ? 'text-ink-soft' : 'text-ink',
                             )}
                           />
@@ -699,8 +734,10 @@ export function DayProgram({
                   </motion.div>
 
                   {/* The seam: a hole, or a collision */}
-                  {gap != null && gap !== 0 && (
-                    <div className="-mt-2 mb-2 flex items-center gap-2 pl-14 sm:gap-3 sm:pl-[4.6rem]">
+                  {/* A short breather is the day working as planned and
+                      needs no line of its own; a real hole or a collision does. */}
+                  {gap != null && (gap < 0 || gap >= 45) && (
+                    <div className="-mt-2 mb-2 flex items-center gap-1.5 pl-12 sm:gap-3 sm:pl-[4.6rem]">
                       <span className="flex w-6 shrink-0 justify-center">
                         <span
                           className={cn(
@@ -746,8 +783,8 @@ export function DayProgram({
 /** "You are here", drawn where the clock actually falls between two moments. */
 function NowMarker({ clock, label }: { clock: string; label: string }) {
   return (
-    <div className="flex items-center gap-3 py-1.5">
-      <span className="w-[4.6rem] shrink-0 pr-1 text-right text-[0.7rem] font-bold tabular-nums text-[var(--color-terracotta)]">
+    <div className="flex items-center gap-1.5 py-1.5 sm:gap-3">
+      <span className="w-12 shrink-0 pr-1 text-right text-[0.7rem] font-bold tabular-nums text-[var(--color-terracotta)] sm:w-[4.6rem]">
         {clock}
       </span>
       <span className="relative z-10 flex w-6 shrink-0 justify-center">
@@ -762,17 +799,6 @@ function NowMarker({ clock, label }: { clock: string; label: string }) {
       </span>
       <span className="h-px flex-1 bg-[var(--color-terracotta)]/25" />
     </div>
-  );
-}
-
-/** A figure with its label above it, so the summary strip reads without
- *  being decoded. */
-function Stat({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <span className="flex flex-col gap-0.5">
-      <span className="text-[0.6rem] font-bold uppercase tracking-[0.14em] text-faint">{label}</span>
-      <span className="text-[0.82rem] text-ink-soft tabular-nums">{children}</span>
-    </span>
   );
 }
 

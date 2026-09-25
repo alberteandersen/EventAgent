@@ -2513,4 +2513,8 @@ export const EN: Record<string, string> = {
   'Tidslinjen er flyttet': 'The timeline has moved',
   'Én dato fulgte med.': 'One date came along.',
   '{n} datoer fulgte med.': '{n} dates came along.',
+  'Tidslinjen bygges ud fra jeres dato': 'The timeline is built from your date',
+  'Sæt datoen, så lægger vi 14 milepæle ud for jer, fra budget og venue til bordplan og invitationer.':
+    'Set the date and we lay out 14 milestones for you, from budget and venue to seating plan and invitations.',
+  'Sæt datoen': 'Set the date',
 };

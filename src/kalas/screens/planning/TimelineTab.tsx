@@ -229,9 +229,11 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
             : t('Alt med en dato frem til brylluppet.')}
         </p>
         <div className="flex flex-wrap items-center gap-2.5">
-          <p className="shrink-0 text-sm font-bold text-sage">
-            {t('{done} af {total} klaret', { done, total: tasks.length })}
-          </p>
+          {tasks.length > 0 && (
+            <p className="shrink-0 text-sm font-bold text-sage">
+              {t('{done} af {total} klaret', { done, total: tasks.length })}
+            </p>
+          )}
           <button
             type="button"
             onClick={handleReset}
@@ -278,7 +280,8 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
         </div>
       )}
 
-      {/* Search + filters */}
+      {/* Search + filters, once there is something to search */}
+      {tasks.length > 0 && (
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex h-11 w-full items-center gap-2.5 rounded-[14px] border border-line bg-shell px-4 sm:w-[260px]">
           <Search size={15} className="shrink-0 text-faint" />
@@ -316,9 +319,25 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
           );
         })}
       </div>
+      )}
 
       {/* The spine, time runs downward, one month band at a time. */}
-      {dated.length === 0 && undated.length === 0 ? (
+      {tasks.length === 0 && !couple.dateISO ? (
+        /* The milestones are laid out backwards from the wedding day, so
+           without one there is nothing to lay out yet. Say that, and where
+           the date goes, instead of inviting them to type the plan by hand. */
+        <div className="flex flex-col items-center gap-3 rounded-[18px] border border-line bg-shell px-5 py-10 text-center">
+          <CalendarClock size={22} className="text-sage-strong" aria-hidden />
+          <p className="font-serif text-xl text-ink">{t('Tidslinjen bygges ud fra jeres dato')}</p>
+          <p className="max-w-md text-[13px] leading-relaxed text-muted">
+            {t('Sæt datoen, så lægger vi 14 milepæle ud for jer, fra budget og venue til bordplan og invitationer.')}
+          </p>
+          <a href="/settings"
+            className="mt-1 inline-flex h-9 items-center rounded-full bg-ink px-4 text-[0.82rem] font-semibold text-canvas transition-opacity hover:opacity-90">
+            {t('Sæt datoen')}
+          </a>
+        </div>
+      ) : dated.length === 0 && undated.length === 0 ? (
         <div className="rounded-[18px] border border-line bg-shell px-5 py-10 text-center">
           <p className="font-serif text-lg text-ink">
             {tasks.length === 0

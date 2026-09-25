@@ -16,7 +16,7 @@ import { defaultChecklist, phaseOf, phaseLabel, currentPhase, isDueBy, PHASES } 
 import {
   isCheck, isMilestone, hasArea, groupByArea, areaLabel, nextSort, areaOf, topUpKey,
   assigneeInitials, assigneeName, priorityOf,
-  readOpenAreas, writeOpenAreas, daysDiff,
+  readOpenAreas, writeOpenAreas, daysDiff, todayISO,
   type ChecklistArea, type Filter, FILTER_LABELS, CHECKLIST_AREAS,
 } from './shared';
 
@@ -69,6 +69,30 @@ export default function ChecklistTab({ onCelebrate, onNavigate, initialFilter }:
     const phase = isCheck(r) ? phaseOf(r.title) : null;
     return phase ? PHASES.findIndex((p) => p.id === phase) : PHASES.length;
   };
+
+  /* An open area, split by when: what belongs to now, what comes later, and
+     what is done, each in phase order with the area's milestone first. One
+     undifferentiated run of forty rows is what made it all run together.
+     Without a date there is no "now", so the open items stay one group. */
+  const today = todayISO();
+  function bucketed(items: (typeof rows)[number][]) {
+    const byWhen = (a: (typeof rows)[number], b: (typeof rows)[number]) =>
+      (Number(isCheck(a)) - Number(isCheck(b))) || phaseRank(a) - phaseRank(b);
+    const isNow = (r: (typeof rows)[number]) =>
+      isCheck(r) ? dueNow(r) : r.due_date != null && r.due_date <= today;
+    const open = items.filter((r) => !r.done);
+    const done = items.filter((r) => r.done);
+    return now
+      ? [
+          { id: 'nu', label: 'Hører til nu', rows: open.filter(isNow).sort(byWhen) },
+          { id: 'senere', label: 'Senere', rows: open.filter((r) => !isNow(r)).sort(byWhen) },
+          { id: 'klaret', label: 'Klaret', rows: done },
+        ]
+      : [
+          { id: 'aabne', label: null, rows: open.sort(byWhen) },
+          { id: 'klaret', label: 'Klaret', rows: done },
+        ];
+  }
 
   const done = rows.filter((r) => r.done).length;
   const counts: Record<ChecklistFilter, number> = {
@@ -295,47 +319,52 @@ export default function ChecklistTab({ onCelebrate, onNavigate, initialFilter }:
         </div>
       )}
 
-      {/* One foldable block per area. Tight gap on purpose: folded away, the
-          twelve headers should read as a single list, not twelve panels. */}
-      <div className="flex flex-col gap-1">
+      {/* One foldable block per area, parted by hairlines so twelve areas read
+          as twelve things, each saying how far it has come and what it asks
+          of them now on a quiet second line. */}
+      <div className="border-t border-line">
       {groups.map(({ area, items }) => {
         const progress = areaProgress(area);
         const Icon = CHECKLIST_AREAS.find((a) => a.id === area)?.Icon;
         const open = isOpen(area);
         const label = t(areaLabel(area));
+        const buckets = bucketed(items);
+        const labelled = buckets.filter((b) => b.rows.length > 0).length > 1;
         return (
-          <section key={area} className="flex flex-col">
+          <section key={area} className="border-b border-line">
             {/* Button inside the heading, not the other way round: a <button>
                 may only contain phrasing content, and this way the area keeps
                 its place in the heading outline. No aria-label, the visible
-                text is the accessible name, so "2/17" is announced too, and
-                aria-expanded carries the state. */}
+                text is the accessible name, so the counts are announced too,
+                and aria-expanded carries the state. */}
             <h2>
               <button
                 type="button"
                 onClick={() => toggleArea(area)}
                 aria-expanded={open}
-                className="flex w-full items-center gap-3 rounded-[14px] px-1 py-2.5 text-left transition-colors hover:bg-[#f2efe7] cursor-pointer"
+                className="flex w-full items-center gap-3.5 px-1 py-3.5 text-left transition-colors hover:bg-[#f6f7f5] cursor-pointer sm:px-2"
               >
-                {Icon && <Icon size={16} strokeWidth={2} className="shrink-0 text-[#7d938a]" />}
-                <span className="min-w-0 flex-1 font-serif text-lg leading-snug text-[#24413a]">{label}</span>
-                {/* What the area asks of them now, then how far it has come. A
-                    bar per area drew twelve empty lines on a new plan. */}
-                {now && progress.due > 0 && activeFilter !== 'nu' && (
-                  <span className="shrink-0 rounded-full bg-[#f4ecdc] px-2 py-0.5 font-sans text-[11px] font-semibold text-[#746b56]">
-                    {t('{n} nu', { n: progress.due })}
+                {Icon && (
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-shell text-sage-strong">
+                    <Icon size={16} strokeWidth={2} aria-hidden />
                   </span>
                 )}
-                <span className="shrink-0 font-sans text-xs font-semibold tabular-nums text-[#6c7561]">
-                  {progress.done}/{progress.total}
+                <span className="min-w-0 flex-1">
+                  <span className="block font-serif text-lg leading-snug text-ink">{label}</span>
+                  <span className="mt-0.5 flex flex-wrap items-center gap-x-2 font-sans text-[13px] font-normal text-muted">
+                    <span>{t('{done} af {total} klaret', { done: progress.done, total: progress.total })}</span>
+                    {now && progress.due > 0 && activeFilter !== 'nu' && (
+                      <span className="inline-flex items-center gap-1.5 text-[#746b56]">
+                        <span aria-hidden className="size-1.5 rounded-full bg-[#c9a15f]" />
+                        {tn(progress.due, 'én hører til nu', '{n} hører til nu')}
+                      </span>
+                    )}
+                  </span>
                 </span>
                 <ChevronDown
                   size={16}
                   aria-hidden
-                  className={cn(
-                    'shrink-0 text-[#9a9686] transition-transform duration-200',
-                    open && 'rotate-180',
-                  )}
+                  className={cn('shrink-0 text-faint transition-transform duration-200', open && 'rotate-180')}
                 />
               </button>
             </h2>
@@ -349,39 +378,52 @@ export default function ChecklistTab({ onCelebrate, onNavigate, initialFilter }:
                   transition={reduce ? { duration: 0 } : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="flex flex-col gap-3 pt-2">
+                  {/* Indented under the area's icon on a wide screen, so the
+                      items read as belonging to it. */}
+                  <div className="pb-4 sm:pl-[3.25rem]">
                     {/* The real thank-you list and the photo album live in
                         Nygift; these checkboxes only remind you they exist. */}
                     {area === 'efter' && onNavigate && (
                       <button
                         type="button"
                         onClick={() => onNavigate('nygift')}
-                        className="flex w-full items-center justify-between gap-3 rounded-[18px] border border-[#d3dcc4] bg-[#e8f0ec] px-5 py-3.5 text-left transition-colors hover:bg-[#e6ebdc] cursor-pointer"
+                        className="mb-2 flex w-full items-center justify-between gap-3 rounded-xl bg-sage-tint/50 px-4 py-3 text-left transition-colors hover:bg-sage-tint cursor-pointer"
                       >
-                        <span className="text-sm text-[#24413a]">
-                          {t('Takkelisten og billederne bor under Nygift')}
-                        </span>
-                        <ArrowRight size={15} className="shrink-0 text-[#5f6b66]" />
+                        <span className="text-sm text-ink">{t('Takkelisten og billederne bor under Nygift')}</span>
+                        <ArrowRight size={15} className="shrink-0 text-muted" />
                       </button>
                     )}
 
-                    {items.map((row) => (
-                      <TaskRow
-                        key={row.id}
-                        task={toDisplay(row)}
-                        deleteLabel="Slet punkt"
-                        menuOpen={menuId === row.id}
-                        onMenu={() => setMenuId((m) => (m === row.id ? null : row.id))}
-                        onCloseMenu={() => setMenuId(null)}
-                        onToggle={() => handleToggle(row)}
-                        onOpen={() => { setMenuId(null); setOpenId(row.id); }}
-                        // A milestone is only visiting: open, tick or date it
-                        // here, but delete it on the timeline where it lives.
-                        {...(isCheck(row)
-                          ? { onDelete: () => { setMenuId(null); removeTask(row.id, row.title, () => deleteTask(row.id)); } }
-                          : {})}
-                        onDateChange={(d) => void updateTask(row.id, { due_date: d })}
-                      />
+                    {buckets.map((b) => b.rows.length > 0 && (
+                      <div key={b.id}>
+                        {labelled && b.label && (
+                          <p className="px-1 pb-1 pt-3 text-[12px] font-semibold text-muted sm:px-2">{t(b.label)}</p>
+                        )}
+                        <div className="divide-y divide-line/70">
+                          {b.rows.map((row) => (
+                            // The hairline sits on this wrapper, not on the
+                            // row itself, whose hover is rounded.
+                            <div key={row.id}>
+                            <TaskRow
+                              variant="list"
+                              task={toDisplay(row)}
+                              deleteLabel="Slet punkt"
+                              menuOpen={menuId === row.id}
+                              onMenu={() => setMenuId((m) => (m === row.id ? null : row.id))}
+                              onCloseMenu={() => setMenuId(null)}
+                              onToggle={() => handleToggle(row)}
+                              onOpen={() => { setMenuId(null); setOpenId(row.id); }}
+                              // A milestone is only visiting: open, tick or date it
+                              // here, but delete it on the timeline where it lives.
+                              {...(isCheck(row)
+                                ? { onDelete: () => { setMenuId(null); removeTask(row.id, row.title, () => deleteTask(row.id)); } }
+                                : {})}
+                              onDateChange={(d) => void updateTask(row.id, { due_date: d })}
+                            />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     ))}
 
                     <AnimatePresence>
@@ -396,11 +438,9 @@ export default function ChecklistTab({ onCelebrate, onNavigate, initialFilter }:
                     <button
                       type="button"
                       onClick={() => openAdd(area)}
-                      className="flex w-full items-center gap-4 rounded-[18px] border border-dashed border-[#dcdfdb] bg-transparent px-5 py-3 text-left text-sm font-semibold text-[#5f6b66] transition-colors hover:border-[#c6cbc6] hover:text-[#24413a] cursor-pointer"
+                      className="mt-1 inline-flex items-center gap-2 px-1 py-2 text-[13px] font-semibold text-muted transition-colors hover:text-ink cursor-pointer sm:px-2"
                     >
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-[#c6cbc6]">
-                        <Plus size={14} />
-                      </span>
+                      <Plus size={14} aria-hidden />
                       {t('Tilføj punkt')}
                     </button>
                   </div>

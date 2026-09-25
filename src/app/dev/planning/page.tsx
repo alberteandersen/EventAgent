@@ -6,7 +6,8 @@
      ?tab=tjekliste|bryllupsdagen  open on that tab
      ?moved=1                     the couple has moved the wedding since the plan was laid out
      ?nodate=1                    no wedding date yet
-     ?venue=1                     a venue is chosen, so "Book venue" looks done */
+     ?venue=1                     a venue is chosen, so "Book venue" looks done
+     ?date=2026-12-05             a different wedding date (the plan is laid out from it) */
 
 import { Suspense, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
@@ -26,9 +27,10 @@ function Harness() {
   const moved = params.get('moved') === '1';
   const noDate = params.get('nodate') === '1';
   const venue = params.get('venue') === '1';
+  const plannedFor = params.get('date') ?? PLANNED_FOR;
   const [navigated, setNavigated] = useState<string | null>(null);
   // Stable, so the fixture's value (and every effect keyed on it) settles.
-  const couple = useMemo(() => ({ dateISO: noDate ? null : moved ? '2027-06-12' : PLANNED_FOR }), [noDate, moved]);
+  const couple = useMemo(() => ({ dateISO: noDate ? null : moved ? '2027-06-12' : plannedFor }), [noDate, moved, plannedFor]);
   const event = useMemo(() => (venue ? { chosen_venue_id: 'v1' } : undefined), [venue]);
 
   const [tasks] = useState(() => {
@@ -36,7 +38,7 @@ function Harness() {
     try { if (tab) sessionStorage.setItem('kalas_planning_tab', tab); } catch { /* ignore */ }
     if (noDate) return [];
     // The first milestone is ticked, so the list shows done, overdue and ahead.
-    return defaultMilestones(PLANNED_FOR).map((m, i) => task(m.title, { ...m, done: i === 0 }));
+    return defaultMilestones(plannedFor).map((m, i) => task(m.title, { ...m, done: i === 0 }));
   });
 
   return (

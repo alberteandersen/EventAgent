@@ -41,7 +41,7 @@ export type DisplayTask = {
  *  the title and from the menu. */
 export default function TaskRow({
   task, deleteLabel, menuOpen, onMenu, onCloseMenu, onToggle, onDelete, onInsertAfter, onOpen, onClearDate, onDateChange,
-  action, suggestion,
+  action, suggestion, variant = 'card',
 }: {
   task: DisplayTask;
   deleteLabel: string;
@@ -58,6 +58,9 @@ export default function TaskRow({
   action?: { label: string; onClick: () => void };
   /** The rest of the app says this looks done; `reason` is shown with it. */
   suggestion?: { reason: string; onAccept: () => void };
+  /** 'card' on the timeline's spine; 'list' in the checklist, where a stack
+   *  of two hundred bordered cards ran together into one grey mass. */
+  variant?: 'card' | 'list';
 }) {
   const { t } = useLang();
   const dateInputRef = useRef<HTMLInputElement>(null);
@@ -108,8 +111,12 @@ export default function TaskRow({
   return (
     <div
       className={cn(
-        'flex w-full items-start gap-3 rounded-[18px] border px-4 py-3.5 sm:items-center sm:gap-4 sm:px-5 sm:py-4',
-        taskRowTone(done ? 'done' : overdue ? 'overdue' : 'default'),
+        variant === 'list'
+          ? 'flex w-full items-start gap-3 rounded-xl px-1 py-3 transition-colors hover:bg-[#f6f7f5] sm:items-center sm:gap-4 sm:px-2'
+          : cn(
+            'flex w-full items-start gap-3 rounded-[18px] border px-4 py-3.5 sm:items-center sm:gap-4 sm:px-5 sm:py-4',
+            taskRowTone(done ? 'done' : overdue ? 'overdue' : 'default'),
+          ),
       )}
     >
       <div className="mt-0.5 shrink-0 sm:mt-0">

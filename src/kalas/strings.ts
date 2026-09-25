@@ -2584,4 +2584,9 @@ export const EN: Record<string, string> = {
   'Vis den klarede milepæl': 'Show the done milestone',
   'Vis {n} klarede milepæle': 'Show {n} done milestones',
   'Tjeklisten er tom. Prøv igen med Gendan standardlisten under ⋯.': 'The checklist is empty. Try again with Restore the default list under ⋯.',
+  'Hører til nu': 'Belongs to now',
+  'Senere': 'Later',
+  'Klaret': 'Done',
+  'én hører til nu': 'one belongs to now',
+  '{n} hører til nu': '{n} belong to now',
 };

@@ -93,7 +93,7 @@ export default function Suppliers({
     onGoToVenue?: () => void;
   };
 }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const { venues, refresh } = useWedding();
   const locked = hub?.locked ?? false;
   const [query, setQuery] = useState(hub?.query ?? '');
@@ -242,7 +242,7 @@ export default function Suppliers({
           <>
             <div className="mt-10 flex items-baseline justify-between">
               <Eyebrow className="!text-[#7d938a]">
-                {cat === 'alle' ? t('Jeres leverandører') : catLabel} · {t('{n} resultater', { n: results.length })}
+                {cat === 'alle' ? t('Jeres leverandører') : catLabel} · {tn(results.length, '{n} resultat', '{n} resultater')}
               </Eyebrow>
               {savedCount > 0 && (
                 <span className="flex items-center gap-1.5 text-[0.7rem] text-[#5f6b66]">
@@ -310,7 +310,7 @@ export default function Suppliers({
 function SupplierCard({ s, i, onToggleSave }: {
   s: VendorCard; i: number; onToggleSave: (id: string) => void;
 }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const catLabel = t(CATS.find((c) => c.id === s.cat)?.label ?? 'Leverandør');
   return (
     <motion.div
@@ -348,8 +348,8 @@ function SupplierCard({ s, i, onToggleSave }: {
         {s.tags.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-1.5">
             {s.tags.map((tag) => {
-              const reviews = /^(\d+) anmeldelser$/.exec(tag);
-              const label = reviews ? t('{n} anmeldelser', { n: reviews[1] }) : t(tag);
+              const reviews = /^(\d+) anmeldelser?$/.exec(tag);
+              const label = reviews ? tn(Number(reviews[1]), '{n} anmeldelse', '{n} anmeldelser') : t(tag);
               return (
               <span key={tag} className="rounded-full bg-[#eceeeb] px-2.5 py-0.5 text-[0.58rem] font-medium uppercase tracking-[0.1em] text-[#5f6b66]">
                 {label}

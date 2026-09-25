@@ -397,7 +397,7 @@ export default function GuestDialog({
                 </button>
                 <button type="button" onClick={() => setConfirmingDelete(false)}
                   className="text-muted hover:text-ink cursor-pointer">
-                  {t('Fortryd')}
+                  {t('Behold')}
                 </button>
               </div>
             ) : (

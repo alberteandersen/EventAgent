@@ -8,6 +8,7 @@
 
 import { useMemo, useState } from 'react';
 import { WeddingFixtureProvider, type Couple, type WeddingData } from '@/kalas/useWedding';
+import { UndoProvider } from '@/kalas/undo';
 import type { BudgetItemRow, BudgetSubItemRow, EventRow, GuestRow, SeatingPlanRow } from '@/lib/db/types';
 
 const now = new Date().toISOString();
@@ -103,5 +104,9 @@ export function FixtureWedding({
     }) as unknown as WeddingData;
   }, [guests, seatingPlan, budgetItems, budgetSubItems]);
 
-  return <WeddingFixtureProvider value={value}>{children}</WeddingFixtureProvider>;
+  return (
+    <WeddingFixtureProvider value={value}>
+      <UndoProvider>{children}</UndoProvider>
+    </WeddingFixtureProvider>
+  );
 }

@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Lightbox } from '../onboarding/Lightbox';
 import { useWedding } from '../useWedding';
+import { useRemoveWithUndo, useWithoutPending } from '../undo';
 import { cn } from '../ui';
 import type { NavigateTarget } from '../lib/hub-nav';
 import { useLang, type Lang } from '../i18n';
@@ -83,7 +84,12 @@ function RatingBadge({ rating, className }: { rating: number | null; className?:
 ══════════════════════════════════════════════════════════════════════════ */
 export default function Honeymoon({ onNavigate }: { onNavigate?: (s: NavigateTarget) => void }) {
   const { t, lang } = useLang();
-  const { couple, honeymoonSaves, addHoneymoonSave, removeHoneymoonSave, setHoneymoonBooked } = useWedding();
+  const { couple, honeymoonSaves: allSaves, addHoneymoonSave, removeHoneymoonSave, setHoneymoonBooked } = useWedding();
+  // A trip removed from Gemte a moment ago stays gone while Fortryd is offered.
+  const honeymoonSaves = useWithoutPending(allSaves);
+  const removeWithUndo = useRemoveWithUndo();
+  const removeSaved = (id: string) =>
+    removeWithUndo(id, allSaves.find((s) => s.id === id)?.name ?? '', () => removeHoneymoonSave(id));
   const [tab, setTab] = useState<HTab>('udforsk');
 
   // Shared save helpers (dedupe on place_id when present, else on name+kind).
@@ -203,7 +209,7 @@ export default function Honeymoon({ onNavigate }: { onNavigate?: (s: NavigateTar
           <GemteTab
             key="gemte"
             saves={honeymoonSaves}
-            onRemove={removeHoneymoonSave}
+            onRemove={removeSaved}
             onToggleBooked={setHoneymoonBooked}
             onExplore={() => setTab('udforsk')}
             onInspire={() => setTab('inspiration')}

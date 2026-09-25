@@ -248,7 +248,7 @@ export default function TaskDialog({
                 </button>
                 <button type="button" onClick={() => setConfirmingDelete(false)}
                   className="text-muted hover:text-ink cursor-pointer">
-                  {t('Fortryd')}
+                  {t('Behold')}
                 </button>
               </div>
             ) : (

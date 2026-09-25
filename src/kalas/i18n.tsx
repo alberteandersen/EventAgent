@@ -31,13 +31,22 @@ const DICTIONARIES = new Map<Lang, Record<string, string>>(
 );
 
 type Translate = (s: string, params?: Record<string, string | number>) => string;
-interface LangCtx { lang: Lang; setLang: (l: Lang) => void; t: Translate }
+/** `one` when n is 1, `other` otherwise; both get {n}. Danish and English
+ *  split the same way, so two forms cover every registered language. */
+type TranslateCount = (n: number, one: string, other: string, params?: Record<string, string | number>) => string;
+interface LangCtx { lang: Lang; setLang: (l: Lang) => void; t: Translate; tn: TranslateCount }
 
 export function translate(lang: Lang, s: string, params?: Record<string, string | number>): string {
   const dict = DICTIONARIES.get(lang); // undefined for the source language (da)
   let out = dict ? (dict[s] ?? s) : s;
   if (params) for (const k of Object.keys(params)) out = out.split(`{${k}}`).join(String(params[k]));
   return out;
+}
+
+export function translateCount(
+  lang: Lang, n: number, one: string, other: string, params?: Record<string, string | number>,
+): string {
+  return translate(lang, n === 1 ? one : other, { n, ...params });
 }
 
 const Ctx = createContext<LangCtx | null>(null);
@@ -69,7 +78,8 @@ export function LanguageProvider({ initialLang = 'da', lock = false, children }:
   }, []);
 
   const t = useCallback<Translate>((s, params) => translate(lang, s, params), [lang]);
-  const value = useMemo<LangCtx>(() => ({ lang, setLang, t }), [lang, setLang, t]);
+  const tn = useCallback<TranslateCount>((n, one, other, params) => translateCount(lang, n, one, other, params), [lang]);
+  const value = useMemo<LangCtx>(() => ({ lang, setLang, t, tn }), [lang, setLang, t, tn]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
@@ -77,7 +87,11 @@ export function LanguageProvider({ initialLang = 'da', lock = false, children }:
 export function useLang(): LangCtx {
   const ctx = useContext(Ctx);
   if (ctx) return ctx;
-  return { lang: 'da', setLang: () => {}, t: (s, params) => translate('da', s, params) };
+  return {
+    lang: 'da', setLang: () => {},
+    t: (s, params) => translate('da', s, params),
+    tn: (n, one, other, params) => translateCount('da', n, one, other, params),
+  };
 }
 
 /* ── Presentational language switch (one pill per registered language) ─── */

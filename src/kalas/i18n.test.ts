@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LANGUAGES, translate } from './i18n';
+import { LANGUAGES, translate, translateCount } from './i18n';
 import { APP_LANGUAGES } from '@/lib/db/types';
 
 describe('i18n registry', () => {
@@ -26,5 +26,15 @@ describe('i18n registry', () => {
   it('interpolates {named} params in either language', () => {
     expect(translate('en', 'Skrevet på {sprog}', { sprog: 'Danish' })).toBe('Written in Danish');
     expect(translate('da', 'Skrevet på {sprog}', { sprog: 'dansk' })).toBe('Skrevet på dansk');
+  });
+
+  it('picks the singular for exactly one, in either language', () => {
+    const one = 'Én gæst mangler stadig svar';
+    const other = '{n} gæster mangler stadig svar';
+    expect(translateCount('da', 1, one, other)).toBe('Én gæst mangler stadig svar');
+    expect(translateCount('da', 0, one, other)).toBe('0 gæster mangler stadig svar');
+    expect(translateCount('da', 3, one, other)).toBe('3 gæster mangler stadig svar');
+    expect(translateCount('en', 1, one, other)).toBe('One guest still awaiting a reply');
+    expect(translateCount('en', 3, one, other)).toBe('3 guests still awaiting a reply');
   });
 });

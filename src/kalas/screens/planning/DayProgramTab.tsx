@@ -22,6 +22,7 @@ import {
   FileDown, Link2, Plus, RefreshCw, Share2, Sparkles, Trash2, User, X,
 } from 'lucide-react';
 import { useWedding } from '../../useWedding';
+import { useRemoveWithUndo, useWithoutPending } from '../../undo';
 import { useLang } from '../../i18n';
 import { Eyebrow, cn } from '../../ui';
 import {
@@ -110,13 +111,17 @@ function printProgram(title: string, subtitle: string, items: DayProgramItemRow[
  *  takes plain props. */
 export default function DayProgramTab() {
   const { couple, dayProgramItems, addDayProgramItem, updateDayProgramItem, deleteDayProgramItem, seedDayProgram } = useWedding();
+  const items = useWithoutPending(dayProgramItems);
+  const removeWithUndo = useRemoveWithUndo();
+  const remove = (id: string) =>
+    removeWithUndo(id, dayProgramItems.find((i) => i.id === id)?.title ?? '', () => deleteDayProgramItem(id));
   return (
     <DayProgram
-      items={dayProgramItems}
+      items={items}
       isToday={Boolean(couple.dateISO) && couple.dateISO === todayISO()}
       onAdd={(item) => addDayProgramItem(item)}
       onUpdate={(id, patch) => void updateDayProgramItem(id, patch)}
-      onDelete={(id) => void deleteDayProgramItem(id)}
+      onDelete={remove}
       onSeed={(rows) => void seedDayProgram(rows)}
       onShare={shareLink}
     />

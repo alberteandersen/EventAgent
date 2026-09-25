@@ -112,7 +112,7 @@ export default function BudgetLineDetail({
   onUpdateSubItem: (id: string, patch: { label?: string; vendor?: string | null; amount?: number }) => void;
   onDeleteSubItem: (id: string) => void;
 }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
 
   // A draft, seeded from the current values once, on open. Nothing here
   // touches the real data until Save.
@@ -459,9 +459,9 @@ export default function BudgetLineDetail({
               {days != null && (
                 <span className={cn('text-[0.78rem]', days < 0 ? 'text-[var(--color-terracotta)]' : 'text-muted')}>
                   {days < 0
-                    ? t('forfaldt for {n} dage siden', { n: Math.abs(days) })
+                    ? tn(Math.abs(days), 'forfaldt i går', 'forfaldt for {n} dage siden')
                     : days === 0 ? t('forfalder i dag')
-                    : t('forfalder om {n} dage', { n: days })}
+                    : tn(days, 'forfalder i morgen', 'forfalder om {n} dage')}
                 </span>
               )}
             </div>
@@ -517,7 +517,7 @@ export default function BudgetLineDetail({
                 onClick={() => setConfirmingDelete(false)}
                 className="text-muted hover:text-ink cursor-pointer"
               >
-                {t('Fortryd')}
+                {t('Behold')}
               </button>
             </div>
           ) : (

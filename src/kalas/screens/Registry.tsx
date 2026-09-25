@@ -26,7 +26,7 @@ const FALLBACK_PHOTO =
   'https://cdn.wonder.so/images/019d9110-e1f2-74f3-85e8-c89f82be5a63/6d0cada0901a800c9f43a2cf68a9d52f6cf2620687565337240b2d069d261834.jpg';
 
 export default function Registry({ onNavigate }: { onNavigate?: (s: import('../Shell').ScreenId) => void }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const {
     couple, weddingSite,
     registryItems, addRegistryItem, updateRegistryItem, deleteRegistryItem,
@@ -122,7 +122,7 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
 
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[0.82rem] text-muted">
-              {t('{n} ønsker på listen', { n: allItems.length })}
+              {tn(allItems.length, 'Ét ønske på listen', '{n} ønsker på listen')}
             </span>
             {publicUrl ? (
               <button
@@ -307,7 +307,7 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
                       </button>
                       <button onClick={() => setConfirmDelete(null)}
                         className="rounded-full px-2 py-1 text-[0.72rem] text-muted hover:text-ink cursor-pointer">
-                        {t('Fortryd')}
+                        {t('Behold')}
                       </button>
                     </div>
                   </div>

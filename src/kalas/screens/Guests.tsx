@@ -12,6 +12,7 @@ import AnimateNumber from '../AnimateNumber';
 import { useLang } from '../i18n';
 import { GuideLink } from './guides/GuideLink';
 import { useWedding } from '../useWedding';
+import { useRemoveWithUndo, useWithoutPending } from '../undo';
 import type { GuestRow as GuestRecord, RsvpStatus } from '@/lib/db/types';
 
 /** The three states a couple can set by hand, in the order they think about
@@ -63,11 +64,14 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
   /** Which tab opens first; the app always opens the list, harnesses may not. */
   initialTab?: Tab;
 } = {}) {
-  const { t } = useLang();
-  const { couple, guests: guestList, weddingSite, seatingPlan, saveSeating, addGuest: addGuestRow, updateGuest, deleteGuest } = useWedding();
+  const { t, tn } = useLang();
+  const { couple, guests: allGuests, weddingSite, seatingPlan, saveSeating, addGuest: addGuestRow, updateGuest, deleteGuest } = useWedding();
   const siteBase = weddingSite?.published && weddingSite.domain
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/w/${weddingSite.domain}`
     : null;
+  // A guest removed a moment ago stays gone while Fortryd is still on offer.
+  const guestList = useWithoutPending(allGuests);
+  const removeWithUndo = useRemoveWithUndo();
   const guestLink = (token: string) => (siteBase ? `${siteBase}?rsvp=${token}` : null);
   const [tab, setTab] = useState<Tab>(initialTab);
   const [filter, setFilter] = useState<Filter>('alle');
@@ -112,7 +116,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
     void saveSeating(placeAtTable(plan, id, tableId) as unknown as Record<string, unknown>);
   };
 
-  const removeGuest = (id: string) => void deleteGuest(id);
+  const removeGuest = (g: GuestRecord) => removeWithUndo(g.id, g.name, () => deleteGuest(g.id));
   const setRsvp = (g: GuestRecord, rsvp: RsvpStatus) => void updateGuest(g.id, { rsvp });
 
   const sides = ['Fælles', couple.a || 'Partner 1', couple.b || 'Partner 2'].filter(Boolean);
@@ -168,7 +172,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
                 className="mt-6 flex items-center justify-between gap-4 rounded-2xl rule bg-card px-5 py-4">
                 <div>
                   <p className="text-[0.88rem] font-medium text-ink">
-                    {t('{n} gæster mangler stadig svar', { n: rsvpStats.afventer })}
+                    {tn(rsvpStats.afventer, 'Én gæst mangler stadig svar', '{n} gæster mangler stadig svar')}
                   </p>
                   <p className="mt-0.5 text-[0.76rem] text-muted">
                     {t('Ava sender en venlig påmindelse på jeres vegne')}
@@ -257,7 +261,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
               <span className="text-[0.62rem] font-semibold tracking-[0.2em] uppercase text-muted">-</span>
             </div>
             <div className="divide-y divide-[var(--color-line)]">
-              {orderByHousehold(list).map(({ guest: g, member }, i) => <GuestRow key={g.id} g={g} i={i} member={member} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g.id)} onSetRsvp={(v) => setRsvp(g, v)} onEdit={() => setDialog(g)} />)}
+              {orderByHousehold(list).map(({ guest: g, member }, i) => <GuestRow key={g.id} g={g} i={i} member={member} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g)} onSetRsvp={(v) => setRsvp(g, v)} onEdit={() => setDialog(g)} />)}
             </div>
             {list.length === 0 && (
               <p className="py-10 text-center font-serif text-[1.1rem] italic text-muted">
@@ -296,7 +300,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
           tableId={dialog === 'new' ? null : (seatOf(plan, dialog.id)?.tableId ?? null)}
           onClose={() => setDialog(null)}
           onSave={saveDialog}
-          onDelete={dialog === 'new' ? undefined : () => { removeGuest(dialog.id); setDialog(null); }}
+          onDelete={dialog === 'new' ? undefined : () => { removeGuest(dialog); setDialog(null); }}
         />
       )}
     </div>

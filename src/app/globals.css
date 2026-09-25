@@ -118,6 +118,15 @@ html {
   outline-offset: 2px;
 }
 
+/* Where toasts sit (src/kalas/undo.tsx): clear of the phone's bottom bar and
+   home indicator below lg, where Shell shows that bar; low on desktop. */
+:root {
+  --kalas-toast-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+@media (min-width: 1024px) {
+  :root { --kalas-toast-bottom: 32px; }
+}
+
 /* ── Kalas utilities (names unique — safe globally) ───────────────────── */
 
 /* Hairline rules — the Aesop signature. Never a heavy shadowed box.      */

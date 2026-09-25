@@ -94,7 +94,7 @@ export default function VenueFilterBar({
   /** Opens the favourites tab. Omitted when there is nowhere to go. */
   onOpenSaved?: () => void;
 }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   /** Only one menu at a time — two open popovers is two ways to be lost. */
   const [openPill, setOpenPill] = useState<string | null>(null);
   const [guestDraft, setGuestDraft] = useState<string>(
@@ -431,7 +431,7 @@ export default function VenueFilterBar({
       {/* ── What the row adds up to ───────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[0.74rem] text-muted">
         <span className="font-bold text-ink">
-          {loading ? t('Søger…') : t('{n} steder', { n: counts.shown })}
+          {loading ? t('Søger…') : tn(counts.shown, '{n} sted', '{n} steder')}
         </span>
         {counts.hiddenCapacity > 0 && filters.min_capacity != null && (
           <span>

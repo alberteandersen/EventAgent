@@ -57,7 +57,7 @@ const CANVAS_MAX_H = 576;
 const PLANE_PAD = 100;
 
 export default function Seating() {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const reduce = useReducedMotion();
   const { loading, guests, couple, seatingPlan, saveSeating } = useWedding();
 
@@ -386,7 +386,7 @@ export default function Seating() {
             {pool.length === 0
               ? t('Tilføj gæster på gæstelisten, så kan I sætte dem på plads her.')
               : unseatedGuests.length === 0
-                ? t('Alle {n} gæster har en plads.', { n: pool.length })
+                ? tn(pool.length, 'Gæsten har en plads.', 'Alle {n} gæster har en plads.')
                 : t('{n} af {total} gæster har en plads.', { n: seated.size, total: pool.length })}
           </p>
           <GuideLink screen="seating" />
@@ -782,7 +782,7 @@ export default function Seating() {
                 <button
                   type="button"
                   onClick={() => lift(null)}
-                  aria-label={t('Fortryd')}
+                  aria-label={t('Annuller')}
                   className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#5f6b66] hover:text-[#24413a]"
                 >
                   <X size={13} />

@@ -13,6 +13,7 @@ import GuidedTour from './GuidedTour';
 import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
 import { LanguageProvider, type Lang } from './i18n';
+import { UndoProvider } from './undo';
 import Home from './screens/Home';
 import Ava from './screens/Ava';
 import type { AgentUiAction } from '@/lib/db/types';
@@ -41,7 +42,9 @@ export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }
         <WeddingProvider>
           <KalasProvider>
             <div className="theme-kalas min-h-screen bg-canvas font-sans text-ink">
-              <AppInner />
+              <UndoProvider>
+                <AppInner />
+              </UndoProvider>
             </div>
           </KalasProvider>
         </WeddingProvider>

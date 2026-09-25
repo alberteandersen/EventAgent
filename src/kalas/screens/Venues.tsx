@@ -12,6 +12,7 @@ import { Lightbox } from '../onboarding/Lightbox';
 import OutreachDialog from '../OutreachDialog';
 import { IMAGES } from '../data';
 import { useWedding, type Couple } from '../useWedding';
+import { showNotice } from '../notice';
 import { venueBudget } from './budget/estimate';
 import { Eyebrow, Pill, cn } from '../ui';
 import type { NavigateTarget } from '../lib/hub-nav';
@@ -212,10 +213,6 @@ export default function VenueDiscovery({
     const name = displayVenues.find((v) => v.id === id)?.name ?? 'venue';
     setContacting({ id, name });
   };
-  // Confirmation toast shown the moment a venue becomes "jeres venue".
-  const [chosenToast, setChosenToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const bookVenue = async (id: string) => {
     const alreadyChosen = booked === id;
     await fetch(`/api/venues/${id}`, {
@@ -223,14 +220,15 @@ export default function VenueDiscovery({
       body: JSON.stringify({ booked: true }),
     });
     await refresh();
+    // Confirm the moment a venue becomes "jeres venue".
     if (!alreadyChosen) {
       const name = displayVenues.find((v) => v.id === id)?.name ?? null;
-      setChosenToast(name);
-      if (toastTimer.current) clearTimeout(toastTimer.current);
-      toastTimer.current = setTimeout(() => setChosenToast(null), 3800);
+      showNotice(
+        name ? t('{name} er nu jeres venue', { name }) : t('Venue valgt'),
+        t('Alt om stedet samles nu på jeres oversigt.'),
+      );
     }
   };
-  useEffect(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
 
   // Open the list, optionally straight into a venue's detail.
   const [pendingSelect, setPendingSelect] = useState<string | null>(null);
@@ -316,32 +314,6 @@ export default function VenueDiscovery({
         )}
       </AnimatePresence>
 
-
-      {/* ── "Venue valgt" confirmation toast ───────────────────────────── */}
-      <AnimatePresence>
-        {chosenToast !== null && (
-          <motion.div
-            initial={{ opacity: 0, y: 28, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            role="status" aria-live="polite"
-            className="fixed inset-x-0 bottom-24 z-40 flex justify-center px-4 lg:bottom-8 pointer-events-none"
-          >
-            <div className="pointer-events-auto flex items-center gap-3.5 rounded-full bg-[#24413a] py-3 pl-4 pr-5 shadow-[0_16px_48px_rgba(18,51,43,0.32)]">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#7d938a]">
-                <Check size={16} className="text-white" strokeWidth={3} />
-              </span>
-              <div className="min-w-0">
-                <p className="truncate font-serif text-[0.98rem] leading-snug text-[#f8f9f8]">
-                  {chosenToast ? t('{name} er nu jeres venue', { name: chosenToast }) : t('Venue valgt')}
-                </p>
-                <p className="text-[0.72rem] text-[#a6b0aa]">{t('Alt om stedet samles nu på jeres oversigt.')}</p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <AnimatePresence>
         {contacting && (
@@ -673,7 +645,7 @@ function DiscoverView({
   embedded?: boolean;
   categoryBar?: ReactNode;
 }) {
-  const { lang, t } = useLang();
+  const { lang, t, tn } = useLang();
   const { updateEvent, budgetItems, event } = useWedding();
   const venueArea = venueAreaLabel(couple.region);
 
@@ -1579,7 +1551,7 @@ function DiscoverView({
                 </p>
                 {rejected.length > 0 && (
                   <p className="mt-1.5 text-[0.75rem] text-[#9a9686]">
-                    {t('{n} steder blev filtreret fra.', { n: rejected.length })}
+                    {tn(rejected.length, 'Ét sted blev filtreret fra.', '{n} steder blev filtreret fra.')}
                   </p>
                 )}
               </div>
@@ -1739,7 +1711,7 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
   open: boolean; onOpen: () => void;
   onSave: () => void; onDismiss: () => void; onExpand?: () => void;
 }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   return (
     <div className={cn(
       'group flex flex-col overflow-hidden rounded-2xl border bg-[#ffffff] transition-shadow',
@@ -1785,7 +1757,7 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
         )}
         {v.photos.length > 1 && (
           <span className="pointer-events-none absolute bottom-2.5 right-2.5 rounded-full bg-black/45 px-2 py-0.5 text-[0.6rem] font-semibold text-white backdrop-blur-sm">
-            {t('{n} billeder', { n: v.photos.length })}
+            {tn(v.photos.length, '{n} billede', '{n} billeder')}
           </span>
         )}
       </div>
@@ -2369,7 +2341,7 @@ function OutreachReview({
   recipients: DisplayVenue[];
   onBack: () => void; onApproved: () => void; onAva: () => void;
 }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const [draft, setDraft] = useState<EmailDraftRow | null>(null);
   const [preparing, setPreparing] = useState(true);
   const [prepError, setPrepError] = useState<string | null>(null);
@@ -2431,7 +2403,7 @@ function OutreachReview({
       </button>
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Trin 3 · Godkend')}</p>
       <h1 className="mt-1 font-serif text-[clamp(1.9rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
-        {t(recipients.length === 1 ? 'Ava kontakter {n} venue' : 'Ava kontakter {n} venues', { n: recipients.length })}
+        {tn(recipients.length, 'Ava kontakter {n} venue', 'Ava kontakter {n} venues')}
       </h1>
       <p className="mt-2 text-[13px] text-[#5f6b66]">
         {t('Ava sender en personlig mail til hvert sted fra jeres Kalas-postkasse og samler alle svar under Henvendelser. I godkender her, intet sendes uden.')}
@@ -2515,7 +2487,7 @@ function VenueDetail({
   onSelectOther: (id: string) => void;
   onRefresh: () => Promise<void>;
 }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const [notes, setNotes]         = useState('');
   const [activePackage, setPkg]   = useState<number | null>(null);
   // Start in the researching state when a shortlisted venue has nothing on file
@@ -2608,7 +2580,7 @@ function VenueDetail({
             <img src={imgSrc(venue.image)} alt={venue.name}
               className="absolute inset-0 h-full w-full object-cover object-center" />
             <div className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-full border border-[#dcdfdb] bg-[#ffffff]/95 px-3 py-1.5 backdrop-blur-sm">
-              <span className="text-[0.68rem] font-medium text-[#24413a]">{t('{n} billeder', { n: realPhotos.length })}</span>
+              <span className="text-[0.68rem] font-medium text-[#24413a]">{tn(realPhotos.length, '{n} billede', '{n} billeder')}</span>
             </div>
           </div>
           {realPhotos.slice(1, 5).map((url, i) => (
@@ -2635,7 +2607,7 @@ function VenueDetail({
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#e6e9e5] bg-[#f8f9f8] px-3 py-1 text-[0.72rem] font-medium text-[#24413a]">
               <Star size={12} fill="currentColor" className="text-[#8a7d5c]" />
               {venue.rating.toFixed(1)}
-              {venue.reviewCount > 0 && <span className="text-[#5f6b66]">· {t('{n} anmeldelser', { n: venue.reviewCount })}</span>}
+              {venue.reviewCount > 0 && <span className="text-[#5f6b66]">· {tn(venue.reviewCount, '{n} anmeldelse', '{n} anmeldelser')}</span>}
             </span>
           )}
         </div>

@@ -446,7 +446,7 @@ function ProposalCard({ proposalId, onNavigate }: { proposalId: string; onNaviga
 }
 
 function DraftCard({ draftId }: { draftId: string }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const supabase = useMemo(() => createClient(), []);
   const { venues, refresh } = useWedding();
   const [draft, setDraft] = useState<EmailDraftRow | null>(null);
@@ -476,7 +476,7 @@ function DraftCard({ draftId }: { draftId: string }) {
         {draft.body_template}
       </p>
       <p className="mt-2 text-[0.74rem] text-muted">
-        {t('Ava skriver individuelt til {n} valgte leverandører', { n: recipients.length })}
+        {tn(recipients.length, 'Ava skriver til den valgte leverandør', 'Ava skriver individuelt til {n} valgte leverandører')}
         {recipients.length > 0 && `: ${recipients.map((v) => v.name).join(', ')}`}.
       </p>
       {draft.status !== 'proposed' || sent ? (

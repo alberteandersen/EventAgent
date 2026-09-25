@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { RotateCcw, Plus, Search, X, ArrowRight, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { useWedding } from '../../useWedding';
+import { useRemoveWithUndo, useWithoutPending } from '../../undo';
 import { cn } from '../../ui';
 import { useLang } from '../../i18n';
 import type { ScreenId } from '../../Shell';
@@ -56,7 +57,10 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
      seeded, so folding them into `checks` would convince the seeder that the
      list is already full. */
   const checks = timelineTasks.filter(isCheck);
-  const rows = [...checks, ...timelineTasks.filter((r) => isMilestone(r) && hasArea(r))];
+  // A task removed a moment ago stays out of `rows` while Fortryd is offered.
+  const visible = useWithoutPending(timelineTasks);
+  const removeTask = useRemoveWithUndo();
+  const rows = [...visible.filter(isCheck), ...visible.filter((r) => isMilestone(r) && hasArea(r))];
 
   /* The checklist seeds itself from here rather than from Planning's mount
      effect: its items are dateless, so waiting for a wedding date only left
@@ -377,7 +381,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
                         // A milestone is only visiting: open, tick or date it
                         // here, but delete it on the timeline where it lives.
                         {...(isCheck(row)
-                          ? { onDelete: () => { setMenuId(null); void deleteTask(row.id); } }
+                          ? { onDelete: () => { setMenuId(null); removeTask(row.id, row.title, () => deleteTask(row.id)); } }
                           : {})}
                         onDateChange={(d) => void updateTask(row.id, { due_date: d })}
                       />
@@ -422,7 +426,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
               void updateTask(openTask.id, patch);
               if (patch.done === true) celebrateArea(openTask);
             }}
-            onDelete={isCheck(openTask) ? () => { setOpenId(null); void deleteTask(openTask.id); } : undefined}
+            onDelete={isCheck(openTask) ? () => { setOpenId(null); removeTask(openTask.id, openTask.title, () => deleteTask(openTask.id)); } : undefined}
           />
         )}
       </AnimatePresence>

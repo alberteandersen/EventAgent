@@ -131,7 +131,7 @@ export function QrBlock({ url, caption, size = 96, printable = true }: {
       {printable && (
         <button type="button" onClick={print} disabled={!svg}
           className="inline-flex items-center gap-1 text-[0.68rem] text-muted transition-colors hover:text-ink disabled:opacity-40 cursor-pointer">
-          <Printer size={11} /> {t('Print')}
+          <Printer size={11} /> {t('Udskriv')}
         </button>
       )}
     </div>

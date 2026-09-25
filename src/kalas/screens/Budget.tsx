@@ -14,6 +14,7 @@ import {
 import { Eyebrow, Chip, CheckDot, cn } from '../ui';
 import AnimateNumber from '../AnimateNumber';
 import { useWedding } from '../useWedding';
+import { useUndo } from '../undo';
 import { useLang } from '../i18n';
 import { GuideLink } from './guides/GuideLink';
 import { navigateToHub, type NavigateTarget } from '../lib/hub-nav';
@@ -44,6 +45,8 @@ const splitting = new Set<string>();
 const subSeeding = new Set<string>();
 
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
+/** Undo key for a category: its id is a category name, not a row id. */
+const lineKey = (category: string) => `budget-line:${category}`;
 
 /** Paid state of a line: fully paid, partially paid, or nothing paid. */
 const paidState = (actual: number, paid: number): 'full' | 'partial' | 'none' =>
@@ -60,7 +63,7 @@ function daysUntil(dateStr: string): number | null {
 }
 
 export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget) => void }) {
-  const { t } = useLang();
+  const { t, tn } = useLang();
   const {
     loading, couple, event, budgetItems, saveBudgetItem, deleteBudgetItem, updateEvent,
     budgetSubItems, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem, seedBudgetSubItems,
@@ -70,7 +73,12 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   // fallback. Zero means we know neither, and nothing is guessed.
   const estimate = estimatedTotal(couple.budgetTotal, couple.guests);
   const total = couple.budgetTotal || estimate;
-  const [lines, setLines] = useState<BudgetLine[]>(budgetLines);
+  const [storedLines, setLines] = useState<BudgetLine[]>(budgetLines);
+  // A category or post removed a moment ago stays out of sight, and out of
+  // the totals, while Fortryd is still on offer; see removeLine.
+  const { remove, isPending } = useUndo();
+  const lines = useMemo(() => storedLines.filter((l) => !isPending(lineKey(l.id))), [storedLines, isPending]);
+  const subItems = useMemo(() => budgetSubItems.filter((s) => !isPending(s.id)), [budgetSubItems, isPending]);
   const [amounts, setAmounts] = useState<Record<string, number>>(
     () => Object.fromEntries(budgetLines.map((b) => [b.id, Math.round((total * b.pct) / 100)])),
   );
@@ -259,7 +267,10 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   const [newColor, setNewColor] = useState<string>(BUDGET_COLORS[0]);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const allocated = useMemo(() => Object.values(amounts).reduce((a, b) => a + b, 0), [amounts]);
+  const allocated = useMemo(
+    () => Object.entries(amounts).reduce((a, [id, v]) => (isPending(lineKey(id)) ? a : a + v), 0),
+    [amounts, isPending],
+  );
   const remaining = total - allocated;
   const spent = lines.reduce((a, b) => a + b.spent, 0);
 
@@ -282,14 +293,35 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
     else void saveBudgetItem({ category: id, label, planned_amount: 0, icon: newIcon, color: newColor });
   };
 
+  // The removal runs when the Fortryd toast closes, so it reads the budget as
+  // it is then rather than as it was when the × was pressed.
+  const latest = useRef({ lines: storedLines, amounts, persisted: budgetItems.length > 0 });
+  useEffect(() => { latest.current = { lines: storedLines, amounts, persisted: budgetItems.length > 0 }; });
+
   const removeLine = (id: string) => {
-    const remaining = lines.filter((b) => b.id !== id);
-    setLines(remaining);
-    setAmounts((prev) => { const next = { ...prev }; delete next[id]; return next; });
-    // When nothing is persisted yet, seed everything *except* the removed line
-    // so the removal sticks; otherwise delete the persisted row.
-    if (budgetItems.length === 0) void seedAll(remaining, amounts);
-    else void deleteBudgetItem(id);
+    const line = lines.find((b) => b.id === id);
+    remove({
+      ids: lineKey(id),
+      label: t('{label} er fjernet', { label: t(line?.label ?? id) }),
+      commit: () => {
+        const { lines: now, amounts: nowAmounts, persisted } = latest.current;
+        setLines((prev) => prev.filter((b) => b.id !== id));
+        setAmounts((prev) => { const next = { ...prev }; delete next[id]; return next; });
+        // When nothing is persisted yet, seed everything *except* the removed
+        // line so the removal sticks; otherwise delete the persisted row.
+        if (!persisted) return seedAll(now.filter((b) => b.id !== id), nowAmounts);
+        return deleteBudgetItem(id);
+      },
+    });
+  };
+
+  const removeSubItem = (id: string) => {
+    const sub = budgetSubItems.find((s) => s.id === id);
+    remove({
+      ids: id,
+      label: t('{label} er fjernet', { label: sub?.label ?? '' }),
+      commit: () => deleteBudgetSubItem(id),
+    });
   };
 
   /** Applies a whole Detaljer draft at once — label, style, the actual/paid
@@ -495,7 +527,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           const note = noteById[b.id] ?? '';
           const Icon = resolveBudgetIcon(b.icon);
           const custom = isCustomLine(b.id);
-          const subs = budgetSubItems.filter((s) => s.category === b.id);
+          const subs = subItems.filter((s) => s.category === b.id);
           const subCount = subs.length;
           const subTotal = subs.reduce((a, s) => a + s.amount, 0);
           return (
@@ -594,7 +626,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               </span>
 
               <span className="flex shrink-0 items-center gap-1.5">
-                {subCount > 0 && <span className="text-[0.72rem] text-muted">{t('{n} poster', { n: subCount })}</span>}
+                {subCount > 0 && <span className="text-[0.72rem] text-muted">{tn(subCount, '{n} post', '{n} poster')}</span>}
                 {reminder && <Bell size={12} className="text-clay" aria-hidden />}
                 {note && <StickyNote size={12} className="text-clay" aria-hidden />}
                 <ChevronRight
@@ -851,10 +883,10 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
               if (patch.reminder_at) setReminderById((r) => ({ ...r, [b.id]: patch.reminder_at! }));
               persistField(b.id, patch);
             }}
-            subItems={budgetSubItems.filter((s) => s.category === b.id)}
+            subItems={subItems.filter((s) => s.category === b.id)}
             onAddSubItem={(item) => void addBudgetSubItem({ category: b.id, ...item })}
             onUpdateSubItem={(id, patch) => void updateBudgetSubItem(id, patch)}
-            onDeleteSubItem={(id) => void deleteBudgetSubItem(id)}
+            onDeleteSubItem={removeSubItem}
           />
         );
       })()}

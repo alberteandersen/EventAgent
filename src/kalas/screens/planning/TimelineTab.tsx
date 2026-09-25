@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { RotateCcw, Plus, Search, X } from 'lucide-react';
 import { timeline as MOCK_TIMELINE } from '../../data';
 import { useWedding } from '../../useWedding';
+import { useRemoveWithUndo, useWithoutPending } from '../../undo';
 import { cn } from '../../ui';
 import { useLang } from '../../i18n';
 import type { DisplayTask } from './TaskRow';
@@ -67,7 +68,10 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
   const locale = lang === 'en' ? 'en-US' : 'da-DK';
   const monthLabel = (monthISO: string) =>
     new Date(`${monthISO}T12:00:00`).toLocaleDateString(locale, { month: 'long', year: 'numeric' });
-  const { couple, timelineTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
+  const { couple, timelineTasks: allTasks, addTask, updateTask, deleteTask, seedTasks, clearTasks } = useWedding();
+  // A task removed a moment ago stays off the timeline while Fortryd is offered.
+  const timelineTasks = useWithoutPending(allTasks);
+  const removeTask = useRemoveWithUndo();
   const today = todayISO();
   const daysUntil = couple.dateISO ? Math.max(0, daysDiff(couple.dateISO, today)) : 0;
 
@@ -150,7 +154,7 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
       ? { onOpen, onClearDate: () => { setMenuId(null); void updateTask(task.id, { due_date: null }); } }
       : {
           onOpen,
-          onDelete: () => { setMenuId(null); void deleteTask(task.id); },
+          onDelete: () => { setMenuId(null); removeTask(task.id, task.title, () => deleteTask(task.id)); },
           onInsertAfter: () => openAdd(task.id),
         };
   }
@@ -336,7 +340,7 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
             }}
             // A dated checklist item is only visiting: deleting it here would
             // take it off the checklist too.
-            onDelete={isMilestone(openTask) ? () => { setOpenId(null); void deleteTask(openTask.id); } : undefined}
+            onDelete={isMilestone(openTask) ? () => { setOpenId(null); removeTask(openTask.id, openTask.title, () => deleteTask(openTask.id)); } : undefined}
           />
         )}
       </AnimatePresence>

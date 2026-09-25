@@ -198,7 +198,7 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-5 rounded-[28px] border border-line bg-card p-7"
+      className="flex flex-col gap-5 rounded-[22px] border border-line bg-card p-4 sm:rounded-[28px] sm:p-7"
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <p className="text-sm text-muted">
@@ -241,7 +241,7 @@ export default function TimelineTab({ onCelebrate }: { onCelebrate: (title: stri
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('Søg i milepæle')}
             aria-label={t('Søg i milepæle')}
-            className="min-w-0 flex-1 bg-transparent text-sm text-ink placeholder:text-faint focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-base sm:text-sm text-ink placeholder:text-faint focus:outline-none"
           />
           {query && (
             <button type="button" onClick={() => setQuery('')} aria-label={t('Ryd søgning')}

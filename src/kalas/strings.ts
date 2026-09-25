@@ -2502,4 +2502,7 @@ export const EN: Record<string, string> = {
   '{n} sted': '{n} place',
   'forfaldt i går': 'due yesterday',
   'forfalder i morgen': 'due tomorrow',
+
+  // ── Tidslinje & tjekliste ──────────────────────────────────────────
+  'Dublér': 'Duplicate',
 };

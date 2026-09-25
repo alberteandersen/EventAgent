@@ -23,8 +23,8 @@ export type RowActions = {
 /** The "you are here" line, drawn between the rows it falls between. */
 function TodayMarker({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-4">
-      <span className="relative z-10 flex w-12 shrink-0 justify-center">
+    <div className="flex items-center gap-2.5 sm:gap-4">
+      <span className="relative z-10 flex w-9 shrink-0 sm:w-12 justify-center">
         <span className="size-3 rounded-full bg-terracotta ring-4 ring-card" />
       </span>
       <span className="text-[0.68rem] font-bold uppercase tracking-[0.16em] text-terracotta">
@@ -92,14 +92,14 @@ export default function TimelineSpine<T extends SpineTask>({
       {/* One continuous rule behind every band, so the months read as a single
           stretch of time rather than as separate cards. */}
       {bands.length > 0 && (
-        <div aria-hidden className="absolute bottom-3 left-[23px] top-3 w-px bg-line" />
+        <div aria-hidden className="absolute bottom-3 left-[17px] top-3 w-px bg-line sm:left-[23px]" />
       )}
 
       <div className="flex flex-col gap-7">
         {bands.map((band) =>
           band.kind === 'gap' ? (
-            <div key={band.key} className="flex items-center gap-4">
-              <span className="flex w-12 shrink-0 justify-center">
+            <div key={band.key} className="flex items-center gap-2.5 sm:gap-4">
+              <span className="flex w-9 shrink-0 sm:w-12 justify-center">
                 {/* Dashed over the solid rule: time passing, nothing planned.
                     Height grows with the lull, capped so a year-long gap does
                     not push the rest of the plan off the screen. */}
@@ -116,8 +116,8 @@ export default function TimelineSpine<T extends SpineTask>({
             </div>
           ) : (
             <div key={band.key}>
-              <div className="flex items-center gap-4">
-                <span className="relative z-10 flex w-12 shrink-0 justify-center">
+              <div className="flex items-center gap-2.5 sm:gap-4">
+                <span className="relative z-10 flex w-9 shrink-0 sm:w-12 justify-center">
                   <span className="rounded-full bg-card p-1">
                     <CalendarClock size={16} className="text-sage" aria-hidden />
                   </span>
@@ -132,11 +132,11 @@ export default function TimelineSpine<T extends SpineTask>({
                 {band.todayIndex === 0 && <TodayMarker label={t('I dag')} />}
                 {band.items.map((task, i) => (
                   <React.Fragment key={task.id}>
-                    <div className="flex items-start gap-4">
-                      <span className="relative z-10 flex w-12 shrink-0 justify-center pt-4">
+                    <div className="flex items-start gap-2.5 sm:gap-4">
+                      <span className="relative z-10 flex w-9 shrink-0 justify-center pt-3 sm:w-12 sm:pt-4">
                         <span
                           className={cn(
-                            'flex size-9 items-center justify-center rounded-full border text-[0.72rem] font-bold tabular-nums',
+                            'flex size-8 items-center justify-center rounded-full border text-[0.7rem] font-bold tabular-nums sm:size-9 sm:text-[0.72rem]',
                             task.done ? 'border-sage-strong bg-sage-tint text-ink'
                               : task.weddingDay ? 'border-ink bg-ink text-canvas'
                               : task.overdue ? 'border-terracotta bg-terracotta-tint text-terracotta'
@@ -163,7 +163,7 @@ export default function TimelineSpine<T extends SpineTask>({
       {/* An undated task has no place in time, so it waits here rather than
           being pinned to a date nobody chose. */}
       {undated.length > 0 && (
-        <div className="mt-7 rounded-[18px] border border-dashed border-line-strong bg-shell/60 p-5">
+        <div className="mt-7 rounded-[18px] border border-dashed border-line-strong bg-shell/60 p-3 sm:p-5">
           <h3 className="text-[0.7rem] font-bold uppercase tracking-[0.18em] text-muted">
             {t('Uden dato')}
           </h3>

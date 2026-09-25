@@ -9,7 +9,10 @@
 import { useMemo, useState } from 'react';
 import { WeddingFixtureProvider, type Couple, type WeddingData } from '@/kalas/useWedding';
 import { UndoProvider } from '@/kalas/undo';
-import type { BudgetItemRow, BudgetSubItemRow, EventRow, GuestRow, SeatingPlanRow } from '@/lib/db/types';
+import type {
+  BudgetItemRow, BudgetSubItemRow, EventRow, GuestRow, SeatingPlanRow, TaskKind, TimelineTaskRow, VenueRow,
+} from '@/lib/db/types';
+import type { JourneyStage } from '@/lib/journey';
 
 const now = new Date().toISOString();
 let seq = 0;
@@ -30,15 +33,33 @@ export function guest(name: string, extra: Partial<GuestRow> = {}): GuestRow {
   };
 }
 
+export function task(title: string, extra: Partial<TimelineTaskRow> = {}): TimelineTaskRow {
+  return {
+    id: id('t'), event_id: 'dev', user_id: 'dev', title, due_date: null, done: false, category: null,
+    kind: 'milestone', notes: null, priority: null, assignee: null, sort: seq, created_at: now,
+    ...extra,
+  };
+}
+
+type TaskDraft = { title: string; due_date?: string | null; category?: string | null; kind?: TaskKind; done?: boolean; sort?: number };
+
 export function FixtureWedding({
   children, guests: initialGuests = [], seating = null, budgetItems: initialItems = [], budgetSubItems: initialSubs = [],
+  tasks: initialTasks = [], couple: coupleOverride, event: eventOverride, venues = [], journey = [],
 }: {
   children: React.ReactNode;
   guests?: GuestRow[];
   seating?: Record<string, unknown> | null;
   budgetItems?: BudgetItemRow[];
   budgetSubItems?: BudgetSubItemRow[];
+  /** Timeline and checklist rows (Planlægning). */
+  tasks?: TimelineTaskRow[];
+  couple?: Partial<Couple>;
+  event?: Partial<EventRow>;
+  venues?: VenueRow[];
+  journey?: JourneyStage[];
 }) {
+  const [timelineTasks, setTimelineTasks] = useState(initialTasks);
   const [guests, setGuests] = useState(initialGuests);
   const [seatingPlan, setSeatingPlan] = useState<SeatingPlanRow | null>(
     seating ? { id: 'sp', event_id: 'dev', user_id: 'dev', data: seating, updated_at: now } as SeatingPlanRow : null,
@@ -48,12 +69,12 @@ export function FixtureWedding({
 
   const value = useMemo(() => {
     const noop = async () => undefined;
-    const event = { id: 'dev', user_id: 'dev', title: "Emma & Frederik's wedding" } as EventRow;
+    const event = { id: 'dev', user_id: 'dev', title: "Emma & Frederik's wedding", ...eventOverride } as EventRow;
     const base = {
-      loading: false, hasWedding: true, event, profile: null, couple: FIXTURE_COUPLE,
-      venues: [], drafts: [], outbound: [], replies: [], attachments: [], proposals: [],
-      inviteOrders: [], inviteDesigns: [], invitations: [], journey: [],
-      dayProgramItems: [], timelineTasks: [], moodboardItems: [], weddingSite: null,
+      loading: false, hasWedding: true, event, profile: null, couple: { ...FIXTURE_COUPLE, ...coupleOverride },
+      venues, drafts: [], outbound: [], replies: [], attachments: [], proposals: [],
+      inviteOrders: [], inviteDesigns: [], invitations: [], journey,
+      dayProgramItems: [], timelineTasks, moodboardItems: [], weddingSite: null,
       registryItems: [], registryClaims: [], thankYous: [], honeymoonSaves: [],
       websiteDesigns: [], websiteDesign: null, sitePhotos: [], websiteOrders: [], websitePaid: false,
       guests, seatingPlan, budgetItems, budgetSubItems,
@@ -91,6 +112,24 @@ export function FixtureWedding({
         setBudgetSubItems((rows) => rows.map((r) => (r.id === sid ? { ...r, ...patch } : r)));
       },
       deleteBudgetSubItem: async (sid: string) => setBudgetSubItems((rows) => rows.filter((r) => r.id !== sid)),
+
+      addTask: async (draft: TaskDraft) => {
+        const row = task(draft.title, { ...draft, kind: draft.kind ?? 'milestone' });
+        setTimelineTasks((rows) => [...rows, row]);
+        return row;
+      },
+      updateTask: async (tid: string, patch: Partial<TimelineTaskRow>) => {
+        setTimelineTasks((rows) => rows.map((r) => (r.id === tid ? { ...r, ...patch } : r)));
+      },
+      deleteTask: async (tid: string) => setTimelineTasks((rows) => rows.filter((r) => r.id !== tid)),
+      seedTasks: async (drafts: TaskDraft[]) => {
+        setTimelineTasks((rows) => [...rows, ...drafts.map((d, i) => task(d.title, { ...d, kind: d.kind ?? 'milestone', sort: d.sort ?? i }))]);
+        return null;
+      },
+      clearTasks: async (kind: TaskKind) => {
+        setTimelineTasks((rows) => rows.filter((r) => (r.kind === 'check' ? 'check' : 'milestone') !== kind));
+        return null;
+      },
       seedBudgetSubItems: async (items: { category: string; label: string; amount: number; sort: number }[]) => {
         setBudgetSubItems((rows) => [...rows, ...items.map((item) => ({
           id: id('s'), event_id: 'dev', user_id: 'dev', vendor: null, paid: false, created_at: now, ...item,
@@ -102,7 +141,7 @@ export function FixtureWedding({
     return new Proxy(base, {
       get: (target, key) => (key in target ? target[key as keyof typeof target] : noop),
     }) as unknown as WeddingData;
-  }, [guests, seatingPlan, budgetItems, budgetSubItems]);
+  }, [guests, seatingPlan, budgetItems, budgetSubItems, timelineTasks, coupleOverride, eventOverride, venues, journey]);
 
   return (
     <WeddingFixtureProvider value={value}>

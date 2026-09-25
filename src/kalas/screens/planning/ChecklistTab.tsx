@@ -205,7 +205,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-5 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-7"
+      className="flex flex-col gap-5 rounded-[22px] border border-[#dcdfdb] bg-[#ffffff] p-4 sm:rounded-[28px] sm:p-7"
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <p className="text-sm text-[#5f6b66]">
@@ -248,7 +248,7 @@ export default function ChecklistTab({ onCelebrate, onNavigate }: {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('Søg i tjeklisten')}
             aria-label={t('Søg i tjeklisten')}
-            className="min-w-0 flex-1 bg-transparent text-sm text-[#24413a] placeholder:text-[#9a9686] focus:outline-none"
+            className="min-w-0 flex-1 bg-transparent text-base sm:text-sm text-[#24413a] placeholder:text-[#9a9686] focus:outline-none"
           />
           {query && (
             <button type="button" onClick={() => setQuery('')} aria-label={t('Ryd søgning')}

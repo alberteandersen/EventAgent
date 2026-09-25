@@ -237,7 +237,7 @@ export default function TaskDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-line px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-4 sm:gap-3 sm:px-6">
           {onDelete ? (
             confirmingDelete ? (
               <div className="flex items-center gap-3 text-[0.82rem]">
@@ -254,9 +254,11 @@ export default function TaskDialog({
             ) : (
               <button
                 type="button" onClick={() => setConfirmingDelete(true)}
-                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-[0.82rem] font-medium text-[var(--color-terracotta)] transition-colors hover:bg-[var(--color-terracotta-tint)] cursor-pointer"
+                aria-label={t(deleteLabel)}
+                className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-[0.82rem] font-medium text-[var(--color-terracotta)] transition-colors hover:bg-[var(--color-terracotta-tint)] cursor-pointer"
               >
-                <Trash2 size={14} /> {t(deleteLabel)}
+                {/* Just the bin on a phone, where the label broke the footer onto two lines. */}
+                <Trash2 size={14} /> <span className="hidden sm:inline">{t(deleteLabel)}</span>
               </button>
             )
           ) : <span />}
@@ -264,13 +266,13 @@ export default function TaskDialog({
           <div className="flex items-center gap-2">
             <button
               type="button" onClick={onClose}
-              className="rounded-full px-4 py-2 text-[0.82rem] font-medium text-muted transition-colors hover:text-ink cursor-pointer"
+              className="whitespace-nowrap rounded-full px-3 py-2 text-[0.82rem] font-medium text-muted transition-colors hover:text-ink sm:px-4 cursor-pointer"
             >
               {t('Annuller')}
             </button>
             <button
               type="button" onClick={save} disabled={!title}
-              className="rounded-full bg-ink px-5 py-2 text-[0.82rem] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+              className="whitespace-nowrap rounded-full bg-ink px-5 py-2 text-[0.82rem] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
             >
               {t('Gem ændringer')}
             </button>

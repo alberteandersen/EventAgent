@@ -56,17 +56,39 @@ export default function TaskRow({
   const isSoon = status === 'planned' && diff !== null && diff > 0 && diff <= 14;
   const isToday = status === 'planned' && diff === 0;
 
+  const statusTone = done ? 'text-[#5f7d70]'
+    : overdue ? 'text-[#b34e37]'
+    : status === 'wedding' ? 'text-[#24413a]'
+    : isSoon || isToday ? 'text-[#8a7d5c]'
+    : 'text-[#9a9686]';
+  const statusText = statusLabel(task, t);
+  const assignee = task.assigneeInitials && (
+    <span
+      title={task.assigneeName ?? undefined}
+      aria-label={task.assigneeName ? t('Tildelt {name}', { name: task.assigneeName }) : undefined}
+      className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#e8f0ec] px-1.5 text-[0.62rem] font-bold tracking-[0.04em] text-[#5f7d70]"
+    >
+      {task.assigneeInitials}
+    </span>
+  );
+
+  /* On a phone the title gets the whole width and everything else moves to
+     a line under it; side by side, a three-word title wrapped into a column
+     two words wide and the status ran across it. From sm up the status and
+     the owner sit on the right as before. */
   return (
     <div
       className={cn(
-        'flex w-full flex-wrap items-center gap-3 rounded-[18px] border px-5 py-4 sm:gap-4',
+        'flex w-full items-start gap-3 rounded-[18px] border px-4 py-3.5 sm:items-center sm:gap-4 sm:px-5 sm:py-4',
         taskRowTone(done ? 'done' : overdue ? 'overdue' : 'default'),
       )}
     >
-      <TaskCheckbox done={task.done} label={task.title} onToggle={onToggle} />
+      <div className="mt-0.5 shrink-0 sm:mt-0">
+        <TaskCheckbox done={task.done} label={task.title} onToggle={onToggle} />
+      </div>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className={cn('flex flex-wrap items-center gap-2 text-base font-semibold', done ? doneLabelClass : 'text-[#24413a]')}>
+      <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-0.5">
+        <span className={cn('flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.95rem] font-semibold leading-snug sm:text-base', done ? doneLabelClass : 'text-[#24413a]')}>
           {task.Icon && <task.Icon size={14} strokeWidth={2} className="shrink-0 text-[#7d938a]" aria-hidden />}
           {onOpen ? (
             <button
@@ -89,52 +111,41 @@ export default function TaskRow({
             </span>
           )}
         </span>
-        <button
-          type="button"
-          onClick={() => dateInputRef.current?.showPicker?.()}
-          aria-label={t("Ændr dato for '{title}'", { title: task.title })}
-          className={cn(
-            'relative flex w-fit items-center gap-1.5 text-[13px] hover:text-[#24413a] cursor-pointer',
-            task.dateISO ? 'text-[#5f6b66]' : 'text-[#9a9686]',
-          )}
-        >
-          <CalendarDays size={12} />
-          {task.dateISO ? formatDate(task.dateISO) : t('Vælg dato')}
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={task.dateISO ?? ''}
-            onChange={(e) => e.target.value && onDateChange(e.target.value)}
-            className="absolute inset-0 w-full cursor-pointer opacity-0"
-            tabIndex={-1}
-          />
-        </button>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <button
+            type="button"
+            onClick={() => dateInputRef.current?.showPicker?.()}
+            aria-label={t("Ændr dato for '{title}'", { title: task.title })}
+            className={cn(
+              'relative flex w-fit items-center gap-1.5 text-[13px] hover:text-[#24413a] cursor-pointer',
+              task.dateISO ? 'text-[#5f6b66]' : 'text-[#9a9686]',
+            )}
+          >
+            <CalendarDays size={12} />
+            {task.dateISO ? formatDate(task.dateISO) : t('Vælg dato')}
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={task.dateISO ?? ''}
+              onChange={(e) => e.target.value && onDateChange(e.target.value)}
+              className="absolute inset-0 w-full cursor-pointer opacity-0"
+              tabIndex={-1}
+            />
+          </button>
+          <span className={cn('text-[0.68rem] font-bold uppercase tracking-[0.12em] sm:hidden', statusTone)}>
+            {statusText}
+          </span>
+          <span className="sm:hidden">{assignee}</span>
+        </div>
       </div>
 
-      {task.assigneeInitials && (
-        <span
-          title={task.assigneeName ?? undefined}
-          aria-label={task.assigneeName ? t('Tildelt {name}', { name: task.assigneeName }) : undefined}
-          className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#e8f0ec] px-1.5 text-[0.62rem] font-bold tracking-[0.04em] text-[#5f7d70]"
-        >
-          {task.assigneeInitials}
-        </span>
-      )}
+      <span className="hidden sm:inline-flex">{assignee}</span>
 
-      <span
-        className={cn(
-          'text-xs font-bold uppercase tracking-[0.12em]',
-          done ? 'text-[#5f7d70]'
-            : overdue ? 'text-[#b34e37]'
-            : status === 'wedding' ? 'text-[#24413a]'
-            : isSoon || isToday ? 'text-[#8a7d5c]'
-            : 'text-[#9a9686]',
-        )}
-      >
-        {statusLabel(task, t)}
+      <span className={cn('hidden text-xs font-bold uppercase tracking-[0.12em] sm:inline', statusTone)}>
+        {statusText}
       </span>
 
-      <div className="relative">
+      <div className="relative -mr-1.5 -mt-1 shrink-0 sm:m-0">
         <button
           type="button"
           onClick={onMenu}

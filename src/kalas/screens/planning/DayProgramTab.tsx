@@ -510,9 +510,9 @@ export function DayProgram({
                 <div key={item.id}>
                   {isToday && markerAt === i && <NowMarker clock={clock} label={t('nu')} />}
 
-                  <motion.div layout="position" className="group flex items-stretch gap-3">
+                  <motion.div layout="position" className="group flex items-stretch gap-2 sm:gap-3">
                     {/* Time */}
-                    <div className="flex w-[4.6rem] shrink-0 flex-col items-end pt-2.5">
+                    <div className="flex w-14 shrink-0 flex-col items-end pt-2.5 sm:w-[4.6rem]">
                       <input
                         type="time"
                         defaultValue={item.time}
@@ -581,7 +581,7 @@ export function DayProgram({
                             </span>
                           )}
 
-                          <div className="flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+                          <div className="hidden shrink-0 items-center gap-0.5 opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100 sm:flex">
                             <button
                               type="button" onClick={() => duplicate(item)}
                               aria-label={t('Dublér {label}', { label: item.title })}
@@ -618,7 +618,7 @@ export function DayProgram({
                               if (v !== (item.subtitle ?? '')) onUpdate(item.id, { subtitle: v || null });
                             }}
                             aria-label={t('Detaljer')}
-                            className="min-w-[6rem] flex-1 rounded-lg bg-transparent px-1 py-0.5 text-[0.78rem] text-muted focus:bg-card focus:outline-none"
+                            className="min-w-[6rem] flex-1 basis-full rounded-lg bg-transparent px-1 py-0.5 text-[0.78rem] text-muted focus:bg-card focus:outline-none sm:basis-0"
                           />
                           {item.owner && !open && (
                             <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-shell px-2 py-0.5 text-[0.68rem] text-ink-soft">
@@ -668,6 +668,17 @@ export function DayProgram({
                                   ))}
                                 </Row>
 
+                                {/* A phone has no hover, so the title line's copy and
+                                    delete buttons live here instead. */}
+                                <div className="flex gap-2 sm:hidden">
+                                  <Pill onClick={() => duplicate(item)}>
+                                    <Copy size={12} className="mr-1 inline" /> {t('Dublér')}
+                                  </Pill>
+                                  <Pill onClick={() => onDelete(item.id)}>
+                                    <Trash2 size={12} className="mr-1 inline" /> {t('Slet')}
+                                  </Pill>
+                                </div>
+
                                 <textarea
                                   rows={2}
                                   defaultValue={item.notes ?? ''}
@@ -689,7 +700,7 @@ export function DayProgram({
 
                   {/* The seam: a hole, or a collision */}
                   {gap != null && gap !== 0 && (
-                    <div className="-mt-2 mb-2 flex items-center gap-3 pl-[4.6rem]">
+                    <div className="-mt-2 mb-2 flex items-center gap-2 pl-14 sm:gap-3 sm:pl-[4.6rem]">
                       <span className="flex w-6 shrink-0 justify-center">
                         <span
                           className={cn(

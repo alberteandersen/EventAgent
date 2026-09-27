@@ -5,7 +5,7 @@ import {
   MessageCircle, Monitor, Settings,
 } from 'lucide-react';
 import {
-  NAV, NavRow, Wordmark, ModeToggle, PAGE_BG, CHROME_BG, CHROME_WASH,
+  NAV, NavRow, Wordmark, useNav, ModeToggle, PAGE_BG, CHROME_BG, CHROME_WASH,
   SIDEBAR_RAIL_W, type ScreenId,
 } from './Shell';
 import { cn } from './ui';
@@ -40,6 +40,7 @@ export default function ChatShell({
   children: React.ReactNode;
 }) {
   const { t } = useLang();
+  const nav = useNav();
   const [mobileView, setMobileView] = useState<'chat' | 'stage'>('chat');
 
   // Agent-driven navigation should be seen: switch the mobile view to the
@@ -78,7 +79,7 @@ export default function ChatShell({
             </div>
 
             <nav className="min-h-0 flex-1 overflow-y-auto pt-1" aria-label={t('Alle sider')}>
-              {NAV.filter((n) => n.group === 'main').map((n) => (
+              {nav.filter((n) => n.group === 'main').map((n) => (
                 <NavRow
                   key={n.id}
                   item={n}
@@ -89,7 +90,7 @@ export default function ChatShell({
                 />
               ))}
               <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />
-              {NAV.filter((n) => n.group === 'plan').map((n) => (
+              {nav.filter((n) => n.group === 'plan').map((n) => (
                 <NavRow
                   key={n.id}
                   item={n}
@@ -99,7 +100,7 @@ export default function ChatShell({
                 />
               ))}
               <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />
-              {NAV.filter((n) => n.group === 'help').map((n) => (
+              {nav.filter((n) => n.group === 'help').map((n) => (
                 <NavRow
                   key={n.id}
                   item={n}

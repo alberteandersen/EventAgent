@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { HeartHandshake, Images, Star, Share2, Mail } from 'lucide-react';
+import { HeartHandshake, Images, Share2, Mail } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import WeddingRings from '../icons/WeddingRings';
 import { useWedding } from '../useWedding';
@@ -11,31 +11,28 @@ import type { ScreenId } from '../Shell';
 import TakkelisteTab from './nygift/TakkelisteTab';
 import TakkekortTab from './nygift/TakkekortTab';
 import AlbumTab from './nygift/AlbumTab';
-import AnmeldelserTab from './nygift/AnmeldelserTab';
 import DelTab from './nygift/DelTab';
 import { daysMarried, readNygiftTab, writeNygiftTab, type NygiftTab } from './nygift/shared';
 import { buildThankList, thankProgress } from './nygift/thanks';
-import { bookedVendors, reviewProgress } from './nygift/reviews';
 
 /* Nygift — the phase after the wedding day. The rest of the app stops at the
    date; this is where the couple thanks people, collects the photos guests
    took, and looks back.
 
-   Deliberately always visible: events.event_date is nullable and date_hint is
-   free text, so a nav item conditional on "the wedding has happened" would be
-   wrong for a large share of couples. Each tab carries its own empty state. */
+   The menu shows it from a week before an exact date (nygiftInMenu); before
+   that it is only reachable when Ava or a link opens it. Each tab carries its
+   own empty state. */
 export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => void }) {
   const { t, tn } = useLang();
-  const { couple, event, guests, venues, registryClaims, registryItems, thankYous } = useWedding();
+  const { couple, event, guests, registryClaims, registryItems, thankYous } = useWedding();
   const [tab, setTab] = useState<NygiftTab>(() => readNygiftTab());
 
   const { done, total } = thankProgress(
     buildThankList(guests, registryClaims, registryItems, thankYous)
   );
-  const reviews = reviewProgress(bookedVendors(venues, event?.chosen_venue_id ?? null));
 
-  /* The screen is always in the menu, so it cannot assume the day has been.
-     Once it has, say how long ago: it is the one number here that is only
+  /* Ava or a link can open it before the day, so it cannot assume the day
+     has been. Once it has, say how long ago: it is the one number here that is only
      theirs, and it quietly dates the to-do list underneath it. */
   const days = daysMarried(event?.event_date ?? couple.dateISO);
   const married =
@@ -54,7 +51,6 @@ export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => v
     { id: 'takkeliste', label: 'Takkeliste', Icon: HeartHandshake, open: total - done },
     { id: 'takkekort', label: 'Takkekort', Icon: Mail, open: 0 },
     { id: 'album', label: 'Album', Icon: Images, open: 0 },
-    { id: 'anmeldelser', label: 'Anmeldelser', Icon: Star, open: reviews.total - reviews.done },
     { id: 'del', label: 'Del', Icon: Share2, open: 0 },
   ];
 
@@ -112,7 +108,6 @@ export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => v
         {tab === 'takkeliste' && <TakkelisteTab key="takkeliste" />}
         {tab === 'takkekort' && <TakkekortTab key="takkekort" />}
         {tab === 'album' && <AlbumTab key="album" onNavigate={onNavigate} />}
-        {tab === 'anmeldelser' && <AnmeldelserTab key="anmeldelser" />}
         {tab === 'del' && <DelTab key="del" onNavigate={onNavigate} />}
       </AnimatePresence>
     </div>

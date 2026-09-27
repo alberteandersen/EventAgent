@@ -74,24 +74,6 @@ export const EN: Record<string, string> = {
 
   'Sæt i kalenderen': 'Add to calendar',
 
-  // ── Bryllupsrejse ───────────────────────────────────────────────────
-  'Se priser på Booking': 'See prices on Booking',
-  'Se priser': 'See prices',
-  'Idé': 'Idea',
-  'Jeres rejse': 'Your trip',
-  'Jeres rejse starter her': 'Your trip starts here',
-  'Tryk på hjertet ved en destination, et hotel eller en idé. Når noget er booket, samler vi rejseplanen øverst.':
-    'Tap the heart on a destination, a hotel or an idea. Once something is booked, it goes to the top as your plan.',
-  'Booket · {n}': 'Booked · {n}',
-  'Det er på plads': "It's settled",
-  'Gemt · {n}': 'Saved · {n}',
-  'Stadig på ønskelisten': 'Still on the wishlist',
-  'Jeres shortlist': 'Your shortlist',
-  'Alt, I har gemt, er booket.': 'Everything you saved is booked.',
-  'Find mere': 'Find more',
-  'Når noget er booket, så tryk Marker som booket, så rykker det op som jeres rejseplan.':
-    'When something is booked, press Mark as booked and it moves up as your travel plan.',
-
   // ── Nygift ──────────────────────────────────────────────────────────
   'Gift i dag': 'Married today',
   'Gift i går': 'Married yesterday',
@@ -476,7 +458,6 @@ export const EN: Record<string, string> = {
   'Vil helst ikke sige': 'Rather not say',
   'Stemning': 'Mood',
   'Have': 'Garden',
-  'Strand': 'Beach',
   'Destination': 'Destination',
   'din partner': 'your partner',
   '{name}s e-mail': "{name}'s email",
@@ -650,11 +631,8 @@ export const EN: Record<string, string> = {
   'Drej på kloden, zoom ind og tryk på et land': 'Spin the globe, zoom in and tap a country',
   'Prøv igen': 'Try again',
   'Ja': 'Yes',
-  'anmeldelser': 'reviews',
-  'Søg på Google': 'Search on Google',
   'Byer': 'Towns',
   'Bryllupsdestinationer': 'Wedding destinations',
-  'Fjern fra gemte': 'Remove from saved',
   'Skriv selv': 'Write your own',
   'Hvornår': 'When',
   'Hvornår siger I': 'When do you say',
@@ -698,12 +676,8 @@ export const EN: Record<string, string> = {
 
   // Destination labels (source Danish → English)
   'København': 'Copenhagen',
-  'Amalfikysten': 'Amalfi Coast',
   'Fyn': 'Funen',
   // Countries
-  'Italien': 'Italy',
-  'Grækenland': 'Greece',
-  'Japan': 'Japan',
   'USA': 'USA',
 
   // ── i18n audit batch (screens + chrome) ─────────────────────────────
@@ -1042,38 +1016,8 @@ export const EN: Record<string, string> = {
   'Sted': 'Venue',
   'Afslutning': 'Closing',
   // ── Honeymoon screen ────────────────────────────────────────────────
-  'Bryllupsrejse': 'Honeymoon',
-  'Udforsk': 'Explore',
-  'Inspiration': 'Inspiration',
-  'Drøm jer væk sammen, find destinationer på kloden, bliv inspireret, og gem de steder I forelsker jer i.':
-    'Dream away together, find destinations on the globe, get inspired, and save the places you fall in love with.',
-  'Tryk på et land på kloden, eller skriv selv et sted, for at se honeymoon-destinationer.':
-    'Tap a country on the globe, or type a place yourself, to see honeymoon destinations.',
-  'f.eks. Maldiverne · Toscana · Bali': 'e.g. Maldives · Tuscany · Bali',
-  'Søg hoteller nær {area}': 'Search hotels near {area}',
-  'Finder honeymoon-destinationer i {country}…': 'Finding honeymoon destinations in {country}…',
-  'Honeymoon-hoteller': 'Honeymoon hotels',
-  'Romantiske ophold til jeres bryllupsrejse, tryk på hjertet for at gemme.':
-    'Romantic stays for your honeymoon, tap the heart to save.',
-  'Kunne ikke finde hoteller her.': "Couldn't find hotels here.",
-  'Se hoteller': 'See hotels',
-  'Eventyr': 'Adventure',
-  'Natur': 'Nature',
   'Hotel': 'Hotel',
-  'Tur': 'Trip',
-  'Rute': 'Route',
-  'Samler inspiration…': 'Gathering inspiration…',
-  'Ingen inspiration lige nu': 'No inspiration right now',
-  'Prøv i stedet at udforske destinationer på kloden.': 'Try exploring destinations on the globe instead.',
-  'Honeymoon-typer': 'Honeymoon types',
-  'Destinations-spotlight': 'Destination spotlight',
-  'Idéer til turen': 'Trip ideas',
-  'Ture, ruter & romantiske ophold': 'Trips, routes & romantic stays',
-  'Destinationer': 'Destinations',
-  'Hoteller': 'Hotels',
-  'Idéer': 'Ideas',
   'Marker som booket': 'Mark as booked',
-  'Fjern booking': 'Remove booking',
 
   // ── Tjekliste (underfane på Tidslinje + standardpunkter) ────────────
   'Vælg dato': 'Pick a date',
@@ -1353,15 +1297,6 @@ export const EN: Record<string, string> = {
   'Send linket rundt i gruppechatten, så fyldes albummet af sig selv.': 'Drop the link in the group chat, the album fills itself from there.',
   'Marker som favorit': 'Mark as favourite',
   'Hent flere': 'Load more',
-  'Ingen bookede leverandører endnu': 'No booked vendors yet',
-  'Når I markerer nogen som booket under Venue & leverandører, kan I bedømme dem her bagefter.': 'Once you mark someone as booked under Venue & vendors, you can rate them here afterwards.',
-  'Skriv det ned mens I husker det, hvad gik godt, og hvem ville I anbefale videre.': 'Write it down while you remember, what went well, and who you would recommend.',
-  '{done} af {total} bedømt': '{done} of {total} rated',
-  'Giv {n} ud af 5': 'Give {n} out of 5',
-  'Vil anbefale': 'Would recommend',
-  'Vil ikke anbefale': 'Would not recommend',
-  'Hvordan gik det? Kun jer der ser det.': 'How did it go? Only you can see this.',
-  'Jeres anmeldelse af {name}': 'Your review of {name}',
   'Opsamlingen deler adresse med jeres side, så den kan først åbne når siden er udgivet.': 'The recap shares an address with your site, so it can only open once the site is published.',
   'En lille side der opsummerer dagen, til dem der ikke kunne komme, og til jer selv om ti år.': 'A small page summing up the day, for those who could not come, and for yourselves in ten years.',
   'Billeder': 'Photos',
@@ -2128,8 +2063,6 @@ export const EN: Record<string, string> = {
   'Til gæsterne (valgfri)': 'For the guests (optional)',
   'Tykt bomuldspapir, blindpræg og ren typografi.': 'Thick cotton paper, blind debossing and pure typography.',
   'Vælg en stemning, skriv jeres ord, og lad Ava male et kort kun til jer. Hent det til Canva, hvor alt kan rettes.': 'Pick a vibe, write your words, and let Ava paint a card just for you. Take it to Canva, where everything can be edited.',
-  'Invitationskort, malet til jer': 'Invitation cards, painted for you',
-  'Vælg en stemning og skriv jeres ord, så maler jeg et kort kun til jer. I henter det til Canva, hvor alt kan rettes, eller printer det, som det er.': 'Pick a vibe and write your words, and I paint a card just for you. Take it to Canva, where everything can be edited, or print it as it is.',
   'Vælg en stemning, så står jeres kort her.': 'Pick a vibe and your card appears here.',
   'Vælg format': 'Choose a format',
   'f.eks. Dresscode: festligt.': 'e.g. Dress code: festive.',
@@ -2170,5 +2103,16 @@ export const EN: Record<string, string> = {
   'Svar for {name}': 'RSVP for {name}',
   'Vælg hvad I vil holde styr på': 'Choose what you want to keep track of',
   'Slå fra, hvad der ikke hører til jeres bryllup. I kan altid slå det til igen.': 'Turn off what doesn\'t belong at your wedding. You can always turn it back on.',
-  'Se billeder': 'See photos',
+  // ── Guided tour ─────────────────────────────────────────────────────
+  'Jeres navne, jeres dato og hvor længe der er til — alt hvad I fortalte mig, står allerede her.\n\nJeg holder **Kom godt i gang** opdateret nedenunder, ét skridt ad gangen.':
+    'Your names, your date and how long there is to go — everything you told me is already here.\n\nI keep **Getting started** up to date below, one step at a time.',
+  'Planen regnes baglæns fra jeres dato': 'The plan counts back from your date',
+  'Den lægger sig selv ud, fase for fase, så I altid ved **hvad der haster nu**, og I skal ikke selv finde på punkterne.\n\nOg **Bryllupsdagen** er selve dagen, time for time, når I når dertil.':
+    'It lays itself out phase by phase, so you always know **what is urgent now**, and you don\'t have to think up the items yourselves.\n\nAnd **The wedding day** is the day itself, hour by hour, when you get there.',
+  'Jeg søger stederne frem for jer': 'I find the places for you',
+  'Jeg leder på **det åbne web** og tjekker, at stederne findes. I gemmer dem, I kan lide, som **favoritter**, og jeg skriver til dem for jer.':
+    'I search **the open web** and check that the places exist. You save the ones you like as **favourites**, and I write to them for you.',
+  'Her lander svarene fra stederne': 'This is where the replies land',
+  'Tom lige nu. Når jeg har skrevet til et sted, samler jeg tråden her, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende det.':
+    'Empty for now. Once I have written to a place, I gather the thread here, pull the **price** out of the email and have **a suggested reply** ready. You just approve it.',
 };

@@ -14,8 +14,8 @@
    two stay in step. It drills at
    the level the parent is on, and `focus` flies the camera there; the parent
    owns the level and the breadcrumb. Both are optional,
-   so the two screens that only ever wanted a country picker (Onboarding,
-   Honeymoon) pass neither and get exactly what they had. */
+   so Onboarding, which only wants a country picker, passes neither and
+   gets exactly what it had. */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Globe, { type GlobeMethods } from 'react-globe.gl';

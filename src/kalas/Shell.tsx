@@ -6,18 +6,19 @@ import {
   Wallet, Users, Globe, Mail, ListChecks, LayoutDashboard,
   LayoutGrid, X, Settings, Gift, PanelLeftClose, PanelLeft,
   LogOut, UserPlus, Inbox,
-  MessageCircle, Plane, BookOpen,
+  MessageCircle, BookOpen,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import WeddingRings from './icons/WeddingRings';
 import { useWedding } from './useWedding';
+import { nygiftInMenu } from './screens/nygift/shared';
 import { cn } from './ui';
 import { useLang } from './i18n';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 
 export type ScreenId =
   | 'home' | 'ava' | 'team' | 'inbox'
-  | 'budget' | 'guests' | 'website' | 'registry' | 'invites' | 'planning' | 'seating' | 'honeymoon'
+  | 'budget' | 'guests' | 'website' | 'registry' | 'invites' | 'planning' | 'seating'
   | 'nygift' | 'guides';
 
 export type NavItem = { id: ScreenId; label: string; icon: LucideIcon; group: 'main' | 'plan' | 'help' };
@@ -33,10 +34,16 @@ export const NAV: NavItem[] = [
   { id: 'registry',    label: 'Ønskeliste',    icon: Gift,          group: 'plan' },
   { id: 'invites',     label: 'Invitationer',  icon: Mail,          group: 'plan' },
   { id: 'seating',     label: 'Bordplan',      icon: LayoutDashboard, group: 'plan' },
-  { id: 'honeymoon',   label: 'Bryllupsrejse', icon: Plane,         group: 'plan' },
   { id: 'nygift',      label: 'Nygift',        icon: WeddingRings,  group: 'plan' },
   { id: 'guides',      label: 'Guides & FAQ',  icon: BookOpen,      group: 'help' },
 ];
+
+/** The menu as this wedding sees it: Nygift joins a week before the day. */
+export function useNav(): NavItem[] {
+  const { event } = useWedding();
+  const withNygift = nygiftInMenu(event?.event_date);
+  return withNygift ? NAV : NAV.filter((n) => n.id !== 'nygift');
+}
 
 const MOBILE_TABS: ScreenId[] = ['home', 'planning', 'inbox'];
 
@@ -101,6 +108,7 @@ export default function Shell({
   children: React.ReactNode;
 }) {
   const { t } = useLang();
+  const nav = useNav();
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -167,7 +175,7 @@ export default function Shell({
             </div>
 
             <nav className={cn('min-h-0 flex-1 overflow-y-auto', sidebarRail ? 'pt-1' : 'mt-1 pt-[18px]')}>
-              {NAV.filter((n) => n.group === 'main').map((n) => (
+              {nav.filter((n) => n.group === 'main').map((n) => (
                 <NavRow key={n.id} item={n} active={current === n.id} onClick={() => navigate(n.id)}
                   badge={n.id === 'inbox' ? inboxBadge : undefined}
                   collapsed={sidebarRail}
@@ -179,7 +187,7 @@ export default function Shell({
                 </p>
               )}
               {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />}
-              {NAV.filter((n) => n.group === 'plan').map((n) => (
+              {nav.filter((n) => n.group === 'plan').map((n) => (
                 <NavRow key={n.id} item={n} active={current === n.id} onClick={() => navigate(n.id)}
                   collapsed={sidebarRail}
                 />
@@ -190,7 +198,7 @@ export default function Shell({
                 </p>
               )}
               {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />}
-              {NAV.filter((n) => n.group === 'help').map((n) => (
+              {nav.filter((n) => n.group === 'help').map((n) => (
                 <NavRow key={n.id} item={n} active={current === n.id} onClick={() => navigate(n.id)}
                   collapsed={sidebarRail}
                 />
@@ -328,7 +336,7 @@ export default function Shell({
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-2.5">
-                {NAV.filter((n) => n.group !== 'main' || !MOBILE_TABS.includes(n.id)).map((n) => {
+                {nav.filter((n) => n.group !== 'main' || !MOBILE_TABS.includes(n.id)).map((n) => {
                   const Icon = n.icon;
                   const active = current === n.id;
                   return (

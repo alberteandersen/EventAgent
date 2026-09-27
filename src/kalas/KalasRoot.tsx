@@ -27,7 +27,6 @@ import Invites from './screens/Invites';
 import Seating from './screens/Seating';
 import Registry from './screens/Registry';
 import Inbox from './screens/Inbox';
-import Honeymoon from './screens/Honeymoon';
 import Nygift from './screens/Nygift';
 import { OPEN_GUIDE_EVENT } from './screens/guides/links';
 
@@ -201,7 +200,6 @@ function AppInner() {
     registry:    <Registry onNavigate={navigate} />,
     invites:     <Invites />,
     seating:     <Seating />,
-    honeymoon:   <Honeymoon onNavigate={navigate} />,
     nygift:      <Nygift onNavigate={navigate} />,
     guides:      <Guides onNavigate={navigate} />,
   };

@@ -20,8 +20,6 @@ import type {
   EmailReplyRow,
   EventRow,
   GuestRow,
-  HoneymoonSaveKind,
-  HoneymoonSaveRow,
   InvitationDesignRow,
   InvitationRow,
   OutboundEmailRow,
@@ -83,18 +81,11 @@ export interface WeddingData {
   registryItems: RegistryItemRow[];
   registryClaims: RegistryClaimRow[];
   thankYous: ThankYouRow[];
-  /** The couple's own rating of a vendor they booked. */
-  saveVenueReview: (
-    venueId: string,
-    patch: { own_rating?: number | null; own_review?: string | null; own_recommend?: boolean | null }
-  ) => Promise<void>;
   /** Upserts the couple's annotation for one person on the thank-you list. */
   saveThankYou: (
     subjectKey: string,
     patch: { label: string; gift?: string | null; thanked_at?: string | null; method?: ThankMethod | null; note?: string | null }
   ) => Promise<void>;
-  /** The couple's favourited honeymoon destinations, hotels and ideas. */
-  honeymoonSaves: HoneymoonSaveRow[];
   /** All generations, newest first; the active one drives the live site. */
   websiteDesigns: WebsiteDesignRow[];
   websiteDesign: WebsiteDesignRow | null;
@@ -150,20 +141,6 @@ export interface WeddingData {
   addRegistryItem: (item: Partial<RegistryItemRow> & { title: string }) => Promise<RegistryItemRow | null>;
   updateRegistryItem: (id: string, patch: Partial<RegistryItemRow>) => Promise<void>;
   deleteRegistryItem: (id: string) => Promise<void>;
-
-  addHoneymoonSave: (item: {
-    kind: HoneymoonSaveKind;
-    name: string;
-    location?: string | null;
-    blurb?: string | null;
-    image_url?: string | null;
-    place_id?: string | null;
-    rating?: number | null;
-    meta?: Record<string, unknown>;
-  }) => Promise<HoneymoonSaveRow | null>;
-  removeHoneymoonSave: (id: string) => Promise<void>;
-  /** Mark a saved destination/hotel/idea as booked (or un-book it). */
-  setHoneymoonBooked: (id: string, booked: boolean) => Promise<void>;
 
   /** Create/update a digital invitation via /api/invitations (assigns a unique
       share slug server-side). Returns the saved row. */
@@ -265,7 +242,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const [registryItems, setRegistryItems] = useState<RegistryItemRow[]>([]);
   const [registryClaims, setRegistryClaims] = useState<RegistryClaimRow[]>([]);
   const [thankYous, setThankYous] = useState<ThankYouRow[]>([]);
-  const [honeymoonSaves, setHoneymoonSaves] = useState<HoneymoonSaveRow[]>([]);
   const [websiteDesigns, setWebsiteDesigns] = useState<WebsiteDesignRow[]>([]);
   const [sitePhotos, setSitePhotos] = useState<SitePhotoRow[]>([]);
   const [websiteOrders, setWebsiteOrders] = useState<WebsiteOrderRow[]>([]);
@@ -308,7 +284,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     setEvent(ev);
 
     if (ev) {
-      const [v, d, o, r, at, p, bi, bsi, dpi, g, tt, ws, sp, ri, rc, wd, sph, wo, inv, hs, ty, ivd] = await Promise.all([
+      const [v, d, o, r, at, p, bi, bsi, dpi, g, tt, ws, sp, ri, rc, wd, sph, wo, inv, ty, ivd] = await Promise.all([
         supabase.from("venues").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("email_drafts").select("*").eq("event_id", ev.id),
         supabase.from("outbound_emails").select("*").eq("event_id", ev.id).order("created_at"),
@@ -328,7 +304,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         supabase.from("site_photos").select("*").eq("event_id", ev.id).order("sort").order("created_at"),
         supabase.from("website_orders").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
         supabase.from("invitations").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
-        supabase.from("honeymoon_saves").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
         supabase.from("thank_yous").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("invitation_designs").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
       ]);
@@ -353,7 +328,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       setWebsiteOrders((wo.data ?? []) as WebsiteOrderRow[]);
       setInvitations((inv.data ?? []) as InvitationRow[]);
       setInvitationDesigns((ivd.data ?? []) as InvitationDesignRow[]);
-      setHoneymoonSaves((hs.data ?? []) as HoneymoonSaveRow[]);
     }
     setLoading(false);
   }, [supabase]);
@@ -687,27 +661,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   );
 
   /**
-   * Writes straight to `venues` through the RLS client — deliberately NOT via
-   * /api/venues/[venueId], whose PATCH only accepts { booked } and carries
-   * venue-exclusivity side effects we do not want here.
-   */
-  const saveVenueReview = useCallback(
-    async (
-      venueId: string,
-      patch: { own_rating?: number | null; own_review?: string | null; own_recommend?: boolean | null }
-    ) => {
-      const { data } = await supabase
-        .from("venues")
-        .update({ ...patch, own_reviewed_at: new Date().toISOString() })
-        .eq("id", venueId)
-        .select()
-        .single();
-      if (data) setVenues((rows) => upsertById(rows, data as VenueRow));
-    },
-    [supabase]
-  );
-
-  /**
    * The thank-you list is derived from guests + registry_claims; this stores
    * only the couple's own annotations, keyed by subject_key so a row is
    * created the first time they touch someone and updated after that.
@@ -826,75 +779,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       setRegistryItems((rows) => removeById(rows, id));
     },
     [supabase]
-  );
-
-  const addHoneymoonSave = useCallback(
-    async (item: {
-      kind: HoneymoonSaveKind;
-      name: string;
-      location?: string | null;
-      blurb?: string | null;
-      image_url?: string | null;
-      place_id?: string | null;
-      rating?: number | null;
-      meta?: Record<string, unknown>;
-    }) => {
-      if (!eventId || !userId) return null;
-      // De-dupe on place_id (when known) so saving the same place twice is a no-op.
-      if (item.place_id) {
-        const existing = honeymoonSaves.find(
-          (h) => h.kind === item.kind && h.place_id === item.place_id
-        );
-        if (existing) return existing;
-      }
-      const { data } = await supabase
-        .from("honeymoon_saves")
-        .insert({
-          event_id: eventId,
-          user_id: userId,
-          kind: item.kind,
-          name: item.name,
-          location: item.location ?? null,
-          blurb: item.blurb ?? null,
-          image_url: item.image_url ?? null,
-          place_id: item.place_id ?? null,
-          rating: item.rating ?? null,
-          meta: item.meta ?? {},
-        })
-        .select()
-        .single();
-      if (data) setHoneymoonSaves((rows) => upsertById(rows, data as HoneymoonSaveRow));
-      return (data as HoneymoonSaveRow) ?? null;
-    },
-    [supabase, eventId, userId, honeymoonSaves]
-  );
-
-  const removeHoneymoonSave = useCallback(
-    async (id: string) => {
-      await supabase.from("honeymoon_saves").delete().eq("id", id);
-      setHoneymoonSaves((rows) => removeById(rows, id));
-    },
-    [supabase]
-  );
-
-  const setHoneymoonBooked = useCallback(
-    async (id: string, booked: boolean) => {
-      const current = honeymoonSaves.find((h) => h.id === id);
-      if (!current) return;
-      const meta = { ...current.meta, booked };
-      // Optimistic — mirror the flag locally, then persist.
-      setHoneymoonSaves((rows) =>
-        rows.map((h) => (h.id === id ? { ...h, meta } : h))
-      );
-      const { data } = await supabase
-        .from("honeymoon_saves")
-        .update({ meta })
-        .eq("id", id)
-        .select()
-        .single();
-      if (data) setHoneymoonSaves((rows) => upsertById(rows, data as HoneymoonSaveRow));
-    },
-    [supabase, honeymoonSaves]
   );
 
   const saveInvitation = useCallback(
@@ -1049,14 +933,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
             ? setInvitations((rows) => removeById(rows, (p.old as { id: string }).id))
             : setInvitations((rows) => upsertById(rows, p.new as InvitationRow))
       )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "honeymoon_saves", filter: `event_id=eq.${eventId}` },
-        (p) =>
-          p.eventType === "DELETE"
-            ? setHoneymoonSaves((rows) => removeById(rows, (p.old as { id: string }).id))
-            : setHoneymoonSaves((rows) => upsertById(rows, p.new as HoneymoonSaveRow))
-      )
       .subscribe();
     return () => {
       supabase.removeChannel(channel);
@@ -1109,8 +985,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       registryClaims,
       thankYous,
       saveThankYou,
-      saveVenueReview,
-      honeymoonSaves,
       websiteDesigns,
       websiteDesign: websiteDesigns.find((d) => d.active) ?? null,
       sitePhotos,
@@ -1142,23 +1016,20 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       addRegistryItem,
       updateRegistryItem,
       deleteRegistryItem,
-      addHoneymoonSave,
-      removeHoneymoonSave,
-      setHoneymoonBooked,
       saveInvitation,
     }),
     [
       loading, event, profile, email, venues, drafts, outbound, replies, attachments, proposals,
       invitations, journey, budgetItems, budgetSubItems, dayProgramItems, guests, timelineTasks,
-      weddingSite, seatingPlan, registryItems, registryClaims, honeymoonSaves,
-      thankYous, saveThankYou, saveVenueReview,
+      weddingSite, seatingPlan, registryItems, registryClaims,
+      thankYous, saveThankYou,
       websiteDesigns, sitePhotos, websiteOrders, invitationDesigns, load, updateEvent, saveBudgetItem,
       deleteBudgetItem, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem, seedBudgetSubItems,
       addDayProgramItem, updateDayProgramItem, deleteDayProgramItem, seedDayProgram,
       addGuest, updateGuest, deleteGuest, addTask, updateTask, deleteTask, seedTasks, clearTasks,
       saveSite, saveSeating,
       addRegistryItem, updateRegistryItem, deleteRegistryItem,
-      addHoneymoonSave, removeHoneymoonSave, setHoneymoonBooked, saveInvitation,
+      saveInvitation,
     ]
   );
 

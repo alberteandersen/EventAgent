@@ -74,7 +74,7 @@ export default function VendorHub({ onNavigate }: { onNavigate?: (s: NavigateTar
 
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-6 px-6 py-8 sm:px-9 lg:px-12">
-      {/* Header, same pattern as Honeymoon: title first, tabs underneath. */}
+      {/* Header: title first, tabs underneath. */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Planlægning')}</p>

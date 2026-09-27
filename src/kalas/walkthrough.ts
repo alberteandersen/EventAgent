@@ -1,10 +1,9 @@
 /* Ava's guided tour — the script.
  *
- * One step per page, walked down the sidebar in the order the menu itself
- * lists them. The order is not written here: it is derived from NAV, so the
- * two cannot drift apart and a new menu entry cannot be silently skipped.
- * What lives here is the only thing NAV does not know — what to say about
- * each page.
+ * Four pages and then Ava, not the whole menu: on day one a couple needs to
+ * know where the plan is, where the venues are and where the answers land.
+ * The rest of the menu explains itself when they get there. Labels come from
+ * NAV, so a renamed page is renamed here too.
  *
  * The copy rule, learned the hard way: say what Ava does for them, not what
  * the page is called, and never describe a screen that is empty on day one —
@@ -44,79 +43,41 @@ export type WalkthroughStep = {
   final?: boolean;
 };
 
-/** What to say about each page. Keyed by ScreenId; the order comes from NAV.
- *  A page with no entry gets no step. */
-const PAGE_COPY: Partial<Record<ScreenId, { title: string; body: string }>> = {
-  home: {
+/** The pages the tour opens, in order, and what it says about each. */
+const TOUR_PAGES: { page: ScreenId; title: string; body: string }[] = [
+  {
+    page: 'home',
     title: 'Det her er jeres side',
     body: 'Jeres navne, jeres dato og hvor længe der er til — alt hvad I fortalte mig, står allerede her.\n\nJeg holder **Kom godt i gang** opdateret nedenunder, ét skridt ad gangen.',
   },
-  planning: {
-    title: 'Tidsplanen regnes baglæns fra jeres dato',
-    body: 'Milepælene lægger sig selv ud fra dagen og hjem, så I altid ved **hvad der haster nu**. Tjeklisten har over 200 punkter fordelt på områder — I skal ikke selv finde på dem.\n\nOg **Bryllupsdagen** er selve dagen, minut for minut, når I når dertil.',
+  {
+    page: 'planning',
+    title: 'Planen regnes baglæns fra jeres dato',
+    body: 'Den lægger sig selv ud, fase for fase, så I altid ved **hvad der haster nu**, og I skal ikke selv finde på punkterne.\n\nOg **Bryllupsdagen** er selve dagen, time for time, når I når dertil.',
   },
-  inbox: {
+  {
+    page: 'team',
+    title: 'Jeg søger stederne frem for jer',
+    body: 'Jeg leder på **det åbne web** og tjekker, at stederne findes. I gemmer dem, I kan lide, som **favoritter**, og jeg skriver til dem for jer.',
+  },
+  {
+    page: 'inbox',
     title: 'Her lander svarene fra stederne',
     body: 'Tom lige nu. Når jeg har skrevet til et sted, samler jeg tråden her, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende det.',
   },
-  team: {
-    title: 'Jeg søger stederne frem for jer',
-    body: 'Jeg leder på **det åbne web**, tjekker at stederne findes, og lægger dem på tavlen. I swiper dem til jeres **shortlist**, og jeg kan skrive til dem for jer.',
-  },
-  budget: {
-    title: 'Budgettet fordeler sig selv',
-    body: 'Jeg fordeler beløbet på kategorier og siger til, **før I rammer loftet**. Bed mig om et forslag, så regner jeg en fordeling ud fra jeres tal.\n\nUploader I en kontrakt, læser jeg prisen og betalingsdatoerne ud af den.',
-  },
-  guests: {
-    title: 'Gæstelisten svarer selv',
-    body: 'Hver gæst får sit **eget svar-link**. De svarer, og listen opdaterer sig — også med kostbehov og overnatning, så I ikke skal spørge to gange.',
-  },
-  website: {
-    title: 'En rigtig hjemmeside, ikke et udkast',
-    body: 'Jeg bygger den ud fra jeres oplysninger, og I kan udgive den på **en offentlig adresse**, I kan dele med gæsterne. Programmet og svar-formularen hænger sammen med resten her.',
-  },
-  registry: {
-    title: 'Ønskelisten, uden dobbeltgaver',
-    body: 'I skriver ønskerne, gæsterne reserverer dem på jeres side — og I kan ikke se hvem, før I selv vil.',
-  },
-  invites: {
-    title: 'Invitationskort, malet til jer',
-    body: 'Vælg en stemning og skriv jeres ord, så maler jeg et kort kun til jer. I henter det til Canva, hvor alt kan rettes, eller printer det, som det er.',
-  },
-  seating: {
-    title: 'Bordplanen kender jeres gæster',
-    body: 'Gæsterne kommer herover fra listen, grupperet efter side, med kostbehov markeret. I trækker dem på plads.',
-  },
-  honeymoon: {
-    title: 'Bryllupsrejsen, når I orker at tænke på den',
-    body: 'Find destinationer og gem dem, I kan lide. Den venter på jer.',
-  },
-  nygift: {
-    title: 'Og bagefter',
-    body: 'Album til billederne og en takkeliste, der holder styr på hvem I har takket. Den er der, når dagen er ovre.',
-  },
-  guides: {
-    title: 'Når I er i tvivl',
-    body: 'Guides til **budget, vielse, lokale og gæster**, og svar på det, alle par spørger om. Hver guide har en knap, der åbner det sted her, hvor I gør det.',
-  },
-};
+];
 
-/* The sidebar, top to bottom, then the two steps that are not pages. */
 export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
-  ...NAV.flatMap((item): WalkthroughStep[] => {
-    const copy = PAGE_COPY[item.id];
-    if (!copy) return [];
-    return [{
-      id: item.id,
-      page: item.id,
-      eyebrow: item.label,
-      title: copy.title,
-      body: copy.body,
-      // Onboarding lands every couple in chat, so without this the tour
-      // explains a page from behind the chat column covering it.
-      ...(item.id === 'home' ? { chat: false } : {}),
-    }];
-  }),
+  ...TOUR_PAGES.map(({ page, title, body }): WalkthroughStep => ({
+    id: page,
+    page,
+    eyebrow: NAV.find((n) => n.id === page)?.label,
+    title,
+    body,
+    // Onboarding lands every couple in chat, so without this the tour
+    // explains a page from behind the chat column covering it.
+    ...(page === 'home' ? { chat: false } : {}),
+  })),
   {
     id: 'chat',
     page: 'home',

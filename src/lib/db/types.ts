@@ -57,7 +57,6 @@ export const AGENT_PAGES = [
   "registry",
   "invites",
   "seating",
-  "honeymoon",
   "nygift",
 ] as const;
 export type AgentPage = (typeof AGENT_PAGES)[number];
@@ -532,23 +531,6 @@ export interface TimelineTaskRow {
   priority?: TaskPriority | null;
   assignee?: TaskAssignee | null;
   sort: number;
-  created_at: string;
-}
-
-export type HoneymoonSaveKind = "destination" | "hotel" | "idea";
-
-export interface HoneymoonSaveRow {
-  id: string;
-  event_id: string;
-  user_id: string;
-  kind: HoneymoonSaveKind;
-  name: string;
-  location: string | null;
-  blurb: string | null;
-  image_url: string | null;
-  place_id: string | null;
-  rating: number | null;
-  meta: Record<string, unknown>;
   created_at: string;
 }
 

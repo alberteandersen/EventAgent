@@ -92,13 +92,13 @@ export default function FilterPill({
         className={cn(
           'inline-flex h-9 max-w-[15rem] items-center gap-1.5 rounded-full border px-3.5 text-[0.78rem] transition-colors cursor-pointer',
           set || open
-            ? 'border-ink bg-[#e8f0ec] font-semibold text-ink'
+            ? 'border-ink bg-sage-wash font-semibold text-ink'
             : 'border-line bg-card text-muted hover:border-ink hover:text-ink',
         )}
       >
         <span className="truncate">{summary || label}</span>
         {(count ?? 0) > 1 && (
-          <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-ink px-1 text-[0.62rem] font-bold text-[#f8f9f8]">
+          <span className="flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full bg-ink px-1 text-[0.62rem] font-bold text-paper">
             {count}
           </span>
         )}
@@ -141,7 +141,7 @@ export default function FilterPill({
                 <button
                   type="button"
                   onClick={() => onOpenChange(false)}
-                  className="ml-auto inline-flex h-9 items-center justify-center rounded-full bg-ink px-5 text-[0.8rem] font-bold text-[#f8f9f8] transition-opacity hover:opacity-90 cursor-pointer"
+                  className="ml-auto inline-flex h-9 items-center justify-center rounded-full bg-ink px-5 text-[0.8rem] font-bold text-paper transition-opacity hover:opacity-90 cursor-pointer"
                 >
                   {t('Vis {n} steder', { n: shown })}
                 </button>

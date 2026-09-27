@@ -438,10 +438,10 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
       {/* ── Header ────────────────────────────────────────────────────── */}
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+          <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
             {t('Budget')}
           </h1>
-          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
+          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
             {total > 0
               ? t('Fordelingen er lagt ud fra det I har fortalt, træk i den, så den passer jer.')
               : t('Hold styr på hvad brylluppet koster, og hvad I har tilbage.')}
@@ -462,7 +462,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           <button
             type="button"
             onClick={() => setAssistOpen(true)}
-            className="flex shrink-0 items-center gap-2 rounded-full bg-[#12332b] py-2.5 pl-2.5 pr-4 text-[0.82rem] font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer"
+            className="flex shrink-0 items-center gap-2 rounded-full bg-ink-deep py-2.5 pl-2.5 pr-4 text-[0.82rem] font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer"
           >
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15">
               <MessageCircle size={13} strokeWidth={2.25} />

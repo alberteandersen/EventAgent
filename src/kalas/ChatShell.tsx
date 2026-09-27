@@ -75,7 +75,7 @@ export default function ChatShell({
         >
           <div className="flex h-full min-h-0 flex-col px-2.5 py-5">
             <div className="flex shrink-0 flex-col items-center gap-2 px-1 pb-3">
-              <span className="font-serif text-[1.35rem] leading-none text-[#24413a]" aria-hidden>K</span>
+              <span className="font-serif text-[1.35rem] leading-none text-ink" aria-hidden>K</span>
             </div>
 
             <nav className="min-h-0 flex-1 overflow-y-auto pt-1" aria-label={t('Alle sider')}>
@@ -89,7 +89,7 @@ export default function ChatShell({
                   collapsed
                 />
               ))}
-              <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />
+              <div className="mx-auto my-3 h-px w-8 bg-line" />
               {nav.filter((n) => n.group === 'plan').map((n) => (
                 <NavRow
                   key={n.id}
@@ -99,7 +99,7 @@ export default function ChatShell({
                   collapsed
                 />
               ))}
-              <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />
+              <div className="mx-auto my-3 h-px w-8 bg-line" />
               {nav.filter((n) => n.group === 'help').map((n) => (
                 <NavRow
                   key={n.id}
@@ -124,7 +124,7 @@ export default function ChatShell({
               <a
                 href="/settings"
                 aria-label={t('Indstillinger')}
-                className="flex size-8 items-center justify-center rounded-full border border-[#dcdfdb] text-[#5f6b66] transition-colors hover:bg-[#24413a]/6 hover:text-[#24413a]"
+                className="flex size-8 items-center justify-center rounded-full border border-line text-muted transition-colors hover:bg-ink/6 hover:text-ink"
               >
                 <Settings size={15} strokeWidth={1.6} />
               </a>
@@ -142,12 +142,12 @@ export default function ChatShell({
               )}
             >
               <main
-                className="relative min-w-0 flex-1 overflow-y-auto rounded-t-[20px] border border-[#e2e6e2] border-b-0 pb-28 lg:pb-0"
+                className="relative min-w-0 flex-1 overflow-y-auto rounded-t-[20px] border border-line-soft border-b-0 pb-28 lg:pb-0"
                 style={{ backgroundColor: PAGE_BG }}
               >
                 {/* Stage strip: what Ava is showing right now */}
-                <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-[#e2e6e2]/70 bg-[#f4f5f3]/92 px-5 py-2 backdrop-blur-sm">
-                  <Monitor size={13} className="text-[#7d938a]" />
+                <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-line-soft/70 bg-canvas/92 px-5 py-2 backdrop-blur-sm">
+                  <Monitor size={13} className="text-sage" />
                   <AnimatePresence mode="wait" initial={false}>
                     <motion.span
                       key={current}
@@ -155,12 +155,12 @@ export default function ChatShell({
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -3 }}
                       transition={{ duration: 0.16 }}
-                      className="text-[0.72rem] font-semibold text-[#46574f]"
+                      className="text-[0.72rem] font-semibold text-ink-soft"
                     >
                       {t('Viser: {page}', { page: t(currentLabel) })}
                     </motion.span>
                   </AnimatePresence>
-                  <span className="ml-auto hidden text-[0.68rem] italic text-[#8a9992] md:block">
+                  <span className="ml-auto hidden text-[0.68rem] italic text-faint md:block">
                     {t('Ava styrer skærmen, sig hvad I vil se.')}
                   </span>
                 </div>
@@ -191,7 +191,7 @@ export default function ChatShell({
               )}
             >
               <div
-                className="flex h-full w-full min-h-0 flex-col overflow-hidden rounded-t-[20px] border border-[#e2e6e2] border-b-0 pb-[76px] lg:pb-0"
+                className="flex h-full w-full min-h-0 flex-col overflow-hidden rounded-t-[20px] border border-line-soft border-b-0 pb-[76px] lg:pb-0"
                 style={{ backgroundColor: PAGE_BG }}
               >
                 {chat}

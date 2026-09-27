@@ -51,7 +51,7 @@ export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: Navig
 
   const header = !embedded && (
     <div>
-      <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+      <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
         {t('Inbox')}
       </h1>
       <GuideLink screen="inbox" />

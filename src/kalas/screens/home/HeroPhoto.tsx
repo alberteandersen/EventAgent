@@ -131,7 +131,7 @@ export default function HeroPhoto({
               <button
                 type="button"
                 onClick={() => inputRef.current?.click()}
-                className="flex items-center gap-1.5 rounded-full bg-[#ffffff] px-4 py-2 text-[0.78rem] font-semibold text-[#24413a] transition-colors hover:bg-white cursor-pointer"
+                className="flex items-center gap-1.5 rounded-full bg-white px-4 py-2 text-[0.78rem] font-semibold text-ink transition-colors hover:bg-white cursor-pointer"
               >
                 <Camera size={14} />
                 {url ? t('Skift billede') : t('Vælg jeres billede')}
@@ -140,7 +140,7 @@ export default function HeroPhoto({
                 <button
                   type="button"
                   onClick={clear}
-                  className="rounded-full bg-[#ffffff]/85 px-3 py-2 text-[0.78rem] font-medium text-[#24413a] transition-colors hover:bg-white cursor-pointer"
+                  className="rounded-full bg-white/85 px-3 py-2 text-[0.78rem] font-medium text-ink transition-colors hover:bg-white cursor-pointer"
                 >
                   {t('Fjern')}
                 </button>
@@ -159,9 +159,9 @@ export default function HeroPhoto({
         />
       </div>
 
-      {error && <p role="alert" className="px-1 text-[0.78rem] text-[#b34e37]">{error}</p>}
+      {error && <p role="alert" className="px-1 text-[0.78rem] text-terracotta">{error}</p>}
       {url && !error && (
-        <p className="px-1 text-[0.72rem] text-[#7d938a]">{t('Billedet bruges også som forside på jeres bryllupsside.')}</p>
+        <p className="px-1 text-[0.72rem] text-sage">{t('Billedet bruges også som forside på jeres bryllupsside.')}</p>
       )}
     </div>
   );

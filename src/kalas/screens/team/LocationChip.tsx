@@ -56,8 +56,8 @@ export default function LocationChip({ className }: { className?: string }) {
         className={cn(
           'flex h-8 max-w-[240px] items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors cursor-pointer',
           location
-            ? 'border-[#dcdfdb] bg-[#ffffff] text-[#24413a] hover:border-[#24413a]'
-            : 'border-[#24413a] bg-[#e8f0ec] text-[#24413a]',
+            ? 'border-line bg-white text-ink hover:border-ink'
+            : 'border-ink bg-sage-wash text-ink',
         )}
       >
         <MapPin size={13} className="shrink-0" />
@@ -74,8 +74,8 @@ export default function LocationChip({ className }: { className?: string }) {
             onClick={() => setOpen(false)}
             className="fixed inset-0 z-40 cursor-default"
           />
-          <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-[280px] rounded-2xl border border-[#dcdfdb] bg-[#ffffff] p-3 shadow-[0_16px_40px_rgba(18,51,43,0.16)]">
-            <p className="px-1 pb-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-[#7d938a]">
+          <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-[280px] rounded-2xl border border-line bg-white p-3 shadow-[0_16px_40px_rgba(18,51,43,0.16)]">
+            <p className="px-1 pb-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-sage">
               {t('Jeres lokation')}
             </p>
             <div className="flex items-center gap-2">
@@ -88,14 +88,14 @@ export default function LocationChip({ className }: { className?: string }) {
                   if (e.key === 'Escape') setOpen(false);
                 }}
                 placeholder={t('f.eks. København, Danmark')}
-                className="h-9 min-w-0 flex-1 rounded-full border border-[#dcdfdb] bg-white px-3.5 text-[0.82rem] text-ink placeholder:text-[#9a9686] focus:border-[#24413a] focus:outline-none"
+                className="h-9 min-w-0 flex-1 rounded-full border border-line bg-white px-3.5 text-[0.82rem] text-ink placeholder:text-faint focus:border-ink focus:outline-none"
               />
               <button
                 type="button"
                 onClick={() => void commit(value)}
                 disabled={!value.trim() || saving}
                 aria-label={t('Gem lokation')}
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#24413a] text-[#f8f9f8] transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink text-paper transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer"
               >
                 <Check size={15} />
               </button>
@@ -105,14 +105,14 @@ export default function LocationChip({ className }: { className?: string }) {
               <button
                 type="button"
                 onClick={() => void commit(venueArea)}
-                className="mt-2 flex w-full items-center gap-2 rounded-xl border border-[#e6e9e5] bg-white px-3 py-2 text-left text-[0.76rem] text-[#24413a] transition-colors hover:bg-[#f8f9f8] cursor-pointer"
+                className="mt-2 flex w-full items-center gap-2 rounded-xl border border-line-soft bg-white px-3 py-2 text-left text-[0.76rem] text-ink transition-colors hover:bg-paper cursor-pointer"
               >
-                <Building2 size={13} className="shrink-0 text-[#7d938a]" />
+                <Building2 size={13} className="shrink-0 text-sage" />
                 <span className="min-w-0 flex-1 truncate">{t('Brug jeres venue: {area}', { area: venueArea })}</span>
               </button>
             )}
 
-            <p className="px-1 pt-2 text-[0.68rem] leading-snug text-[#5f6b66]">
+            <p className="px-1 pt-2 text-[0.68rem] leading-snug text-muted">
               {t('Leverandører på de andre faner findes nær dette sted.')}
             </p>
           </div>

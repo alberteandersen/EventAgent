@@ -63,7 +63,7 @@ export default function MemoryView({ eventId }: { eventId: string }) {
             <h3 className="px-1 pb-1.5 text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-muted">
               {t(HEADINGS[c])}
             </h3>
-            <ul className="divide-y divide-[#e7eae6] rounded-xl border border-[#e2e6e2] bg-card">
+            <ul className="divide-y divide-[#e7eae6] rounded-xl border border-line-soft bg-card">
               {rows.map((m) => (
                 <li key={m.id} className="group flex items-start gap-2 py-2.5 pl-3 pr-1.5">
                   <span className="min-w-0 flex-1 text-[0.86rem] leading-snug text-ink">{m.content}</span>

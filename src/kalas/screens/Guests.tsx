@@ -105,10 +105,10 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
     <div className="px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+          <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
             {t('Gæster')}
           </h1>
-          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
+          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
             {t('Hold styr på jeres gæsteliste og RSVP, og send invitationer, når I er klar.')}
           </p>
           <GuideLink screen="guests" />
@@ -292,7 +292,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
 function RsvpSelect({ value, name, onChange }: { value: RsvpStatus; name: string; onChange: (v: RsvpStatus) => void }) {
   const { t } = useLang();
   const tone =
-    value === 'ja' ? 'bg-[#dde7d6] text-[#2f5a48]'
+    value === 'ja' ? 'bg-[#dde7d6] text-success'
     : value === 'afventer' ? 'bg-[#ecdcd0] text-[#7a543c]'
     : 'rule text-muted';
   return (

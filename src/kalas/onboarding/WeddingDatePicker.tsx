@@ -132,7 +132,7 @@ export default function WeddingDatePicker({ value, onChange, lang, className }: 
                 'flex h-10 w-full items-center justify-center rounded-full text-[0.88rem] transition-colors cursor-pointer',
                 disabled && 'cursor-not-allowed text-[#c5cbc3]',
                 !disabled && !isSelected && 'text-[#23351f] hover:bg-[#eef2e8]',
-                isSelected && 'bg-[#12332b] font-semibold text-[#fffdf7] shadow-[0px_4px_12px_rgba(18,51,43,0.2)]',
+                isSelected && 'bg-ink-deep font-semibold text-[#fffdf7] shadow-[0px_4px_12px_rgba(18,51,43,0.2)]',
                 isToday && !isSelected && 'ring-1 ring-[#7b8e55] ring-inset',
               )}
             >

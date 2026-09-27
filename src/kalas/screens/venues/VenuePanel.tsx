@@ -38,7 +38,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-      className="overflow-hidden rounded-2xl border border-[#24413a] bg-[#ffffff]"
+      className="overflow-hidden rounded-2xl border border-ink bg-white"
     >
       <div className="grid gap-5 p-5 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
         {/* Pictures */}
@@ -48,7 +48,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
               type="button"
               onClick={() => onPhoto(0)}
               aria-label={t('Se billeder af {name}', { name: v.name })}
-              className="relative h-52 w-full cursor-pointer overflow-hidden rounded-xl bg-[#e8f0ec]"
+              className="relative h-52 w-full cursor-pointer overflow-hidden rounded-xl bg-sage-wash"
             >
               <img src={photos[0]} alt={v.name} className="h-full w-full object-cover" />
             </button>
@@ -60,7 +60,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
                     type="button"
                     onClick={() => onPhoto(i + 1)}
                     aria-label={t('Billede {n}', { n: i + 2 })}
-                    className="h-16 flex-1 cursor-pointer overflow-hidden rounded-lg bg-[#e8f0ec]"
+                    className="h-16 flex-1 cursor-pointer overflow-hidden rounded-lg bg-sage-wash"
                   >
                     <img src={src} alt="" className="h-full w-full object-cover" />
                   </button>
@@ -69,8 +69,8 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
             )}
           </div>
         ) : (
-          <div className="flex h-52 items-center justify-center rounded-xl bg-[#e8f0ec]">
-            <MapPin size={24} className="text-[#24413a] opacity-40" />
+          <div className="flex h-52 items-center justify-center rounded-xl bg-sage-wash">
+            <MapPin size={24} className="text-ink opacity-40" />
           </div>
         )}
 
@@ -78,11 +78,11 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
         <div className="flex min-w-0 flex-col">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <h3 className="font-serif text-[clamp(1.35rem,2.4vw,1.75rem)] leading-tight text-[#24413a]">
+              <h3 className="font-serif text-[clamp(1.35rem,2.4vw,1.75rem)] leading-tight text-ink">
                 {v.name}
               </h3>
               {v.address && (
-                <p className="mt-1 flex items-start gap-1.5 text-[0.78rem] text-[#5f6b66]">
+                <p className="mt-1 flex items-start gap-1.5 text-[0.78rem] text-muted">
                   <MapPin size={12} className="mt-0.5 shrink-0" />{v.address}
                 </p>
               )}
@@ -91,16 +91,16 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
               type="button"
               onClick={onClose}
               aria-label={t('Luk')}
-              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#5f6b66] transition-colors hover:bg-[#eceeeb] hover:text-[#24413a]"
+              className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-colors hover:bg-shell hover:text-ink"
             >
               <ChevronUp size={16} />
             </button>
           </div>
 
           {/* The four numbers a couple asks for first */}
-          <dl className="mt-3.5 flex flex-wrap gap-x-6 gap-y-2 border-y border-[#e6e9e5] py-3">
+          <dl className="mt-3.5 flex flex-wrap gap-x-6 gap-y-2 border-y border-line-soft py-3">
             {v.rating != null && (
-              <Fact icon={<Star size={12} fill="currentColor" className="text-[#e6a34e]" />}
+              <Fact icon={<Star size={12} fill="currentColor" className="text-amber" />}
                 label={t('Bedømmelse')}
                 value={`${v.rating.toFixed(1)}${v.review_count ? ` (${v.review_count})` : ''}`} />
             )}
@@ -118,11 +118,11 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
           </dl>
 
           {v.why_fit && (
-            <div className="mt-3.5 rounded-xl bg-[#e8f0ec] px-4 py-3">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#7d938a]">
+            <div className="mt-3.5 rounded-xl bg-sage-wash px-4 py-3">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-sage">
                 {t('Avas note')}
               </p>
-              <p className="mt-1 font-serif text-[0.95rem] italic leading-snug text-[#24413a]">
+              <p className="mt-1 font-serif text-[0.95rem] italic leading-snug text-ink">
                 {v.why_fit}
               </p>
             </div>
@@ -139,9 +139,9 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
                   key={b.id}
                   className={cn(
                     'rounded-full px-2.5 py-1 text-[0.68rem] font-semibold',
-                    b.tone === 'good' && 'bg-[#e8f0ec] text-[#24413a]',
+                    b.tone === 'good' && 'bg-sage-wash text-ink',
                     b.tone === 'warn' && 'bg-[#f7ece0] text-[#8a5a22]',
-                    b.tone === 'neutral' && 'bg-[#eceeeb] text-[#5f6b66]',
+                    b.tone === 'neutral' && 'bg-shell text-muted',
                   )}
                 >
                   {b.text}
@@ -157,7 +157,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
               onClick={onSave}
               className={cn(
                 'inline-flex h-10 items-center justify-center gap-1.5 rounded-full px-5 text-[0.8rem] font-bold transition-colors',
-                saved ? 'bg-[#e8f0ec] text-[#24413a] cursor-default' : 'bg-[#24413a] text-white hover:opacity-90 cursor-pointer',
+                saved ? 'bg-sage-wash text-ink cursor-default' : 'bg-ink text-white hover:opacity-90 cursor-pointer',
               )}
             >
               {saving ? <Loader2 size={14} className="animate-spin" />
@@ -169,7 +169,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
                 href={v.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex h-10 items-center gap-1.5 rounded-full border border-[#dcdfdb] px-4 text-[0.8rem] font-semibold text-[#5f6b66] transition-colors hover:border-[#24413a] hover:text-[#24413a]"
+                className="inline-flex h-10 items-center gap-1.5 rounded-full border border-line px-4 text-[0.8rem] font-semibold text-muted transition-colors hover:border-ink hover:text-ink"
               >
                 <ExternalLink size={13} /> {t('Deres hjemmeside')}
               </a>
@@ -184,8 +184,8 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
 function Fact({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[#7d938a]">{label}</dt>
-      <dd className="mt-0.5 inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-[#24413a]">
+      <dt className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">{label}</dt>
+      <dd className="mt-0.5 inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-ink">
         {icon}{value}
       </dd>
     </div>

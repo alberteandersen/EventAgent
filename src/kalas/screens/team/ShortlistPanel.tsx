@@ -70,9 +70,9 @@ export default function ShortlistPanel({
   return (
     <div className="space-y-10">
       {vendorsLocked && showVenueList && likedVenues.length > 0 && (
-        <div className="flex items-start gap-3 rounded-[18px] border border-[#dcdfdb] bg-[#eceeeb] px-5 py-4">
-          <Lock size={14} className="mt-0.5 shrink-0 text-[#5f6b66]" />
-          <p className="text-[0.82rem] text-[#24413a]">
+        <div className="flex items-start gap-3 rounded-[18px] border border-line bg-shell px-5 py-4">
+          <Lock size={14} className="mt-0.5 shrink-0 text-muted" />
+          <p className="text-[0.82rem] text-ink">
             Lås jeres lokation ved at vælge et venue herunder, så åbner vi de øvrige
             leverandører, og Ava kan begynde at finde og kontakte dem.
           </p>
@@ -108,7 +108,7 @@ export default function ShortlistPanel({
           <button
             type="button"
             onClick={() => onSwitchTab('explore', cat)}
-            className="mt-4 inline-flex h-8 items-center gap-1.5 rounded-full bg-[#24413a] px-3 text-xs font-semibold text-[#f8f9f8] hover:opacity-90 transition-colors cursor-pointer"
+            className="mt-4 inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold text-paper hover:opacity-90 transition-colors cursor-pointer"
           >
             {cat === 'venue' ? t('Udforsk venues') : t('Udforsk leverandører')}
           </button>
@@ -170,7 +170,7 @@ function VendorShortlist({
 
   return (
     <section>
-      <Eyebrow className="!text-[#7d938a]">{t('Gemte favoritter')} · {items.length}</Eyebrow>
+      <Eyebrow className="!text-sage">{t('Gemte favoritter')} · {items.length}</Eyebrow>
       <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((v) => {
           const isContacted = contacted.has(v.id);
@@ -178,21 +178,21 @@ function VendorShortlist({
             <motion.div
               key={v.id}
               layout
-              className="flex flex-col rounded-[18px] border border-[#dcdfdb] bg-[#ffffff] p-4"
+              className="flex flex-col rounded-[18px] border border-line bg-white p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-[#7d938a]">
+                  <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-sage">
                     {t(CAT_LABEL[v.category] ?? v.category)}
                   </p>
-                  <h3 className="mt-1 font-serif text-[1.05rem] text-[#24413a]">{v.name}</h3>
-                  {v.price_hint && <p className="mt-1 font-serif text-[0.95rem] text-[#24413a]">{v.price_hint}</p>}
+                  <h3 className="mt-1 font-serif text-[1.05rem] text-ink">{v.name}</h3>
+                  {v.price_hint && <p className="mt-1 font-serif text-[0.95rem] text-ink">{v.price_hint}</p>}
                 </div>
                 <button
                   type="button"
                   onClick={() => void toggle(v.id, true)}
                   disabled={busy === v.id}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e8f0ec] text-[#24413a] cursor-pointer"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sage-wash text-ink cursor-pointer"
                   aria-label={t('Fjern fra favoritter')}
                 >
                   <Heart size={14} fill="currentColor" />
@@ -200,18 +200,18 @@ function VendorShortlist({
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 {isContacted ? (
-                  <span className="inline-flex h-8 items-center rounded-full bg-[#eceeeb] px-3 text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#5f6b66]">
+                  <span className="inline-flex h-8 items-center rounded-full bg-shell px-3 text-[0.65rem] font-bold uppercase tracking-[0.1em] text-muted">
                     {t('Kontaktet')}
                   </span>
                 ) : locked ? (
-                  <span className="flex items-center gap-1.5 rounded-full bg-[#eceeeb] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.1em] text-[#5f6b66]">
+                  <span className="flex items-center gap-1.5 rounded-full bg-shell px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.1em] text-muted">
                     <Lock size={10} /> {t('Vælg venue først')}
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={() => setContacting(v)}
-                    className="flex h-8 items-center gap-1.5 rounded-full bg-[#24413a] px-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#f8f9f8] hover:opacity-85 transition-opacity cursor-pointer"
+                    className="flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-[0.12em] text-paper hover:opacity-85 transition-opacity cursor-pointer"
                   >
                     <Send size={12} /> {t('Kontakt')}
                   </button>
@@ -221,7 +221,7 @@ function VendorShortlist({
                     type="button"
                     onClick={() => void book(v.id, true)}
                     disabled={busy === v.id}
-                    className="flex h-8 items-center gap-1.5 rounded-full bg-[#e8f0ec] px-3 text-xs font-semibold text-[#24413a] cursor-pointer disabled:opacity-50"
+                    className="flex h-8 items-center gap-1.5 rounded-full bg-sage-wash px-3 text-xs font-semibold text-ink cursor-pointer disabled:opacity-50"
                   >
                     <Check size={12} /> {t('Booket')}
                   </button>
@@ -230,7 +230,7 @@ function VendorShortlist({
                     type="button"
                     onClick={() => void book(v.id, false)}
                     disabled={busy === v.id}
-                    className="flex h-8 items-center gap-1.5 rounded-full border border-[#e6e9e5] bg-[#ffffff] px-3 text-xs font-semibold text-[#24413a] hover:bg-[#f8f9f8] transition-colors cursor-pointer disabled:opacity-50"
+                    className="flex h-8 items-center gap-1.5 rounded-full border border-line-soft bg-white px-3 text-xs font-semibold text-ink hover:bg-paper transition-colors cursor-pointer disabled:opacity-50"
                   >
                     <Check size={12} /> {t('Book')}
                   </button>
@@ -244,11 +244,11 @@ function VendorShortlist({
         type="button"
         onClick={() => onExplore(exploreCat)}
         className={cn(
-          'mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-[18px] border border-[#dcdfdb] bg-[#ffffff] px-5',
-          'text-sm text-[#24413a] hover:bg-[#f8f9f8] transition-colors cursor-pointer',
+          'mt-6 flex h-11 w-full items-center justify-center gap-2 rounded-[18px] border border-line bg-white px-5',
+          'text-sm text-ink hover:bg-paper transition-colors cursor-pointer',
         )}
       >
-        <MessageCircle size={16} className="text-[#5f6b66]" />
+        <MessageCircle size={16} className="text-muted" />
         {t('Find flere leverandører')}
       </button>
 

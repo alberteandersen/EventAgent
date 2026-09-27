@@ -54,19 +54,19 @@ function TableNodeInner({
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); } }}
         className={cn(
           'group absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 cursor-grab',
-          'flex-col items-center justify-center border bg-[#ffffff] transition-colors active:cursor-grabbing',
+          'flex-col items-center justify-center border bg-white transition-colors active:cursor-grabbing',
           table.shape === 'round' ? 'rounded-full' : 'rounded-2xl',
-          selected ? 'border-[#24413a] shadow-[0_6px_20px_rgba(18,51,43,0.12)]' : 'border-[#dcdfdb]',
+          selected ? 'border-ink shadow-[0_6px_20px_rgba(18,51,43,0.12)]' : 'border-line',
         )}
         style={{ width: w, height: h }}
       >
-        <span className="pointer-events-none font-serif text-[1.35rem] leading-none text-[#24413a]">
+        <span className="pointer-events-none font-serif text-[1.35rem] leading-none text-ink">
           {table.name}
         </span>
-        <span className="pointer-events-none mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[#7d938a]">
+        <span className="pointer-events-none mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">
           {taken}/{table.seats}
         </span>
-        <span className="pointer-events-none absolute left-2 top-2 text-[#c6cbc6] opacity-0 transition-opacity group-hover:opacity-100">
+        <span className="pointer-events-none absolute left-2 top-2 text-line-strong opacity-0 transition-opacity group-hover:opacity-100">
           <GripVertical size={13} />
         </span>
         {selected && (
@@ -75,7 +75,7 @@ function TableNodeInner({
             onClick={(e) => { e.stopPropagation(); onRename(); }}
             onPointerDown={(e) => e.stopPropagation()}
             aria-label={`Omdøb ${table.name}`}
-            className="absolute right-2 top-2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-[#7d938a] hover:bg-[#eceeeb] hover:text-[#24413a]"
+            className="absolute right-2 top-2 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-sage hover:bg-shell hover:text-ink"
           >
             <Pencil size={12} />
           </button>
@@ -107,10 +107,10 @@ function TableNodeInner({
                 'relative flex -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full',
                 'text-[0.62rem] font-bold transition-colors cursor-pointer',
                 guest
-                  ? 'border border-[#7d938a] bg-[#dbe5e0] text-[#24413a] hover:border-[#24413a]'
-                  : 'border border-dashed border-[#c6cbc6] bg-[#ffffff] text-transparent hover:border-[#24413a] hover:bg-[#e8f0ec]',
+                  ? 'border border-sage bg-sage-tint text-ink hover:border-ink'
+                  : 'border border-dashed border-line-strong bg-white text-transparent hover:border-ink hover:bg-sage-wash',
                 // A guest in hand makes every free chair a target worth seeing.
-                held && !guest && 'border-solid border-[#24413a] bg-[#e8f0ec]',
+                held && !guest && 'border-solid border-ink bg-sage-wash',
                 isHeld && 'opacity-40',
                 guest && !guest.attending && 'opacity-55',
               )}
@@ -120,7 +120,7 @@ function TableNodeInner({
               {guest?.dietary && (
                 <span
                   aria-hidden
-                  className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-[#ffffff] bg-[#b34e37]"
+                  className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border border-white bg-terracotta"
                 />
               )}
             </button>
@@ -129,7 +129,7 @@ function TableNodeInner({
               <span
                 className={cn(
                   // Never wider than the chair pitch, or two neighbours collide.
-                  'pointer-events-none absolute left-1/2 w-[3.4rem] -translate-x-1/2 truncate text-center text-[0.62rem] leading-tight text-[#46574f]',
+                  'pointer-events-none absolute left-1/2 w-[3.4rem] -translate-x-1/2 truncate text-center text-[0.62rem] leading-tight text-ink-soft',
                   below ? 'top-3' : 'bottom-3',
                 )}
               >

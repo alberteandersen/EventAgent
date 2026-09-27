@@ -116,7 +116,7 @@ export default function CardSteps(props: CardStepsProps) {
   return (
     <div className="space-y-7">
       {genError && (
-        <p className="rule rounded-xl bg-[#f2e3dd] px-4 py-3 text-[0.82rem] text-[var(--color-terracotta)]">{t(genError)}</p>
+        <p className="rule rounded-xl bg-terracotta-tint px-4 py-3 text-[0.82rem] text-[var(--color-terracotta)]">{t(genError)}</p>
       )}
 
       {needsPayment && !websitePaid && (

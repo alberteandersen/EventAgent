@@ -143,10 +143,10 @@ export default function BookedPanel({
 
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#7d938a]">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-sage">
         {t('Jeres team · {n} booket', { n: bookedCount })}
       </p>
-      <p className="mt-2 max-w-xl text-sm text-[#5f6b66]">
+      <p className="mt-2 max-w-xl text-sm text-muted">
         {t('Hold styr på hele holdet ét sted, I bestemmer selv hvilke kategorier der hører til jeres dag.')}
       </p>
 
@@ -165,15 +165,15 @@ export default function BookedPanel({
               className={cn(
                 'group relative flex min-h-[200px] flex-col rounded-[18px] border p-5 transition-colors',
                 done
-                  ? 'border-[#d3dcc4] bg-[#e8f0ec]'
-                  : 'border-dashed border-[#dcdfdb] bg-[#ffffff]',
+                  ? 'border-[#d3dcc4] bg-sage-wash'
+                  : 'border-dashed border-line bg-white',
               )}
             >
               <button
                 type="button"
                 onClick={() => removeSlot(slot.id)}
                 aria-label={t('Fjern {name} fra tavlen', { name: slot.label })}
-                className="absolute right-3 top-3 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-[#7d938a] opacity-0 transition-opacity hover:bg-[#eceeeb] hover:text-[#24413a] focus-visible:opacity-100 group-hover:opacity-100"
+                className="absolute right-3 top-3 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full text-sage opacity-0 transition-opacity hover:bg-shell hover:text-ink focus-visible:opacity-100 group-hover:opacity-100"
               >
                 <X size={14} />
               </button>
@@ -181,31 +181,31 @@ export default function BookedPanel({
               <div className="flex items-center gap-3 pr-8">
                 <span className={cn(
                   'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
-                  done ? 'bg-[#24413a] text-[#f8f9f8]' : 'bg-[#eceeeb] text-[#5f6b66]',
+                  done ? 'bg-ink text-paper' : 'bg-shell text-muted',
                 )}>
                   <Icon size={20} strokeWidth={1.6} />
                 </span>
                 <div className="min-w-0">
-                  <h3 className="font-serif text-[1.15rem] leading-tight text-[#24413a]">
+                  <h3 className="font-serif text-[1.15rem] leading-tight text-ink">
                     {custom ? slot.label : t(slot.label)}
                   </h3>
-                  {done && <p className="text-[0.72rem] font-medium text-[#5f7d70]">{t('Booket ✓')}</p>}
+                  {done && <p className="text-[0.72rem] font-medium text-sage-strong">{t('Booket ✓')}</p>}
                 </div>
               </div>
 
               {booked ? (
                 <div className="mt-4 flex-1">
-                  <p className="font-serif text-[1.05rem] text-[#24413a]">{booked.name}</p>
+                  <p className="font-serif text-[1.05rem] text-ink">{booked.name}</p>
                   {booked.price_hint && (
-                    <p className="mt-1 text-[0.82rem] text-[#5f6b66]">{booked.price_hint}</p>
+                    <p className="mt-1 text-[0.82rem] text-muted">{booked.price_hint}</p>
                   )}
                   {booked.address && (
-                    <p className="mt-1 text-[0.78rem] text-[#5f6b66]">{booked.address}</p>
+                    <p className="mt-1 text-[0.78rem] text-muted">{booked.address}</p>
                   )}
                   <button
                     type="button"
                     onClick={() => onSwitchTab('shortlist', slot.id as HubCat)}
-                    className="mt-4 text-[0.78rem] font-medium text-[#24413a] underline-offset-2 hover:underline cursor-pointer"
+                    className="mt-4 text-[0.78rem] font-medium text-ink underline-offset-2 hover:underline cursor-pointer"
                   >
                     {t('Se detaljer')}
                   </button>
@@ -214,7 +214,7 @@ export default function BookedPanel({
                 /* Kalas has no search for a category it has never heard of, so
                    a custom card is the couple's own tick-box. */
                 <div className="mt-4 flex flex-1 flex-col">
-                  <p className="text-[0.82rem] leading-relaxed text-[#5f6b66]">
+                  <p className="text-[0.82rem] leading-relaxed text-muted">
                     {t('Jeres egen kategori, kryds af, når den er på plads.')}
                   </p>
                   <button
@@ -224,8 +224,8 @@ export default function BookedPanel({
                     className={cn(
                       'mt-auto inline-flex h-8 items-center gap-1.5 self-start rounded-full border px-3 text-xs font-semibold uppercase tracking-[0.1em] transition-colors cursor-pointer',
                       manual.includes(slot.id)
-                        ? 'border-[#24413a] bg-[#24413a] text-[#f8f9f8]'
-                        : 'border-[#24413a] text-[#24413a] hover:bg-[#f8f9f8]',
+                        ? 'border-ink bg-ink text-paper'
+                        : 'border-ink text-ink hover:bg-paper',
                     )}
                   >
                     <Check size={13} />
@@ -234,11 +234,11 @@ export default function BookedPanel({
                 </div>
               ) : (
                 <div className="mt-4 flex flex-1 flex-col">
-                  <p className="text-[0.82rem] leading-relaxed text-[#5f6b66]">{t(entry!.leadTime)}</p>
+                  <p className="text-[0.82rem] leading-relaxed text-muted">{t(entry!.leadTime)}</p>
                   <button
                     type="button"
                     onClick={() => onSwitchTab('explore', slot.id as HubCat)}
-                    className="mt-auto inline-flex h-8 items-center gap-1.5 self-start rounded-full border border-[#24413a] px-3 text-xs font-semibold uppercase tracking-[0.1em] text-[#24413a] hover:bg-[#f8f9f8] transition-colors cursor-pointer"
+                    className="mt-auto inline-flex h-8 items-center gap-1.5 self-start rounded-full border border-ink px-3 text-xs font-semibold uppercase tracking-[0.1em] text-ink hover:bg-paper transition-colors cursor-pointer"
                   >
                     <Plus size={13} />
                     {t('Booket? Tilføj her')}
@@ -250,14 +250,14 @@ export default function BookedPanel({
         })}
 
         {/* Add a category */}
-        <div className="flex min-h-[200px] flex-col rounded-[18px] border border-dashed border-[#c6cbc6] bg-[#f8f9f8] p-5">
+        <div className="flex min-h-[200px] flex-col rounded-[18px] border border-dashed border-line-strong bg-paper p-5">
           {!adding ? (
             <button
               type="button"
               onClick={() => setAdding(true)}
-              className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-2 text-[#5f6b66] transition-colors hover:text-[#24413a]"
+              className="flex flex-1 cursor-pointer flex-col items-center justify-center gap-2 text-muted transition-colors hover:text-ink"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#e6e9e6]">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blush">
                 <Plus size={20} strokeWidth={1.6} />
               </span>
               <span className="text-[0.85rem] font-semibold">{t('Tilføj kategori')}</span>
@@ -265,14 +265,14 @@ export default function BookedPanel({
           ) : (
             <div className="flex min-h-0 flex-1 flex-col gap-3">
               <div className="flex items-center justify-between">
-                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-[#7d938a]">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-sage">
                   {t('Tilføj kategori')}
                 </p>
                 <button
                   type="button"
                   onClick={() => { setAdding(false); setCustomName(''); }}
                   aria-label={t('Luk')}
-                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-[#7d938a] hover:text-[#24413a]"
+                  className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-sage hover:text-ink"
                 >
                   <X size={13} />
                 </button>
@@ -285,7 +285,7 @@ export default function BookedPanel({
                       key={c.id}
                       type="button"
                       onClick={() => addSlot({ id: c.id, label: c.label })}
-                      className="inline-flex h-8 cursor-pointer items-center rounded-full border border-[#dcdfdb] bg-[#ffffff] px-3 text-[0.76rem] font-semibold text-[#5f6b66] transition-colors hover:border-[#24413a] hover:text-[#24413a]"
+                      className="inline-flex h-8 cursor-pointer items-center rounded-full border border-line bg-white px-3 text-[0.76rem] font-semibold text-muted transition-colors hover:border-ink hover:text-ink"
                     >
                       {t(c.label)}
                     </button>
@@ -304,13 +304,13 @@ export default function BookedPanel({
                   }}
                   placeholder={t('f.eks. Fyrværkeri')}
                   aria-label={t('Egen kategori')}
-                  className="h-9 min-w-0 flex-1 rounded-full border border-[#dcdfdb] bg-[#ffffff] px-3.5 text-[0.8rem] text-[#24413a] placeholder:text-[#9a9686] focus:border-[#24413a] focus:outline-none"
+                  className="h-9 min-w-0 flex-1 rounded-full border border-line bg-white px-3.5 text-[0.8rem] text-ink placeholder:text-faint focus:border-ink focus:outline-none"
                 />
                 <button
                   type="button"
                   disabled={!customName.trim()}
                   onClick={() => addSlot({ id: `${CUSTOM}${customName.trim()}`, label: customName.trim() })}
-                  className="flex h-9 shrink-0 cursor-pointer items-center rounded-full bg-[#24413a] px-3.5 text-[0.76rem] font-semibold text-[#f8f9f8] transition-opacity hover:opacity-90 disabled:opacity-40"
+                  className="flex h-9 shrink-0 cursor-pointer items-center rounded-full bg-ink px-3.5 text-[0.76rem] font-semibold text-paper transition-opacity hover:opacity-90 disabled:opacity-40"
                 >
                   {t('Tilføj')}
                 </button>
@@ -321,7 +321,7 @@ export default function BookedPanel({
       </div>
 
       {slots.length === 0 && (
-        <p className="mt-6 text-[0.85rem] text-[#5f6b66]">
+        <p className="mt-6 text-[0.85rem] text-muted">
           {t('Tavlen er tom, tilføj de kategorier jeres dag har brug for.')}
         </p>
       )}

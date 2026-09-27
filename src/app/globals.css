@@ -45,21 +45,27 @@ html {
      rest of the app standardizes on. Names disjoint from the marketing
      set; ink/fonts are overridden per subtree via .theme-kalas instead.
      See docs/DESIGN_SYSTEM.md. */
-  --color-canvas: #f4f5f3;          /* main background — warm ivory       */
-  --color-card: #ffffff;            /* raised card — bright ivory         */
-  --color-blush: #e6e9e6;           /* alt warm band                      */
+  --color-canvas: #f4f5f3;          /* main background                    */
+  --color-chrome: #f0f1ec;          /* sidebar + header, behind the page  */
+  --color-card: #ffffff;            /* raised card                        */
+  --color-paper: #f8f9f8;           /* quiet panel, and text on forest    */
+  --color-blush: #e6e9e6;           /* alt band                           */
   --color-shell: #eceeeb;           /* inset tile / chip                  */
 
+  --color-ink-deep: #12332b;        /* darkest forest: Ava, big numerals  */
   --color-muted: #5f6b66;           /* meta + tracked labels (AA)         */
   --color-faint: #8a9992;           /* labels / captions                  */
 
   --color-sage: #7d938a;            /* sage accent + eyebrow labels       */
   --color-sage-strong: #5f7d70;     /* sage hover / "done"                */
   --color-sage-tint: #dbe5e0;       /* sage wash                          */
+  --color-sage-wash: #e8f0ec;       /* lighter wash: done rows, badges    */
 
   --color-line: #dcdfdb;            /* hairline rule                      */
+  --color-line-soft: #e6e9e5;       /* softer border inside cards         */
   --color-line-strong: #c6cbc6;
 
+  --color-amber: #e6a34e;           /* in progress / attention            */
   --color-clay: #8a7f66;            /* warm khaki accent (awaiting)       */
   --color-terracotta: #b34e37;      /* the single accent — links / → / errors */
   --color-terracotta-tint: #f2e3dd; /* warm terracotta wash               */

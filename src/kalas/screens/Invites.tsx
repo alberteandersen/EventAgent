@@ -273,10 +273,10 @@ export default function Invites() {
     <div className="grid min-h-screen lg:grid-cols-[1fr_440px]">
       {/* The card, as it prints */}
       <div className="px-6 pt-8 sm:px-9 lg:rule-r lg:px-12 lg:py-8">
-        <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+        <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
           {t('Invitationer')}
         </h1>
-        <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
+        <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
           {t('Vælg en stemning, skriv jeres ord, og lad Ava male et kort kun til jer. Hent det til Canva, hvor alt kan rettes.')}
         </p>
         <div className="sticky top-8 flex justify-center py-8 lg:py-12">

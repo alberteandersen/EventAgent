@@ -94,7 +94,7 @@ export default function TakkekortTab() {
       className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]"
     >
       {/* The card, as a guest's phone shows it */}
-      <div className="flex min-w-0 flex-col items-center gap-4 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] px-5 py-8 sm:px-7">
+      <div className="flex min-w-0 flex-col items-center gap-4 rounded-[28px] border border-line bg-white px-5 py-8 sm:px-7">
         <InvitePreview
           html={null}
           htmlFontsHref={null}
@@ -105,7 +105,7 @@ export default function TakkekortTab() {
           title={t('Forhåndsvisning af takkekortet')}
           thanks={words}
         />
-        <p className="max-w-sm text-center text-[12px] leading-relaxed text-[#9a9686]">
+        <p className="max-w-sm text-center text-[12px] leading-relaxed text-faint">
           {source === 'invitation'
             ? t('I samme stemning som jeres invitation: {name}.', { name: design.concept.name })
             : source === 'website'
@@ -114,11 +114,11 @@ export default function TakkekortTab() {
         </p>
       </div>
 
-      <aside className="flex flex-col gap-5 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-6 lg:sticky lg:top-6">
+      <aside className="flex flex-col gap-5 rounded-[28px] border border-line bg-white p-6 lg:sticky lg:top-6">
         {/* Their own words. The default is a placeholder for the couple with
             nothing particular to add; anything they write replaces it. */}
         <label className="flex flex-col gap-2">
-          <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[#9a9686]">
+          <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
             <PenLine size={12} aria-hidden /> {t('Jeres egen hilsen')}
           </span>
           <textarea
@@ -127,29 +127,29 @@ export default function TakkekortTab() {
             rows={3}
             maxLength={400}
             placeholder={t('Fx: Tak fordi I dansede til den lyse morgen.')}
-            className="w-full resize-none rounded-[14px] border border-[#e6e9e5] bg-[#f8f9f8] px-4 py-3 text-sm leading-relaxed text-[#24413a] placeholder:text-[#9a9686] focus:border-[#24413a] focus:outline-none"
+            className="w-full resize-none rounded-[14px] border border-line-soft bg-paper px-4 py-3 text-sm leading-relaxed text-ink placeholder:text-faint focus:border-ink focus:outline-none"
           />
         </label>
 
         <a
           href={mailto}
-          className="inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-[#12332b] px-4 text-[0.8rem] font-semibold text-white transition-opacity hover:opacity-90"
+          className="inline-flex h-11 items-center justify-center gap-2 rounded-[14px] bg-ink-deep px-4 text-[0.8rem] font-semibold text-white transition-opacity hover:opacity-90"
         >
           <Mail size={14} /> {t('Send det med mail')}
         </a>
 
         {/* Who has not been thanked yet — the same list the Takkeliste shows,
             here as the addressing side of the card rather than a checklist. */}
-        <div className="flex flex-col gap-3 border-t border-[#e6e9e5] pt-5">
+        <div className="flex flex-col gap-3 border-t border-line-soft pt-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-[#24413a]">
+              <p className="text-sm font-semibold text-ink">
                 {outstanding.length > 0
                   ? t('{n} mangler stadig en tak', { n: outstanding.length })
                   : t('Alle har fået tak')}
               </p>
               {outstanding.length > 0 && (
-                <p className="mt-0.5 text-[12px] text-[#9a9686]">
+                <p className="mt-0.5 text-[12px] text-faint">
                   {t('Navnene står som de skal skrives på kortet.')}
                 </p>
               )}
@@ -158,7 +158,7 @@ export default function TakkekortTab() {
               <button
                 type="button"
                 onClick={copyGreetings}
-                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#d9ded9] px-3 py-1.5 text-[0.74rem] font-semibold text-[#24413a] transition-colors hover:border-[#24413a]"
+                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#d9ded9] px-3 py-1.5 text-[0.74rem] font-semibold text-ink transition-colors hover:border-ink"
               >
                 {copied ? <Check size={13} /> : <Copy size={13} />}
                 {copied ? t('Kopieret') : t('Kopiér')}
@@ -169,12 +169,12 @@ export default function TakkekortTab() {
           {outstanding.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {outstanding.slice(0, 8).map((r) => (
-                <span key={r.key} className="rounded-full bg-[#f4f5f3] px-2.5 py-1 text-[0.74rem] text-[#5f6b66]">
+                <span key={r.key} className="rounded-full bg-canvas px-2.5 py-1 text-[0.74rem] text-muted">
                   {greetingFor(r.name, lang)}
                 </span>
               ))}
               {outstanding.length > 8 && (
-                <span className="px-1.5 py-1 text-[0.74rem] text-[#9a9686]">
+                <span className="px-1.5 py-1 text-[0.74rem] text-faint">
                   {t('+{n} flere', { n: outstanding.length - 8 })}
                 </span>
               )}

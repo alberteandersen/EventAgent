@@ -45,9 +45,9 @@ function ElementNodeInner({ element, selected, onSelect, onPointerDown }: {
       className={cn(
         'group absolute flex cursor-grab flex-col items-center justify-center gap-1 rounded-2xl border transition-colors active:cursor-grabbing',
         selected
-          ? 'border-solid border-[#24413a] shadow-[0_6px_20px_rgba(18,51,43,0.12)]'
+          ? 'border-solid border-ink shadow-[0_6px_20px_rgba(18,51,43,0.12)]'
           : 'border-dashed border-[#9fb3a8]',
-        floor ? 'bg-[#e8f0ec]' : 'bg-[#f1f5f2]',
+        floor ? 'bg-sage-wash' : 'bg-[#f1f5f2]',
       )}
       style={{
         left: element.x,
@@ -65,11 +65,11 @@ function ElementNodeInner({ element, selected, onSelect, onPointerDown }: {
           : null),
       }}
     >
-      <Icon size={element.h < 70 ? 14 : 18} strokeWidth={1.75} className="pointer-events-none text-[#5f7d70]" aria-hidden />
-      <span className="pointer-events-none max-w-full truncate px-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-[#46574f]">
+      <Icon size={element.h < 70 ? 14 : 18} strokeWidth={1.75} className="pointer-events-none text-sage-strong" aria-hidden />
+      <span className="pointer-events-none max-w-full truncate px-2 text-[0.72rem] font-semibold uppercase tracking-[0.12em] text-ink-soft">
         {element.label}
       </span>
-      <span className="pointer-events-none absolute left-2 top-2 text-[#c6cbc6] opacity-0 transition-opacity group-hover:opacity-100">
+      <span className="pointer-events-none absolute left-2 top-2 text-line-strong opacity-0 transition-opacity group-hover:opacity-100">
         <GripVertical size={13} />
       </span>
     </div>

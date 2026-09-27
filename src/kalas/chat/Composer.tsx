@@ -37,7 +37,7 @@ const Composer = forwardRef<ComposerHandle, {
   return (
     <form
       onSubmit={(e) => { e.preventDefault(); send(); }}
-      className="flex items-end gap-2 rounded-[18px] border border-[#dcdfdb] bg-card py-1.5 pl-3.5 pr-1.5 shadow-[0_1px_2px_rgba(18,51,43,0.04)] transition-colors focus-within:border-[#b9c4be]"
+      className="flex items-end gap-2 rounded-[18px] border border-line bg-card py-1.5 pl-3.5 pr-1.5 shadow-[0_1px_2px_rgba(18,51,43,0.04)] transition-colors focus-within:border-[#b9c4be]"
     >
       <textarea
         ref={area}

@@ -45,7 +45,7 @@ export default function ToolSteps({ calls, live = false }: { calls: (ChatToolCal
       >
         <span className="flex -space-x-1">
           {icons.map((Icon, i) => (
-            <span key={i} className="flex size-5 items-center justify-center rounded-full border border-[#e2e6e2] bg-card">
+            <span key={i} className="flex size-5 items-center justify-center rounded-full border border-line-soft bg-card">
               <Icon size={11} strokeWidth={1.8} />
             </span>
           ))}
@@ -67,7 +67,7 @@ export default function ToolSteps({ calls, live = false }: { calls: (ChatToolCal
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
-            className="mt-1 space-y-0.5 overflow-hidden border-l border-[#e2e6e2] pl-2.5"
+            className="mt-1 space-y-0.5 overflow-hidden border-l border-line-soft pl-2.5"
           >
             {calls.map((c) => <StepRow key={c.id} step={c} expandable />)}
           </motion.ol>

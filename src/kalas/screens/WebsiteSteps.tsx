@@ -146,7 +146,7 @@ export default function WebsiteSteps({
   return (
     <div className="space-y-7">
       {genError && (
-        <p className="rule rounded-xl bg-[#f2e3dd] px-4 py-3 text-[0.82rem] text-[var(--color-terracotta)]">{t(genError)}</p>
+        <p className="rule rounded-xl bg-terracotta-tint px-4 py-3 text-[0.82rem] text-[var(--color-terracotta)]">{t(genError)}</p>
       )}
 
       {/* Paywall notice, templates stay usable; Ava's edits unlock on purchase. */}

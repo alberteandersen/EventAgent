@@ -95,7 +95,7 @@ export function Chip({
     neutral: 'text-muted rule',
     sage: 'text-ink bg-sage-tint',
     clay: 'text-[#7a543c] bg-[#ecdcd0]',
-    success: 'text-[#2f5a48] bg-[#dde7d6]',
+    success: 'text-success bg-[#dde7d6]',
   }[tone];
   return (
     <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-[0.14em]', tones)}>
@@ -157,7 +157,7 @@ export function CheckDot({ done, icon, className }: { done: boolean; icon?: Reac
     <span
       className={cn(
         'flex size-7 shrink-0 items-center justify-center rounded-full',
-        done ? 'bg-[#24413a] text-[#f8f9f8]' : 'border-2 border-[#c6cbc6] bg-transparent',
+        done ? 'bg-ink text-paper' : 'border-2 border-line-strong bg-transparent',
         className,
       )}
     >
@@ -186,14 +186,14 @@ export function TaskCheckbox({ done, label, onToggle }: { done: boolean; label: 
 /** Row background + border for a task's status. */
 export function taskRowTone(status: 'done' | 'overdue' | 'default') {
   return status === 'done'
-    ? 'border-[#d3dcc4] bg-[#e8f0ec]'
+    ? 'border-[#d3dcc4] bg-sage-wash'
     : status === 'overdue'
       ? 'border-[#e8d5c8] bg-[#faf4ef]'
-      : 'border-[#e6e9e5] bg-[#f8f9f8]';
+      : 'border-line-soft bg-paper';
 }
 
 /** Label styling for a completed task. */
-export const doneLabelClass = 'text-[#46574f] line-through decoration-[#46574f]/40';
+export const doneLabelClass = 'text-ink-soft line-through decoration-ink-soft/40';
 
 /* ── Animated screen wrapper ─────────────────────────────────────────── */
 export function Screen({ children, className }: { children: React.ReactNode; className?: string }) {

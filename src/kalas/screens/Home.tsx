@@ -265,7 +265,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
   };
 
   return (
-    <div className="flex min-h-full flex-col gap-10 bg-[#f4f5f3] px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
+    <div className="flex min-h-full flex-col gap-10 bg-canvas px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
       {/* Hero */}
       <motion.section
         initial={{ opacity: 0, y: 12 }}
@@ -274,14 +274,14 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
         className="flex flex-col gap-7"
       >
         <div
-          className="flex w-full flex-col gap-8 rounded-[28px] border border-[#dcdfdb] bg-[#e6e9e6] p-7 lg:flex-row"
+          className="flex w-full flex-col gap-8 rounded-[28px] border border-line bg-blush p-7 lg:flex-row"
         >
           <HeroPhoto fallback={HERO_IMG} alt={coupleLabel} />
           <div className="flex flex-1 flex-col justify-center gap-4">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7d938a]">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage">
               {t('Brylluppet for')}
             </p>
-            <h1 className="font-serif text-[clamp(2.5rem,6vw,3.75rem)] font-semibold leading-[1.05] text-[#24413a]">
+            <h1 className="font-serif text-[clamp(2.5rem,6vw,3.75rem)] font-semibold leading-[1.05] text-ink">
               {coupleLabel}
             </h1>
             {/* The date is the product's pulse, and it changes — it should be
@@ -325,11 +325,11 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
                 </div>
               )}
             </div>
-            <div className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-[#24413a] px-5 py-2">
-              <span className="font-serif text-xl font-semibold text-[#f8f9f8]">
+            <div className="mt-1 inline-flex w-fit items-center gap-2 rounded-full bg-ink px-5 py-2">
+              <span className="font-serif text-xl font-semibold text-paper">
                 {days ?? '-'}
               </span>
-              <span className="text-sm font-semibold text-[#dbe5e0]">{t('dage tilbage')}</span>
+              <span className="text-sm font-semibold text-sage-tint">{t('dage tilbage')}</span>
             </div>
           </div>
         </div>
@@ -463,33 +463,33 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
         >
           <div className="absolute inset-0 bg-[linear-gradient(rgba(20,32,16,0.15)_0%,rgba(20,32,16,0.82)_100%)]" />
           <div className="relative flex flex-col gap-2">
-            <h3 className="font-serif text-3xl font-semibold leading-tight text-[#f8f9f8]">
+            <h3 className="font-serif text-3xl font-semibold leading-tight text-paper">
               {t('Find jeres venue')}
             </h3>
             <p className="max-w-[420px] text-sm leading-relaxed text-[#e6ebe0]">
               {t('Steder der matcher gæsteantal, stemning, placering og budget.')}
             </p>
           </div>
-          <span className="relative mt-4 inline-flex h-8 w-fit items-center gap-1.5 rounded-full bg-[#f8f9f8] px-3 text-xs font-semibold text-[#24413a]">
+          <span className="relative mt-4 inline-flex h-8 w-fit items-center gap-1.5 rounded-full bg-paper px-3 text-xs font-semibold text-ink">
             {t('Udforsk venues')}
             <MapPin size={13} />
           </span>
         </button>
 
-        <div className="flex flex-1 flex-col gap-6 rounded-[26px] border border-[#dcdfdb] bg-[#ffffff] p-7">
+        <div className="flex flex-1 flex-col gap-6 rounded-[26px] border border-line bg-white p-7">
           <div className="flex items-end justify-between gap-3">
             <div className="flex flex-col gap-2">
-              <h3 className="font-serif text-3xl font-semibold text-[#24413a]">
+              <h3 className="font-serif text-3xl font-semibold text-ink">
                 {t('Find leverandører')}
               </h3>
-              <p className="text-sm text-[#5f6b66]">
+              <p className="text-sm text-muted">
                 {t('Saml holdet der bringer dagen til live.')}
               </p>
             </div>
             <button
               type="button"
               onClick={() => goHub('explore', 'fotografi')}
-              className="shrink-0 text-sm font-bold text-[#24413a] hover:opacity-70"
+              className="shrink-0 text-sm font-bold text-ink hover:opacity-70"
             >
               {t('Se alle →')}
             </button>
@@ -502,12 +502,12 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
                   key={tile.id}
                   type="button"
                   onClick={() => goHub('explore', tile.hubCat)}
-                  className="flex flex-col gap-3 rounded-[18px] border border-[#e6e9e5] bg-[#eceeeb] p-4 text-left transition-colors hover:bg-[#e8e4da]"
+                  className="flex flex-col gap-3 rounded-[18px] border border-line-soft bg-shell p-4 text-left transition-colors hover:bg-[#e8e4da]"
                 >
                   <Icon size={20} className="text-[#35544a]" strokeWidth={1.8} />
                   <div>
-                    <p className="text-sm font-bold text-[#24413a]">{tile.label}</p>
-                    <p className="text-[11px] text-[#5f6b66]">{tile.meta}</p>
+                    <p className="text-sm font-bold text-ink">{tile.label}</p>
+                    <p className="text-[11px] text-muted">{tile.meta}</p>
                   </div>
                 </button>
               );
@@ -523,12 +523,12 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
         transition={{ delay: 0.12 }}
         className="flex flex-col gap-5"
       >
-        <div className="flex items-end justify-between border-b border-[#e2e6e2] pb-4">
+        <div className="flex items-end justify-between border-b border-line-soft pb-4">
           <div className="flex flex-col gap-1">
-            <h2 className="font-serif text-[28px] font-semibold text-[#24413a]">
+            <h2 className="font-serif text-[28px] font-semibold text-ink">
               {t('Over hele planlægningen')}
             </h2>
-            <p className="text-sm text-[#5f6b66]">
+            <p className="text-sm text-muted">
               {t('Et roligt overblik over alle hjørner af brylluppet.')}
             </p>
           </div>

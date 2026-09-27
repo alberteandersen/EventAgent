@@ -77,11 +77,11 @@ export default function VendorHub({ onNavigate }: { onNavigate?: (s: NavigateTar
       {/* Header: title first, tabs underneath. */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Planlægning')}</p>
-          <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage">{t('Planlægning')}</p>
+          <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
             {t('Venue & leverandører')}
           </h1>
-          <p className="mt-1 max-w-xl text-[13px] text-[#5f6b66]">
+          <p className="mt-1 max-w-xl text-[13px] text-muted">
             {t('Find jeres venue og leverandører, gem favoritter, og hold styr på hvem I har booket.')}
           </p>
           <GuideLink screen="team" />

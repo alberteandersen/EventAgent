@@ -102,7 +102,7 @@ export default function BudgetAvaAssistant({
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#12332b]">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink-deep">
               <MessageCircle size={17} className="text-white" strokeWidth={2.25} />
             </span>
             <div className="min-w-0">

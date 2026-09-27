@@ -71,11 +71,11 @@ export default function TaskRow({
   const isSoon = status === 'planned' && diff !== null && diff > 0 && diff <= 14;
   const isToday = status === 'planned' && diff === 0;
 
-  const statusTone = done ? 'text-[#5f7d70]'
-    : overdue ? 'text-[#b34e37]'
-    : status === 'wedding' ? 'text-[#24413a]'
+  const statusTone = done ? 'text-sage-strong'
+    : overdue ? 'text-terracotta'
+    : status === 'wedding' ? 'text-ink'
     : isSoon || isToday ? 'text-[#8a7d5c]'
-    : 'text-[#9a9686]';
+    : 'text-faint';
   const statusText = statusLabel(task, t);
   // A checklist item without a date: not "Vælg dato · INGEN DATO" 205 times over.
   const quiet = Boolean(task.dateOptional && !task.dateISO);
@@ -98,7 +98,7 @@ export default function TaskRow({
     <span
       title={task.assigneeName ?? undefined}
       aria-label={task.assigneeName ? t('Tildelt {name}', { name: task.assigneeName }) : undefined}
-      className="flex h-6 min-w-6 items-center justify-center rounded-full bg-[#e8f0ec] px-1.5 text-[0.62rem] font-bold tracking-[0.04em] text-[#5f7d70]"
+      className="flex h-6 min-w-6 items-center justify-center rounded-full bg-sage-wash px-1.5 text-[0.62rem] font-bold tracking-[0.04em] text-sage-strong"
     >
       {task.assigneeInitials}
     </span>
@@ -124,25 +124,25 @@ export default function TaskRow({
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-0.5">
-        <span className={cn('flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.95rem] font-semibold leading-snug sm:text-base', done ? doneLabelClass : 'text-[#24413a]')}>
-          {task.Icon && <task.Icon size={14} strokeWidth={2} className="shrink-0 text-[#7d938a]" aria-hidden />}
+        <span className={cn('flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.95rem] font-semibold leading-snug sm:text-base', done ? doneLabelClass : 'text-ink')}>
+          {task.Icon && <task.Icon size={14} strokeWidth={2} className="shrink-0 text-sage" aria-hidden />}
           {onOpen ? (
             <button
               type="button"
               onClick={onOpen}
-              className="text-left underline-offset-4 decoration-[#c6cbc6] hover:underline cursor-pointer"
+              className="text-left underline-offset-4 decoration-line-strong hover:underline cursor-pointer"
             >
               {t(task.title)}
             </button>
           ) : t(task.title)}
           {task.priority === 'high' && !done && (
-            <Flag size={12} strokeWidth={2.5} className="shrink-0 text-[#b34e37]" aria-label={t('Høj prioritet')} />
+            <Flag size={12} strokeWidth={2.5} className="shrink-0 text-terracotta" aria-label={t('Høj prioritet')} />
           )}
           {task.hasNotes && (
-            <StickyNote size={12} strokeWidth={2} className="shrink-0 text-[#9a9686]" aria-label={t('Har noter')} />
+            <StickyNote size={12} strokeWidth={2} className="shrink-0 text-faint" aria-label={t('Har noter')} />
           )}
           {task.tag && (
-            <span className="rounded-full bg-[#e8f0ec] px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#5f6b66]">
+            <span className="rounded-full bg-sage-wash px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-muted">
               {t(task.tag)}
             </span>
           )}
@@ -151,7 +151,7 @@ export default function TaskRow({
           {task.phase && (
             <span className={cn(
               'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-              task.phaseDue && !done ? 'bg-[#f4ecdc] text-[#746b56]' : 'bg-[#eef1ee] text-[#5f6b66]',
+              task.phaseDue && !done ? 'bg-[#f4ecdc] text-[#746b56]' : 'bg-[#eef1ee] text-muted',
             )}>
               {t(task.phase)}
             </span>
@@ -162,8 +162,8 @@ export default function TaskRow({
               onClick={() => dateInputRef.current?.showPicker?.()}
               aria-label={t("Ændr dato for '{title}'", { title: task.title })}
               className={cn(
-                'relative flex w-fit items-center gap-1.5 text-[13px] hover:text-[#24413a] cursor-pointer',
-                task.dateISO ? 'text-[#5f6b66]' : 'text-[#9a9686]',
+                'relative flex w-fit items-center gap-1.5 text-[13px] hover:text-ink cursor-pointer',
+                task.dateISO ? 'text-muted' : 'text-faint',
               )}
             >
               <CalendarDays size={12} />
@@ -182,7 +182,7 @@ export default function TaskRow({
               type="button"
               onClick={suggestion.onAccept}
               aria-label={t("Sæt flueben ved '{title}': {reason}", { title: t(task.title), reason: t(suggestion.reason) })}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#dbe5e0] py-1 pl-2.5 pr-3 text-left text-[12px] font-semibold text-[#2f5a48] transition-colors hover:bg-[#cddbd4] cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-sage-tint py-1 pl-2.5 pr-3 text-left text-[12px] font-semibold text-success transition-colors hover:bg-[#cddbd4] cursor-pointer"
             >
               <Check size={12} strokeWidth={2.6} aria-hidden />
               {t(suggestion.reason)} · {t('Sæt flueben')}
@@ -193,7 +193,7 @@ export default function TaskRow({
               onClick={action.onClick}
               className={cn(
                 'group inline-flex items-center gap-1 text-[13px] font-semibold transition-colors cursor-pointer',
-                overdue ? 'text-[#b34e37] hover:text-[#8f3d2b]' : 'text-[#5f6b66] hover:text-[#24413a]',
+                overdue ? 'text-terracotta hover:text-[#8f3d2b]' : 'text-muted hover:text-ink',
               )}
             >
               {t(action.label)}
@@ -216,7 +216,7 @@ export default function TaskRow({
           type="button"
           onClick={onMenu}
           aria-label={t("Handlinger for '{title}'", { title: task.title })}
-          className="flex size-8 items-center justify-center rounded-full text-[#9a9686] transition-colors hover:bg-white/70 hover:text-[#24413a] cursor-pointer"
+          className="flex size-8 items-center justify-center rounded-full text-faint transition-colors hover:bg-white/70 hover:text-ink cursor-pointer"
         >
           <MoreHorizontal size={18} />
         </button>
@@ -229,35 +229,35 @@ export default function TaskRow({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.98 }}
                 transition={{ duration: 0.14 }}
-                className="absolute right-0 top-9 z-50 w-[168px] overflow-hidden rounded-[14px] border border-[#dcdfdb] bg-[#ffffff] py-1 shadow-[0_16px_40px_-12px_rgba(20,26,19,0.25)]"
+                className="absolute right-0 top-9 z-50 w-[168px] overflow-hidden rounded-[14px] border border-line bg-white py-1 shadow-[0_16px_40px_-12px_rgba(20,26,19,0.25)]"
               >
                 {onInsertAfter && (
                   <button type="button" onClick={onInsertAfter}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer">
-                    <CornerDownRight size={14} className="text-[#5f6b66]" /> {t('Indsæt under')}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-ink transition-colors hover:bg-shell cursor-pointer">
+                    <CornerDownRight size={14} className="text-muted" /> {t('Indsæt under')}
                   </button>
                 )}
                 {onOpen && (
                   <button type="button" onClick={() => { onCloseMenu(); onOpen(); }}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer">
-                    <Pencil size={14} className="text-[#5f6b66]" /> {t('Rediger')}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-ink transition-colors hover:bg-shell cursor-pointer">
+                    <Pencil size={14} className="text-muted" /> {t('Rediger')}
                   </button>
                 )}
                 {quiet && (
                   <button type="button" onClick={() => { onCloseMenu(); dateInputRef.current?.showPicker?.(); }}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer">
-                    <CalendarPlus size={14} className="text-[#5f6b66]" /> {t('Sæt på tidslinjen')}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-ink transition-colors hover:bg-shell cursor-pointer">
+                    <CalendarPlus size={14} className="text-muted" /> {t('Sæt på tidslinjen')}
                   </button>
                 )}
                 {onClearDate && (
                   <button type="button" onClick={onClearDate}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer">
-                    <CalendarOff size={14} className="text-[#5f6b66]" /> {t('Fjern dato')}
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-ink transition-colors hover:bg-shell cursor-pointer">
+                    <CalendarOff size={14} className="text-muted" /> {t('Fjern dato')}
                   </button>
                 )}
                 {onDelete && (
                   <button type="button" onClick={onDelete}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#b34e37] transition-colors hover:bg-[#faf4ef] cursor-pointer">
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-terracotta transition-colors hover:bg-[#faf4ef] cursor-pointer">
                     <Trash2 size={14} /> {t(deleteLabel)}
                   </button>
                 )}

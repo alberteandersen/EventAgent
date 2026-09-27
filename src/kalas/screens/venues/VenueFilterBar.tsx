@@ -199,7 +199,7 @@ export default function VenueFilterBar({
           } : undefined}
         >
           <PanelHint>{t('Steder der er for små, bliver sorteret fra.')}</PanelHint>
-          <div className="flex items-center gap-1 rounded-full border border-line bg-[#f8f9f8] pl-3 pr-1">
+          <div className="flex items-center gap-1 rounded-full border border-line bg-paper pl-3 pr-1">
             <Users size={13} className="shrink-0 text-muted" aria-hidden />
             <label htmlFor="venue-guests" className="text-[0.76rem] font-semibold text-muted">
               {t('Gæster')}
@@ -390,7 +390,7 @@ export default function VenueFilterBar({
             type="button"
             onClick={onOpenSaved}
             aria-label={t('Se jeres favoritter')}
-            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-[0.78rem] font-semibold text-ink transition-colors hover:border-ink hover:bg-[#e8f0ec] cursor-pointer sm:ml-auto"
+            className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-card px-3 text-[0.78rem] font-semibold text-ink transition-colors hover:border-ink hover:bg-sage-wash cursor-pointer sm:ml-auto"
           >
             <Heart
               size={15}
@@ -417,7 +417,7 @@ export default function VenueFilterBar({
                 aria-pressed={sort === s.id}
                 className={cn(
                   'flex items-center gap-2 rounded-xl px-3 py-2 text-left text-[0.82rem] transition-colors cursor-pointer',
-                  sort === s.id ? 'bg-[#e8f0ec] font-semibold text-ink' : 'text-muted hover:bg-shell hover:text-ink',
+                  sort === s.id ? 'bg-sage-wash font-semibold text-ink' : 'text-muted hover:bg-shell hover:text-ink',
                 )}
               >
                 <ArrowUpDown size={13} className="shrink-0 opacity-60" aria-hidden />

@@ -413,10 +413,10 @@ export default function Seating() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <Eyebrow>{t('Planlægning')}</Eyebrow>
-          <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+          <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
             {t('Bordplan')}
           </h1>
-          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
+          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
             {pool.length === 0
               ? t('Tilføj gæster på gæstelisten, så kan I sætte dem på plads her.')
               : unseatedGuests.length === 0
@@ -428,7 +428,7 @@ export default function Seating() {
         <button
           type="button"
           onClick={printPlan}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dcdfdb] bg-[#ffffff] px-4 text-[0.78rem] font-semibold text-[#24413a] transition-colors hover:border-[#24413a] cursor-pointer"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-[0.78rem] font-semibold text-ink transition-colors hover:border-ink cursor-pointer"
         >
           <Printer size={14} /> {t('Udskriv')}
         </button>
@@ -455,7 +455,7 @@ export default function Seating() {
                   type="button"
                   onClick={() => setAskingShape(s.id)}
                   title={t(s.hint)}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dcdfdb] bg-[#ffffff] px-3.5 text-[0.78rem] font-semibold text-[#5f6b66] transition-colors hover:border-[#24413a] hover:text-[#24413a] cursor-pointer"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-[0.78rem] font-semibold text-muted transition-colors hover:border-ink hover:text-ink cursor-pointer"
                 >
                   <Plus size={13} /> <Icon size={13} /> {t(s.label)}
                 </button>
@@ -470,8 +470,8 @@ export default function Seating() {
                 aria-expanded={moreOpen}
                 aria-haspopup="menu"
                 className={cn(
-                  'inline-flex h-9 items-center gap-1.5 rounded-full border bg-[#ffffff] px-3.5 text-[0.78rem] font-semibold transition-colors cursor-pointer',
-                  moreOpen ? 'border-[#24413a] text-[#24413a]' : 'border-[#dcdfdb] text-[#5f6b66] hover:border-[#24413a] hover:text-[#24413a]',
+                  'inline-flex h-9 items-center gap-1.5 rounded-full border bg-white px-3.5 text-[0.78rem] font-semibold transition-colors cursor-pointer',
+                  moreOpen ? 'border-ink text-ink' : 'border-line text-muted hover:border-ink hover:text-ink',
                 )}
               >
                 <Plus size={13} /> {t('Mere')}
@@ -487,9 +487,9 @@ export default function Seating() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -4, scale: 0.98 }}
                       transition={{ duration: 0.14 }}
-                      className="absolute left-0 top-11 z-50 grid w-[18rem] grid-cols-2 gap-1 rounded-[18px] border border-[#dcdfdb] bg-[#ffffff] p-2 shadow-[0_16px_40px_-12px_rgba(20,26,19,0.25)]"
+                      className="absolute left-0 top-11 z-50 grid w-[18rem] grid-cols-2 gap-1 rounded-[18px] border border-line bg-white p-2 shadow-[0_16px_40px_-12px_rgba(20,26,19,0.25)]"
                     >
-                      <p className="col-span-2 px-2 pb-1 pt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[#7d938a]">
+                      <p className="col-span-2 px-2 pb-1 pt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">
                         {t('Læg på planen')}
                       </p>
                       {ELEMENTS.map((el) => {
@@ -500,9 +500,9 @@ export default function Seating() {
                             type="button"
                             role="menuitem"
                             onClick={() => addFloorElement(el.id)}
-                            className="flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[0.8rem] text-[#24413a] transition-colors hover:bg-[#eceeeb] cursor-pointer"
+                            className="flex items-center gap-2 rounded-xl px-2.5 py-2 text-left text-[0.8rem] text-ink transition-colors hover:bg-shell cursor-pointer"
                           >
-                            <Icon size={14} className="shrink-0 text-[#5f7d70]" aria-hidden /> {t(el.label)}
+                            <Icon size={14} className="shrink-0 text-sage-strong" aria-hidden /> {t(el.label)}
                           </button>
                         );
                       })}
@@ -512,17 +512,17 @@ export default function Seating() {
               </AnimatePresence>
             </div>
 
-            <div className="ml-auto flex items-center gap-1 rounded-full border border-[#dcdfdb] bg-[#ffffff] px-1">
+            <div className="ml-auto flex items-center gap-1 rounded-full border border-line bg-white px-1">
               <button
                 type="button"
                 onClick={() => setZoom((z) => stepZoom(z, -1))}
                 disabled={zoom <= ZOOMS[0]}
                 aria-label={t('Zoom ud')}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6b66] hover:text-[#24413a] disabled:opacity-30 cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:text-ink disabled:opacity-30 cursor-pointer"
               >
                 <Minus size={14} />
               </button>
-              <span className="w-11 text-center text-[0.72rem] font-semibold tabular-nums text-[#24413a]">
+              <span className="w-11 text-center text-[0.72rem] font-semibold tabular-nums text-ink">
                 {Math.round(zoom * 100)}%
               </span>
               <button
@@ -530,7 +530,7 @@ export default function Seating() {
                 onClick={() => setZoom((z) => stepZoom(z, 1))}
                 disabled={zoom >= ZOOMS[ZOOMS.length - 1]}
                 aria-label={t('Zoom ind')}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6b66] hover:text-[#24413a] disabled:opacity-30 cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:text-ink disabled:opacity-30 cursor-pointer"
               >
                 <Plus size={14} />
               </button>
@@ -539,7 +539,7 @@ export default function Seating() {
                 onClick={() => setZoom(DEFAULT_ZOOM)}
                 title={t('Tilbage til standardvisning')}
                 aria-label={t('Nulstil zoom')}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6b66] hover:text-[#24413a] cursor-pointer"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:text-ink cursor-pointer"
               >
                 <Maximize2 size={13} />
               </button>
@@ -549,7 +549,7 @@ export default function Seating() {
           {/* The plan itself */}
           <div
             ref={canvasRef}
-            className="relative overflow-auto rounded-[28px] border border-[#dcdfdb] bg-[#f8f9f8]"
+            className="relative overflow-auto rounded-[28px] border border-line bg-paper"
             style={{
               // Hug the plan, but never take more of the page than this — the
               // totals underneath have to stay on screen.
@@ -600,10 +600,10 @@ export default function Seating() {
 
             {plan.tables.length === 0 && (plan.elements ?? []).length === 0 && (
               <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-3 text-center">
-                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f0ec]">
-                  <Circle size={22} className="text-[#24413a]" />
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sage-wash">
+                  <Circle size={22} className="text-ink" />
                 </span>
-                <p className="max-w-[22rem] text-[0.9rem] leading-relaxed text-[#5f6b66]">
+                <p className="max-w-[22rem] text-[0.9rem] leading-relaxed text-muted">
                   {t('Læg det første bord ud, så kan I trække gæsterne på plads.')}
                 </p>
               </div>
@@ -618,9 +618,9 @@ export default function Seating() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={reduce ? undefined : { opacity: 0, y: 8 }}
                 transition={{ duration: 0.18 }}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#dcdfdb] bg-[#ffffff] px-4 py-3"
+                className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3"
               >
-                <span className="font-serif text-[1.05rem] text-[#24413a]">{activeTable.name}</span>
+                <span className="font-serif text-[1.05rem] text-ink">{activeTable.name}</span>
 
                 <div className="flex items-center gap-1">
                   {SHAPES.map((s) => {
@@ -635,8 +635,8 @@ export default function Seating() {
                         aria-label={t(s.label)}
                         className={cn(
                           'flex h-8 w-8 items-center justify-center rounded-full border transition-colors cursor-pointer',
-                          on ? 'border-[#24413a] bg-[#e8f0ec] text-[#24413a]'
-                            : 'border-[#dcdfdb] text-[#5f6b66] hover:border-[#24413a] hover:text-[#24413a]',
+                          on ? 'border-ink bg-sage-wash text-ink'
+                            : 'border-line text-muted hover:border-ink hover:text-ink',
                         )}
                       >
                         <Icon size={14} />
@@ -645,17 +645,17 @@ export default function Seating() {
                   })}
                 </div>
 
-                <div className="flex items-center gap-1 rounded-full border border-[#dcdfdb] px-1">
+                <div className="flex items-center gap-1 rounded-full border border-line px-1">
                   <button
                     type="button"
                     onClick={() => patchTable(activeTable.id, (x) => setSeatCount(x, x.seats - 1))}
                     disabled={activeTable.seats <= MIN_SEATS}
                     aria-label={t('Færre pladser')}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6b66] hover:text-[#24413a] disabled:opacity-30 cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:text-ink disabled:opacity-30 cursor-pointer"
                   >
                     <Minus size={13} />
                   </button>
-                  <span className="w-16 text-center text-[0.74rem] font-semibold text-[#24413a]">
+                  <span className="w-16 text-center text-[0.74rem] font-semibold text-ink">
                     {t('{n} pl.', { n: activeTable.seats })}
                   </span>
                   <button
@@ -663,20 +663,20 @@ export default function Seating() {
                     onClick={() => patchTable(activeTable.id, (x) => setSeatCount(x, x.seats + 1))}
                     disabled={activeTable.seats >= MAX_SEATS}
                     aria-label={t('Flere pladser')}
-                    className="flex h-8 w-8 items-center justify-center rounded-full text-[#5f6b66] hover:text-[#24413a] disabled:opacity-30 cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-full text-muted hover:text-ink disabled:opacity-30 cursor-pointer"
                   >
                     <Plus size={13} />
                   </button>
                 </div>
 
-                <span className="text-[0.76rem] text-[#7d938a]">
+                <span className="text-[0.76rem] text-sage">
                   {t('{n} ledige', { n: freeSeats(activeTable) })}
                 </span>
 
                 <button
                   type="button"
                   onClick={() => removeTable(activeTable.id)}
-                  className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[0.76rem] font-semibold text-[#b34e37] transition-colors hover:bg-[#f2e3dd] cursor-pointer"
+                  className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[0.76rem] font-semibold text-terracotta transition-colors hover:bg-terracotta-tint cursor-pointer"
                 >
                   <Trash2 size={13} /> {t('Fjern bord')}
                 </button>
@@ -684,7 +684,7 @@ export default function Seating() {
                   type="button"
                   onClick={() => setSelected(null)}
                   aria-label={t('Luk')}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-[#7d938a] hover:text-[#24413a] cursor-pointer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-sage hover:text-ink cursor-pointer"
                 >
                   <X size={14} />
                 </button>
@@ -700,9 +700,9 @@ export default function Seating() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={reduce ? undefined : { opacity: 0, y: 8 }}
                 transition={{ duration: 0.18 }}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border border-[#dcdfdb] bg-[#ffffff] px-4 py-3"
+                className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3"
               >
-                {(() => { const Icon = ELEMENT_ICON[activeElement.kind]; return <Icon size={15} className="text-[#5f7d70]" aria-hidden />; })()}
+                {(() => { const Icon = ELEMENT_ICON[activeElement.kind]; return <Icon size={15} className="text-sage-strong" aria-hidden />; })()}
                 <input
                   key={activeElement.id}
                   defaultValue={activeElement.label}
@@ -713,7 +713,7 @@ export default function Seating() {
                   }}
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
                   aria-label={t('Navn')}
-                  className="h-8 min-w-0 flex-[0_1_12rem] rounded-full border border-[#dcdfdb] bg-[#f8f9f8] px-3 font-serif text-[1rem] text-[#24413a] focus:border-[#24413a] focus:outline-none"
+                  className="h-8 min-w-0 flex-[0_1_12rem] rounded-full border border-line bg-paper px-3 font-serif text-[1rem] text-ink focus:border-ink focus:outline-none"
                 />
 
                 <div className="flex items-center gap-1" role="group" aria-label={t('Størrelse')}>
@@ -727,8 +727,8 @@ export default function Seating() {
                         aria-pressed={on}
                         className={cn(
                           'flex h-8 w-8 items-center justify-center rounded-full border text-[0.72rem] font-bold transition-colors cursor-pointer',
-                          on ? 'border-[#24413a] bg-[#e8f0ec] text-[#24413a]'
-                            : 'border-[#dcdfdb] text-[#5f6b66] hover:border-[#24413a] hover:text-[#24413a]',
+                          on ? 'border-ink bg-sage-wash text-ink'
+                            : 'border-line text-muted hover:border-ink hover:text-ink',
                         )}
                       >
                         {sz.id}
@@ -740,7 +740,7 @@ export default function Seating() {
                 <button
                   type="button"
                   onClick={() => { setPlan((p) => removeElement(p, activeElement.id)); setSelectedEl(null); }}
-                  className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[0.76rem] font-semibold text-[#b34e37] transition-colors hover:bg-[#f2e3dd] cursor-pointer"
+                  className="ml-auto inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-[0.76rem] font-semibold text-terracotta transition-colors hover:bg-terracotta-tint cursor-pointer"
                 >
                   <Trash2 size={13} /> {t('Fjern fra planen')}
                 </button>
@@ -748,7 +748,7 @@ export default function Seating() {
                   type="button"
                   onClick={() => setSelectedEl(null)}
                   aria-label={t('Luk')}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-[#7d938a] hover:text-[#24413a] cursor-pointer"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-sage hover:text-ink cursor-pointer"
                 >
                   <X size={14} />
                 </button>
@@ -760,26 +760,26 @@ export default function Seating() {
         {/* ── Guest rail ─────────────────────────────────────────────── */}
         <aside
           data-guest-rail
-          className="flex min-w-0 flex-[1_1_16rem] flex-col rounded-[28px] border border-[#dcdfdb] bg-[#ffffff]"
+          className="flex min-w-0 flex-[1_1_16rem] flex-col rounded-[28px] border border-line bg-white"
         >
-          <div className="border-b border-[#e6e9e5] p-4">
+          <div className="border-b border-line-soft p-4">
             <div className="flex items-baseline justify-between gap-2">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-[#7d938a]">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-sage">
                 {t('Gæster')}
               </p>
-              <p className="text-[0.72rem] font-semibold text-[#24413a]">
+              <p className="text-[0.72rem] font-semibold text-ink">
                 {t('{n} uden plads', { n: unseatedGuests.length })}
               </p>
             </div>
 
-            <div className="mt-3 flex h-9 items-center gap-1.5 rounded-full border border-[#dcdfdb] bg-[#f8f9f8] px-3">
-              <Search size={13} className="shrink-0 text-[#7d938a]" />
+            <div className="mt-3 flex h-9 items-center gap-1.5 rounded-full border border-line bg-paper px-3">
+              <Search size={13} className="shrink-0 text-sage" />
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('Søg efter en gæst')}
                 aria-label={t('Søg efter en gæst')}
-                className="h-full w-full min-w-0 bg-transparent text-[0.8rem] text-[#24413a] placeholder:text-[#9a9686] focus:outline-none"
+                className="h-full w-full min-w-0 bg-transparent text-[0.8rem] text-ink placeholder:text-faint focus:outline-none"
               />
             </div>
 
@@ -796,8 +796,8 @@ export default function Seating() {
                   className={cn(
                     'h-8 flex-1 rounded-full border text-[0.76rem] font-semibold transition-colors cursor-pointer',
                     onlyUnseated === o.id
-                      ? 'border-[#24413a] bg-[#e8f0ec] text-[#24413a]'
-                      : 'border-[#dcdfdb] text-[#5f6b66] hover:border-[#24413a] hover:text-[#24413a]',
+                      ? 'border-ink bg-sage-wash text-ink'
+                      : 'border-line text-muted hover:border-ink hover:text-ink',
                   )}
                 >
                   {o.label}
@@ -808,16 +808,16 @@ export default function Seating() {
 
           <div className="min-h-0 flex-1 overflow-y-auto p-3 sm:max-h-[clamp(21rem,50vh,36rem)]">
             {heldGuest && (
-              <div className="mb-3 flex items-center gap-2 rounded-xl bg-[#e8f0ec] px-3 py-2.5">
-                <CornerUpLeft size={13} className="shrink-0 text-[#24413a]" />
-                <p className="min-w-0 flex-1 text-[0.76rem] leading-snug text-[#24413a]">
+              <div className="mb-3 flex items-center gap-2 rounded-xl bg-sage-wash px-3 py-2.5">
+                <CornerUpLeft size={13} className="shrink-0 text-ink" />
+                <p className="min-w-0 flex-1 text-[0.76rem] leading-snug text-ink">
                   {t('Tryk på en ledig stol for at sætte {name}.', { name: heldGuest.name })}
                 </p>
                 <button
                   type="button"
                   onClick={() => lift(null)}
                   aria-label={t('Annuller')}
-                  className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-[#5f6b66] hover:text-[#24413a]"
+                  className="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted hover:text-ink"
                 >
                   <X size={13} />
                 </button>
@@ -825,7 +825,7 @@ export default function Seating() {
             )}
 
             {grouped.length === 0 && (
-              <p className="px-2 py-8 text-center text-[0.82rem] text-[#5f6b66]">
+              <p className="px-2 py-8 text-center text-[0.82rem] text-muted">
                 {pool.length === 0
                   ? t('Ingen gæster endnu.')
                   : query.trim()
@@ -836,7 +836,7 @@ export default function Seating() {
 
             {grouped.map(([group, list]) => (
               <div key={group} className="mb-4">
-                <p className="mb-1.5 px-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[#7d938a]">
+                <p className="mb-1.5 px-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">
                   {group} · {list.length}
                 </p>
                 <div className="flex flex-col gap-1">
@@ -853,24 +853,24 @@ export default function Seating() {
                         className={cn(
                           'flex w-full cursor-grab items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition-colors active:cursor-grabbing',
                           held === g.id
-                            ? 'border-[#24413a] bg-[#e8f0ec]'
-                            : 'border-transparent hover:border-[#dcdfdb] hover:bg-[#f8f9f8]',
+                            ? 'border-ink bg-sage-wash'
+                            : 'border-transparent hover:border-line hover:bg-paper',
                           !g.attending && 'opacity-55',
                         )}
                       >
-                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#dbe5e0] text-[0.6rem] font-bold text-[#24413a]">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sage-tint text-[0.6rem] font-bold text-ink">
                           {initials(g.name)}
                         </span>
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[0.82rem] text-[#24413a]">{g.name}</span>
+                          <span className="block truncate text-[0.82rem] text-ink">{g.name}</span>
                           {table && (
-                            <span className="block truncate text-[0.68rem] text-[#7d938a]">{table.name}</span>
+                            <span className="block truncate text-[0.68rem] text-sage">{table.name}</span>
                           )}
                         </span>
                         {g.dietary && (
                           <span
                             title={g.dietary}
-                            className="h-2 w-2 shrink-0 rounded-full bg-[#b34e37]"
+                            className="h-2 w-2 shrink-0 rounded-full bg-terracotta"
                           />
                         )}
                       </button>
@@ -883,7 +883,7 @@ export default function Seating() {
 
           {/* Fill the rest of a table in one go, when that is what is wanted. */}
           {activeTable && unseatedGuests.length > 0 && freeSeats(activeTable) > 0 && (
-            <div className="border-t border-[#e6e9e5] p-3">
+            <div className="border-t border-line-soft p-3">
               <button
                 type="button"
                 onClick={() => {
@@ -899,7 +899,7 @@ export default function Seating() {
                   });
                   setSay(t('Pladserne ved {table} er fyldt op.', { table: activeTable.name }));
                 }}
-                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-[#24413a] px-4 text-[0.78rem] font-bold text-[#f8f9f8] transition-opacity hover:opacity-90 cursor-pointer"
+                className="inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-full bg-ink px-4 text-[0.78rem] font-bold text-paper transition-opacity hover:opacity-90 cursor-pointer"
               >
                 <Users size={14} />
                 {t('Fyld {table} op', { table: activeTable.name })}
@@ -910,7 +910,7 @@ export default function Seating() {
       </div>
 
       {/* ── The numbers a venue asks for ─────────────────────────────── */}
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-[#dcdfdb] bg-[#dcdfdb] sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
         <Stat label={t('Borde')} value={plan.tables.length} />
         <Stat label={t('Pladser')} value={totalSeats} />
         <Stat label={t('Placeret')} value={seated.size} />
@@ -923,12 +923,12 @@ export default function Seating() {
       {/* The printed chart. Its own sheet at <body> level, so what comes out
           of the printer is the plan and nothing around it. */}
       {mounted && createPortal(
-        <div className="kalas-print-sheet theme-kalas hidden bg-white font-sans text-[#24413a]">
-          <div className="flex items-baseline justify-between border-b border-[#dcdfdb] pb-2">
+        <div className="kalas-print-sheet theme-kalas hidden bg-white font-sans text-ink">
+          <div className="flex items-baseline justify-between border-b border-line pb-2">
             <p className="font-serif text-[1.4rem]">
               {couple.a && couple.b ? `${couple.a} & ${couple.b}` : t('Bordplan')}
             </p>
-            <p className="text-[0.7rem] uppercase tracking-[0.16em] text-[#7d938a]">
+            <p className="text-[0.7rem] uppercase tracking-[0.16em] text-sage">
               {couple.dateLabel || t('Bordplan')}
             </p>
           </div>
@@ -972,7 +972,7 @@ export default function Seating() {
       {/* The guest under the cursor while dragging. */}
       {drag && dragGuest && (
         <div
-          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#24413a] bg-[#ffffff] px-3 py-1.5 text-[0.78rem] font-semibold text-[#24413a] shadow-[0_8px_24px_rgba(18,51,43,0.18)]"
+          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-1/2 rounded-full border border-ink bg-white px-3 py-1.5 text-[0.78rem] font-semibold text-ink shadow-[0_8px_24px_rgba(18,51,43,0.18)]"
           style={{ left: drag.x, top: drag.y }}
         >
           {dragGuest.name}
@@ -984,11 +984,11 @@ export default function Seating() {
 
 function Stat({ label, value, tone }: { label: string; value: number; tone?: 'clay' }) {
   return (
-    <div className="bg-[#ffffff] px-4 py-3.5">
-      <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-[#7d938a]">{label}</p>
+    <div className="bg-white px-4 py-3.5">
+      <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">{label}</p>
       <p className={cn(
         'mt-1 font-serif text-[1.6rem] leading-none',
-        tone === 'clay' ? 'text-[#b34e37]' : 'text-[#24413a]',
+        tone === 'clay' ? 'text-terracotta' : 'text-ink',
       )}>
         {value}
       </p>

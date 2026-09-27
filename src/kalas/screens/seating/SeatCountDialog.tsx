@@ -36,7 +36,7 @@ export default function SeatCountDialog({ shape, icon: Icon, onConfirm, onCancel
   }, [onCancel, onConfirm, seats]);
 
   const stepBtn =
-    'flex h-12 w-12 items-center justify-center rounded-full border border-line bg-card text-[#24413a] shadow-[0_2px_8px_rgba(36,65,58,0.06)] transition-colors hover:border-[#24413a] disabled:opacity-30 cursor-pointer';
+    'flex h-12 w-12 items-center justify-center rounded-full border border-line bg-card text-ink shadow-[0_2px_8px_rgba(36,65,58,0.06)] transition-colors hover:border-ink disabled:opacity-30 cursor-pointer';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-4 py-8 backdrop-blur-sm" onClick={onCancel}>
@@ -50,8 +50,8 @@ export default function SeatCountDialog({ shape, icon: Icon, onConfirm, onCancel
         aria-label={t(spec.label)}
         className="w-full max-w-sm rounded-3xl border border-line bg-card px-6 pb-6 pt-7 text-center shadow-[0_32px_80px_-16px_rgba(24,32,24,0.28)]"
       >
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#e8f0ec]">
-          <Icon size={22} className="text-[#24413a]" aria-hidden />
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-sage-wash">
+          <Icon size={22} className="text-ink" aria-hidden />
         </span>
         <h2 className="mt-4 font-serif text-[1.6rem] leading-tight text-ink">{t(spec.label)}</h2>
         <p className="mt-1 text-[0.85rem] text-muted">{t('Hvor mange pladser skal bordet have?')}</p>

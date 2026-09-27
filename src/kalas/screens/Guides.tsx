@@ -80,15 +80,15 @@ export default function Guides({ onNavigate }: { onNavigate?: (s: NavigateTarget
       ) : (
         <>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Hjælp')}</p>
-            <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage">{t('Hjælp')}</p>
+            <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
               {t('Guides & FAQ')}
             </h1>
-            <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
+            <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
               {t('Råd til hele brylluppet, og svar på det, par spørger om.')}
             </p>
             {lang !== 'da' && (
-              <p className="mt-1 text-[13px] text-[#5f6b66]">{t('Guiderne findes indtil videre kun på dansk.')}</p>
+              <p className="mt-1 text-[13px] text-muted">{t('Guiderne findes indtil videre kun på dansk.')}</p>
             )}
           </div>
 
@@ -126,7 +126,7 @@ export default function Guides({ onNavigate }: { onNavigate?: (s: NavigateTarget
                       tab === id ? 'border-ink bg-ink text-canvas' : 'border-line bg-shell text-ink-soft hover:border-ink hover:text-ink',
                     )}
                   >
-                    {label} <span className={tab === id ? 'text-[#dbe5e0]' : 'text-muted'}>{n}</span>
+                    {label} <span className={tab === id ? 'text-sage-tint' : 'text-muted'}>{n}</span>
                   </button>
                 ))}
               </div>
@@ -256,7 +256,7 @@ function ArticleView({
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-[#5f7d70] transition-colors hover:text-[#24413a]"
+          className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-sage-strong transition-colors hover:text-ink"
         >
           <ArrowLeft size={15} aria-hidden /> {t('Alle guides')}
         </button>
@@ -270,10 +270,10 @@ function ArticleView({
         </a>
       </div>
 
-      <header className="grid gap-6 rounded-[28px] border border-[#dcdfdb] bg-[#e6e9e6] p-6 sm:p-7 lg:grid-cols-[1.3fr_1fr] lg:items-center">
+      <header className="grid gap-6 rounded-[28px] border border-line bg-blush p-6 sm:p-7 lg:grid-cols-[1.3fr_1fr] lg:items-center">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7d938a]">{getCategory(article.category).name}</p>
-          <h1 className="mt-3 font-serif text-[clamp(2rem,4vw,2.75rem)] font-semibold leading-[1.05] text-[#24413a]">{article.title}</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage">{getCategory(article.category).name}</p>
+          <h1 className="mt-3 font-serif text-[clamp(2rem,4vw,2.75rem)] font-semibold leading-[1.05] text-ink">{article.title}</h1>
           <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{article.description}</p>
           <p className="mt-3 text-[13px] text-muted">{t('{n} min. læsning', { n: readingMinutes(article.body) })}</p>
         </div>
@@ -283,13 +283,13 @@ function ArticleView({
       </header>
 
       <section className="rounded-[28px] border border-line bg-card p-6">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7d938a]">{t('Kort svar')}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage">{t('Kort svar')}</p>
         <p className="mt-2.5 text-[1.0625rem] leading-[1.7] text-ink">{article.summary}</p>
         {act && (
           <button
             type="button"
             onClick={act}
-            className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#24413a] px-4 py-2.5 text-sm font-semibold text-[#f8f9f8] transition-colors hover:bg-[#1b322c]"
+            className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-[#1b322c]"
           >
             {t(action.label)} <ArrowRight size={15} aria-hidden />
           </button>
@@ -304,7 +304,7 @@ function ArticleView({
         />
         {article.sources?.length ? (
           <section className="mt-10 rounded-[22px] border border-line bg-card p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#7d938a]">{t('Kilder')}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage">{t('Kilder')}</p>
             <ul className="mt-2.5 space-y-1.5 text-sm">
               {article.sources.map((s) => (
                 <li key={s.url}>
@@ -330,7 +330,7 @@ function ArticleView({
 function DoItInKalas({ article, label, onAct }: { article: GuideArticle; label?: string; onAct?: () => void }) {
   const { t } = useLang();
   return (
-    <aside className="my-9 grid gap-5 rounded-[28px] bg-[#24413a] p-6 text-[#f8f9f8] sm:p-8 md:grid-cols-[1.1fr_1fr] md:items-center">
+    <aside className="my-9 grid gap-5 rounded-[28px] bg-ink p-6 text-paper sm:p-8 md:grid-cols-[1.1fr_1fr] md:items-center">
       <div>
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a9c2b6]">{t('Gør det i Kalas')}</p>
         <p className="mt-2.5 font-serif text-[1.75rem] font-semibold leading-[1.1]">{article.kalas.title}</p>
@@ -339,7 +339,7 @@ function DoItInKalas({ article, label, onAct }: { article: GuideArticle; label?:
         <ul className="space-y-2.5">
           {article.kalas.points.map((p) => (
             <li key={p} className="flex items-start gap-2.5 text-[0.95rem] leading-snug">
-              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[#dbe5e0] text-[#24413a]">
+              <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-sage-tint text-ink">
                 <Check size={12} strokeWidth={3} aria-hidden />
               </span>
               {p}
@@ -350,7 +350,7 @@ function DoItInKalas({ article, label, onAct }: { article: GuideArticle; label?:
           <button
             type="button"
             onClick={onAct}
-            className="mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#f8f9f8] px-5 py-3 text-sm font-semibold text-[#24413a] transition-colors hover:bg-white"
+            className="mt-5 inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-paper px-5 py-3 text-sm font-semibold text-ink transition-colors hover:bg-white"
           >
             {label} <ArrowRight size={15} aria-hidden />
           </button>

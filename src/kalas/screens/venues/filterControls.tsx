@@ -30,8 +30,8 @@ export function TriChip({ filters, onChange, rule, icon, label }: {
       className={cn(
         'mb-1.5 mr-1.5 inline-flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-[0.78rem] font-semibold transition-colors cursor-pointer',
         state === 'off' && 'border-line bg-card text-muted hover:border-ink hover:text-ink',
-        state === 'wanted' && 'border-ink bg-[#e8f0ec] text-ink',
-        state === 'required' && 'border-ink bg-ink text-[#f8f9f8]',
+        state === 'wanted' && 'border-ink bg-sage-wash text-ink',
+        state === 'required' && 'border-ink bg-ink text-paper',
       )}
     >
       {state === 'required' ? <Lock size={12} className="shrink-0" aria-hidden /> : icon}
@@ -56,7 +56,7 @@ export function Chip({ label, state, onClick }: {
         'inline-flex h-9 items-center rounded-full border px-3.5 text-[0.78rem] font-semibold transition-colors cursor-pointer',
         state === 'off'
           ? 'border-line bg-card text-muted hover:border-ink hover:text-ink'
-          : 'border-ink bg-[#e8f0ec] text-ink',
+          : 'border-ink bg-sage-wash text-ink',
       )}
     >
       {label}
@@ -78,12 +78,12 @@ export function RequireSwitch({ label, hint, active, disabled, onClick }: {
       className={cn(
         'mt-3 flex w-full items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors',
         disabled ? 'cursor-not-allowed border-line opacity-50' : 'cursor-pointer',
-        active && !disabled ? 'border-ink bg-[#e8f0ec]' : 'border-line bg-[#f8f9f8]',
+        active && !disabled ? 'border-ink bg-sage-wash' : 'border-line bg-paper',
       )}
     >
       <span className={cn(
         'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-        active ? 'border-ink bg-ink text-[#f8f9f8]' : 'border-[#b5b1a3] bg-white',
+        active ? 'border-ink bg-ink text-paper' : 'border-[#b5b1a3] bg-white',
       )}>
         {active && <Lock size={9} aria-hidden />}
       </span>

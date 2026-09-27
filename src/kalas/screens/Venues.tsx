@@ -95,7 +95,7 @@ type VenueStage = 'idle' | 'contacted' | 'replied' | 'quoted';
 const STAGE_META: Record<VenueStage, { label: string; cls: string; Icon: typeof Mail }> = {
   idle:      { label: 'Ikke kontaktet', cls: 'bg-shell text-muted',                 Icon: Clock },
   contacted: { label: 'Kontaktet',      cls: 'bg-[#e9edf2] text-[#3f5b6b]',          Icon: Send },
-  replied:   { label: 'Svar modtaget',  cls: 'bg-[#e5ead8] text-[#46574f]',          Icon: Mail },
+  replied:   { label: 'Svar modtaget',  cls: 'bg-[#e5ead8] text-ink-soft',          Icon: Mail },
   quoted:    { label: 'Tilbud',         cls: 'bg-[#f3d8cf] text-[#7b4032]',          Icon: Mail },
 };
 
@@ -113,7 +113,7 @@ function RatingBadge({ rating, count, className }: { rating: number | null; coun
   if (rating == null) return null;
   return (
     <span className={cn('inline-flex items-center gap-1 rounded-full bg-canvas/90 px-2.5 py-1 text-[0.68rem] font-semibold text-ink backdrop-blur-sm', className)}>
-      <Star size={11} fill="currentColor" className="text-[#e6a34e]" />
+      <Star size={11} fill="currentColor" className="text-amber" />
       {rating.toFixed(1)}
       {count ? <span className="font-normal text-muted">({count})</span> : null}
     </span>
@@ -951,7 +951,7 @@ function DiscoverView({
 
       <div className="grid gap-[18px] xl:grid-cols-[minmax(0,1fr)_400px]">
         {/* Globe */}
-        <div className="relative h-[min(62vh,560px)] overflow-hidden rounded-[28px] border border-[#dcdfdb] bg-[#f8f9f8]">
+        <div className="relative h-[min(62vh,560px)] overflow-hidden rounded-[28px] border border-line bg-paper">
           <DestinationGlobe
             selectedCountry={country}
             onCountryPick={pickCountry}
@@ -960,15 +960,15 @@ function DiscoverView({
         </div>
 
         {/* Destination panel, areas, cities, or write your own */}
-        <div className="flex min-h-[320px] max-h-[min(62vh,560px)] flex-col overflow-hidden rounded-[28px] border border-[#dcdfdb] bg-[#ffffff]">
-          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e6e9e5] px-5 py-4">
+        <div className="flex min-h-[320px] max-h-[min(62vh,560px)] flex-col overflow-hidden rounded-[28px] border border-line bg-white">
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line-soft px-5 py-4">
             <div className="min-w-0">
               {/* Where you are, and every step back out. */}
               <nav aria-label={t('Destination')} className="flex flex-wrap items-center gap-1 text-[0.68rem] text-muted">
                 <button
                   type="button"
                   onClick={() => { setOpenRegion(null); setLevel('earth'); setFocus({ lat: 35, lng: 10, altitude: 2.1 }); }}
-                  className={cn('cursor-pointer transition-colors hover:text-[#24413a]', level === 'earth' && 'font-semibold text-[#24413a]')}
+                  className={cn('cursor-pointer transition-colors hover:text-ink', level === 'earth' && 'font-semibold text-ink')}
                 >
                   {t('Jorden')}
                 </button>
@@ -978,7 +978,7 @@ function DiscoverView({
                     <button
                       type="button"
                       onClick={() => { setOpenRegion(null); setLevel('country'); setFocus(countryView(country) ?? countryFocus(country)); }}
-                      className={cn('cursor-pointer transition-colors hover:text-[#24413a]', level === 'country' && 'font-semibold text-[#24413a]')}
+                      className={cn('cursor-pointer transition-colors hover:text-ink', level === 'country' && 'font-semibold text-ink')}
                     >
                       {country}
                     </button>
@@ -987,7 +987,7 @@ function DiscoverView({
                 {level === 'region' && openRegionLabel && (
                   <>
                     <span aria-hidden className="opacity-50">/</span>
-                    <span className="font-semibold text-[#24413a]">{openRegionLabel}</span>
+                    <span className="font-semibold text-ink">{openRegionLabel}</span>
                   </>
                 )}
               </nav>
@@ -1002,8 +1002,8 @@ function DiscoverView({
               className={cn(
                 'flex h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[0.72rem] font-semibold transition-colors cursor-pointer',
                 custom
-                  ? 'border-[#24413a] bg-[#e8f0ec] text-[#24413a]'
-                  : 'border-[#dcdfdb] text-[#5f6b66] hover:border-[#24413a] hover:text-[#24413a]',
+                  ? 'border-ink bg-sage-wash text-ink'
+                  : 'border-line text-muted hover:border-ink hover:text-ink',
               )}
             >
               <PenLine size={13} /> {t('Skriv selv')}
@@ -1016,7 +1016,7 @@ function DiscoverView({
               <motion.div
                 initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                className="shrink-0 overflow-hidden border-b border-[#e6e9e5] bg-[#f8f9f8]"
+                className="shrink-0 overflow-hidden border-b border-line-soft bg-paper"
               >
                 <div className="flex items-center gap-2 px-4 py-3">
                   <input
@@ -1024,14 +1024,14 @@ function DiscoverView({
                     onChange={(e) => setCustomValue(e.target.value)}
                     onKeyDown={(e) => { if (e.key === 'Enter') submitCustom(); }}
                     placeholder={t('f.eks. Sydfyn · Toscana · jeres sommerhusby')}
-                    className="h-9 min-w-0 flex-1 rounded-full border border-[#dcdfdb] bg-[#ffffff] px-4 text-[0.82rem] text-ink placeholder:text-[#9a9686] focus:border-[#24413a] focus:outline-none"
+                    className="h-9 min-w-0 flex-1 rounded-full border border-line bg-white px-4 text-[0.82rem] text-ink placeholder:text-faint focus:border-ink focus:outline-none"
                     autoFocus
                   />
                   <button
                     type="button"
                     onClick={submitCustom}
                     disabled={!customValue.trim()}
-                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#24413a] px-3.5 text-[0.72rem] font-semibold text-[#f8f9f8] transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer"
+                    className="flex h-9 shrink-0 items-center gap-1.5 rounded-full bg-ink px-3.5 text-[0.72rem] font-semibold text-paper transition-opacity hover:opacity-90 disabled:opacity-40 cursor-pointer"
                   >
                     <Search size={13} /> {t('Søg')}
                   </button>
@@ -1042,7 +1042,7 @@ function DiscoverView({
 
           {/* Areas+cities ↔ wedding-destination toggle */}
           {level !== 'region' && !destLoading && !destFailed && country && (cities.length > 0 || weddings.length > 0) && (
-            <div className="flex shrink-0 gap-0.5 border-b border-[#e6e9e5] px-3">
+            <div className="flex shrink-0 gap-0.5 border-b border-line-soft px-3">
               {[
                 { id: 'city' as const, label: t('Byer'), count: cities.length },
                 { id: 'wedding' as const, label: t('Bryllupsdestinationer'), count: weddings.length },
@@ -1054,7 +1054,7 @@ function DiscoverView({
                   onClick={() => setDestTab(id)}
                   className={cn(
                     'flex-1 border-b-2 px-2 py-2.5 text-center text-[0.64rem] font-bold uppercase tracking-[0.08em] transition-colors cursor-pointer',
-                    destTab === id ? 'border-[#24413a] text-[#24413a]' : 'border-transparent text-muted hover:text-ink',
+                    destTab === id ? 'border-ink text-ink' : 'border-transparent text-muted hover:text-ink',
                     count === 0 && 'cursor-not-allowed opacity-40',
                   )}
                 >
@@ -1071,7 +1071,7 @@ function DiscoverView({
                 <button
                   type="button"
                   onClick={zoomOut}
-                  className="mb-1 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#dcdfdb] px-3 py-1.5 text-[0.72rem] font-semibold text-[#5f6b66] transition-colors hover:border-[#24413a] hover:text-[#24413a] cursor-pointer"
+                  className="mb-1 inline-flex w-fit items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[0.72rem] font-semibold text-muted transition-colors hover:border-ink hover:text-ink cursor-pointer"
                 >
                   <ArrowLeft size={12} /> {t('Zoom ud')}
                 </button>
@@ -1086,8 +1086,8 @@ function DiscoverView({
                     className={cn(
                       'flex items-center gap-2 rounded-2xl border px-3 py-2.5 transition-colors',
                       destination === tn.id
-                        ? 'border-[#24413a] bg-[#e8f0ec]'
-                        : 'border-[#e6e9e5] bg-[#ffffff] hover:border-[#24413a]/40',
+                        ? 'border-ink bg-sage-wash'
+                        : 'border-line-soft bg-white hover:border-ink/40',
                     )}
                   >
                     <button
@@ -1095,7 +1095,7 @@ function DiscoverView({
                       onClick={() => openTown(tn.id, tn.point)}
                       className="flex min-w-0 flex-1 items-center gap-2 text-left cursor-pointer"
                     >
-                      <MapPin size={13} className="shrink-0 text-[#7d938a]" />
+                      <MapPin size={13} className="shrink-0 text-sage" />
                       <span className="truncate text-[0.88rem] font-medium text-ink">{tn.label}</span>
                     </button>
                   </div>
@@ -1103,7 +1103,7 @@ function DiscoverView({
               </div>
             ) : !country ? (
               <div className="flex h-full flex-col items-center justify-center gap-4 px-4 text-center">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#24413a]">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ink">
                   <GlobeIcon size={19} className="text-white" />
                 </div>
                 <p className="text-[0.88rem] leading-relaxed text-ink-soft">
@@ -1113,7 +1113,7 @@ function DiscoverView({
                   <button
                     type="button"
                     onClick={() => void searchVenues(venueArea)}
-                    className="inline-flex items-center gap-2 rounded-full bg-[#24413a] px-4 py-2.5 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
+                    className="inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
                   >
                     <MapPin size={13} />
                     {t('Søg venues nær {area}', { area: venueArea })}
@@ -1137,7 +1137,7 @@ function DiscoverView({
                           key={r.id}
                           type="button"
                           onClick={() => openRegionLevel(r.id)}
-                          className="rounded-full border border-[#e6e9e5] bg-white px-3 py-1.5 text-[0.76rem] font-medium text-ink transition-colors hover:border-[#24413a] cursor-pointer"
+                          className="rounded-full border border-line-soft bg-white px-3 py-1.5 text-[0.76rem] font-medium text-ink transition-colors hover:border-ink cursor-pointer"
                         >
                           {r.name}
                         </button>
@@ -1173,12 +1173,12 @@ function DiscoverView({
       <div ref={resultsRef} className="scroll-mt-6">
         {destination && (
           <div className="flex flex-col gap-5">
-            <div className="border-b border-[#e2e6e2] pb-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Venues')}</p>
-              <h2 className="mt-1 font-serif text-[clamp(1.5rem,3vw,2rem)] leading-tight text-[#24413a]">
+            <div className="border-b border-line-soft pb-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage">{t('Venues')}</p>
+              <h2 className="mt-1 font-serif text-[clamp(1.5rem,3vw,2rem)] leading-tight text-ink">
                 {destTitle}
               </h2>
-              <p className="mt-1 text-[13px] text-[#5f6b66]">
+              <p className="mt-1 text-[13px] text-muted">
                 {t('Tryk på et venue for at se det hele, I behøver ikke gemme det først.')}
               </p>
             </div>
@@ -1203,32 +1203,32 @@ function DiscoverView({
             {searching && results.length === 0 ? (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {[0, 1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="animate-pulse overflow-hidden rounded-2xl border border-[#e6e9e5] bg-[#ffffff]">
-                    <div className="h-44 bg-[#eceeeb]" />
+                  <div key={i} className="animate-pulse overflow-hidden rounded-2xl border border-line-soft bg-white">
+                    <div className="h-44 bg-shell" />
                     <div className="space-y-2 p-4">
-                      <div className="h-4 w-1/2 rounded bg-[#eceeeb]" />
-                      <div className="h-3 w-5/6 rounded bg-[#eceeeb]" />
-                      <div className="h-3 w-2/3 rounded bg-[#eceeeb]" />
+                      <div className="h-4 w-1/2 rounded bg-shell" />
+                      <div className="h-3 w-5/6 rounded bg-shell" />
+                      <div className="h-3 w-2/3 rounded bg-shell" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : resultsFailed ? (
-              <div className="rounded-2xl border border-[#e6e9e5] bg-[#ffffff] p-8 text-center">
+              <div className="rounded-2xl border border-line-soft bg-white p-8 text-center">
                 <p className="text-[0.9rem] text-ink-soft">{t('Kunne ikke finde venues her.')}</p>
                 {resultsError && (
-                  <p className="mt-1.5 text-[0.75rem] text-[#9a9686]">{resultsError}</p>
+                  <p className="mt-1.5 text-[0.75rem] text-faint">{resultsError}</p>
                 )}
                 <button
                   type="button"
                   onClick={() => (selectedRegions.length > 0 ? void searchRegions(selectedRegions) : void searchVenues(destination))}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#24413a] px-4 py-2 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
                 >
                   {t('Prøv igen')}
                 </button>
               </div>
             ) : visibleResults.length === 0 ? (
-              <div className="rounded-2xl border border-[#e6e9e5] bg-[#ffffff] p-8 text-center">
+              <div className="rounded-2xl border border-line-soft bg-white p-8 text-center">
                 <p className="text-[0.9rem] text-ink-soft">
                   {blockingRule === 'capacity' && filters.min_capacity
                     ? t('Ingen steder til {guests} gæster her, prøv et andet område, eller sænk antallet.', { guests: filters.min_capacity })
@@ -1243,7 +1243,7 @@ function DiscoverView({
                             : t('Ingen venues tilbage her, prøv et andet sted.')}
                 </p>
                 {rejected.length > 0 && (
-                  <p className="mt-1.5 text-[0.75rem] text-[#9a9686]">
+                  <p className="mt-1.5 text-[0.75rem] text-faint">
                     {tn(rejected.length, 'Ét sted blev filtreret fra.', '{n} steder blev filtreret fra.')}
                   </p>
                 )}
@@ -1290,11 +1290,11 @@ function DiscoverView({
                   ))}
                   {/* A shard still in flight, the grid grows as areas land. */}
                   {searching && [0, 1, 2].map((i) => (
-                    <div key={`shard-${i}`} className="animate-pulse overflow-hidden rounded-2xl border border-[#e6e9e5] bg-[#ffffff]">
-                      <div className="h-44 bg-[#eceeeb]" />
+                    <div key={`shard-${i}`} className="animate-pulse overflow-hidden rounded-2xl border border-line-soft bg-white">
+                      <div className="h-44 bg-shell" />
                       <div className="space-y-2 p-4">
-                        <div className="h-4 w-1/2 rounded bg-[#eceeeb]" />
-                        <div className="h-3 w-5/6 rounded bg-[#eceeeb]" />
+                        <div className="h-4 w-1/2 rounded bg-shell" />
+                        <div className="h-3 w-5/6 rounded bg-shell" />
                       </div>
                     </div>
                   ))}
@@ -1306,7 +1306,7 @@ function DiscoverView({
                       type="button"
                       onClick={() => void loadMore()}
                       disabled={loadingMore || destination === SIMILAR_KEY}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#dcdfdb] px-5 text-xs font-semibold text-[#5f6b66] transition-colors hover:border-[#24413a] hover:text-[#24413a] disabled:opacity-40 cursor-pointer"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line px-5 text-xs font-semibold text-muted transition-colors hover:border-ink hover:text-ink disabled:opacity-40 cursor-pointer"
                     >
                       {loadingMore ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
                       {t('Vis flere')}
@@ -1318,7 +1318,7 @@ function DiscoverView({
                     <button
                       type="button"
                       onClick={onViewList}
-                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-[#24413a] px-5 text-xs font-semibold text-[#f8f9f8] transition-opacity hover:opacity-90 cursor-pointer"
+                      className="inline-flex h-9 items-center gap-1.5 rounded-full bg-ink px-5 text-xs font-semibold text-paper transition-opacity hover:opacity-90 cursor-pointer"
                     >
                       {t('Se jeres liste ({n})', { n: justSaved.size })} <ArrowRight size={14} />
                     </button>
@@ -1351,7 +1351,7 @@ function DiscoverDestCard({ s, active, onChoose, onExpand }: {
   return (
     <div className={cn(
       'group relative overflow-hidden rounded-2xl border transition-colors',
-      active ? 'border-[#24413a] shadow-[0_6px_18px_rgba(18,51,43,0.12)]' : 'border-[#e6e9e5] hover:border-[#24413a]/40',
+      active ? 'border-ink shadow-[0_6px_18px_rgba(18,51,43,0.12)]' : 'border-line-soft hover:border-ink/40',
     )}>
       <button type="button" onClick={onChoose} className="block w-full text-left cursor-pointer">
         {s.photo ? (
@@ -1361,24 +1361,24 @@ function DiscoverDestCard({ s, active, onChoose, onExpand }: {
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           </div>
         ) : (
-          <div className="flex h-28 w-full items-center justify-center bg-[#e8f0ec]">
-            <MapPin size={18} className="text-[#24413a] opacity-40" />
+          <div className="flex h-28 w-full items-center justify-center bg-sage-wash">
+            <MapPin size={18} className="text-ink opacity-40" />
           </div>
         )}
         <div className="p-3">
           <div className="flex items-center gap-2">
-            <p className="truncate font-serif text-[0.98rem] text-[#24413a]">{s.name}</p>
-            <span className="shrink-0 rounded-full bg-[#eceeeb] px-2 py-0.5 text-[0.56rem] font-bold uppercase tracking-[0.1em] text-[#24413a]">
+            <p className="truncate font-serif text-[0.98rem] text-ink">{s.name}</p>
+            <span className="shrink-0 rounded-full bg-shell px-2 py-0.5 text-[0.56rem] font-bold uppercase tracking-[0.1em] text-ink">
               {s.kind === 'city' ? t('By') : t('Bryllup')}
             </span>
             {s.rating != null && (
               <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-[0.7rem] text-ink-soft">
-                <Star size={11} className="fill-[#e6a34e] text-[#e6a34e]" />{s.rating.toFixed(1)}
+                <Star size={11} className="fill-amber text-amber" />{s.rating.toFixed(1)}
               </span>
             )}
           </div>
-          {s.blurb && <p className="mt-1 line-clamp-2 text-[0.74rem] leading-snug text-[#5f6b66]">{s.blurb}</p>}
-          <p className="mt-2 inline-flex items-center gap-1.5 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#24413a]">
+          {s.blurb && <p className="mt-1 line-clamp-2 text-[0.74rem] leading-snug text-muted">{s.blurb}</p>}
+          <p className="mt-2 inline-flex items-center gap-1.5 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-ink">
             {active ? <><Check size={12} /> {t('Viser venues')}</> : <>{t('Se venues')} <ArrowRight size={12} /></>}
           </p>
         </div>
@@ -1388,7 +1388,7 @@ function DiscoverDestCard({ s, active, onChoose, onExpand }: {
           type="button"
           onClick={(e) => { e.stopPropagation(); onExpand(); }}
           aria-label={t('Forstør billede')}
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#ffffff]/90 text-ink-soft shadow-sm transition-colors hover:text-ink cursor-pointer"
+          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-ink-soft shadow-sm transition-colors hover:text-ink cursor-pointer"
         >
           <Expand size={14} />
         </button>
@@ -1407,13 +1407,13 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
   const { t, tn } = useLang();
   return (
     <div className={cn(
-      'group flex flex-col overflow-hidden rounded-2xl border bg-[#ffffff] transition-shadow',
-      open ? 'border-[#24413a] shadow-[0_10px_28px_rgba(18,51,43,0.10)]' : 'border-[#e6e9e5] hover:shadow-[0_10px_28px_rgba(18,51,43,0.10)]',
+      'group flex flex-col overflow-hidden rounded-2xl border bg-white transition-shadow',
+      open ? 'border-ink shadow-[0_10px_28px_rgba(18,51,43,0.10)]' : 'border-line-soft hover:shadow-[0_10px_28px_rgba(18,51,43,0.10)]',
     )}>
       {/* The picture opens the venue; the corner button opens the photos.
           Siblings, not nested, a button inside a button is invalid HTML and
           the inner one stops working. */}
-      <div className="relative h-44 w-full overflow-hidden bg-[#e8f0ec]">
+      <div className="relative h-44 w-full overflow-hidden bg-sage-wash">
         <button
           type="button"
           onClick={onOpen}
@@ -1426,14 +1426,14 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
               className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]" />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
-              <MapPin size={22} className="text-[#24413a] opacity-40" />
+              <MapPin size={22} className="text-ink opacity-40" />
             </div>
           )}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-transparent" />
         </button>
         {v.rating != null && (
           <span className="pointer-events-none absolute left-2.5 top-2.5 inline-flex items-center gap-1 rounded-full bg-canvas/90 px-2.5 py-1 text-[0.68rem] font-semibold text-ink backdrop-blur-sm">
-            <Star size={11} fill="currentColor" className="text-[#e6a34e]" />
+            <Star size={11} fill="currentColor" className="text-amber" />
             {v.rating.toFixed(1)}
             {v.review_count ? <span className="font-normal text-muted">({v.review_count})</span> : null}
           </span>
@@ -1458,12 +1458,12 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
         <button
           type="button"
           onClick={onOpen}
-          className="text-left font-serif text-[1.05rem] leading-tight text-[#24413a] hover:underline underline-offset-4 cursor-pointer"
+          className="text-left font-serif text-[1.05rem] leading-tight text-ink hover:underline underline-offset-4 cursor-pointer"
         >
           {v.name}
         </button>
         {v.address && (
-          <p className="mt-1 flex items-start gap-1 text-[0.72rem] text-[#5f6b66]">
+          <p className="mt-1 flex items-start gap-1 text-[0.72rem] text-muted">
             <MapPin size={11} className="mt-0.5 shrink-0" /><span className="line-clamp-1">{v.address}</span>
           </p>
         )}
@@ -1477,9 +1477,9 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
                 key={b.id}
                 className={cn(
                   'rounded-full px-2 py-0.5 text-[0.64rem] font-semibold',
-                  b.tone === 'good' && 'bg-[#e8f0ec] text-[#24413a]',
+                  b.tone === 'good' && 'bg-sage-wash text-ink',
                   b.tone === 'warn' && 'bg-[#f7ece0] text-[#8a5a22]',
-                  b.tone === 'neutral' && 'bg-[#eceeeb] text-[#5f6b66]',
+                  b.tone === 'neutral' && 'bg-shell text-muted',
                 )}
               >
                 {b.text}
@@ -1494,7 +1494,7 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
             onClick={onSave}
             className={cn(
               'inline-flex flex-1 items-center justify-center gap-1.5 rounded-full px-3.5 py-2 text-[0.74rem] font-bold transition-colors',
-              saved ? 'bg-[#e8f0ec] text-[#24413a] cursor-default' : 'bg-[#24413a] text-white hover:opacity-90 cursor-pointer',
+              saved ? 'bg-sage-wash text-ink cursor-default' : 'bg-ink text-white hover:opacity-90 cursor-pointer',
             )}
           >
             {saving ? <Loader2 size={13} className="animate-spin" /> : saved ? <Check size={13} /> : <Plus size={13} />}
@@ -1504,7 +1504,7 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
             type="button"
             onClick={onDismiss}
             aria-label={t('Afvis {name}', { name: v.name })}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#5f6b66] transition-colors hover:bg-[#eceeeb] hover:text-[#24413a] cursor-pointer"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
           >
             <X size={15} />
           </button>
@@ -1531,7 +1531,7 @@ function PanelError({ label, onRetry }: { label: string; onRetry: () => void }) 
       <button
         type="button"
         onClick={onRetry}
-        className="rounded-full border border-[#24413a]/20 px-4 py-2 text-[0.75rem] font-bold text-[#24413a] hover:bg-[#f8f9f8] transition-colors cursor-pointer"
+        className="rounded-full border border-ink/20 px-4 py-2 text-[0.75rem] font-bold text-ink hover:bg-paper transition-colors cursor-pointer"
       >
         {t('Prøv igen')}
       </button>
@@ -1611,7 +1611,7 @@ function PicksView({
     return (
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
         className="flex min-h-[60vh] flex-col items-center justify-center px-6 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#24413a]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ink">
           <MapPin size={22} className="text-white" />
         </div>
         <h2 className="display mt-5 text-[1.8rem] text-ink">{t('Ingen venues på listen endnu')}</h2>
@@ -1687,7 +1687,7 @@ function PicksView({
             onClick={onDiscover}
             className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-[var(--color-line-strong)] p-6 text-center transition-colors hover:border-ink/40 hover:bg-card cursor-pointer"
           >
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#24413a]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ink">
               <GlobeIcon size={18} className="text-white" />
             </div>
             <div>
@@ -1727,7 +1727,7 @@ function OutreachBanner({
 }) {
   const { t } = useLang();
   return (
-    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-[#24413a] px-6 py-5 text-canvas">
+    <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-ink px-6 py-5 text-canvas">
       <div className="flex items-center gap-4">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/12">
           <Send size={17} />
@@ -1747,7 +1747,7 @@ function OutreachBanner({
       {notContacted > 0 && (
         <button
           onClick={onReview}
-          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#24413a] px-3 text-xs font-semibold uppercase tracking-[0.12em] text-[#f8f9f8] hover:opacity-90 transition-opacity cursor-pointer"
+          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-[0.12em] text-paper hover:opacity-90 transition-opacity cursor-pointer"
         >
           {t('Lad Ava kontakte ({n})', { n: notContacted })} <ArrowRight size={14} />
         </button>
@@ -1770,7 +1770,7 @@ function VenueGridCard({
       initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.5, delay: Math.min(index, 6) * 0.05, ease: [0.22, 1, 0.36, 1] }}
-      className="group flex flex-col overflow-hidden rounded-[18px] border border-[#dcdfdb] bg-[#ffffff]">
+      className="group flex flex-col overflow-hidden rounded-[18px] border border-line bg-white">
 
       <button type="button" onClick={onSelect} className="relative block aspect-[4/3] overflow-hidden cursor-pointer text-left">
         <img src={imgSrc(venue.image)} alt={venue.name}
@@ -1794,43 +1794,43 @@ function VenueGridCard({
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-serif text-[1.15rem] leading-tight text-[#24413a]">{venue.name}</h3>
-            {venue.location && <p className="mt-0.5 truncate text-[0.72rem] text-[#5f6b66]">{venue.location}</p>}
+            <h3 className="font-serif text-[1.15rem] leading-tight text-ink">{venue.name}</h3>
+            {venue.location && <p className="mt-0.5 truncate text-[0.72rem] text-muted">{venue.location}</p>}
           </div>
           <motion.button whileTap={{ scale: 0.85 }} onClick={onToggleSave} aria-label={saved ? t('Fjern fra listen') : t('Tilføj til liste')}
-            className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#e6e9e5] transition-all cursor-pointer',
-              saved ? 'bg-[#e8f0ec] text-[#24413a]' : 'text-[#5f6b66] hover:text-[#24413a] hover:bg-[#f8f9f8]')}>
+            className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line-soft transition-all cursor-pointer',
+              saved ? 'bg-sage-wash text-ink' : 'text-muted hover:text-ink hover:bg-paper')}>
             {saved ? <Check size={14} /> : <Plus size={14} />}
           </motion.button>
         </div>
 
         {venue.quote && (
-          <p className="mt-2 line-clamp-2 text-[0.78rem] leading-snug text-[#5f6b66]">{venue.quote}</p>
+          <p className="mt-2 line-clamp-2 text-[0.78rem] leading-snug text-muted">{venue.quote}</p>
         )}
 
         <div className="mt-auto flex items-end gap-5 pt-4">
           <div>
-            <p className="eyebrow !text-[#7d938a]">{t('Pris')}</p>
-            <p className="mt-0.5 font-serif text-[0.95rem] leading-none text-[#24413a]">{venue.price}</p>
+            <p className="eyebrow !text-sage">{t('Pris')}</p>
+            <p className="mt-0.5 font-serif text-[0.95rem] leading-none text-ink">{venue.price}</p>
           </div>
           <div>
-            <p className="eyebrow !text-[#7d938a]">{t('Kapacitet')}</p>
-            <p className="mt-0.5 font-serif text-[0.95rem] leading-none text-[#24413a]">{venue.capacity}</p>
+            <p className="eyebrow !text-sage">{t('Kapacitet')}</p>
+            <p className="mt-0.5 font-serif text-[0.95rem] leading-none text-ink">{venue.capacity}</p>
           </div>
         </div>
 
         <div className="mt-4 flex items-center gap-2">
           <button onClick={onSelect}
-            className="flex h-8 flex-1 items-center justify-center rounded-full border border-[#e6e9e5] px-3 text-xs font-semibold text-[#24413a] hover:bg-[#f8f9f8] transition-colors cursor-pointer">
+            className="flex h-8 flex-1 items-center justify-center rounded-full border border-line-soft px-3 text-xs font-semibold text-ink hover:bg-paper transition-colors cursor-pointer">
             {t('Se venue')}
           </button>
           {isBooked ? (
-            <span className="flex h-8 items-center gap-1.5 rounded-full bg-[#e8f0ec] px-3 text-xs font-semibold text-[#24413a]">
+            <span className="flex h-8 items-center gap-1.5 rounded-full bg-sage-wash px-3 text-xs font-semibold text-ink">
               <Check size={12} /> {t('Jeres venue')}
             </span>
           ) : (
             <button onClick={onChoose}
-              className="flex h-8 items-center gap-1.5 rounded-full bg-[#24413a] px-3 text-xs font-semibold text-[#f8f9f8] hover:opacity-85 transition-opacity cursor-pointer">
+              className="flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold text-paper hover:opacity-85 transition-opacity cursor-pointer">
               <Check size={12} /> {t('Vælg')}
             </button>
           )}
@@ -1844,7 +1844,7 @@ function VenueGridCard({
           )
         ) : (
           <button onClick={onContact}
-            className="mt-2.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-full border border-[#e6e9e5] bg-[#ffffff] px-3 text-xs font-semibold text-[#24413a] hover:bg-[#f8f9f8] transition-colors cursor-pointer">
+            className="mt-2.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-full border border-line-soft bg-white px-3 text-xs font-semibold text-ink hover:bg-paper transition-colors cursor-pointer">
             <Send size={12} /> {t('Kontakt via Ava')}
           </button>
         )}
@@ -1988,7 +1988,7 @@ function ComparisonView({
                       <div
                         key={`${v.id}-${field.label}`}
                         className={cn(
-                          'rounded-[14px] border border-[var(--color-line)] bg-[#ffffff] px-4 py-3.5',
+                          'rounded-[14px] border border-[var(--color-line)] bg-white px-4 py-3.5',
                           field.wide && 'sm:col-span-2',
                         )}
                       >
@@ -2094,11 +2094,11 @@ function OutreachReview({
         className="mb-4 flex items-center gap-2 text-[0.72rem] font-medium uppercase tracking-[0.18em] text-muted hover:text-ink transition-colors cursor-pointer">
         <ArrowLeft size={13} /> {t('Tilbage til listen')}
       </button>
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Trin 3 · Godkend')}</p>
-      <h1 className="mt-1 font-serif text-[clamp(1.9rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage">{t('Trin 3 · Godkend')}</p>
+      <h1 className="mt-1 font-serif text-[clamp(1.9rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
         {tn(recipients.length, 'Ava kontakter {n} venue', 'Ava kontakter {n} venues')}
       </h1>
-      <p className="mt-2 text-[13px] text-[#5f6b66]">
+      <p className="mt-2 text-[13px] text-muted">
         {t('Ava sender en personlig mail til hvert sted fra jeres Kalas-postkasse og samler alle svar under Henvendelser. I godkender her, intet sendes uden.')}
       </p>
 
@@ -2127,7 +2127,7 @@ function OutreachReview({
       <div className="mt-4 rounded-2xl border border-[var(--color-line)] bg-card p-5">
         <div className="flex items-center justify-between">
           <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Avas udkast')}</p>
-          <button onClick={onAva} className="text-[0.72rem] font-semibold text-[#7d938a] hover:underline cursor-pointer">{t('Rediger med Ava')}</button>
+          <button onClick={onAva} className="text-[0.72rem] font-semibold text-sage hover:underline cursor-pointer">{t('Rediger med Ava')}</button>
         </div>
         {preparing ? (
           <div className="flex items-center gap-2.5 py-6 text-ink-soft">
@@ -2155,7 +2155,7 @@ function OutreachReview({
         <button
           onClick={() => void approve()}
           disabled={approving || preparing || !draft || recipients.length === 0}
-          className="flex items-center gap-2 rounded-full bg-[#24413a] px-7 py-3.5 text-[0.85rem] font-bold text-canvas transition-opacity hover:opacity-90 cursor-pointer disabled:opacity-50"
+          className="flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-[0.85rem] font-bold text-canvas transition-opacity hover:opacity-90 cursor-pointer disabled:opacity-50"
         >
           {approving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
           {t('Godkend & lad Ava sende')}
@@ -2231,12 +2231,12 @@ function VenueDetail({
     <motion.div
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="min-h-full bg-[#f4f5f3] pb-24">
+      className="min-h-full bg-canvas pb-24">
 
       {/* ── Top bar ───────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-[#e2e6e2] bg-[#f4f5f3]/95 px-6 py-3 backdrop-blur-md sm:px-9 lg:px-12">
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-line-soft bg-canvas/95 px-6 py-3 backdrop-blur-md sm:px-9 lg:px-12">
         <button type="button" onClick={onBack}
-          className="flex h-8 cursor-pointer items-center gap-1.5 text-sm text-[#5f6b66] transition-colors hover:text-[#24413a]">
+          className="flex h-8 cursor-pointer items-center gap-1.5 text-sm text-muted transition-colors hover:text-ink">
           <ArrowLeft size={15} /> {t('Tilbage')}
         </button>
         <div className="flex items-center gap-2">
@@ -2247,8 +2247,8 @@ function VenueDetail({
             className={cn(
               'flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all',
               researching
-                ? 'border border-[#e6e9e5] bg-[#f8f9f8] text-[#9a9686]'
-                : 'border border-[#e6e9e5] bg-[#ffffff] text-[#24413a] hover:bg-[#f8f9f8]',
+                ? 'border border-line-soft bg-paper text-faint'
+                : 'border border-line-soft bg-white text-ink hover:bg-paper',
             )}>
             {researching ? <Loader2 size={13} className="animate-spin" /> : <BookOpen size={13} />}
             {researching ? t('Ava researcher…') : research ? t('Opdater research') : t('Research venue')}
@@ -2257,8 +2257,8 @@ function VenueDetail({
             className={cn(
               'flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-all',
               saved
-                ? 'bg-[#e8f0ec] text-[#24413a]'
-                : 'border border-[#e6e9e5] bg-[#ffffff] text-[#24413a] hover:bg-[#f8f9f8]',
+                ? 'bg-sage-wash text-ink'
+                : 'border border-line-soft bg-white text-ink hover:bg-paper',
             )}>
             <Heart size={13} fill={saved ? 'currentColor' : 'none'} />
             {saved ? t('Gemt') : t('Gem')}
@@ -2272,8 +2272,8 @@ function VenueDetail({
           <div className="relative overflow-hidden sm:row-span-2">
             <img src={imgSrc(venue.image)} alt={venue.name}
               className="absolute inset-0 h-full w-full object-cover object-center" />
-            <div className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-full border border-[#dcdfdb] bg-[#ffffff]/95 px-3 py-1.5 backdrop-blur-sm">
-              <span className="text-[0.68rem] font-medium text-[#24413a]">{tn(realPhotos.length, '{n} billede', '{n} billeder')}</span>
+            <div className="absolute bottom-4 right-4 flex items-center gap-1.5 rounded-full border border-line bg-white/95 px-3 py-1.5 backdrop-blur-sm">
+              <span className="text-[0.68rem] font-medium text-ink">{tn(realPhotos.length, '{n} billede', '{n} billeder')}</span>
             </div>
           </div>
           {realPhotos.slice(1, 5).map((url, i) => (
@@ -2293,23 +2293,23 @@ function VenueDetail({
       <div className="px-6 pt-8 sm:px-9 lg:px-12">
 
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center rounded-full bg-[#e8f0ec] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-[#24413a]">
+          <span className="inline-flex items-center rounded-full bg-sage-wash px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-ink">
             {t('Ava pick')}
           </span>
           {venue.rating != null && (
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#e6e9e5] bg-[#f8f9f8] px-3 py-1 text-[0.72rem] font-medium text-[#24413a]">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-line-soft bg-paper px-3 py-1 text-[0.72rem] font-medium text-ink">
               <Star size={12} fill="currentColor" className="text-[#8a7d5c]" />
               {venue.rating.toFixed(1)}
-              {venue.reviewCount > 0 && <span className="text-[#5f6b66]">· {tn(venue.reviewCount, '{n} anmeldelse', '{n} anmeldelser')}</span>}
+              {venue.reviewCount > 0 && <span className="text-muted">· {tn(venue.reviewCount, '{n} anmeldelse', '{n} anmeldelser')}</span>}
             </span>
           )}
         </div>
-        <h1 className="mt-3 font-serif text-[clamp(2rem,4.5vw,3.25rem)] font-semibold leading-[1.05] text-[#24413a]">
+        <h1 className="mt-3 font-serif text-[clamp(2rem,4.5vw,3.25rem)] font-semibold leading-[1.05] text-ink">
           {venue.name}
         </h1>
-        <p className="mt-1 text-sm text-[#5f6b66]">{venue.location}</p>
+        <p className="mt-1 text-sm text-muted">{venue.location}</p>
         {directions && (
-          <p className="mt-1 text-[0.8rem] text-[#7d938a]">{directions}</p>
+          <p className="mt-1 text-[0.8rem] text-sage">{directions}</p>
         )}
 
         {researchError && (
@@ -2317,64 +2317,64 @@ function VenueDetail({
         )}
 
         {research?.briefing?.length ? (
-          <div className="mt-6 rounded-[18px] bg-[#24413a] p-6 text-[#f8f9f8]">
+          <div className="mt-6 rounded-[18px] bg-ink p-6 text-paper">
             <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-[#a6b0aa]">{t('Avas briefing')}</p>
             <ul className="mt-4 space-y-2.5">
               {research.briefing.map((line) => (
                 <li key={line} className="flex items-start gap-3 text-[0.92rem] leading-snug">
-                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#dbe5e0]" />
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-sage-tint" />
                   <span>{line}</span>
                 </li>
               ))}
             </ul>
           </div>
         ) : researching ? (
-          <div className="mt-6 flex items-center gap-3 rounded-[18px] border border-[#e6e9e5] bg-[#ffffff] px-5 py-4">
-            <Loader2 size={16} className="shrink-0 animate-spin text-[#24413a]" />
-            <p className="text-sm leading-relaxed text-[#5f6b66]">
+          <div className="mt-6 flex items-center gap-3 rounded-[18px] border border-line-soft bg-white px-5 py-4">
+            <Loader2 size={16} className="shrink-0 animate-spin text-ink" />
+            <p className="text-sm leading-relaxed text-muted">
               {t('Ava researcher venueet, søger på nettet og udfylder kapacitet, priser og praktisk info fra stedets egne sider…')}
             </p>
           </div>
         ) : !research ? (
-          <div className="mt-6 rounded-[18px] border border-dashed border-[#dcdfdb] bg-[#ffffff] px-5 py-4">
-            <p className="text-sm leading-relaxed text-[#5f6b66]">
+          <div className="mt-6 rounded-[18px] border border-dashed border-line bg-white px-5 py-4">
+            <p className="text-sm leading-relaxed text-muted">
               {t('Ava kunne ikke hente info automatisk. Tryk')}{' '}
-              <span className="font-medium text-[#24413a]">{t('Research venue')}</span>{' '}
+              <span className="font-medium text-ink">{t('Research venue')}</span>{' '}
               {t('for at prøve igen.')}
             </p>
           </div>
         ) : null}
 
         {description && (
-          <p className="mt-7 max-w-2xl text-[1.02rem] leading-relaxed text-[#46574f]">{description}</p>
+          <p className="mt-7 max-w-2xl text-[1.02rem] leading-relaxed text-ink-soft">{description}</p>
         )}
 
         {/* Stats strip */}
-        <div className="mt-8 grid grid-cols-3 items-stretch gap-px overflow-hidden rounded-[18px] border border-[#dcdfdb] bg-[#dcdfdb]">
-          <div className="flex min-h-[5.5rem] flex-col bg-[#ffffff] px-4 py-4 sm:px-5 sm:py-5">
-            <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[#5f6b66]">{t('Kapacitet')}</p>
-            <p className="mt-2 text-[0.9rem] font-semibold leading-snug text-[#24413a]">{venue.capacity || '-'}</p>
+        <div className="mt-8 grid grid-cols-3 items-stretch gap-px overflow-hidden rounded-[18px] border border-line bg-line">
+          <div className="flex min-h-[5.5rem] flex-col bg-white px-4 py-4 sm:px-5 sm:py-5">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">{t('Kapacitet')}</p>
+            <p className="mt-2 text-[0.9rem] font-semibold leading-snug text-ink">{venue.capacity || '-'}</p>
           </div>
-          <div className="flex min-h-[5.5rem] flex-col bg-[#e8f0ec] px-4 py-4 sm:px-5 sm:py-5">
-            <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[#5f6b66]">{t('Pris fra')}</p>
-            <p className="mt-2 text-[0.9rem] font-semibold leading-snug text-[#24413a]">{venue.price || '-'}</p>
+          <div className="flex min-h-[5.5rem] flex-col bg-sage-wash px-4 py-4 sm:px-5 sm:py-5">
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-muted">{t('Pris fra')}</p>
+            <p className="mt-2 text-[0.9rem] font-semibold leading-snug text-ink">{venue.price || '-'}</p>
           </div>
-          <div className="flex min-h-[5.5rem] flex-col bg-[#24413a] px-4 py-4 sm:px-5 sm:py-5">
+          <div className="flex min-h-[5.5rem] flex-col bg-ink px-4 py-4 sm:px-5 sm:py-5">
             <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[#c5ccc4]">{t('Bedømmelse')}</p>
-            <p className="mt-2 font-serif text-[1.35rem] leading-none text-[#f8f9f8]">
+            <p className="mt-2 font-serif text-[1.35rem] leading-none text-paper">
               {venue.rating != null ? `★ ${venue.rating.toFixed(1)}` : '-'}
             </p>
           </div>
         </div>
 
         {practical.length > 0 && (
-          <div className="mt-10 border-t border-[#e2e6e2] pt-8">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#24413a]">{t('Praktisk info')}</p>
+          <div className="mt-10 border-t border-line-soft pt-8">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink">{t('Praktisk info')}</p>
             <dl className="mt-5 grid grid-cols-2 gap-x-8 gap-y-6 sm:grid-cols-3">
               {practical.map(({ key, value }) => (
                 <div key={key}>
-                  <dt className="text-[0.72rem] font-bold uppercase tracking-[0.12em] text-[#5f6b66]">{key}</dt>
-                  <dd className="mt-1.5 text-[0.92rem] leading-snug text-[#24413a]">{value}</dd>
+                  <dt className="text-[0.72rem] font-bold uppercase tracking-[0.12em] text-muted">{key}</dt>
+                  <dd className="mt-1.5 text-[0.92rem] leading-snug text-ink">{value}</dd>
                 </div>
               ))}
             </dl>
@@ -2382,13 +2382,13 @@ function VenueDetail({
         )}
 
         {highlights.length > 0 && (
-          <div className="mt-10 border-t border-[#e2e6e2] pt-8">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#24413a]">{t('Faciliteter & fordele')}</p>
+          <div className="mt-10 border-t border-line-soft pt-8">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink">{t('Faciliteter & fordele')}</p>
             <ul className="mt-5 grid gap-3 sm:grid-cols-2">
               {highlights.map((h) => (
                 <li key={h} className="flex items-start gap-3">
-                  <Check size={15} strokeWidth={2} className="mt-0.5 shrink-0 text-[#5f7d70]" />
-                  <span className="text-[0.92rem] leading-snug text-[#46574f]">{h}</span>
+                  <Check size={15} strokeWidth={2} className="mt-0.5 shrink-0 text-sage-strong" />
+                  <span className="text-[0.92rem] leading-snug text-ink-soft">{h}</span>
                 </li>
               ))}
             </ul>
@@ -2396,9 +2396,9 @@ function VenueDetail({
         )}
 
         {packages.length > 0 && (
-          <div className="mt-10 border-t border-[#e2e6e2] pt-8">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#24413a]">{t('Priser & pakker')}</p>
-            <p className="mt-1.5 text-[0.8rem] text-[#5f6b66]">{t('Fra venueets egne sider, bekræft altid pris og dato direkte.')}</p>
+          <div className="mt-10 border-t border-line-soft pt-8">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink">{t('Priser & pakker')}</p>
+            <p className="mt-1.5 text-[0.8rem] text-muted">{t('Fra venueets egne sider, bekræft altid pris og dato direkte.')}</p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {packages.map((pkg, i) => {
                 const active = activePackage === i;
@@ -2407,25 +2407,25 @@ function VenueDetail({
                     className={cn(
                       'group flex flex-col rounded-[18px] p-5 text-left transition-all cursor-pointer',
                       pkg.featured
-                        ? 'bg-[#24413a] text-[#f8f9f8]'
+                        ? 'bg-ink text-paper'
                         : active
-                          ? 'border-2 border-[#24413a] bg-[#ffffff]'
-                          : 'border border-[#dcdfdb] bg-[#ffffff] hover:bg-[#f8f9f8]',
+                          ? 'border-2 border-ink bg-white'
+                          : 'border border-line bg-white hover:bg-paper',
                     )}>
                     {pkg.featured && (
-                      <span className="mb-2 text-[0.58rem] font-bold uppercase tracking-[0.22em] text-[#dbe5e0]">{t('Mest valgt')}</span>
+                      <span className="mb-2 text-[0.58rem] font-bold uppercase tracking-[0.22em] text-sage-tint">{t('Mest valgt')}</span>
                     )}
-                    <span className={cn('font-serif text-[1.15rem]', pkg.featured ? 'text-[#f8f9f8]' : 'text-[#24413a]')}>
+                    <span className={cn('font-serif text-[1.15rem]', pkg.featured ? 'text-paper' : 'text-ink')}>
                       {pkg.name}
                     </span>
-                    <span className={cn('mt-1 text-[0.76rem] leading-relaxed', pkg.featured ? 'text-[#a6b0aa]' : 'text-[#5f6b66]')}>
+                    <span className={cn('mt-1 text-[0.76rem] leading-relaxed', pkg.featured ? 'text-[#a6b0aa]' : 'text-muted')}>
                       {pkg.desc}
                     </span>
-                    <span className={cn('mt-4 font-serif text-[1.5rem] leading-none', pkg.featured ? 'text-[#f8f9f8]' : 'text-[#24413a]')}>
+                    <span className={cn('mt-4 font-serif text-[1.5rem] leading-none', pkg.featured ? 'text-paper' : 'text-ink')}>
                       {pkg.price}
                     </span>
                     {active && !pkg.featured && (
-                      <span className="mt-3 flex items-center gap-1 text-[0.72rem] text-[#5f7d70]">
+                      <span className="mt-3 flex items-center gap-1 text-[0.72rem] text-sage-strong">
                         <Check size={12} /> {t('Valgt')}
                       </span>
                     )}
@@ -2437,20 +2437,20 @@ function VenueDetail({
         )}
 
         {(venue.quote || venue.why.length > 0) && (
-          <div className="mt-10 border-t border-[#e2e6e2] pt-8">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#24413a]">{t('Derfor matcher det jer')}</p>
-            <div className="mt-5 rounded-[18px] border border-[#dcdfdb] bg-[#ffffff] p-6">
+          <div className="mt-10 border-t border-line-soft pt-8">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink">{t('Derfor matcher det jer')}</p>
+            <div className="mt-5 rounded-[18px] border border-line bg-white p-6">
               {venue.quote && (
-                <blockquote className="font-serif text-[1.2rem] italic leading-relaxed text-[#24413a]">
+                <blockquote className="font-serif text-[1.2rem] italic leading-relaxed text-ink">
                   &ldquo;{venue.quote}&rdquo;
                 </blockquote>
               )}
               {venue.why.length > 0 && (
-                <ul className={cn('space-y-3', venue.quote && 'mt-5 border-t border-[#e6e9e5] pt-5')}>
+                <ul className={cn('space-y-3', venue.quote && 'mt-5 border-t border-line-soft pt-5')}>
                   {venue.why.map((reason) => (
                     <li key={reason} className="flex items-start gap-3">
-                      <Check size={13} className="mt-1 shrink-0 text-[#5f7d70]" />
-                      <span className="text-[0.9rem] leading-relaxed text-[#46574f]">{reason}</span>
+                      <Check size={13} className="mt-1 shrink-0 text-sage-strong" />
+                      <span className="text-[0.9rem] leading-relaxed text-ink-soft">{reason}</span>
                     </li>
                   ))}
                 </ul>
@@ -2460,8 +2460,8 @@ function VenueDetail({
         )}
 
         {allVenues.length > 1 && (
-          <div className="mt-10 border-t border-[#e2e6e2] pt-8">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#24413a]">{t('Flere fra jeres liste')}</p>
+          <div className="mt-10 border-t border-line-soft pt-8">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink">{t('Flere fra jeres liste')}</p>
             <div className="mt-5 flex gap-3 overflow-x-auto hide-scrollbar pb-2">
               {allVenues.filter((v) => v.id !== venue.id).slice(0, 4).map((v) => (
                 <button key={v.id} type="button" onClick={() => onSelectOther(v.id)}
@@ -2469,11 +2469,11 @@ function VenueDetail({
                   style={{ width: 'min(180px, 45vw)', aspectRatio: '3/4' }}>
                   <img src={imgSrc(v.image)} alt={v.name}
                     className="absolute inset-0 h-full w-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#24413a]/90 via-transparent to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-transparent to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-3">
-                    <p className="font-serif text-[0.95rem] leading-tight text-[#f8f9f8]">{v.name}</p>
+                    <p className="font-serif text-[0.95rem] leading-tight text-paper">{v.name}</p>
                     {v.rating != null && (
-                      <p className="mt-0.5 text-[0.65rem] text-[#dbe5e0]">★ {v.rating.toFixed(1)}</p>
+                      <p className="mt-0.5 text-[0.65rem] text-sage-tint">★ {v.rating.toFixed(1)}</p>
                     )}
                   </div>
                 </button>
@@ -2482,33 +2482,33 @@ function VenueDetail({
           </div>
         )}
 
-        <div className="mt-10 border-t border-[#e2e6e2] pt-8">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#24413a]">{t('Jeres noter')}</p>
+        <div className="mt-10 border-t border-line-soft pt-8">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink">{t('Jeres noter')}</p>
           <textarea
             value={notes} onChange={(e) => setNotes(e.target.value)}
             placeholder={t('Skriv noter om dette venue, spørgsmål, mavefornemmelser, hvad I vil spørge om til visning…')}
             rows={4}
-            className="mt-3 w-full resize-none rounded-[18px] border border-[#dcdfdb] bg-[#ffffff] px-5 py-4 text-[0.9rem] leading-relaxed text-[#24413a] placeholder:text-[#9a9686] focus:outline-none"
+            className="mt-3 w-full resize-none rounded-[18px] border border-line bg-white px-5 py-4 text-[0.9rem] leading-relaxed text-ink placeholder:text-faint focus:outline-none"
           />
         </div>
 
-        <div className="mt-8 border-t border-[#e2e6e2] pt-8">
-          <p className="mb-4 text-[0.8rem] text-[#5f6b66]">
+        <div className="mt-8 border-t border-line-soft pt-8">
+          <p className="mb-4 text-[0.8rem] text-muted">
             {t('Ava forbereder en personlig henvendelse og sender den på jeres vegne.')}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             {isBooked ? (
-              <div className="flex h-8 items-center gap-1.5 rounded-full bg-[#e8f0ec] px-3 text-xs font-semibold text-[#24413a]">
+              <div className="flex h-8 items-center gap-1.5 rounded-full bg-sage-wash px-3 text-xs font-semibold text-ink">
                 <Check size={13} /> {t('Jeres venue')}
               </div>
             ) : (
               <>
                 <button type="button" onClick={onBook}
-                  className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-[#24413a] px-3 text-xs font-semibold text-[#f8f9f8] hover:opacity-85 transition-opacity">
+                  className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold text-paper hover:opacity-85 transition-opacity">
                   <Check size={13} /> {t('Vælg som jeres venue')}
                 </button>
                 <button type="button" onClick={onContact} disabled={sent}
-                  className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-[#e6e9e5] bg-[#ffffff] px-3 text-xs font-semibold text-[#24413a] hover:bg-[#f8f9f8] transition-colors disabled:cursor-default disabled:opacity-60 disabled:hover:bg-[#ffffff]">
+                  className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-line-soft bg-white px-3 text-xs font-semibold text-ink hover:bg-paper transition-colors disabled:cursor-default disabled:opacity-60 disabled:hover:bg-white">
                   {sent ? <><Check size={13} /> {t('Ava har kontaktet stedet')}</> : <><Send size={12} /> {t('Kontakt via Ava')}</>}
                 </button>
               </>
@@ -2517,8 +2517,8 @@ function VenueDetail({
               className={cn(
                 'flex h-8 cursor-pointer items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors',
                 saved
-                  ? 'bg-[#e8f0ec] text-[#24413a]'
-                  : 'border border-[#e6e9e5] bg-[#ffffff] text-[#24413a] hover:bg-[#f8f9f8]',
+                  ? 'bg-sage-wash text-ink'
+                  : 'border border-line-soft bg-white text-ink hover:bg-paper',
               )}>
               <Heart size={13} fill={saved ? 'currentColor' : 'none'} />
               {saved ? t('Gemt') : t('Gem venue')}

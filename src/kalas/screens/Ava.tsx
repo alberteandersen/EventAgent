@@ -340,7 +340,7 @@ function Messages({
               key={s}
               type="button"
               onClick={() => onSuggestion(s)}
-              className="rounded-full border border-[#dcdfdb] bg-card px-3.5 py-1.5 text-[0.8rem] text-ink-soft transition-[background-color,color,transform] duration-150 hover:bg-shell hover:text-ink active:scale-[0.97] cursor-pointer"
+              className="rounded-full border border-line bg-card px-3.5 py-1.5 text-[0.8rem] text-ink-soft transition-[background-color,color,transform] duration-150 hover:bg-shell hover:text-ink active:scale-[0.97] cursor-pointer"
             >
               {t(s)}
             </button>
@@ -458,7 +458,7 @@ function IconButton({
 
 function Avatar({ small = false }: { small?: boolean }) {
   return (
-    <div className={cn('flex shrink-0 items-center justify-center rounded-full bg-[#12332b]', small ? 'size-8' : 'size-10')}>
+    <div className={cn('flex shrink-0 items-center justify-center rounded-full bg-ink-deep', small ? 'size-8' : 'size-10')}>
       <span className={cn('font-serif leading-none text-white', small ? 'text-[1.05rem]' : 'text-[1.3rem]')}>K</span>
     </div>
   );

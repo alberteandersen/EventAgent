@@ -381,7 +381,7 @@ function CoverPreview({ url, form }: { url: string; form: FormState }) {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url('${url}')` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#12332b]/85 via-[#12332b]/10 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-ink-deep/85 via-ink-deep/10 to-transparent" />
       <div className="relative mt-auto flex flex-col gap-2 p-[38px]">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sage-tint">{t('Jeres forside')}</p>
         <h2 className="font-serif text-[clamp(2rem,3.4vw,2.6rem)] leading-[1.05] tracking-[-0.03em] text-card">

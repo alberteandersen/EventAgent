@@ -52,10 +52,9 @@ export const SIDEBAR_RAIL_W = 72;
 
 const shellTransition = { type: 'spring' as const, stiffness: 380, damping: 36 };
 
-/** Page cream — main content surface */
-export const PAGE_BG = '#f4f5f3';
-/** Soft mint chrome behind sidebar + header (slightly greener than page cream) */
-export const CHROME_BG = '#f0f1ec';
+/** The page surface, and the chrome behind the sidebar + header. */
+export const PAGE_BG = 'var(--color-canvas)';
+export const CHROME_BG = 'var(--color-chrome)';
 /** Soft green wash from top-left (sits behind sidebar + header as one layer) */
 export const CHROME_WASH =
   'radial-gradient(ellipse 520px 380px at 0% 0%, rgba(31,77,64,0.16) 0%, rgba(31,77,64,0.07) 42%, transparent 72%)';
@@ -65,7 +64,7 @@ export function Wordmark({ light = false }: { light?: boolean }) {
     <span
       className={cn(
         'text-[1.75rem] leading-none',
-        light ? 'text-[#fffdf7]' : 'text-[#24413a]',
+        light ? 'text-[#fffdf7]' : 'text-ink',
       )}
       style={{ fontFamily: 'var(--font-wordmark)', fontWeight: 700, letterSpacing: 0 }}
     >
@@ -83,7 +82,7 @@ function Initials({ light = false }: { light?: boolean }) {
     <div
       className={cn(
         'flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full text-[0.72rem] font-bold tracking-wide',
-        light ? 'bg-[#b34e37] text-white' : 'bg-ink text-canvas',
+        light ? 'bg-terracotta text-white' : 'bg-ink text-canvas',
       )}
     >
       {a}{b ? `+${b}` : ''}
@@ -152,12 +151,12 @@ export default function Shell({
                       type="button"
                       onClick={() => setSidebarCollapsed(false)}
                       aria-label={t('Vis menu')}
-                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#5f6b66] transition-colors hover:bg-[#24413a]/8 hover:text-[#24413a] cursor-pointer"
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-muted transition-colors hover:bg-ink/8 hover:text-ink cursor-pointer"
                     >
                       <PanelLeft size={18} strokeWidth={1.6} />
                     </button>
                   </div>
-                  <span className="font-serif text-[1.35rem] leading-none text-[#24413a]" aria-hidden>K</span>
+                  <span className="font-serif text-[1.35rem] leading-none text-ink" aria-hidden>K</span>
                 </>
               ) : (
                 <>
@@ -166,7 +165,7 @@ export default function Shell({
                     type="button"
                     onClick={() => setSidebarCollapsed(true)}
                     aria-label={t('Skjul menu')}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-[#5f6b66] transition-colors hover:bg-[#24413a]/8 hover:text-[#24413a] cursor-pointer"
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] text-muted transition-colors hover:bg-ink/8 hover:text-ink cursor-pointer"
                   >
                     <PanelLeftClose size={18} strokeWidth={1.6} />
                   </button>
@@ -182,22 +181,22 @@ export default function Shell({
                 />
               ))}
               {!sidebarRail && (
-                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7d938a]">
+                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sage">
                   {t('Planlægning')}
                 </p>
               )}
-              {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />}
+              {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-line" />}
               {nav.filter((n) => n.group === 'plan').map((n) => (
                 <NavRow key={n.id} item={n} active={current === n.id} onClick={() => navigate(n.id)}
                   collapsed={sidebarRail}
                 />
               ))}
               {!sidebarRail && (
-                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#7d938a]">
+                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sage">
                   {t('Hjælp')}
                 </p>
               )}
-              {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-[#dcdfdb]" />}
+              {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-line" />}
               {nav.filter((n) => n.group === 'help').map((n) => (
                 <NavRow key={n.id} item={n} active={current === n.id} onClick={() => navigate(n.id)}
                   collapsed={sidebarRail}
@@ -206,13 +205,13 @@ export default function Shell({
             </nav>
 
             <div className={cn(
-              'mt-4 shrink-0 border-t border-[#e2e6e2] pt-4',
+              'mt-4 shrink-0 border-t border-line-soft pt-4',
               sidebarRail ? 'flex flex-col items-center gap-1.5' : 'flex flex-col gap-1',
             )}>
               {sidebarRail ? (
                 <>
                   <SignOutButton
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[10px] text-[#5f6b66] transition-colors hover:bg-[#24413a]/8 hover:text-[#24413a] disabled:opacity-50"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[10px] text-muted transition-colors hover:bg-ink/8 hover:text-ink disabled:opacity-50"
                   >
                     <LogOut size={17} strokeWidth={1.6} aria-hidden />
                     <span className="sr-only">{t('Log ud')}</span>
@@ -222,7 +221,7 @@ export default function Shell({
                     onClick={() => navigate('invites')}
                     aria-label={t('Invitér')}
                     title={t('Invitér')}
-                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[10px] text-[#5f6b66] transition-colors hover:bg-[#24413a]/8 hover:text-[#24413a]"
+                    className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[10px] text-muted transition-colors hover:bg-ink/8 hover:text-ink"
                   >
                     <UserPlus size={17} strokeWidth={1.6} />
                   </button>
@@ -230,7 +229,7 @@ export default function Shell({
               ) : (
                 <>
                   <SignOutButton
-                    className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium text-[#46574f] transition-colors hover:bg-[#24413a]/[0.06] hover:text-[#24413a] disabled:opacity-50"
+                    className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium text-ink-soft transition-colors hover:bg-ink/[0.06] hover:text-ink disabled:opacity-50"
                   >
                     <LogOut size={17} strokeWidth={1.6} className="shrink-0" />
                     {t('Log ud')}
@@ -238,7 +237,7 @@ export default function Shell({
                   <button
                     type="button"
                     onClick={() => navigate('invites')}
-                    className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium text-[#46574f] transition-colors hover:bg-[#24413a]/[0.06] hover:text-[#24413a]"
+                    className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium text-ink-soft transition-colors hover:bg-ink/[0.06] hover:text-ink"
                   >
                     <UserPlus size={17} strokeWidth={1.6} className="shrink-0" />
                     {t('Invitér')}
@@ -262,7 +261,7 @@ export default function Shell({
               <a
                 href="/settings"
                 aria-label={t('Indstillinger')}
-                className="flex size-8 items-center justify-center rounded-full border border-[#dcdfdb] text-[#5f6b66] transition-colors hover:bg-[#24413a]/6 hover:text-[#24413a]"
+                className="flex size-8 items-center justify-center rounded-full border border-line text-muted transition-colors hover:bg-ink/6 hover:text-ink"
               >
                 <Settings size={15} strokeWidth={1.6} />
               </a>
@@ -273,7 +272,7 @@ export default function Shell({
           {/* Solid page surface, covers the wash below the header */}
           <div className="flex min-h-0 flex-1 pl-2.5 lg:pl-3">
             <main
-              className="min-w-0 flex-1 overflow-y-auto rounded-tl-[20px] border border-[#e2e6e2] border-b-0 border-r-0 pb-28 lg:pb-0"
+              className="min-w-0 flex-1 overflow-y-auto rounded-tl-[20px] border border-line-soft border-b-0 border-r-0 pb-28 lg:pb-0"
               style={{ backgroundColor: PAGE_BG }}
             >
               <div className="min-h-full">{children}</div>
@@ -376,13 +375,13 @@ export function NavRow({ item, active, onClick, badge, collapsed = false }: {
         'group relative mb-1.5 flex w-full items-center rounded-[10px] text-left transition-colors duration-200 cursor-pointer',
         collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5',
         active
-          ? 'bg-white/70 text-[#24413a] shadow-sm'
-          : 'text-[#46574f] hover:bg-[#24413a]/[0.06] hover:text-[#24413a]',
+          ? 'bg-white/70 text-ink shadow-sm'
+          : 'text-ink-soft hover:bg-ink/[0.06] hover:text-ink',
       )}>
       <span className="relative z-10 shrink-0">
         <Icon size={18} strokeWidth={2} />
         {collapsed && badge ? (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#b34e37] px-0.5 text-[0.55rem] font-bold text-white">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-terracotta px-0.5 text-[0.55rem] font-bold text-white">
             {badge}
           </span>
         ) : null}
@@ -391,7 +390,7 @@ export function NavRow({ item, active, onClick, badge, collapsed = false }: {
         <>
           <span className="relative z-10 text-sm font-semibold">{t(item.label)}</span>
           {badge ? (
-            <span className="relative z-10 ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-[#b34e37] px-1.5 text-[0.65rem] font-bold text-white">
+            <span className="relative z-10 ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-terracotta px-1.5 text-[0.65rem] font-bold text-white">
               {badge}
             </span>
           ) : null}
@@ -419,7 +418,7 @@ export function ModeToggle({
     <div
       role="group"
       aria-label={t('Skift mellem chat og klassisk')}
-      className="flex items-center rounded-full border border-[#dcdfdb] bg-[#ffffff]/70 p-0.5"
+      className="flex items-center rounded-full border border-line bg-white/70 p-0.5"
     >
       {options.map(({ id, label, icon: Icon }) => {
         const active = chatMode === id;
@@ -435,8 +434,8 @@ export function ModeToggle({
             className={cn(
               'relative flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors',
               active
-                ? 'bg-[#24413a] text-[#fffdf7]'
-                : 'text-[#5f6b66] hover:text-[#24413a]',
+                ? 'bg-ink text-[#fffdf7]'
+                : 'text-muted hover:text-ink',
             )}
           >
             <Icon size={12} strokeWidth={1.8} />

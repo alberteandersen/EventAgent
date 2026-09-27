@@ -4,7 +4,7 @@
 import { Modality } from "@google/genai";
 import { getGemini } from "./client";
 import { logAgentError } from "./log";
-import { INVITE_DESIGN_PROMPT, SITE_HERO_PROMPT, SECTION_IMAGE_PROMPT } from "./prompts";
+import { SECTION_IMAGE_PROMPT } from "./prompts";
 
 export const GEMINI_IMAGE_MODEL =
   process.env.GEMINI_IMAGE_MODEL ?? "gemini-2.5-flash-image";
@@ -12,84 +12,6 @@ export const GEMINI_IMAGE_MODEL =
 export interface GeneratedImage {
   data: Buffer;
   mimeType: string;
-}
-
-/**
- * Generate one invitation design. Best-effort: returns null on any failure so
- * the caller can retry or degrade gracefully.
- */
-export async function generateInviteImage(args: {
-  style: string;
-  palette: string;
-  wording: string;
-  vibes: string[];
-}): Promise<GeneratedImage | null> {
-  try {
-    const ai = getGemini();
-    const response = await ai.models.generateContent({
-      model: GEMINI_IMAGE_MODEL,
-      contents: INVITE_DESIGN_PROMPT(args),
-      config: {
-        responseModalities: [Modality.TEXT, Modality.IMAGE],
-        imageConfig: { aspectRatio: "3:4" }, // closest supported to a 5×7 card
-      },
-    });
-
-    const parts = response.candidates?.[0]?.content?.parts ?? [];
-    for (const part of parts) {
-      const inline = part.inlineData;
-      if (inline?.data) {
-        return {
-          data: Buffer.from(inline.data, "base64"),
-          mimeType: inline.mimeType ?? "image/png",
-        };
-      }
-    }
-    return null;
-  } catch (err) {
-    logAgentError("gemini/image:generateInviteImage", err, {
-      model: GEMINI_IMAGE_MODEL,
-      style: args.style,
-    });
-    return null;
-  }
-}
-
-/**
- * Generate a wide decorative hero artwork for the couple's wedding website
- * (used when no uploaded photo suits the hero). Best-effort: null on failure.
- */
-export async function generateSiteHeroImage(args: {
-  styleDirection: string;
-  vibes: string[];
-  region: string;
-  paletteHexes: string[];
-}): Promise<GeneratedImage | null> {
-  try {
-    const ai = getGemini();
-    const response = await ai.models.generateContent({
-      model: GEMINI_IMAGE_MODEL,
-      contents: SITE_HERO_PROMPT(args),
-      config: {
-        responseModalities: [Modality.TEXT, Modality.IMAGE],
-        imageConfig: { aspectRatio: "16:9" },
-      },
-    });
-    const parts = response.candidates?.[0]?.content?.parts ?? [];
-    for (const part of parts) {
-      const inline = part.inlineData;
-      if (inline?.data) {
-        return {
-          data: Buffer.from(inline.data, "base64"),
-          mimeType: inline.mimeType ?? "image/png",
-        };
-      }
-    }
-    return null;
-  } catch (err) {
-    logAgentError("gemini/image:generateSiteHeroImage", err, { model: GEMINI_IMAGE_MODEL });
-    return null;
-  }
 }
 
 /**

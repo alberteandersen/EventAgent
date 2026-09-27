@@ -6,7 +6,7 @@
 
 import type { CardFormat, CardFormatId } from './formats';
 import type { CardBlock, CardSpec, TextArea, TextStyle } from './spec';
-import type { Language } from '../types';
+import type { Language } from '../content';
 
 /** Where a vibe's painting sits, which decides where the words can go. */
 export type ArtPlacement = 'corners' | 'frame' | 'top' | 'bottom' | 'scattered' | 'texture';

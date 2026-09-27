@@ -156,7 +156,7 @@ async function updateContent(supabase: SupabaseClient, event: EventRow, args: Re
   const active = designs.find((d) => d.active) ?? null;
   let siteUpdated: "live" | "rebuilt" | "needs_unlock" | "not_built" = active?.html ? "live" : "not_built";
   if (active?.html && needsRebuild(active.html, active.brief as never, parseConfig(config))) {
-    const { hasWebsiteAccess } = await import("@/lib/website/generate");
+    const { hasWebsiteAccess } = await import("@/lib/website/access");
     if (await hasWebsiteAccess(supabase, event.id)) {
       const { buildSiteHtml } = await import("@/lib/website/buildSite");
       await buildSiteHtml({ supabase, event, userId: event.user_id, syncContent: true });

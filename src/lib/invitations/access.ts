@@ -2,7 +2,7 @@
    purchase unlocks both designers; the cap is the website's cost guard. */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { hasWebsiteAccess } from "@/lib/website/generate";
+import { hasWebsiteAccess } from "@/lib/website/access";
 
 /** Builds and change requests per wedding per day. */
 const MAX_INVITATION_BUILDS_PER_DAY = 20;

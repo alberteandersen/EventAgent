@@ -38,9 +38,8 @@ export async function POST(request: NextRequest) {
     const orderId = session.metadata?.order_id;
     if (orderId) {
       const supabase = createAdminClient();
-      // order_type discriminates the order table; older sessions without it
-      // are invite orders (backward compatible).
-      const table = session.metadata?.order_type === "website" ? "website_orders" : "invite_orders";
+      // Only the website checkout remains (it unlocks both AI designers).
+      const table = "website_orders";
       if (event.type === "checkout.session.completed") {
         await supabase
           .from(table)

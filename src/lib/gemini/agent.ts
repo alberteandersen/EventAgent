@@ -742,7 +742,7 @@ async function execUpdateWebsiteDesign(
   if (!instruction) return { error: "instruction is required" };
   const regenerate = args.regenerate === true;
 
-  const { hasWebsiteAccess } = await import("@/lib/website/generate");
+  const { hasWebsiteAccess } = await import("@/lib/website/access");
   const { buildSiteHtml } = await import("@/lib/website/buildSite");
   if (!(await hasWebsiteAccess(supabase, event.id))) {
     return {

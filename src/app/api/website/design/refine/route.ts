@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { hasWebsiteAccess } from "@/lib/website/generate";
+import { hasWebsiteAccess } from "@/lib/website/access";
 import { dispatchJob } from "@/lib/jobs/dispatch";
 import type { EventRow } from "@/lib/db/types";
 

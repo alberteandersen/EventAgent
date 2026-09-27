@@ -3,7 +3,7 @@ import { Type, type Schema } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 import { getGemini, GEMINI_MODEL } from "@/lib/gemini/client";
 import { logAgentError } from "@/lib/gemini/log";
-import { budgetLines } from "@/kalas/data";
+import { budgetLines } from "@/lib/budget/benchmarks";
 import { estimatedTotal } from "@/kalas/screens/budget/estimate";
 import { normaliseAdvice } from "@/lib/budget/advice";
 import type { BudgetItemRow, EventRow } from "@/lib/db/types";

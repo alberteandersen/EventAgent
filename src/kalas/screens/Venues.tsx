@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Lightbox } from '../onboarding/Lightbox';
 import OutreachDialog from '../OutreachDialog';
-import { IMAGES } from '../data';
+import { IMAGES } from '../images';
 import { useWedding, type Couple } from '../useWedding';
 import { showNotice } from '../notice';
 import { venueBudget } from './budget/estimate';
@@ -142,9 +142,9 @@ export default function VenueDiscovery({
   hub,
 }: {
   onNavigate?: (s: NavigateTarget) => void;
-  hub?: VenueHubConfig;
+  /** The vendor hub owns which view is showing; Venues always renders inside it. */
+  hub: VenueHubConfig;
 }) {
-  type VView = 'home' | 'discover' | 'list' | 'review';
   const { t } = useLang();
   const { couple, event, venues: allVenues, outbound, replies, refresh } = useWedding();
 
@@ -157,28 +157,8 @@ export default function VenueDiscovery({
   const displayVenues = venues.map(toDisplay);
 
   const hasRealVenues = displayVenues.length > 0;
-  // Landing is derived: once the couple has venues (or Ava routed here) we open
-  // the list, otherwise discovery — until they navigate, which pins `navView`.
-  const [navView, setVView] = useState<VView | null>(() => {
-    if (hub) return hub.view;
-    if (typeof window === 'undefined') return null;
-    const fromAva = sessionStorage.getItem('kalas_venues_view');
-    if (fromAva === 'picks' || fromAva === 'list') {
-      sessionStorage.removeItem('kalas_venues_view');
-      return 'list';
-    }
-    return null;
-  });
-  // Hub mode: controlled view from parent. Standalone: home until user navigates.
-  const vview: VView = hub ? hub.view : (navView ?? 'home');
-
-  const setView = (next: VView) => {
-    if (hub) {
-      if (next === 'discover' || next === 'list' || next === 'review') hub.onViewChange(next);
-      return;
-    }
-    setVView(next);
-  };
+  const vview = hub.view;
+  const setView = hub.onViewChange;
 
   const goInbox = () => {
     onNavigate?.('inbox');
@@ -240,33 +220,10 @@ export default function VenueDiscovery({
   const goDiscover = (similar = false) => { setSimilarSeed(similar); setView('discover'); };
 
   const likedNotContacted = displayVenues.filter((v) => saved.has(v.id) && !sent.has(v.id));
-  const likedVenues = displayVenues.filter((v) => saved.has(v.id));
-  const journeyCounts = {
-    listed: likedVenues.length,
-    contacted: likedVenues.filter((v) => sent.has(v.id)).length,
-    replied: likedVenues.filter((v) => repliedIds.has(v.id)).length,
-    quoted: likedVenues.filter((v) => quotedIds.has(v.id)).length,
-  };
 
   return (
     <div className="min-h-screen">
       <AnimatePresence mode="wait">
-        {vview === 'home' && (
-          <VenuesHome
-            key="home"
-            couple={couple}
-            chosen={booked ? displayVenues.find((v) => v.id === booked) ?? null : null}
-            counts={journeyCounts}
-            list={likedVenues}
-            stageOf={stageOf}
-            onDiscover={() => goDiscover(false)}
-            onList={() => goList()}
-            onReview={() => setView('review')}
-            onOpenVenue={(id) => goList(id)}
-            onOpenDetail={booked ? () => goList(booked) : undefined}
-            onInbox={goInbox}
-          />
-        )}
         {vview === 'discover' && (
           <DiscoverView
             key="discover"
@@ -274,18 +231,17 @@ export default function VenueDiscovery({
             savedPlaceIds={savedPlaceIds}
             similarNames={similarSeed ? likedNames : null}
             onSaved={refresh}
-            onBack={hub ? undefined : () => setView('home')}
             /* The heart in the filter row. In the hub it switches to the
                Favoritter tab; standalone it opens the list view. Both routes
                already existed, hub.onSwitchTab had simply never been called. */
             onViewList={
-              hub?.onSwitchTab
+              hub.onSwitchTab
                 ? () => hub.onSwitchTab!('shortlist', hub.category ?? 'venue')
                 : hasRealVenues ? () => goList() : undefined
             }
             savedCount={saved.size}
-            embedded={Boolean(hub)}
-            categoryBar={hub?.categoryBar}
+            embedded
+            categoryBar={hub.categoryBar}
           />
         )}
         {vview === 'list' && (
@@ -296,13 +252,12 @@ export default function VenueDiscovery({
             initialSelectedId={pendingSelect}
             onToggleSave={toggleSave} onOutreach={openOutreach}
             onBook={bookVenue}
-            onBack={hub ? undefined : () => setView('home')}
             onDiscover={() => goDiscover(false)}
             onReview={() => setView('review')}
             onAva={() => onNavigate?.('ava')}
             onRefresh={refresh}
-            embedded={Boolean(hub)}
-            categoryBar={hub?.categoryBar} />
+            embedded
+            categoryBar={hub.categoryBar} />
         )}
         {vview === 'review' && (
           <OutreachReview key="review"
@@ -326,268 +281,6 @@ export default function VenueDiscovery({
         )}
       </AnimatePresence>
     </div>
-  );
-}
-
-/* ── Chosen-venue overview — read-only "jeres venue" status header ────── */
-function ChosenOverview({ chosen, couple, onOpenDetail, onDiscover }: {
-  chosen: DisplayVenue | null; couple: Couple;
-  onOpenDetail?: () => void; onDiscover: () => void;
-}) {
-  const { t } = useLang();
-  return (
-    <div className="flex min-h-[210px] flex-col overflow-hidden rounded-[18px] bg-[#24413a] sm:flex-row">
-      <div className="relative flex min-h-[150px] w-full shrink-0 flex-col justify-end overflow-hidden sm:min-h-0 sm:w-[42%]">
-        {chosen ? (
-          <>
-            <img src={imgSrc(chosen.image)} alt={chosen.name} className="absolute inset-0 h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#24413a]/90 via-[#24413a]/25 to-transparent" />
-          </>
-        ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#4d5638] via-[#3B432A] to-[#24413a]" />
-        )}
-        <div className="relative p-5">
-          {chosen ? (
-            <div className="flex flex-wrap gap-2">
-              {chosen.location && (
-                <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">{chosen.location}</span>
-              )}
-              {couple.dateLabel && (
-                <span className="rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">{couple.dateLabel}</span>
-              )}
-            </div>
-          ) : (
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white/10"><MapPin size={19} className="text-white/70" /></div>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-1 flex-col justify-between gap-4 p-6">
-        <div className="flex flex-col gap-2">
-          {chosen ? (
-            <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-[#f8f9f8] px-[10px] py-1 text-[9px] font-bold uppercase tracking-wide text-[#24413a]"><Check size={11} /> {t('Valgt venue')}</span>
-          ) : (
-            <span className="inline-flex w-fit rounded-full bg-white/15 px-[10px] py-1 text-[9px] font-bold uppercase tracking-wide text-white/80">{t('Ingen venue valgt endnu')}</span>
-          )}
-          <h2 className="font-serif text-[1.6rem] leading-snug text-white">{chosen ? chosen.name : t('I har ikke valgt et sted endnu')}</h2>
-          <p className="max-w-[420px] text-xs leading-[1.6] text-[#a6b0aa]">
-            {chosen
-              ? (chosen.quote || chosen.why[0] || chosen.location || t('Jeres valgte sted.'))
-              : t('Byg jeres liste nedenfor, lad Ava kontakte dem, og vælg til sidst det sted der føles rigtigt.')}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          {chosen && onOpenDetail && (
-            <button type="button" onClick={onOpenDetail} className="inline-flex items-center gap-2 rounded-full bg-[#f8f9f8] px-5 py-2.5 text-[13px] font-bold text-[#24413a] transition-opacity hover:opacity-90 cursor-pointer">{t('Se detaljer')}</button>
-          )}
-          <button type="button" onClick={onDiscover} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-white/20 cursor-pointer"><GlobeIcon size={15} /> {t('Udforsk venues')}</button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   VENUES HOME, project-management overview + the 1-2-3 steps as a tree
-═══════════════════════════════════════════════════════════════════════ */
-type HomeCounts = { listed: number; contacted: number; replied: number; quoted: number };
-
-function VenuesHome({
-  couple, chosen, counts, list, stageOf, onDiscover, onList, onReview, onOpenVenue, onOpenDetail, onInbox,
-}: {
-  couple: Couple; chosen: DisplayVenue | null; counts: HomeCounts;
-  list: DisplayVenue[]; stageOf: (id: string) => VenueStage;
-  onDiscover: () => void; onList: () => void; onReview: () => void;
-  onOpenVenue: (id: string) => void; onOpenDetail?: () => void; onInbox: () => void;
-}) {
-  const { t } = useLang();
-  const metrics = [
-    { label: 'På listen', value: String(counts.listed) },
-    { label: 'Kontaktet', value: String(counts.contacted) },
-    { label: 'Tilbud', value: String(counts.quoted) },
-    { label: 'Valgt', value: chosen ? '1' : '0', accent: !chosen },
-  ];
-
-  type StepState = 'done' | 'active' | 'todo';
-  const steps: {
-    n: number; title: string; desc: string; stat: string; cta: string;
-    Icon: typeof GlobeIcon; onClick: () => void; disabled?: boolean; state: StepState;
-  }[] = [
-    {
-      n: 1, title: 'Opdag',
-      desc: 'Find rigtige venues på kloden og tilføj dem I kan lide til listen.',
-      stat: counts.listed > 0 ? t('{n} tilføjet', { n: counts.listed }) : t('Ikke startet'),
-      cta: counts.listed > 0 ? t('Opdag flere') : t('Start søgning'),
-      Icon: GlobeIcon, onClick: onDiscover, state: counts.listed > 0 ? 'done' : 'active',
-    },
-    {
-      n: 2, title: 'Byg jeres liste',
-      desc: 'Sammenlign, research og forfin listen, fjern dem der ikke passer.',
-      stat: counts.listed > 0 ? t('{n} på listen', { n: counts.listed }) : t('Tom endnu'),
-      cta: t('Rediger liste'), Icon: Heart, onClick: onList,
-      disabled: counts.listed === 0, state: counts.listed > 0 ? 'active' : 'todo',
-    },
-    {
-      n: 3, title: 'Lad Ava kontakte',
-      desc: 'Godkend Avas henvendelse og følg samtalerne under Henvendelser.',
-      stat: counts.contacted > 0
-        ? t('{contacted} kontaktet · {replied} svar', { contacted: counts.contacted, replied: counts.replied })
-        : t('Klar til at sende'),
-      cta: counts.contacted > 0 ? t('Følg svarene') : t('Gennemgå & send'),
-      Icon: Send, onClick: counts.contacted > 0 ? onInbox : onReview,
-      disabled: counts.listed === 0,
-      state: counts.contacted > 0 ? 'done' : counts.listed > 0 ? 'active' : 'todo',
-    },
-  ];
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="flex min-w-0 flex-1 flex-col gap-6 px-6 py-8 sm:px-9 lg:px-12"
-    >
-      {/* Header */}
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Planlægning')}</p>
-        <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">{t('Venues')}</h1>
-        <p className="mt-1 max-w-xl text-[13px] text-[#5f6b66]">
-          {t('Fra opdagelse til det endelige ja, her er jeres overblik og de næste skridt.')}
-        </p>
-      </div>
-
-      {/* Chosen overview */}
-      <ChosenOverview chosen={chosen} couple={couple} onOpenDetail={onOpenDetail} onDiscover={onDiscover} />
-
-      {/* Metrics strip */}
-      <div className="grid grid-cols-2 overflow-hidden rounded-2xl border border-[var(--color-line)] bg-card sm:grid-cols-4">
-        {metrics.map((m, i) => (
-          <div key={m.label} className={cn('px-5 py-4', i < 3 && 'sm:border-r border-[var(--color-line)]', i % 2 === 0 && 'border-r sm:border-r')}>
-            <p className="text-[0.62rem] font-bold uppercase tracking-[0.14em] text-muted">{t(m.label)}</p>
-            <p className={cn('mt-1 font-serif text-[1.6rem] leading-none', m.accent ? 'text-[#7d938a]' : 'text-ink')}>{m.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* What you've built so far */}
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">
-            {list.length > 0 ? t('Jeres liste indtil videre · {n}', { n: list.length }) : t('Jeres liste indtil videre')}
-          </p>
-          {list.length > 0 && (
-            <button type="button" onClick={onList}
-              className="text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#24413a] hover:underline cursor-pointer">
-              {t('Rediger liste →')}
-            </button>
-          )}
-        </div>
-        {list.length === 0 ? (
-          <button
-            type="button"
-            onClick={onDiscover}
-            className="flex w-full items-center gap-4 rounded-2xl border border-dashed border-[var(--color-line-strong)] bg-card p-5 text-left transition-colors hover:border-[#24413a]/40 cursor-pointer"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#24413a]">
-              <GlobeIcon size={18} className="text-white" />
-            </span>
-            <div>
-              <p className="font-serif text-[1.1rem] text-ink">{t('Ingen venues endnu')}</p>
-              <p className="mt-0.5 text-[0.8rem] text-ink-soft">{t('Start i Opdag og tilføj de steder I bliver forelsket i.')}</p>
-            </div>
-          </button>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
-            {list.slice(0, 8).map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => onOpenVenue(v.id)}
-                className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-line)] bg-card text-left transition-shadow hover:shadow-sm cursor-pointer"
-              >
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <img src={imgSrc(v.image)} alt={v.name}
-                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a221566] to-transparent" />
-                  {chosen && v.id === chosen.id ? (
-                    <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-ink px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-[0.1em] text-canvas">
-                      <Check size={9} /> {t('Valgt')}
-                    </span>
-                  ) : stageOf(v.id) !== 'idle' ? (
-                    <div className="absolute left-2 top-2"><StageChip stage={stageOf(v.id)} /></div>
-                  ) : null}
-                </div>
-                <div className="p-2.5">
-                  <p className="truncate font-serif text-[0.92rem] leading-tight text-ink">{v.name}</p>
-                  <p className="truncate text-[0.66rem] text-muted">
-                    {v.rating != null ? `★ ${v.rating.toFixed(1)}` : v.location || v.price}
-                  </p>
-                </div>
-              </button>
-            ))}
-            {list.length > 8 && (
-              <button
-                type="button"
-                onClick={onList}
-                className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[var(--color-line-strong)] bg-card p-4 text-center transition-colors hover:border-[#24413a]/40 cursor-pointer"
-              >
-                <span className="font-serif text-[1.4rem] text-ink">+{list.length - 8}</span>
-                <span className="text-[0.7rem] font-semibold text-muted">{t('flere på listen')}</span>
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Steps tree */}
-      <div>
-        <p className="mb-3 text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Sådan gør I')}</p>
-        <div className="relative">
-          {steps.map((s, i) => {
-            const badge = s.state === 'done'
-              ? 'bg-[#24413a] text-white'
-              : s.state === 'active'
-                ? 'bg-[#7d938a] text-white'
-                : 'bg-shell text-muted';
-            return (
-              <div key={s.n} className="relative flex gap-4 pb-3 last:pb-0">
-                {i < steps.length - 1 && (
-                  <span className="absolute left-[19px] top-11 bottom-1 w-px bg-[var(--color-line-strong)]" />
-                )}
-                <div className={cn('relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full font-serif text-[1rem]', badge)}>
-                  {s.state === 'done' ? <Check size={17} /> : s.n}
-                </div>
-                <button
-                  type="button"
-                  onClick={s.onClick}
-                  disabled={s.disabled}
-                  className={cn(
-                    'flex flex-1 items-center justify-between gap-4 rounded-2xl border p-4 text-left transition-all',
-                    s.disabled
-                      ? 'cursor-not-allowed border-[var(--color-line)] bg-card opacity-55'
-                      : 'border-[var(--color-line)] bg-card hover:border-[#24413a]/40 hover:shadow-sm cursor-pointer',
-                  )}
-                >
-                  <div className="flex min-w-0 items-start gap-3.5">
-                    <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#e8f0ec] text-[#24413a]">
-                      <s.Icon size={17} />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-serif text-[1.15rem] leading-tight text-ink">{t(s.title)}</p>
-                      <p className="mt-0.5 text-[0.8rem] leading-snug text-ink-soft">{t(s.desc)}</p>
-                      <span className="mt-1.5 inline-block rounded-full bg-shell px-2.5 py-1 text-[0.66rem] font-bold uppercase tracking-[0.08em] text-[#5f6b66]">{s.stat}</span>
-                    </div>
-                  </div>
-                  {!s.disabled && (
-                    <span className="flex shrink-0 items-center gap-1.5 text-[0.72rem] font-bold uppercase tracking-[0.1em] text-[#24413a]">
-                      {s.cta} <ArrowRight size={14} />
-                    </span>
-                  )}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </motion.div>
   );
 }
 
@@ -646,7 +339,7 @@ function DiscoverView({
   categoryBar?: ReactNode;
 }) {
   const { lang, t, tn } = useLang();
-  const { updateEvent, budgetItems, event } = useWedding();
+  const { updateEvent, budgetItems } = useWedding();
   const venueArea = venueAreaLabel(couple.region);
 
   /* Seeded, not null. The globe was a mandatory first step before a Danish

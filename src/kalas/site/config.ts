@@ -6,7 +6,7 @@
    `sitePassword` is deliberately NOT part of SiteConfig, it never reaches the
    client. */
 
-import type { IMAGES } from '../data';
+import type { IMAGES } from '../images';
 
 export type ImageKey = keyof typeof IMAGES;
 

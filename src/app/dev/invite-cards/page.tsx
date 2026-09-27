@@ -17,7 +17,7 @@ import { CARD_VIBES, findVibe, sampleArt, starterSpec } from '@/kalas/invitation
 import { parseCardSpec, type CardSpec } from '@/kalas/invitations/card/spec';
 import { cardFileName, exportCardPng, exportCardPptx } from '@/kalas/invitations/card/exportCard';
 import type { InviteContent } from '@/kalas/invitations/content';
-import { IMAGES } from '@/kalas/data';
+import { IMAGES } from '@/kalas/images';
 
 const BASE: InviteContent = {
   partnerA: 'Samira',

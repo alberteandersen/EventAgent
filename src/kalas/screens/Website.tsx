@@ -5,7 +5,7 @@ import {
   Lock, Copy, Eye, MapPin, Gift, HelpCircle, Bed,
   Camera, Clock, BookOpen, Image, QrCode, CalendarClock,
 } from 'lucide-react';
-import { IMAGES as IMG } from '../data';
+import { IMAGES as IMG } from '../images';
 import { Eyebrow, Toggle, cn } from '../ui';
 import { useWedding, type Couple } from '../useWedding';
 import { SiteRenderer } from '../site/SiteRenderer';

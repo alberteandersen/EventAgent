@@ -24,9 +24,6 @@ import type {
   HoneymoonSaveRow,
   InvitationDesignRow,
   InvitationRow,
-  InviteDesignRow,
-  InviteOrderRow,
-  MoodboardItemRow,
   OutboundEmailRow,
   ProfileRow,
   RegistryClaimRow,
@@ -60,7 +57,6 @@ export interface Couple {
 
 export interface WeddingData {
   loading: boolean;
-  hasWedding: boolean;
   event: EventRow | null;
   profile: ProfileRow | null;
   couple: Couple;
@@ -70,8 +66,6 @@ export interface WeddingData {
   replies: EmailReplyRow[];
   attachments: EmailAttachmentRow[];
   proposals: ReplyProposalRow[];
-  inviteOrders: InviteOrderRow[];
-  inviteDesigns: InviteDesignRow[];
   invitations: InvitationRow[];
   journey: JourneyStage[];
 
@@ -84,7 +78,6 @@ export interface WeddingData {
   dayProgramItems: DayProgramItemRow[];
   guests: GuestRow[];
   timelineTasks: TimelineTaskRow[];
-  moodboardItems: MoodboardItemRow[];
   weddingSite: WeddingSiteRow | null;
   seatingPlan: SeatingPlanRow | null;
   registryItems: RegistryItemRow[];
@@ -106,7 +99,6 @@ export interface WeddingData {
   websiteDesigns: WebsiteDesignRow[];
   websiteDesign: WebsiteDesignRow | null;
   sitePhotos: SitePhotoRow[];
-  websiteOrders: WebsiteOrderRow[];
   websitePaid: boolean;
   /** Every version of the invitation's look, newest first; one is active. */
   invitationDesigns: InvitationDesignRow[];
@@ -151,9 +143,6 @@ export interface WeddingData {
   /** Delete every task of one kind in a single round-trip (used by Nulstil).
    *  Resolves to null on success, or the error message when the delete failed. */
   clearTasks: (kind: TaskKind) => Promise<string | null>;
-
-  addMoodboardItem: (item: { image_key?: string | null; image_url?: string | null; note?: string | null }) => Promise<MoodboardItemRow | null>;
-  removeMoodboardItem: (id: string) => Promise<void>;
 
   saveSite: (patch: { config?: Record<string, unknown>; domain?: string | null; published?: boolean }) => Promise<void>;
   saveSeating: (data: Record<string, unknown>) => Promise<void>;
@@ -264,8 +253,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const [replies, setReplies] = useState<EmailReplyRow[]>([]);
   const [attachments, setAttachments] = useState<EmailAttachmentRow[]>([]);
   const [proposals, setProposals] = useState<ReplyProposalRow[]>([]);
-  const [inviteOrders, setInviteOrders] = useState<InviteOrderRow[]>([]);
-  const [inviteDesigns, setInviteDesigns] = useState<InviteDesignRow[]>([]);
   const [invitations, setInvitations] = useState<InvitationRow[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [budgetItems, setBudgetItems] = useState<BudgetItemRow[]>([]);
@@ -273,7 +260,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const [dayProgramItems, setDayProgramItems] = useState<DayProgramItemRow[]>([]);
   const [guests, setGuests] = useState<GuestRow[]>([]);
   const [timelineTasks, setTimelineTasks] = useState<TimelineTaskRow[]>([]);
-  const [moodboardItems, setMoodboardItems] = useState<MoodboardItemRow[]>([]);
   const [weddingSite, setWeddingSite] = useState<WeddingSiteRow | null>(null);
   const [seatingPlan, setSeatingPlan] = useState<SeatingPlanRow | null>(null);
   const [registryItems, setRegistryItems] = useState<RegistryItemRow[]>([]);
@@ -322,21 +308,18 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     setEvent(ev);
 
     if (ev) {
-      const [v, d, o, r, at, p, io, idz, bi, bsi, dpi, g, tt, mb, ws, sp, ri, rc, wd, sph, wo, inv, hs, ty, ivd] = await Promise.all([
+      const [v, d, o, r, at, p, bi, bsi, dpi, g, tt, ws, sp, ri, rc, wd, sph, wo, inv, hs, ty, ivd] = await Promise.all([
         supabase.from("venues").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("email_drafts").select("*").eq("event_id", ev.id),
         supabase.from("outbound_emails").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("email_replies").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("email_attachments").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("reply_proposals").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("invite_orders").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
-        supabase.from("invite_designs").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
         supabase.from("budget_items").select("*").eq("event_id", ev.id).order("sort"),
         supabase.from("budget_sub_items").select("*").eq("event_id", ev.id).order("sort").order("created_at"),
         supabase.from("day_program_items").select("*").eq("event_id", ev.id).order("time"),
         supabase.from("guests").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("timeline_tasks").select("*").eq("event_id", ev.id).order("sort").order("due_date"),
-        supabase.from("moodboard_items").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
         supabase.from("wedding_sites").select("*").eq("event_id", ev.id).maybeSingle(),
         supabase.from("seating_plans").select("*").eq("event_id", ev.id).maybeSingle(),
         supabase.from("registry_items").select("*").eq("event_id", ev.id).order("sort"),
@@ -355,14 +338,11 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       setReplies((r.data ?? []) as EmailReplyRow[]);
       setAttachments((at.data ?? []) as EmailAttachmentRow[]);
       setProposals((p.data ?? []) as ReplyProposalRow[]);
-      setInviteOrders((io.data ?? []) as InviteOrderRow[]);
-      setInviteDesigns((idz.data ?? []) as InviteDesignRow[]);
       setBudgetItems((bi.data ?? []) as BudgetItemRow[]);
       setBudgetSubItems((bsi.data ?? []) as BudgetSubItemRow[]);
       setDayProgramItems((dpi.data ?? []) as DayProgramItemRow[]);
       setGuests((g.data ?? []) as GuestRow[]);
       setTimelineTasks((tt.data ?? []) as TimelineTaskRow[]);
-      setMoodboardItems((mb.data ?? []) as MoodboardItemRow[]);
       setWeddingSite((ws.data as WeddingSiteRow | null) ?? null);
       setSeatingPlan((sp.data as SeatingPlanRow | null) ?? null);
       setRegistryItems((ri.data ?? []) as RegistryItemRow[]);
@@ -763,34 +743,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     [supabase, eventId]
   );
 
-  const addMoodboardItem = useCallback(
-    async (item: { image_key?: string | null; image_url?: string | null; note?: string | null }) => {
-      if (!eventId || !userId) return null;
-      const { data } = await supabase
-        .from("moodboard_items")
-        .insert({
-          event_id: eventId,
-          user_id: userId,
-          image_key: item.image_key ?? null,
-          image_url: item.image_url ?? null,
-          note: item.note ?? null,
-        })
-        .select()
-        .single();
-      if (data) setMoodboardItems((rows) => upsertById(rows, data as MoodboardItemRow));
-      return (data as MoodboardItemRow) ?? null;
-    },
-    [supabase, eventId, userId]
-  );
-
-  const removeMoodboardItem = useCallback(
-    async (id: string) => {
-      await supabase.from("moodboard_items").delete().eq("id", id);
-      setMoodboardItems((rows) => removeById(rows, id));
-    },
-    [supabase]
-  );
-
   // Read the latest site via a ref so saveSite keeps a stable identity — it is
   // called from a debounced autosave effect, and depending on `weddingSite`
   // here would re-fire that effect on every save (an infinite save loop).
@@ -1041,14 +993,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "moodboard_items", filter: `event_id=eq.${eventId}` },
-        (p) =>
-          p.eventType === "DELETE"
-            ? setMoodboardItems((rows) => removeById(rows, (p.old as { id: string }).id))
-            : setMoodboardItems((rows) => upsertById(rows, p.new as MoodboardItemRow))
-      )
-      .on(
-        "postgres_changes",
         { event: "*", schema: "public", table: "wedding_sites", filter: `event_id=eq.${eventId}` },
         (p) => p.eventType !== "DELETE" && setWeddingSite(p.new as WeddingSiteRow)
       )
@@ -1143,7 +1087,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<WeddingData>(
     () => ({
       loading,
-      hasWedding: Boolean(event),
       event,
       profile,
       couple: toCouple(event, profile, email),
@@ -1153,8 +1096,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       replies,
       attachments,
       proposals,
-      inviteOrders,
-      inviteDesigns,
       invitations,
       journey,
       budgetItems,
@@ -1162,7 +1103,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       dayProgramItems,
       guests,
       timelineTasks,
-      moodboardItems,
       weddingSite,
       seatingPlan,
       registryItems,
@@ -1174,7 +1114,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       websiteDesigns,
       websiteDesign: websiteDesigns.find((d) => d.active) ?? null,
       sitePhotos,
-      websiteOrders,
       websitePaid: websiteOrders.some((o) => o.status === "paid"),
       invitationDesigns,
       invitationDesign: invitationDesigns.find((d) => d.active) ?? null,
@@ -1198,8 +1137,6 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       deleteTask,
       seedTasks,
       clearTasks,
-      addMoodboardItem,
-      removeMoodboardItem,
       saveSite,
       saveSeating,
       addRegistryItem,
@@ -1212,14 +1149,14 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       loading, event, profile, email, venues, drafts, outbound, replies, attachments, proposals,
-      inviteOrders, inviteDesigns, invitations, journey, budgetItems, budgetSubItems, dayProgramItems, guests, timelineTasks,
-      moodboardItems, weddingSite, seatingPlan, registryItems, registryClaims, honeymoonSaves,
+      invitations, journey, budgetItems, budgetSubItems, dayProgramItems, guests, timelineTasks,
+      weddingSite, seatingPlan, registryItems, registryClaims, honeymoonSaves,
       thankYous, saveThankYou, saveVenueReview,
       websiteDesigns, sitePhotos, websiteOrders, invitationDesigns, load, updateEvent, saveBudgetItem,
       deleteBudgetItem, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem, seedBudgetSubItems,
       addDayProgramItem, updateDayProgramItem, deleteDayProgramItem, seedDayProgram,
       addGuest, updateGuest, deleteGuest, addTask, updateTask, deleteTask, seedTasks, clearTasks,
-      addMoodboardItem, removeMoodboardItem, saveSite, saveSeating,
+      saveSite, saveSeating,
       addRegistryItem, updateRegistryItem, deleteRegistryItem,
       addHoneymoonSave, removeHoneymoonSave, setHoneymoonBooked, saveInvitation,
     ]

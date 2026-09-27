@@ -3,7 +3,7 @@
    so the seven benchmark lines are worked out and saved on arrival, and the
    couple pushes them up and down from there. */
 
-import { budgetLines } from '../../data';
+import { budgetLines } from '@/lib/budget/benchmarks';
 
 /** kr per guest, Danish average — the fallback when only a headcount is known. */
 export const DK_AVG_PER_GUEST = 1850;

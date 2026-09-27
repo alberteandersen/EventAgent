@@ -21,7 +21,7 @@ import { websitePriceDkk } from '@/lib/website/pricing';
 import { CardView } from './card/CardView';
 import { CARD_FORMATS, type CardFormatId } from './card/formats';
 import { CARD_VIBES, VIBE_GROUPS, sampleArt, starterSpec } from './card/vibes';
-import { IMAGES } from '../data';
+import { IMAGES } from '../images';
 import { parseCardSpec, type CardSpec } from './card/spec';
 import type { InvitationDesignRow } from '@/lib/db/types';
 import type { InviteContent } from './content';

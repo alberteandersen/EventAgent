@@ -1,4 +1,4 @@
-import { timeline as MOCK_TIMELINE } from '../../data';
+import { defaultTimeline as MOCK_TIMELINE } from './defaultTimeline';
 
 // The mock timeline is a proven default plan anchored on its own wedding day.
 // We re-anchor every milestone onto the couple's real date, preserving the

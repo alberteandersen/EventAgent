@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { timeline as MOCK_TIMELINE } from '../../data';
+import { defaultTimeline as MOCK_TIMELINE } from './defaultTimeline';
 import { EN } from '../../strings';
 import { DEFAULT_CHECKLIST, PHASES, currentPhase, defaultChecklist, isDueBy, missingChecklistItems, phaseOf } from './checklist-data';
 import {

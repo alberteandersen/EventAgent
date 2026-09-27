@@ -9,7 +9,7 @@
    design-authored strings render as React text only. */
 
 import { useState } from 'react';
-import { IMAGES } from '../data';
+import { IMAGES } from '../images';
 import { useLang } from '../i18n';
 import GiftCard from '../registry/GiftCard';
 import { sortGifts, PRICE_BANDS, inBand } from '../registry/gifts';

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Check } from 'lucide-react';
-import { IMAGES } from './data';
+import { IMAGES } from './images';
 import { useLang } from './i18n';
 
 export function cn(...parts: Array<string | false | null | undefined>) {

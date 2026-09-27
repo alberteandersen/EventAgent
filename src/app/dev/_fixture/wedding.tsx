@@ -97,12 +97,12 @@ export function FixtureWedding({
     const noop = async () => undefined;
     const event = { id: 'dev', user_id: 'dev', title: "Emma & Frederik's wedding", ...eventOverride } as EventRow;
     const base = {
-      loading: false, hasWedding: true, event, profile: null, couple: { ...FIXTURE_COUPLE, ...coupleOverride },
+      loading: false, event, profile: null, couple: { ...FIXTURE_COUPLE, ...coupleOverride },
       venues, drafts: [], outbound, replies, attachments: [], proposals,
-      inviteOrders: [], inviteDesigns: [], invitations: [], journey,
-      dayProgramItems, timelineTasks, moodboardItems: [], weddingSite,
+      invitations: [], journey,
+      dayProgramItems, timelineTasks, weddingSite,
       registryItems, registryClaims, thankYous, honeymoonSaves,
-      websiteDesigns, websiteDesign: websiteDesigns.find((d) => d.active) ?? null, sitePhotos: [], websiteOrders: [], websitePaid: false,
+      websiteDesigns, websiteDesign: websiteDesigns.find((d) => d.active) ?? null, sitePhotos: [], websitePaid: false,
       invitationDesigns, invitationDesign: invitationDesigns.find((d) => d.active) ?? null,
       guests, seatingPlan, budgetItems, budgetSubItems,
 

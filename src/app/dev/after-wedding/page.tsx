@@ -18,7 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { LanguageProvider } from '@/kalas/i18n';
 import Honeymoon from '@/kalas/screens/Honeymoon';
 import Nygift from '@/kalas/screens/Nygift';
-import { IMAGES } from '@/kalas/data';
+import { IMAGES } from '@/kalas/images';
 import { FixtureWedding, guest } from '../_fixture/wedding';
 import type {
   AlbumPhotoRow, HoneymoonSaveRow, RegistryClaimRow, RegistryItemRow, ThankYouRow, VenueRow,

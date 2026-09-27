@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { budgetLines } from '../../data';
+import { budgetLines } from '@/lib/budget/benchmarks';
 import { EN } from '../../strings';
 import {
   estimatedTotal, estimatedLines, DK_AVG_PER_GUEST, venueBudget,

@@ -11,7 +11,7 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LanguageProvider } from '@/kalas/i18n';
 import { SITE_PRESETS } from '@/kalas/site/presets';
-import { IMAGES } from '@/kalas/data';
+import { IMAGES } from '@/kalas/images';
 import { InvitePreview } from '@/kalas/invitations/InvitePreview';
 import type { InviteContent } from '@/kalas/invitations/content';
 import { thankContent, thankWords } from '@/kalas/screens/nygift/thankCard';

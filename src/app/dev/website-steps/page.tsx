@@ -18,7 +18,7 @@ import { LangSwitch, LanguageProvider, useLang } from '@/kalas/i18n';
 import WebsiteSteps, { type DesignStep } from '@/kalas/screens/WebsiteSteps';
 import { findPreset } from '@/kalas/site/presets';
 import { DEFAULT_DESIGN, parseSiteDesign } from '@/kalas/site/design';
-import { IMAGES } from '@/kalas/data';
+import { IMAGES } from '@/kalas/images';
 import type { SitePhotoRow, WebsiteDesignRow } from '@/lib/db/types';
 
 const SAMPLE_PHOTOS = [IMAGES.florals, IMAGES.olive, IMAGES.candles, IMAGES.arch];

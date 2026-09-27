@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { Plus, X, Pencil, Bell, StickyNote, ChevronRight, ChevronDown, MessageCircle } from 'lucide-react';
 import BudgetLineDetail from './BudgetLineDetail';
 import BudgetAvaAssistant from './BudgetAvaAssistant';
-import { budgetLines, type BudgetLine } from '../data';
+import { budgetLines, type BudgetLine } from '@/lib/budget/benchmarks';
 import {
   BUDGET_COLORS,
   BUDGET_ICON_IDS,

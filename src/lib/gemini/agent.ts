@@ -9,6 +9,8 @@ import {
 } from "./log";
 import { functionDeclarations } from "./tools";
 import { execPlanningTool } from "./planningTools";
+import { execMemoryTool } from "./memory";
+import { execWebsiteTool } from "./websiteTools";
 import { venueListSchema, quoteSchema, type ExtractedVenue } from "./schemas";
 import {
   matchPlace,
@@ -35,6 +37,8 @@ import {
   isAgentPage,
   type AgentUiAction,
   type ChatMessageRow,
+  type ChatToolCall,
+  type ChatToolEvent,
   type EmailReplyRow,
   type EventRow,
   type MessagePayload,
@@ -51,10 +55,28 @@ const MAX_ITERATIONS = 8;
 export interface AgentTurnResult {
   text: string;
   payload: MessagePayload | null;
+  /** Every tool run this turn, in order, for the couple to see. */
+  toolCalls: ChatToolCall[];
 }
 
 type StatusFn = (status: string) => void;
 type UiActionFn = (action: AgentUiAction) => void;
+type ToolFn = (event: ChatToolEvent) => void;
+
+/** Long enough to be useful when expanded, short enough to store per message. */
+const TOOL_TEXT_LIMIT = 1200;
+
+function clip(value: unknown): string {
+  const text = typeof value === "string" ? value : JSON.stringify(value);
+  return text.length > TOOL_TEXT_LIMIT ? `${text.slice(0, TOOL_TEXT_LIMIT)}…` : text;
+}
+
+/** Args as stored: whole when small, a clipped preview when not (a bulk
+ *  add_guests can carry hundreds of rows). */
+function storedArgs(args: Record<string, unknown>): Record<string, unknown> {
+  const text = JSON.stringify(args);
+  return text.length > TOOL_TEXT_LIMIT ? { _preview: clip(text) } : args;
+}
 
 /**
  * Run one agent turn: feed history + the new user message to Gemini with
@@ -70,7 +92,8 @@ export async function runAgentTurn(
   userMessage: string,
   onStatus: StatusFn = () => {},
   extraContext?: string,
-  onUiAction: UiActionFn = () => {}
+  onUiAction: UiActionFn = () => {},
+  onTool: ToolFn = () => {}
 ): Promise<AgentTurnResult> {
   const ai = getGemini();
 
@@ -87,6 +110,7 @@ export async function runAgentTurn(
   // Mutable copy so tool executors can see updates within this turn.
   let currentEvent = { ...event };
   let payload: MessagePayload | null = null;
+  const toolCalls: ChatToolCall[] = [];
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     let response;
@@ -134,7 +158,7 @@ export async function runAgentTurn(
       response.functionCalls ??
       [];
     if (calls.length === 0) {
-      return { text: response.text ?? "", payload };
+      return { text: response.text ?? "", payload, toolCalls };
     }
 
     const callSummary = summarizeFunctionCallParts(responseContent?.parts);
@@ -153,8 +177,11 @@ export async function runAgentTurn(
     }
 
     const responseParts: Part[] = [];
-    for (const call of calls) {
+    for (const [n, call] of calls.entries()) {
       const args = (call.args ?? {}) as Record<string, unknown>;
+      const toolId = `${i}-${n}`;
+      const toolName = call.name ?? "";
+      onTool({ phase: "start", id: toolId, name: toolName, args: storedArgs(args) });
       let result: Record<string, unknown>;
       try {
         switch (call.name) {
@@ -266,11 +293,14 @@ export async function runAgentTurn(
             result = execShowPage(args, onUiAction);
             break;
           default: {
-            // Planning/data tools (budget, guests, tasks, registry, vendor
-            // board) live in their own module; unknown names fall through.
-            const planning = await execPlanningTool(supabase, currentEvent, call.name ?? "", args);
-            if (planning) {
-              result = planning;
+            // Memory and planning/data tools (budget, guests, tasks, registry,
+            // vendor board) live in their own modules; unknown names fall through.
+            const own =
+              (await execMemoryTool(supabase, currentEvent, toolName, args)) ??
+              (await execWebsiteTool(supabase, currentEvent, toolName, args)) ??
+              (await execPlanningTool(supabase, currentEvent, toolName, args));
+            if (own) {
+              result = own;
             } else {
               logAgentError("gemini/agent:unknownTool", new Error(`Unknown tool: ${call.name}`), {
                 eventId: event.id,
@@ -289,6 +319,16 @@ export async function runAgentTurn(
         });
         result = { error: err instanceof Error ? err.message : String(err) };
       }
+      const failed = typeof result.error === "string" ? result.error : undefined;
+      const record: ChatToolCall = {
+        id: toolId,
+        name: toolName,
+        args: storedArgs(args),
+        ok: !failed,
+        ...(failed ? { error: failed } : { result: clip(result) }),
+      };
+      toolCalls.push(record);
+      onTool({ phase: "end", ...record });
       responseParts.push({
         functionResponse: { name: call.name, response: result },
       });
@@ -306,6 +346,7 @@ export async function runAgentTurn(
   return {
     text: "I got a bit tangled up there, could you rephrase that?",
     payload,
+    toolCalls,
   };
 }
 

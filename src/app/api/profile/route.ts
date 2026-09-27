@@ -18,6 +18,7 @@ export async function PATCH(request: NextRequest) {
     accent?: string;
     onboarded?: boolean;
     language?: string;
+    email_notifications?: boolean;
   };
 
   const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
@@ -28,6 +29,7 @@ export async function PATCH(request: NextRequest) {
   if (typeof body.accent === "string") patch.accent = body.accent.slice(0, 8);
   if (typeof body.onboarded === "boolean") patch.onboarded = body.onboarded;
   if (isAppLanguage(body.language)) patch.language = body.language;
+  if (typeof body.email_notifications === "boolean") patch.email_notifications = body.email_notifications;
 
   // Upsert so the row exists even if the signup trigger didn't run.
   const { data, error } = await supabase

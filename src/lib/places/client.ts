@@ -252,6 +252,14 @@ function apiKey(): string | null {
   return process.env.GOOGLE_PLACES_API_KEY ?? null;
 }
 
+/* The callers treat a failed lookup as "not found", which is right for one
+   odd venue and silent for a revoked key: every venue then fails to verify
+   and the explore list comes back empty with nothing in the logs. So say why. */
+async function logPlacesFailure(op: string, res: Response): Promise<void> {
+  const body = (await res.json().catch(() => null)) as { error?: { status?: string; message?: string } } | null;
+  console.error(`[places:${op}] ${res.status} ${body?.error?.status ?? ""} ${body?.error?.message ?? ""}`.trim());
+}
+
 /** Text Search. Returns [] on any failure. */
 export async function searchText(
   query: string,
@@ -277,7 +285,10 @@ export async function searchText(
         maxResultCount: max,
       }),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      await logPlacesFailure("searchText", res);
+      return [];
+    }
     const data = (await res.json()) as { places?: PlaceResult[] };
     const places = data.places ?? [];
     await cacheSet(cacheKey, places);
@@ -316,7 +327,10 @@ export async function getDetails(placeId: string): Promise<PlaceResult | null> {
         "X-Goog-FieldMask": DETAILS_FIELD_MASK,
       },
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      await logPlacesFailure("details", res);
+      return null;
+    }
     const details = (await res.json()) as PlaceResult;
     await cacheSet(cacheKey, details);
     return details;

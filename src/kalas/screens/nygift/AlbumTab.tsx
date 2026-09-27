@@ -3,6 +3,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { Link2, Check, Trash2, Heart, Loader2, ImageOff, Lock, Unlock } from 'lucide-react';
 import { useWedding } from '../../useWedding';
+import { useUndo, useWithoutPending } from '../../undo';
+import { Lightbox } from '../../onboarding/Lightbox';
 import { cn } from '../../ui';
 import { useLang } from '../../i18n';
 import type { AlbumPhotoRow } from '@/lib/db/types';
@@ -18,6 +20,9 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+  const [viewing, setViewing] = useState<number | null>(null);
+  const undo = useUndo();
 
   const domain = typeof weddingSite?.domain === 'string' ? weddingSite.domain : null;
   const published = Boolean(weddingSite?.published);
@@ -46,11 +51,27 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
 
   useEffect(() => { void load(0); }, [load]);
 
-  async function remove(id: string) {
-    setPhotos((prev) => prev.filter((p) => p.id !== id));
-    setTotal((n) => Math.max(0, n - 1));
-    await fetch(`/api/album/${id}`, { method: 'DELETE' });
+  /* A guest's photo is the one thing here that cannot be made again, so a
+     delete waits behind Fortryd like a removed guest does. */
+  function remove(id: string) {
+    undo.remove({
+      ids: id,
+      label: t('Billedet er slettet'),
+      commit: async () => {
+        await fetch(`/api/album/${id}`, { method: 'DELETE' });
+        setPhotos((prev) => prev.filter((p) => p.id !== id));
+        setTotal((n) => Math.max(0, n - 1));
+      },
+    });
   }
+
+  const kept = useWithoutPending(photos);
+  const favorites = kept.filter((p) => p.favorite).length;
+  // The filter lets go by itself once the last favourite is gone.
+  const showFavorites = onlyFavorites && favorites > 0;
+  const shown = showFavorites ? kept.filter((p) => p.favorite) : kept;
+  const viewable = shown.filter((p): p is Photo & { url: string } => Boolean(p.url));
+  const count = total - (photos.length - kept.length);
 
   async function toggleFavorite(photo: Photo) {
     const favorite = !photo.favorite;
@@ -100,14 +121,14 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-5 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-7"
+      className="flex flex-col gap-5 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-5 sm:p-7"
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <p className="max-w-md text-sm text-[#5f6b66]">
           {t('Del linket med gæsterne, de kan lægge billeder op uden at oprette noget. Kun I kan se dem.')}
         </p>
         <p className="shrink-0 text-sm font-bold text-[#7d938a]">
-          {t('{n} billeder', { n: total })}
+          {t('{n} billeder', { n: count })}
         </p>
       </div>
 
@@ -141,7 +162,33 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
         </div>
       )}
 
-      {!loading && photos.length === 0 && (
+      {favorites > 0 && (
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t('Vis')}>
+          {[
+            { on: false, label: t('Alle'), n: count },
+            { on: true, label: t('Favoritter'), n: favorites },
+          ].map((f) => (
+            <button
+              key={f.label}
+              type="button"
+              onClick={() => setOnlyFavorites(f.on)}
+              aria-pressed={showFavorites === f.on}
+              className={cn(
+                'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.1em] transition-colors cursor-pointer',
+                showFavorites === f.on
+                  ? 'bg-[#24413a] text-[#f8f9f8]'
+                  : 'border border-[#e6e9e5] bg-[#f8f9f8] text-[#5f6b66] hover:text-[#24413a]',
+              )}
+            >
+              {f.on && <Heart size={11} fill="currentColor" className={showFavorites ? '' : 'text-[#b34e37]'} />}
+              {f.label}
+              <span className={showFavorites === f.on ? 'text-[#dbe5e0]' : 'text-[#9a9686]'}>{f.n}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!loading && kept.length === 0 && (
         <div className="rounded-[18px] border border-[#e6e9e5] bg-[#f8f9f8] px-5 py-12 text-center">
           <ImageOff size={22} className="mx-auto text-[#9a9686]" />
           <p className="mt-3 font-serif text-lg text-[#24413a]">{t('Ingen billeder endnu')}</p>
@@ -151,13 +198,20 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
         </div>
       )}
 
-      {photos.length > 0 && (
+      {shown.length > 0 && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          {photos.map((photo) => (
+          {shown.map((photo) => (
             <figure key={photo.id} className="group relative aspect-square overflow-hidden rounded-[18px] bg-[#eceeeb]">
               {photo.url ? (
-                <img src={photo.url} alt={photo.caption ?? ''} loading="lazy"
-                  className="h-full w-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setViewing(viewable.findIndex((p) => p.id === photo.id))}
+                  aria-label={photo.uploader_name ? t('Se billede fra {name}', { name: photo.uploader_name }) : t('Se billede')}
+                  className="block h-full w-full cursor-zoom-in"
+                >
+                  <img src={photo.url} alt={photo.caption ?? ''} loading="lazy"
+                    className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
+                </button>
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-[#9a9686]">
                   <ImageOff size={18} />
@@ -165,12 +219,14 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
               )}
 
               {photo.uploader_name && (
-                <figcaption className="absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/55 to-transparent px-3 pb-2 pt-6 text-[11px] font-medium text-white">
+                <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 truncate bg-gradient-to-t from-black/55 to-transparent px-3 pb-2 pt-6 text-[11px] font-medium text-white">
                   {photo.uploader_name}
                 </figcaption>
               )}
 
-              <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+              {/* Shown on hover where there is one; always on a touch screen,
+                  where there is no hover to reveal them. */}
+              <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100">
                 <button
                   type="button"
                   onClick={() => void toggleFavorite(photo)}
@@ -184,7 +240,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
                 </button>
                 <button
                   type="button"
-                  onClick={() => void remove(photo.id)}
+                  onClick={() => remove(photo.id)}
                   aria-label={t('Slet billede')}
                   className="flex size-8 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur transition-colors hover:bg-[#b34e37] cursor-pointer"
                 >
@@ -193,7 +249,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
               </div>
 
               {photo.favorite && (
-                <span className="pointer-events-none absolute left-2 top-2 flex size-6 items-center justify-center rounded-full bg-white/90 text-[#b34e37] group-hover:opacity-0">
+                <span className="pointer-events-none absolute left-2 top-2 flex size-6 items-center justify-center rounded-full bg-white/90 text-[#b34e37] [@media(hover:hover)]:group-hover:opacity-0 [@media(hover:none)]:hidden">
                   <Heart size={12} fill="currentColor" />
                 </span>
               )}
@@ -202,7 +258,17 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
         </div>
       )}
 
-      {hasMore && (
+      {viewing != null && viewable.length > 0 && (
+        <Lightbox
+          photos={viewable.map((p) => p.url)}
+          index={Math.min(Math.max(viewing, 0), viewable.length - 1)}
+          onIndex={setViewing}
+          onClose={() => setViewing(null)}
+          alt={viewable[viewing]?.uploader_name ?? ''}
+        />
+      )}
+
+      {hasMore && !showFavorites && (
         <button
           type="button"
           onClick={() => { const next = page + 1; setPage(next); setLoading(true); void load(next); }}

@@ -19,5 +19,12 @@
   # the alarm — do not silence it.
   SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_KALAS_LOGO_URL,NEXT_PUBLIC_WEBSITE_PRICE_DKK"
 
+# Our own functions, next to the ones the Next.js plugin generates. The one
+# that matters is run-job-background: Netlify ends a request at 60 seconds,
+# so Ava's builds and vendor outreach run there (up to 15 minutes) once the
+# site's environment has JOBS_BACKGROUND=netlify. See src/lib/jobs.
+[functions]
+  directory = "netlify/functions"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { HeartHandshake, Images, Star, Share2, Mail } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import WeddingRings from '../icons/WeddingRings';
 import { useWedding } from '../useWedding';
 import { cn } from '../ui';
 import { useLang } from '../i18n';
@@ -12,8 +13,9 @@ import TakkekortTab from './nygift/TakkekortTab';
 import AlbumTab from './nygift/AlbumTab';
 import AnmeldelserTab from './nygift/AnmeldelserTab';
 import DelTab from './nygift/DelTab';
-import { readNygiftTab, writeNygiftTab, type NygiftTab } from './nygift/shared';
+import { daysMarried, readNygiftTab, writeNygiftTab, type NygiftTab } from './nygift/shared';
 import { buildThankList, thankProgress } from './nygift/thanks';
+import { bookedVendors, reviewProgress } from './nygift/reviews';
 
 /* Nygift — the phase after the wedding day. The rest of the app stops at the
    date; this is where the couple thanks people, collects the photos guests
@@ -23,13 +25,25 @@ import { buildThankList, thankProgress } from './nygift/thanks';
    free text, so a nav item conditional on "the wedding has happened" would be
    wrong for a large share of couples. Each tab carries its own empty state. */
 export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => void }) {
-  const { t } = useLang();
-  const { guests, registryClaims, registryItems, thankYous } = useWedding();
+  const { t, tn } = useLang();
+  const { couple, event, guests, venues, registryClaims, registryItems, thankYous } = useWedding();
   const [tab, setTab] = useState<NygiftTab>(() => readNygiftTab());
 
   const { done, total } = thankProgress(
     buildThankList(guests, registryClaims, registryItems, thankYous)
   );
+  const reviews = reviewProgress(bookedVendors(venues, event?.chosen_venue_id ?? null));
+
+  /* The screen is always in the menu, so it cannot assume the day has been.
+     Once it has, say how long ago: it is the one number here that is only
+     theirs, and it quietly dates the to-do list underneath it. */
+  const days = daysMarried(event?.event_date ?? couple.dateISO);
+  const married =
+    days == null ? null
+    : days === 0 ? t('Gift i dag')
+    : days === 1 ? t('Gift i går')
+    : days < 365 ? t('Gift for {n} dage siden', { n: days })
+    : tn(Math.floor(days / 365), 'Gift for et år siden', 'Gift for {n} år siden');
 
   function selectTab(next: NygiftTab) {
     setTab(next);
@@ -40,21 +54,29 @@ export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => v
     { id: 'takkeliste', label: 'Takkeliste', Icon: HeartHandshake, open: total - done },
     { id: 'takkekort', label: 'Takkekort', Icon: Mail, open: 0 },
     { id: 'album', label: 'Album', Icon: Images, open: 0 },
-    { id: 'anmeldelser', label: 'Anmeldelser', Icon: Star, open: 0 },
+    { id: 'anmeldelser', label: 'Anmeldelser', Icon: Star, open: reviews.total - reviews.done },
     { id: 'del', label: 'Del', Icon: Share2, open: 0 },
   ];
 
   return (
     <div className="flex min-h-full flex-col gap-6 bg-[#f4f5f3] px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
       {/* Header */}
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Planlægning')}</p>
-        <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
-          {t('Nygift')}
-        </h1>
-        <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
-          {t('Tiden efter dagen, sig tak, saml billederne, og se tilbage på det hele.')}
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{t('Planlægning')}</p>
+          <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+            {t('Nygift')}
+          </h1>
+          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">
+            {t('Tiden efter dagen, sig tak, saml billederne, og se tilbage på det hele.')}
+          </p>
+        </div>
+        {married && (
+          <p className="inline-flex items-center gap-2 rounded-full bg-[#e8f0ec] px-3.5 py-1.5 text-[0.76rem] font-semibold text-[#24413a]">
+            <WeddingRings size={14} aria-hidden />
+            {married}
+          </p>
+        )}
       </div>
 
       {/* Tab bar */}

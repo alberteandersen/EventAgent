@@ -6,7 +6,7 @@
    navigation to /home so the server gate re-reads profiles.onboarded. */
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import { type ScreenId } from './Shell';
-import Onboarding, { type FormState, toOnboardingPayload } from './screens/Onboarding';
+import Onboarding, { type FormState, type PhotoDraft, toOnboardingPayload } from './screens/Onboarding';
 import { LanguageProvider, useLang, type Lang } from './i18n';
 import { tourHandoff, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY } from './walkthrough';
 
@@ -27,11 +27,13 @@ function OnboardingShell() {
 
   const enter = async (form: FormState, _s?: ScreenId) => {
     try {
-      await fetch('/api/onboarding', {
+      const res = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...toOnboardingPayload(form), language: lang }),
       });
+      const { eventId } = (await res.json().catch(() => ({}))) as { eventId?: string };
+      if (res.ok && eventId) await uploadPhotos(eventId, form.photos);
     } catch {
       // Non-fatal: fall back to just marking onboarded so the gate lets them in.
       try {
@@ -65,5 +67,22 @@ function OnboardingShell() {
     <AnimatePresence mode="wait">
       <Onboarding key="onb" onEnter={enter} />
     </AnimatePresence>
+  );
+}
+
+/* The photos picked in onboarding, filed under the wedding that now exists.
+   Through the same route the home hero and the website use, so the first one
+   lands as the hero both of them already show. Best effort: a photo that does
+   not make it can be added from home, and none of this should hold them at
+   the door. */
+async function uploadPhotos(eventId: string, photos: PhotoDraft[]) {
+  await Promise.allSettled(
+    photos.map((p, i) => {
+      const body = new FormData();
+      body.append('file', p.file);
+      body.append('eventId', eventId);
+      body.append('role', i === 0 ? 'hero' : 'gallery');
+      return fetch('/api/website/photos', { method: 'POST', body });
+    }),
   );
 }

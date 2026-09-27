@@ -4,8 +4,11 @@ import { createClient } from "@/lib/supabase/server";
 import { runAgentTurn } from "@/lib/gemini/agent";
 import { CHAT_MODE_CONTEXT, ONBOARDING_KICKOFF_CONTEXT } from "@/lib/gemini/prompts";
 import { logAgentError } from "@/lib/gemini/log";
+import { loadMemories, memoryContext, threadTitle } from "@/lib/gemini/memory";
+import { planningSnapshot } from "@/lib/gemini/planningTools";
 import type {
   ChatMessageRow,
+  ChatThreadRow,
   EmailReplyRow,
   EventRow,
   ReplyProposalRow,
@@ -55,12 +58,18 @@ async function buildReplyContext(
   ].join("\n");
 }
 
+/** Messages of the conversation Ava reads back each turn. */
+const HISTORY_LIMIT = 50;
+
 /**
  * POST /api/chat — run one agent turn.
- * Body: { eventId?: string, message: string }
+ * Body: { eventId?: string, threadId?: string, message: string }
+ * Without a threadId the turn starts a new conversation.
  * Responds with an SSE stream:
  *   event: status  → data: {"status": "Searching the web…"}
  *   event: event   → data: {"eventId": "..."}        (when a new event is created)
+ *   event: thread  → data: <ChatThreadRow>           (when a new conversation starts)
+ *   event: tool    → data: <ChatToolEvent>           (a tool starting or finishing)
  *   event: ui      → data: <AgentUiAction>           (agent-driven client navigation)
  *   event: message → data: <persisted assistant ChatMessageRow>
  *   event: error   → data: {"error": "..."}
@@ -72,8 +81,9 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { eventId, message, contextReplyId, uiMode, kickoff } = (await request.json()) as {
+  const { eventId, threadId, message, contextReplyId, uiMode, kickoff } = (await request.json()) as {
     eventId?: string;
+    threadId?: string;
     message?: string;
     contextReplyId?: string;
     uiMode?: "chat" | "classic";
@@ -108,13 +118,61 @@ export async function POST(request: NextRequest) {
     event = data as EventRow;
   }
 
+  // The conversation this turn belongs to, or a new one titled by its opener.
+  let thread: ChatThreadRow;
+  let newThread = false;
+  if (threadId) {
+    const { data } = await supabase
+      .from("chat_threads")
+      .select("*")
+      .eq("id", threadId)
+      .eq("event_id", event.id)
+      .maybeSingle();
+    if (!data) return Response.json({ error: "Conversation not found" }, { status: 404 });
+    thread = data as ChatThreadRow;
+    if (!thread.title) {
+      const title = threadTitle(message);
+      await supabase.from("chat_threads").update({ title }).eq("id", thread.id);
+      thread = { ...thread, title };
+    }
+  } else {
+    const { data, error } = await supabase
+      .from("chat_threads")
+      .insert({ event_id: event.id, user_id: user.id, title: threadTitle(message) })
+      .select()
+      .single();
+    if (error || !data) {
+      return Response.json({ error: error?.message ?? "Could not start conversation" }, { status: 500 });
+    }
+    thread = data as ChatThreadRow;
+    newThread = true;
+  }
+
+  // The latest messages, oldest first.
   const { data: historyData } = await supabase
     .from("chat_messages")
     .select("*")
-    .eq("event_id", event.id)
-    .order("created_at", { ascending: true })
-    .limit(50);
-  const history = (historyData ?? []) as ChatMessageRow[];
+    .eq("thread_id", thread.id)
+    .order("created_at", { ascending: false })
+    .limit(HISTORY_LIMIT);
+  const history = ((historyData ?? []) as ChatMessageRow[]).reverse();
+
+  // What Ava carries between conversations: her memories, the live planning
+  // numbers and what the couple talked about elsewhere.
+  const [memories, snapshot, { data: otherThreadsData }] = await Promise.all([
+    loadMemories(supabase, event.id),
+    planningSnapshot(supabase, event).catch((err) => {
+      logAgentError("api/chat:snapshot", err, { eventId: event.id });
+      return null;
+    }),
+    supabase
+      .from("chat_threads")
+      .select("title, updated_at")
+      .eq("event_id", event.id)
+      .neq("id", thread.id)
+      .order("updated_at", { ascending: false })
+      .limit(8),
+  ]);
 
   // When the user is discussing a specific vendor reply (from the outreach
   // inbox), give the agent that thread's context so it can revise the response.
@@ -134,6 +192,12 @@ export async function POST(request: NextRequest) {
       : "Svar altid parret på dansk.";
   const extraContext = [
     languageDirective,
+    memoryContext({
+      memories,
+      snapshot,
+      otherThreads: (otherThreadsData ?? []) as Pick<ChatThreadRow, "title" | "updated_at">[],
+      today: new Date().toISOString().slice(0, 10),
+    }),
     uiMode === "chat" ? CHAT_MODE_CONTEXT : undefined,
     kickoff ? ONBOARDING_KICKOFF_CONTEXT : undefined,
     replyContext,
@@ -145,6 +209,7 @@ export async function POST(request: NextRequest) {
     .from("chat_messages")
     .insert({
       event_id: event.id,
+      thread_id: thread.id,
       user_id: user.id,
       role: "user",
       content: message,
@@ -168,6 +233,7 @@ export async function POST(request: NextRequest) {
       };
       try {
         if (!eventId) send("event", { eventId: event.id });
+        if (newThread) send("thread", thread);
         // Lets the client swap its optimistic bubble for the persisted row.
         send("user_message", userMsg);
 
@@ -178,17 +244,20 @@ export async function POST(request: NextRequest) {
           message,
           (status) => send("status", { status }),
           extraContext,
-          (action) => send("ui", action)
+          (action) => send("ui", action),
+          (toolEvent) => send("tool", toolEvent)
         );
 
         const { data: saved, error } = await supabase
           .from("chat_messages")
           .insert({
             event_id: event.id,
+            thread_id: thread.id,
             user_id: user.id,
             role: "assistant",
             content: result.text,
             payload: result.payload,
+            tool_calls: result.toolCalls.length > 0 ? result.toolCalls : null,
           })
           .select()
           .single();
@@ -199,6 +268,7 @@ export async function POST(request: NextRequest) {
         logAgentError("api/chat", err, {
           userId: user.id,
           eventId: event.id,
+          threadId: thread.id,
           historyLength: history.length,
           messageLength: message.length,
         });

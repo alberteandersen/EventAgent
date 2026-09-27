@@ -1,35 +1,12 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { slugify } from "@/kalas/site/config";
-import { getTemplateMeta } from "@/kalas/invitations/templates.meta";
+import { parseInviteContent } from "@/kalas/invitations/content";
 import type { EventRow, InvitationRow, ProfileRow } from "@/lib/db/types";
 
-/** Resolve a unique, published-safe slug (case-insensitive) for an invitation,
-    checking across all users via the service-role client. */
-async function uniqueSlug(
-  admin: ReturnType<typeof createAdminClient>,
-  base: string,
-  excludeId: string | null
-): Promise<string> {
-  const root = slugify(base);
-  for (let i = 0; i < 50; i++) {
-    const candidate = i === 0 ? root : `${root}-${i + 1}`;
-    const { data } = await admin
-      .from("invitations")
-      .select("id")
-      .eq("slug", candidate)
-      .maybeSingle();
-    const row = data as { id: string } | null;
-    if (!row || row.id === excludeId) return candidate;
-  }
-  // Extremely unlikely — fall back to a random suffix.
-  return `${root}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 /**
- * POST /api/invitations — create or update the couple's digital invitation.
- * Assigns a unique share slug server-side. Body: { id?, templateId, data, publish? }.
+ * POST /api/invitations — save what the couple's card says (InviteContent,
+ * plus their own wording over Ava's). The look is its own record,
+ * invitation_designs. Body: { id?, data }.
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -38,16 +15,21 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = (await request.json()) as {
-    id?: string;
-    templateId?: string;
-    data?: Record<string, unknown>;
-    publish?: boolean;
-  };
+  const body = (await request.json()) as { id?: string; data?: Record<string, unknown> };
+  const data = parseInviteContent(body.data) as unknown as Record<string, unknown>;
+  const now = new Date().toISOString();
 
-  const meta = getTemplateMeta(body.templateId ?? "");
-  if (!meta) return Response.json({ error: "Unknown template" }, { status: 400 });
-  const data = body.data && typeof body.data === "object" ? body.data : {};
+  if (body.id) {
+    // RLS scopes the update to the wedding's members.
+    const { data: row, error } = await supabase
+      .from("invitations")
+      .update({ data, updated_at: now })
+      .eq("id", body.id)
+      .select()
+      .single();
+    if (error) return Response.json({ error: error.message }, { status: 500 });
+    return Response.json(row as InvitationRow);
+  }
 
   // Resolve the couple's active event (profile pointer, else most recent).
   const { data: profileRow } = await supabase
@@ -67,45 +49,10 @@ export async function POST(request: NextRequest) {
   }
   if (!eventId) return Response.json({ error: "No wedding found" }, { status: 400 });
 
-  const admin = createAdminClient();
-  const partnerA = typeof data.partnerA === "string" ? data.partnerA : "";
-  const partnerB = typeof data.partnerB === "string" ? data.partnerB : "";
-  const slugBase = [partnerA, partnerB].filter(Boolean).join("-") || "invitation";
-
-  const status = body.publish ? "published" : "draft";
-  const now = new Date().toISOString();
-
-  if (body.id) {
-    // Update existing (RLS scopes to the owner). Keep the existing slug.
-    const { data: existing } = await supabase
-      .from("invitations")
-      .select("slug")
-      .eq("id", body.id)
-      .maybeSingle();
-    const currentSlug = (existing as { slug: string | null } | null)?.slug ?? null;
-    const slug = currentSlug ?? (await uniqueSlug(admin, slugBase, body.id));
-    const { data: row, error } = await supabase
-      .from("invitations")
-      .update({ template_id: meta.id, data, slug, status, updated_at: now })
-      .eq("id", body.id)
-      .select()
-      .single();
-    if (error) return Response.json({ error: error.message }, { status: 500 });
-    return Response.json(row as InvitationRow);
-  }
-
-  const slug = await uniqueSlug(admin, slugBase, null);
   const { data: row, error } = await supabase
     .from("invitations")
-    .insert({
-      event_id: eventId,
-      user_id: user.id,
-      template_id: meta.id,
-      data,
-      slug,
-      status,
-      updated_at: now,
-    })
+    // template_id is kept for the column; the design lives in invitation_designs.
+    .insert({ event_id: eventId, user_id: user.id, template_id: "card", data, status: "draft", updated_at: now })
     .select()
     .single();
   if (error) return Response.json({ error: error.message }, { status: 500 });

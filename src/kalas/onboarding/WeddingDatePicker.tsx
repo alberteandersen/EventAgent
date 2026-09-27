@@ -7,6 +7,8 @@ type Props = {
   value: string;
   onChange: (iso: string) => void;
   lang: 'da' | 'en';
+  /** Replaces the default top margin, for callers that lay it out themselves. */
+  className?: string;
 };
 
 function toIso(d: Date): string {
@@ -36,7 +38,7 @@ function sameDay(a: Date, b: Date): boolean {
 }
 
 /** Inline month calendar — shown when the couple already knows their wedding date. */
-export default function WeddingDatePicker({ value, onChange, lang }: Props) {
+export default function WeddingDatePicker({ value, onChange, lang, className }: Props) {
   const { t } = useLang();
   const today = useMemo(() => {
     const d = new Date();
@@ -79,7 +81,7 @@ export default function WeddingDatePicker({ value, onChange, lang }: Props) {
   };
 
   return (
-    <div className="mt-5 w-full max-w-[380px] rounded-[20px] border border-[#d8d5ca] bg-[#fffdf7] p-5 shadow-[0px_12px_36px_rgba(18,51,43,0.06)]">
+    <div className={cn('w-full max-w-[380px] rounded-[20px] border border-[#d8d5ca] bg-[#fffdf7] p-5 shadow-[0px_12px_36px_rgba(18,51,43,0.06)]', className ?? 'mt-5')}>
       <div className="mb-4 flex items-center justify-between">
         <button
           type="button"

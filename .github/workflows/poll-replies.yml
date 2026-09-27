@@ -1,0 +1,51 @@
+# The scheduled mailbox poller: one pass over the platform Kalas inbox every
+# 5 minutes (worker/poll.ts), syncing vendor replies into Supabase. It runs
+# here rather than in the app because Netlify's scheduled functions run at
+# most hourly and stop after 30 seconds.
+#
+# GitHub runs schedules on a best-effort basis: a tick can be late at busy
+# times, and one is sometimes dropped. The next tick picks up whatever was
+# missed, and a poll that overlaps another is harmless (gmail_message_id is
+# unique). In a public repository GitHub switches schedules off after 60
+# days without activity; re-enable it under Actions if replies stop.
+#
+# Secrets (Settings → Secrets and variables → Actions): the six below.
+
+name: Poll vendor replies
+
+on:
+  schedule:
+    # Off the top of the hour, when GitHub's queue is busiest.
+    - cron: "2-59/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One poll at a time; a tick that comes due during a slow one waits.
+concurrency:
+  group: poll-replies
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run poll
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TOKEN_ENCRYPTION_KEY: ${{ secrets.TOKEN_ENCRYPTION_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Links in the "a vendor replied" mails (src/lib/site-url.ts only
+          # picks the live domain itself in a production Next build).
+          NEXT_PUBLIC_SITE_URL: https://kalas-weddings.com

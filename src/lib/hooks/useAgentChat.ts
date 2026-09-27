@@ -1,11 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
-import type { AgentUiAction, ChatMessageRow } from "@/lib/db/types";
+import type {
+  AgentUiAction,
+  ChatMessageRow,
+  ChatThreadRow,
+  ChatToolCall,
+  ChatToolEvent,
+} from "@/lib/db/types";
+import { takeSseFrames } from "./sse";
+
+/** A tool in the turn that is running now; `running` until its result lands. */
+export type LiveToolCall = ChatToolCall & { running: boolean };
+
+/** A message as the chat holds it: a stored row, or a turn that failed. */
+export type ChatMessageView = ChatMessageRow & { error?: string };
 
 interface Options {
   initialEventId: string | null;
-  initialMessages?: ChatMessageRow[];
+  /** The conversation to continue; null starts a new one on the next send. */
+  threadId: string | null;
+  /** Fired when the first message of a new conversation creates it. */
+  onThreadCreated?: (thread: ChatThreadRow) => void;
   /** Fired when the agent lazily creates a new event mid-turn. */
   onEventCreated?: (eventId: string) => void;
   /** Fired after a turn's stream completes (refresh venues/drafts, etc.). */
@@ -14,52 +30,60 @@ interface Options {
   onUiAction?: (action: AgentUiAction) => void;
   /** Which interface the user is in — the agent navigates more proactively in chat mode. */
   uiMode?: "chat" | "classic";
-  /** Rewrite the browser URL when a new event id arrives (workspace only). */
-  syncUrl?: boolean;
 }
 
 export interface AgentChat {
-  messages: ChatMessageRow[];
-  agentStatus: string | null;
-  eventId: string | null;
-  sendMessage: (
-    text: string,
-    ctx?: { contextReplyId?: string; kickoff?: boolean }
-  ) => Promise<void>;
-  setMessages: Dispatch<SetStateAction<ChatMessageRow[]>>;
+  messages: ChatMessageView[];
+  setMessages: Dispatch<SetStateAction<ChatMessageView[]>>;
+  /** True from send until the reply (or error) has landed. */
+  busy: boolean;
+  /** The tools the current turn has run so far, in order. */
+  liveTools: LiveToolCall[];
+  sendMessage: (text: string, ctx?: { contextReplyId?: string; kickoff?: boolean }) => Promise<void>;
 }
 
 /**
- * The shared chat transport: optimistic user message, POST /api/chat, and the
- * SSE frame parser (event/status/message/error). Extracted from EventWorkspace
- * so the omnipresent Ava sidebar can drive the same agent.
+ * The chat transport: optimistic user message, POST /api/chat, and the SSE
+ * frames it streams back — the persisted rows, tool steps as they run, and
+ * agent-driven navigation.
  */
 export function useAgentChat({
   initialEventId,
-  initialMessages = [],
+  threadId,
+  onThreadCreated,
   onEventCreated,
   onTurnComplete,
   onUiAction,
   uiMode = "classic",
-  syncUrl = false,
 }: Options): AgentChat {
-  const [messages, setMessages] = useState<ChatMessageRow[]>(initialMessages);
-  const [agentStatus, setAgentStatus] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessageView[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [liveTools, setLiveTools] = useState<LiveToolCall[]>([]);
   const eventIdRef = useRef<string | null>(initialEventId);
-  // Ref so a new callback identity never invalidates sendMessage mid-stream.
-  const onUiActionRef = useRef(onUiAction);
+  const busyRef = useRef(false);
+
+  // Refs, so a new callback identity or thread never invalidates a turn mid-stream.
+  const threadIdRef = useRef(threadId);
+  const callbacks = useRef({ onThreadCreated, onEventCreated, onTurnComplete, onUiAction });
   useEffect(() => {
-    onUiActionRef.current = onUiAction;
-  }, [onUiAction]);
+    threadIdRef.current = threadId;
+  }, [threadId]);
+  useEffect(() => {
+    callbacks.current = { onThreadCreated, onEventCreated, onTurnComplete, onUiAction };
+  });
 
   const sendMessage = useCallback(
     async (text: string, ctx?: { contextReplyId?: string; kickoff?: boolean }) => {
       const trimmed = text.trim();
-      if (!trimmed || agentStatus !== null) return;
+      if (!trimmed || busyRef.current) return;
+      busyRef.current = true;
+      setBusy(true);
+      setLiveTools([]);
 
       const optimistic: ChatMessageRow = {
         id: `local-${Date.now()}`,
         event_id: eventIdRef.current ?? "",
+        thread_id: threadIdRef.current,
         user_id: "",
         role: "user",
         content: trimmed,
@@ -67,7 +91,69 @@ export function useAgentChat({
         created_at: new Date().toISOString(),
       };
       setMessages((m) => [...m, optimistic]);
-      setAgentStatus("Thinking…");
+      // Mirrors liveTools, so a failed turn can keep what it ran.
+      let turnTools: LiveToolCall[] = [];
+      const setTools = (next: LiveToolCall[]) => {
+        turnTools = next;
+        setLiveTools(next);
+      };
+
+      const handle = (event: string, parsed: unknown) => {
+        switch (event) {
+          case "event": {
+            const id = (parsed as { eventId: string }).eventId;
+            eventIdRef.current = id;
+            callbacks.current.onEventCreated?.(id);
+            break;
+          }
+          case "thread": {
+            const thread = parsed as ChatThreadRow;
+            threadIdRef.current = thread.id;
+            callbacks.current.onThreadCreated?.(thread);
+            break;
+          }
+          case "tool": {
+            const e = parsed as ChatToolEvent;
+            if (e.phase === "start") {
+              setTools([...turnTools, { id: e.id, name: e.name, args: e.args, ok: true, running: true }]);
+            } else {
+              const done: LiveToolCall = {
+                id: e.id, name: e.name, args: e.args, ok: e.ok, error: e.error, result: e.result, running: false,
+              };
+              setTools(turnTools.map((t) => (t.id === e.id ? done : t)));
+            }
+            break;
+          }
+          case "ui":
+            callbacks.current.onUiAction?.(parsed as AgentUiAction);
+            break;
+          case "user_message": {
+            // Swap the optimistic bubble for the persisted row, which the
+            // realtime feed may already have delivered.
+            const saved = parsed as ChatMessageRow;
+            setMessages((m) => {
+              const without = m.filter((x) => x.id !== optimistic.id);
+              return without.some((x) => x.id === saved.id) ? without : [...without, saved];
+            });
+            break;
+          }
+          case "message": {
+            const saved = parsed as ChatMessageRow;
+            setMessages((m) => {
+              const i = m.findIndex((x) => x.id === saved.id);
+              if (i === -1) return [...m, saved];
+              // Realtime got there first; the streamed row is the same row.
+              const next = [...m];
+              next[i] = saved;
+              return next;
+            });
+            setTools([]);
+            break;
+          }
+          case "error":
+            throw new Error((parsed as { error: string }).error);
+        }
+      };
 
       try {
         const res = await fetch("/api/chat", {
@@ -75,6 +161,7 @@ export function useAgentChat({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             eventId: eventIdRef.current ?? undefined,
+            threadId: threadIdRef.current ?? undefined,
             message: trimmed,
             contextReplyId: ctx?.contextReplyId,
             uiMode,
@@ -93,65 +180,34 @@ export function useAgentChat({
           const { done, value } = await reader.read();
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
-          const frames = buffer.split("\n\n");
-          buffer = frames.pop() ?? "";
-          for (const frame of frames) {
-            let name = "message";
-            let data = "";
-            for (const line of frame.split("\n")) {
-              if (line.startsWith("event: ")) name = line.slice(7).trim();
-              else if (line.startsWith("data: ")) data += line.slice(6);
-            }
-            if (!data) continue;
-            const parsed = JSON.parse(data);
-            if (name === "event") {
-              eventIdRef.current = parsed.eventId;
-              if (syncUrl) {
-                window.history.replaceState(null, "", `/events/${parsed.eventId}`);
-              }
-              onEventCreated?.(parsed.eventId);
-            } else if (name === "status") {
-              setAgentStatus(parsed.status);
-            } else if (name === "ui") {
-              onUiActionRef.current?.(parsed as AgentUiAction);
-            } else if (name === "user_message") {
-              const saved = parsed as ChatMessageRow;
-              setMessages((m) => {
-                if (m.some((x) => x.id === saved.id)) {
-                  return m.filter((x) => x.id !== optimistic.id);
-                }
-                return [...m.filter((x) => x.id !== optimistic.id), saved];
-              });
-            } else if (name === "message") {
-              setMessages((m) =>
-                m.some((x) => x.id === (parsed as ChatMessageRow).id)
-                  ? m
-                  : [...m, parsed as ChatMessageRow]
-              );
-            } else if (name === "error") {
-              throw new Error(parsed.error);
-            }
-          }
+          const { frames, rest } = takeSseFrames(buffer);
+          buffer = rest;
+          for (const frame of frames) handle(frame.event, JSON.parse(frame.data));
         }
-        onTurnComplete?.();
+        callbacks.current.onTurnComplete?.();
       } catch (err) {
+        const ran: ChatToolCall[] = turnTools.map(({ running, ...t }) =>
+          running ? { ...t, ok: false, error: "interrupted" } : t
+        );
         setMessages((m) => [
           ...m,
           {
             ...optimistic,
             id: `local-err-${Date.now()}`,
             role: "assistant",
-            content: `Something went wrong: ${
-              err instanceof Error ? err.message : "unknown error"
-            }. Please try again.`,
+            content: "",
+            tool_calls: ran.length > 0 ? ran : null,
+            error: err instanceof Error ? err.message : "unknown error",
           },
         ]);
       } finally {
-        setAgentStatus(null);
+        busyRef.current = false;
+        setBusy(false);
+        setTools([]);
       }
     },
-    [agentStatus, onEventCreated, onTurnComplete, syncUrl, uiMode]
+    [uiMode]
   );
 
-  return { messages, agentStatus, eventId: eventIdRef.current, sendMessage, setMessages };
+  return { messages, setMessages, busy, liveTools, sendMessage };
 }

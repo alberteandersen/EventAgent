@@ -2,20 +2,21 @@
 
 /* Honeymoon screen — a sibling to the venue discovery flow, but for the couple's
    trip after the wedding. Three tabs:
-     · Udforsk   , spin the globe, pick a country, browse AI-curated honeymoon
+     · Udforsk    , spin the globe, pick a country, browse AI-curated honeymoon
                     destinations, then real romantic hotels for a chosen place.
      · Inspiration, an editorial gallery of honeymoon themes, destination
                     spotlights and idea cards (trips / routes / hotels).
-     · Gemte     , everything the couple hearted, grouped by kind.
+     · Jeres rejse, everything the couple hearted: what is booked on top as
+                    the plan, the rest underneath as the shortlist.
    Content is AI-generated (Gemini + Google Places) via /api/honeymoon/*, and
    favourites persist to honeymoon_saves through useWedding(). */
 
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Heart, MapPin, Star, Loader2, Globe as GlobeIcon, Search, PenLine,
-  ArrowRight, ArrowUpRight, Plane, Hotel, Route, Lightbulb, Compass, Expand, Trash2,
+  ArrowRight, ArrowUpRight, Plane, Hotel, Route, Lightbulb, Compass, Expand,
   CalendarCheck, Check,
 } from 'lucide-react';
 import { Lightbox } from '../onboarding/Lightbox';
@@ -42,10 +43,20 @@ const DestinationGlobe = dynamic(() => import('../onboarding/DestinationGlobe'),
   ),
 });
 
-type HTab = 'udforsk' | 'inspiration' | 'gemte' | 'booket';
+type HTab = 'udforsk' | 'inspiration' | 'rejse';
 
 /** A saved row counts as booked when its meta carries the flag. */
 const isBooked = (s: HoneymoonSaveRow) => s.meta?.booked === true;
+
+/* The tab survives a trip to another screen and back, as Nygift's does.
+   Gemte and Booket were separate tabs before they became Jeres rejse. */
+const TAB_KEY = 'kalas_honeymoon_tab';
+function readTab(): HTab {
+  if (typeof window === 'undefined') return 'udforsk';
+  const saved = sessionStorage.getItem(TAB_KEY);
+  if (saved === 'gemte' || saved === 'booket') return 'rejse';
+  return saved === 'inspiration' || saved === 'rejse' ? saved : 'udforsk';
+}
 
 /* ── Heart / save toggle ─────────────────────────────────────────────────── */
 function SaveHeart({ saved, onClick, className }: {
@@ -64,7 +75,15 @@ function SaveHeart({ saved, onClick, className }: {
         className,
       )}
     >
-      <Heart size={16} fill={saved ? 'currentColor' : 'none'} strokeWidth={2} />
+      {/* A small beat when it fills, so the save registers without a toast. */}
+      <motion.span
+        initial={false}
+        animate={{ scale: saved ? [1, 1.3, 1] : 1 }}
+        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+        className="flex"
+      >
+        <Heart size={16} fill={saved ? 'currentColor' : 'none'} strokeWidth={2} />
+      </motion.span>
     </button>
   );
 }
@@ -90,7 +109,11 @@ export default function Honeymoon({ onNavigate }: { onNavigate?: (s: NavigateTar
   const removeWithUndo = useRemoveWithUndo();
   const removeSaved = (id: string) =>
     removeWithUndo(id, allSaves.find((s) => s.id === id)?.name ?? '', () => removeHoneymoonSave(id));
-  const [tab, setTab] = useState<HTab>('udforsk');
+  const [tab, setTabState] = useState<HTab>(readTab);
+  const setTab = (next: HTab) => {
+    setTabState(next);
+    sessionStorage.setItem(TAB_KEY, next);
+  };
 
   // Shared save helpers (dedupe on place_id when present, else on name+kind).
   const savedKey = (kind: string, placeId: string | null, name: string) =>
@@ -121,21 +144,20 @@ export default function Honeymoon({ onNavigate }: { onNavigate?: (s: NavigateTar
     }
   };
 
-  // Cross-tab jump: Inspiration "Se hoteller" hands a destination to Udforsk.
-  const udforskRef = useRef<{ searchHotels: (dest: string) => void } | null>(null);
+  /* Cross-tab jump: "Se hoteller" elsewhere hands a destination to Udforsk.
+     It is held as state rather than called on a ref, because with
+     AnimatePresence mode="wait" Udforsk only mounts once the old tab has
+     finished leaving, and a search fired before that went nowhere. */
+  const [hotelSearch, setHotelSearch] = useState<string | null>(null);
   const goToHotels = (dest: string) => {
+    setHotelSearch(dest);
     setTab('udforsk');
-    // Wait for Udforsk to mount before driving its search.
-    requestAnimationFrame(() => udforskRef.current?.searchHotels(dest));
   };
-
-  const bookedCount = honeymoonSaves.filter(isBooked).length;
 
   const TABS: { id: HTab; label: string; Icon: typeof GlobeIcon }[] = [
     { id: 'udforsk', label: 'Udforsk', Icon: GlobeIcon },
     { id: 'inspiration', label: 'Inspiration', Icon: Compass },
-    { id: 'gemte', label: 'Gemte', Icon: Heart },
-    { id: 'booket', label: 'Booket', Icon: CalendarCheck },
+    { id: 'rejse', label: 'Jeres rejse', Icon: Heart },
   ];
 
   return (
@@ -152,20 +174,17 @@ export default function Honeymoon({ onNavigate }: { onNavigate?: (s: NavigateTar
       </div>
 
       {/* Tab bar */}
-      <div className="flex gap-1 border-b border-[#e2e6e2]">
+      <div className="flex gap-1 overflow-x-auto border-b border-[#e2e6e2]">
         {TABS.map(({ id, label, Icon }) => {
           const active = tab === id;
-          const count =
-            id === 'gemte' && honeymoonSaves.length > 0 ? honeymoonSaves.length :
-            id === 'booket' && bookedCount > 0 ? bookedCount :
-            null;
+          const count = id === 'rejse' && honeymoonSaves.length > 0 ? honeymoonSaves.length : null;
           return (
             <button
               key={id}
               type="button"
               onClick={() => setTab(id)}
               className={cn(
-                'relative flex items-center gap-2 px-3 py-2.5 text-[0.82rem] font-semibold transition-colors cursor-pointer',
+                'relative flex shrink-0 items-center gap-2 px-3 py-2.5 text-[0.82rem] font-semibold transition-colors cursor-pointer',
                 active ? 'text-[#24413a]' : 'text-muted hover:text-ink',
               )}
             >
@@ -188,7 +207,8 @@ export default function Honeymoon({ onNavigate }: { onNavigate?: (s: NavigateTar
         {tab === 'udforsk' && (
           <UdforskTab
             key="udforsk"
-            ref={udforskRef}
+            pendingSearch={hotelSearch}
+            onPendingSearched={() => setHotelSearch(null)}
             region={couple.region}
             lang={lang}
             findSaved={findSaved}
@@ -205,22 +225,16 @@ export default function Honeymoon({ onNavigate }: { onNavigate?: (s: NavigateTar
             onExplore={() => setTab('udforsk')}
           />
         )}
-        {tab === 'gemte' && (
-          <GemteTab
-            key="gemte"
+        {tab === 'rejse' && (
+          <RejseTab
+            key="rejse"
             saves={honeymoonSaves}
+            lang={lang}
             onRemove={removeSaved}
             onToggleBooked={setHoneymoonBooked}
+            onSeeHotels={goToHotels}
             onExplore={() => setTab('udforsk')}
             onInspire={() => setTab('inspiration')}
-          />
-        )}
-        {tab === 'booket' && (
-          <BooketTab
-            key="booket"
-            saves={honeymoonSaves.filter(isBooked)}
-            onUnbook={(id) => setHoneymoonBooked(id, false)}
-            onBrowseSaved={() => setTab('gemte')}
           />
         )}
       </AnimatePresence>
@@ -243,10 +257,12 @@ type ToggleSave = (row: {
 /* ══════════════════════════════════════════════════════════════════════════
    UDFORSK, globe → country → destinations → hotels
 ══════════════════════════════════════════════════════════════════════════ */
-const UdforskTab = forwardRef<
-  { searchHotels: (dest: string) => void },
-  { region: string; lang: Lang; findSaved: FindSaved; onToggleSave: ToggleSave }
->(function UdforskTab({ region, lang, findSaved, onToggleSave }, ref) {
+function UdforskTab({ pendingSearch, onPendingSearched, region, lang, findSaved, onToggleSave }: {
+  /** A destination another tab asked to see hotels for. */
+  pendingSearch: string | null;
+  onPendingSearched: () => void;
+  region: string; lang: Lang; findSaved: FindSaved; onToggleSave: ToggleSave;
+}) {
   const { t } = useLang();
 
   const [country, setCountry] = useState<string | null>(null);
@@ -258,11 +274,14 @@ const UdforskTab = forwardRef<
   const [custom, setCustom] = useState(false);
   const [customValue, setCustomValue] = useState('');
 
-  const [destination, setDestination] = useState<string | null>(null);
+  // Opened from another tab's "Se hoteller": start already on that search.
+  const [destination, setDestination] = useState<string | null>(pendingSearch);
   const [hotels, setHotels] = useState<HoneymoonHotel[]>([]);
-  const [hotelsLoading, setHotelsLoading] = useState(false);
+  const [hotelsLoading, setHotelsLoading] = useState(Boolean(pendingSearch));
   const [hotelsFailed, setHotelsFailed] = useState(false);
   const seenHotels = useRef<Record<string, HoneymoonHotel[]>>({});
+  // The search on screen, so a slow answer for an earlier one is dropped.
+  const currentSearch = useRef<string | null>(pendingSearch);
 
   const [lightbox, setLightbox] = useState<{ photos: string[]; index: number; alt: string } | null>(null);
   const resultsRef = useRef<HTMLDivElement | null>(null);
@@ -296,37 +315,50 @@ const UdforskTab = forwardRef<
     void loadDestinations(c);
   };
 
-  const searchHotels = async (dest: string) => {
-    setDestination(dest);
-    setHotelsFailed(false);
-    scrollToResults();
-    const hit = seenHotels.current[dest];
-    if (hit) { setHotels(hit); return; }
-    setHotelsLoading(true);
-    setHotels([]);
+  // Everything here happens after the await, so the hand-off below can call
+  // it from an effect without a synchronous render in between.
+  const fetchHotels = async (dest: string) => {
+    let list: HoneymoonHotel[] = [];
     try {
       const res = await fetch('/api/honeymoon/hotels', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ destination: dest, lang }),
       });
-      if (!res.ok) throw new Error(String(res.status));
-      const data = (await res.json()) as { hotels?: HoneymoonHotel[] };
-      const list = data.hotels ?? [];
-      if (list.length === 0) { setHotelsFailed(true); return; }
-      seenHotels.current[dest] = list;
-      setHotels(list);
-    } catch {
-      setHotelsFailed(true);
-    } finally {
-      setHotelsLoading(false);
-    }
+      if (res.ok) list = ((await res.json()) as { hotels?: HoneymoonHotel[] }).hotels ?? [];
+    } catch { /* an empty list says the same thing */ }
+    if (currentSearch.current !== dest) return;
+    if (list.length > 0) seenHotels.current[dest] = list;
+    setHotels(list);
+    setHotelsFailed(list.length === 0);
+    setHotelsLoading(false);
   };
 
-  useImperativeHandle(ref, () => ({ searchHotels }));
+  const searchHotels = (dest: string) => {
+    currentSearch.current = dest;
+    setDestination(dest);
+    setHotelsFailed(false);
+    scrollToResults();
+    const hit = seenHotels.current[dest];
+    if (hit) { setHotels(hit); setHotelsLoading(false); return; }
+    setHotelsLoading(true);
+    setHotels([]);
+    void fetchHotels(dest);
+  };
+
+  // The hand-off from another tab: state already says "loading this", so
+  // all that is left is to fetch it and bring it into view.
+  useEffect(() => {
+    if (!pendingSearch) return;
+    onPendingSearched();
+    scrollToResults();
+    void fetchHotels(pendingSearch);
+    // Once, on mount — a hand-off always mounts this tab fresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const submitCustom = () => {
     const v = customValue.trim();
-    if (v) void searchHotels(v);
+    if (v) searchHotels(v);
   };
 
   return (
@@ -404,7 +436,7 @@ const UdforskTab = forwardRef<
                 {region && (
                   <button
                     type="button"
-                    onClick={() => void searchHotels(region)}
+                    onClick={() => searchHotels(region)}
                     className="inline-flex items-center gap-2 rounded-full bg-[#24413a] px-4 py-2.5 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
                   >
                     <MapPin size={13} />
@@ -426,7 +458,7 @@ const UdforskTab = forwardRef<
                       s={s}
                       active={destination === `${s.name}, ${country}`}
                       saved={saved}
-                      onChoose={() => void searchHotels(`${s.name}, ${country}`)}
+                      onChoose={() => searchHotels(`${s.name}, ${country}`)}
                       onToggleSave={() => onToggleSave({
                         kind: 'destination', name: s.name,
                         location: [s.region, country].filter(Boolean).join(', ') || country,
@@ -473,7 +505,7 @@ const UdforskTab = forwardRef<
                 <p className="text-[0.9rem] text-ink-soft">{t('Kunne ikke finde hoteller her.')}</p>
                 <button
                   type="button"
-                  onClick={() => void searchHotels(destination)}
+                  onClick={() => searchHotels(destination)}
                   className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#24413a] px-4 py-2 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
                 >
                   {t('Prøv igen')}
@@ -537,7 +569,7 @@ const UdforskTab = forwardRef<
       )}
     </motion.div>
   );
-});
+}
 
 /* Destination card in the side panel. */
 export function DestCard({ s, active, saved, onChoose, onToggleSave }: {
@@ -866,6 +898,17 @@ function InspirationTab({ lang, findSaved, onToggleSave, onSeeHotels, onExplore 
                         <p className="font-serif text-[1.02rem] leading-tight text-ink">{idea.title}</p>
                         {idea.location && <p className="mt-0.5 truncate text-[0.7rem] text-muted">{idea.location}</p>}
                         {idea.blurb && <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-ink-soft">{idea.blurb}</p>}
+                        {/* An idea with a place on it can go somewhere; one
+                            without ("a road trip") stays an idea to save. */}
+                        {idea.location && (
+                          <button
+                            type="button"
+                            onClick={() => onSeeHotels(idea.location!)}
+                            className="mt-auto inline-flex w-fit items-center gap-1 pt-3 text-[0.7rem] font-bold uppercase tracking-[0.08em] text-[#24413a] hover:underline cursor-pointer"
+                          >
+                            {t('Se hoteller')} <ArrowRight size={12} aria-hidden />
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
@@ -880,36 +923,64 @@ function InspirationTab({ lang, findSaved, onToggleSave, onSeeHotels, onExplore 
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   GEMTE, saved favourites, grouped by kind
+   JERES REJSE, everything hearted: the booked plan on top, the shortlist below
 ══════════════════════════════════════════════════════════════════════════ */
-function GemteTab({ saves, onRemove, onToggleBooked, onExplore, onInspire }: {
+type SaveKind = HoneymoonSaveRow['kind'];
+
+/* Gemte and Booket used to be two tabs, and booking meant marking a card in
+   one to have it appear in the other. It is one list with two states, so it
+   is one page: what is settled reads first, as the trip, and the shortlist
+   underneath is where the deciding still happens. */
+function RejseTab({ saves, lang, onRemove, onToggleBooked, onSeeHotels, onExplore, onInspire }: {
   saves: HoneymoonSaveRow[];
+  lang: Lang;
   onRemove: (id: string) => void;
   onToggleBooked: (id: string, booked: boolean) => void;
+  onSeeHotels: (dest: string) => void;
   onExplore: () => void; onInspire: () => void;
 }) {
   const { t } = useLang();
-  const groups: { kind: HoneymoonSaveRow['kind']; label: string; Icon: typeof Plane }[] = [
-    { kind: 'destination', label: t('Destinationer'), Icon: MapPin },
-    { kind: 'hotel', label: t('Hoteller'), Icon: Hotel },
-    { kind: 'idea', label: t('Idéer'), Icon: Lightbulb },
+  const [kind, setKind] = useState<SaveKind | 'alle'>('alle');
+
+  const booked = saves.filter(isBooked);
+  const later = saves.filter((s) => !isBooked(s));
+  const KINDS: { id: SaveKind; label: string }[] = [
+    { id: 'destination', label: t('Destinationer') },
+    { id: 'hotel', label: t('Hoteller') },
+    { id: 'idea', label: t('Idéer') },
   ];
+  const kindsPresent = KINDS.filter((k) => later.some((s) => s.kind === k.id));
+  // A filter left on a kind that has since emptied would show nothing.
+  const activeKind = kind !== 'alle' && kindsPresent.some((k) => k.id === kind) ? kind : 'alle';
+  const shown = activeKind === 'alle' ? later : later.filter((s) => s.kind === activeKind);
+
+  const card = (s: HoneymoonSaveRow, feature = false) => (
+    <TripCard
+      key={s.id}
+      s={s}
+      feature={feature}
+      lang={lang}
+      onRemove={() => onRemove(s.id)}
+      onToggleBooked={() => onToggleBooked(s.id, !isBooked(s))}
+      onSeeHotels={onSeeHotels}
+    />
+  );
 
   if (saves.length === 0) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="rounded-2xl border border-dashed border-[var(--color-line-strong)] bg-card p-10 text-center"
+        className="rounded-[28px] border border-dashed border-[var(--color-line-strong)] bg-card px-6 py-14 text-center"
       >
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f0ec]">
           <Heart size={20} className="text-[#24413a]" />
         </span>
-        <p className="mt-3 font-serif text-[1.25rem] text-ink">{t('Ingen gemte endnu')}</p>
-        <p className="mx-auto mt-1 max-w-sm text-[0.85rem] text-ink-soft">
-          {t('Tryk på hjertet ved en destination, et hotel eller en idé, så samler vi dem her.')}
+        <p className="mt-3 font-serif text-[1.35rem] text-ink">{t('Jeres rejse starter her')}</p>
+        <p className="mx-auto mt-1 max-w-sm text-[0.85rem] leading-relaxed text-ink-soft">
+          {t('Tryk på hjertet ved en destination, et hotel eller en idé. Når noget er booket, samler vi rejseplanen øverst.')}
         </p>
-        <div className="mt-4 flex flex-wrap justify-center gap-2.5">
+        <div className="mt-5 flex flex-wrap justify-center gap-2.5">
           <button type="button" onClick={onExplore}
             className="inline-flex items-center gap-2 rounded-full bg-[#24413a] px-4 py-2.5 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer">
             <GlobeIcon size={14} /> {t('Udforsk')}
@@ -927,49 +998,173 @@ function GemteTab({ saves, onRemove, onToggleBooked, onExplore, onInspire }: {
     <motion.div
       initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col gap-8"
+      className="flex flex-col gap-10"
     >
-      {groups.map(({ kind, label, Icon }) => {
-        const rows = saves.filter((s) => s.kind === kind);
-        if (rows.length === 0) return null;
-        return (
-          <section key={kind}>
-            <p className="mb-3 flex items-center gap-2 text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">
-              <Icon size={13} /> {label} · {rows.length}
-            </p>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {rows.map((s) => (
-                <div key={s.id} className="group flex flex-col overflow-hidden rounded-2xl border border-[#e6e9e5] bg-[#ffffff]">
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    {s.image_url ? (
-                      <img src={s.image_url} alt={s.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center bg-[#e8f0ec]"><Icon size={22} className="text-[#24413a] opacity-40" /></div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a221533] to-transparent" />
-                    <button
-                      type="button"
-                      onClick={() => onRemove(s.id)}
-                      aria-label={t('Fjern fra gemte')}
-                      className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full bg-canvas/90 text-[#46574f] backdrop-blur-sm transition-colors hover:text-[#b34e37] cursor-pointer"
-                    >
-                      <Trash2 size={15} />
-                    </button>
-                    <RatingBadge rating={s.rating} className="absolute left-2 top-2" />
-                  </div>
-                  <div className="flex flex-1 flex-col p-4">
-                    <p className="font-serif text-[1.02rem] leading-tight text-ink">{s.name}</p>
-                    {s.location && <p className="mt-0.5 truncate text-[0.7rem] text-muted">{s.location}</p>}
-                    {s.blurb && <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-ink-soft">{s.blurb}</p>}
-                    <BookToggle booked={isBooked(s)} onToggle={() => onToggleBooked(s.id, !isBooked(s))} />
-                  </div>
-                </div>
+      {booked.length > 0 && (
+        <section>
+          <SectionHead
+            eyebrow={t('Booket · {n}', { n: booked.length })}
+            title={t('Det er på plads')}
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            {booked.map((s) => card(s, true))}
+          </div>
+        </section>
+      )}
+
+      <section>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <SectionHead
+            eyebrow={t('Gemt · {n}', { n: later.length })}
+            title={booked.length > 0 ? t('Stadig på ønskelisten') : t('Jeres shortlist')}
+          />
+          {kindsPresent.length > 1 && (
+            <div className="mb-4 flex flex-wrap gap-1.5" role="group" aria-label={t('Vis')}>
+              {[{ id: 'alle' as const, label: t('Alle') }, ...kindsPresent].map((k) => (
+                <button
+                  key={k.id}
+                  type="button"
+                  onClick={() => setKind(k.id)}
+                  aria-pressed={activeKind === k.id}
+                  className={cn(
+                    'h-8 rounded-full px-3 text-[0.74rem] font-semibold transition-colors cursor-pointer',
+                    activeKind === k.id
+                      ? 'bg-[#24413a] text-[#f8f9f8]'
+                      : 'border border-[#dcdfdb] text-[#5f6b66] hover:border-[#24413a] hover:text-[#24413a]',
+                  )}
+                >
+                  {k.label}
+                </button>
               ))}
             </div>
-          </section>
-        );
-      })}
+          )}
+        </div>
+
+        {later.length === 0 ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-[var(--color-line-strong)] px-5 py-4">
+            <p className="text-[0.85rem] text-ink-soft">{t('Alt, I har gemt, er booket.')}</p>
+            <button type="button" onClick={onExplore}
+              className="inline-flex items-center gap-1.5 text-[0.78rem] font-bold text-[#24413a] hover:underline cursor-pointer">
+              {t('Find mere')} <ArrowRight size={13} />
+            </button>
+          </div>
+        ) : (
+          <>
+            {booked.length === 0 && (
+              <p className="-mt-2 mb-4 text-[0.82rem] text-ink-soft">
+                {t('Når noget er booket, så tryk Marker som booket, så rykker det op som jeres rejseplan.')}
+              </p>
+            )}
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {shown.map((s) => card(s))}
+            </div>
+          </>
+        )}
+      </section>
     </motion.div>
+  );
+}
+
+function SectionHead({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div className="mb-4">
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#7d938a]">{eyebrow}</p>
+      <h2 className="mt-1 font-serif text-[clamp(1.4rem,2.6vw,1.75rem)] leading-tight text-[#24413a]">{title}</h2>
+    </div>
+  );
+}
+
+/* One saved place. Each kind gets the step that follows from it: a
+   destination leads to its hotels, a hotel to what it costs, an idea with a
+   place to that place's hotels. */
+function TripCard({ s, feature, lang, onRemove, onToggleBooked, onSeeHotels }: {
+  s: HoneymoonSaveRow;
+  /** Booked cards run larger: they are the trip, not options for it. */
+  feature: boolean;
+  lang: Lang;
+  onRemove: () => void;
+  onToggleBooked: () => void;
+  onSeeHotels: (dest: string) => void;
+}) {
+  const { t } = useLang();
+  const booked = isBooked(s);
+  const KIND: Record<SaveKind, { label: string; Icon: typeof Plane }> = {
+    destination: { label: t('Destination'), Icon: MapPin },
+    hotel: { label: t('Hotel'), Icon: Hotel },
+    idea: { label: t('Idé'), Icon: Lightbulb },
+  };
+  const { label, Icon } = KIND[s.kind];
+  const price = typeof s.meta?.price_hint === 'string' ? s.meta.price_hint : null;
+
+  const next =
+    s.kind === 'hotel'
+      ? { href: providerLinks({ name: s.name, location: s.location, lang })[0]?.url, label: t('Se priser') }
+      : s.kind === 'destination'
+        ? { dest: [s.name, s.location].filter(Boolean).join(', '), label: t('Se hoteller') }
+        : s.location
+          ? { dest: s.location, label: t('Se hoteller') }
+          : null;
+
+  return (
+    <div className={cn(
+      'group flex flex-col overflow-hidden rounded-[20px] border bg-[#ffffff] transition-shadow hover:shadow-[0_8px_22px_rgba(18,51,43,0.08)]',
+      booked ? 'border-[#c9d8cf]' : 'border-[#e6e9e5]',
+    )}>
+      <div className={cn('relative overflow-hidden', feature ? 'aspect-[16/9]' : 'aspect-[16/10]')}>
+        {s.image_url ? (
+          <img src={s.image_url} alt={s.name} loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#e8f0ec]"><Icon size={22} className="text-[#24413a] opacity-40" /></div>
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(rgba(18,34,21,0.18)_0%,rgba(18,34,21,0)_30%)]" />
+        {booked ? (
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#24413a] px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-white">
+            <Check size={11} strokeWidth={3} /> {t('Booket')}
+          </span>
+        ) : (
+          <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-canvas/90 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-[0.1em] text-[#24413a] backdrop-blur-sm">
+            <Icon size={11} /> {label}
+          </span>
+        )}
+        <div className="absolute right-3 top-3"><SaveHeart saved onClick={onRemove} /></div>
+      </div>
+
+      <div className={cn('flex flex-1 flex-col', feature ? 'p-5' : 'p-4')}>
+        <p className={cn('font-serif leading-tight text-ink', feature ? 'text-[1.4rem]' : 'text-[1.08rem]')}>{s.name}</p>
+        {(s.location || s.rating != null || price) && (
+          <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[0.72rem] text-muted">
+            {s.location && <span className="truncate">{s.location}</span>}
+            {s.rating != null && (
+              <span className="inline-flex items-center gap-0.5 text-ink-soft">
+                <Star size={10} className="fill-[#e6a34e] text-[#e6a34e]" />{s.rating.toFixed(1)}
+              </span>
+            )}
+            {price && <span>{price}</span>}
+          </p>
+        )}
+        {s.blurb && (
+          <p className={cn('mt-2 text-[0.82rem] leading-snug text-ink-soft', feature ? 'line-clamp-3' : 'line-clamp-2')}>{s.blurb}</p>
+        )}
+
+        <div className="mt-auto flex flex-wrap items-center gap-2 pt-4">
+          <BookToggle booked={booked} onToggle={onToggleBooked} />
+          {next && ('href' in next ? (
+            next.href && (
+              <a href={next.href} target="_blank" rel="noopener noreferrer nofollow"
+                className="inline-flex items-center gap-1 rounded-full px-2 py-1.5 text-[0.72rem] font-bold text-[#24413a] transition-colors hover:bg-[#e8f0ec]">
+                {next.label} <ArrowUpRight size={12} aria-hidden />
+              </a>
+            )
+          ) : (
+            <button type="button" onClick={() => onSeeHotels(next.dest)}
+              className="inline-flex items-center gap-1 rounded-full px-2 py-1.5 text-[0.72rem] font-bold text-[#24413a] transition-colors hover:bg-[#e8f0ec] cursor-pointer">
+              {next.label} <ArrowRight size={12} aria-hidden />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -981,93 +1176,17 @@ function BookToggle({ booked, onToggle }: { booked: boolean; onToggle: () => voi
       type="button"
       onClick={onToggle}
       aria-pressed={booked}
+      title={booked ? t('Fjern booking') : undefined}
       className={cn(
-        'mt-3 inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.72rem] font-bold transition-colors cursor-pointer',
+        'inline-flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.72rem] font-bold transition-colors cursor-pointer',
         booked
-          ? 'bg-[#24413a] text-white hover:opacity-90'
-          : 'border border-[#dcdfdb] text-[#24413a] hover:bg-[#e8f0ec]',
+          ? 'bg-[#e8f0ec] text-[#24413a] hover:bg-[#dbe7e0]'
+          : 'border border-[#dcdfdb] text-[#24413a] hover:border-[#24413a] hover:bg-[#e8f0ec]',
       )}
     >
-      {booked ? <Check size={13} /> : <CalendarCheck size={13} />}
+      {booked ? <Check size={13} strokeWidth={2.5} /> : <CalendarCheck size={13} />}
       {booked ? t('Booket') : t('Marker som booket')}
     </button>
-  );
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   BOOKET, everything the couple has confirmed & booked
-══════════════════════════════════════════════════════════════════════════ */
-function BooketTab({ saves, onUnbook, onBrowseSaved }: {
-  saves: HoneymoonSaveRow[];
-  onUnbook: (id: string) => void;
-  onBrowseSaved: () => void;
-}) {
-  const { t } = useLang();
-
-  if (saves.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="rounded-2xl border border-dashed border-[var(--color-line-strong)] bg-card p-10 text-center"
-      >
-        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#e8f0ec]">
-          <CalendarCheck size={20} className="text-[#24413a]" />
-        </span>
-        <p className="mt-3 font-serif text-[1.25rem] text-ink">{t('Intet booket endnu')}</p>
-        <p className="mx-auto mt-1 max-w-sm text-[0.85rem] text-ink-soft">
-          {t('Når I har booket en destination eller et hotel, så marker det under Gemte, så samler vi jeres rejseplan her.')}
-        </p>
-        <div className="mt-4 flex justify-center">
-          <button type="button" onClick={onBrowseSaved}
-            className="inline-flex items-center gap-2 rounded-full bg-[#24413a] px-4 py-2.5 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer">
-            <Heart size={14} /> {t('Gå til gemte')}
-          </button>
-        </div>
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col gap-4"
-    >
-      <p className="text-[13px] text-[#5f6b66]">
-        {t('Jeres bekræftede rejseplan, destinationer og ophold I har booket.')}
-      </p>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {saves.map((s) => (
-          <div key={s.id} className="group flex flex-col overflow-hidden rounded-2xl border border-[#e6e9e5] bg-[#ffffff]">
-            <div className="relative aspect-[16/10] overflow-hidden">
-              {s.image_url ? (
-                <img src={s.image_url} alt={s.name} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-[#e8f0ec]"><CalendarCheck size={22} className="text-[#24413a] opacity-40" /></div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1a221533] to-transparent" />
-              <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-[#24413a] px-2.5 py-1 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-white">
-                <Check size={11} /> {t('Booket')}
-              </span>
-              <RatingBadge rating={s.rating} className="absolute right-2 top-2" />
-            </div>
-            <div className="flex flex-1 flex-col p-4">
-              <p className="font-serif text-[1.02rem] leading-tight text-ink">{s.name}</p>
-              {s.location && <p className="mt-0.5 truncate text-[0.7rem] text-muted">{s.location}</p>}
-              {s.blurb && <p className="mt-2 line-clamp-2 text-[0.8rem] leading-snug text-ink-soft">{s.blurb}</p>}
-              <button
-                type="button"
-                onClick={() => onUnbook(s.id)}
-                className="mt-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#dcdfdb] px-3 py-1.5 text-[0.72rem] font-bold text-[#5f6b66] transition-colors hover:border-[#b34e37] hover:text-[#b34e37] cursor-pointer"
-              >
-                <Trash2 size={13} /> {t('Fjern booking')}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </motion.div>
   );
 }
 

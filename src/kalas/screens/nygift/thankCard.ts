@@ -1,97 +1,73 @@
 /* "Tak fordi I kom" — the card that goes out after the day.
  *
- * Built on the invitation engine rather than beside it: the couple already
- * chose a look for their invitation, and the thank-you that follows it should
- * be able to match. All twenty templates render from one InvitationData shape
- * (invitations/types.ts), so the whole job here is phrasing the same fields in
- * the past tense — the invitation says "we invite you", the thank-you says
- * "thank you for being there".
+ * Drawn by the invitation's own renderer (invitations/InviteCard.tsx) in the
+ * couple's active invitation design, so the thank-you matches what the guests
+ * were invited with. The whole job here is phrasing the same facts for
+ * afterwards: the invitation says "we're getting married", the thank-you says
+ * "thank you for being there" — and it drops everything that asks something
+ * of the guest (where to go, when, reply by).
  *
- * Pure, so the wording can be tested without a browser or a template.
+ * Pure, so the wording can be tested without a browser.
  */
 
-import { defaultDataFor } from '../../invitations/data';
-import type { InvitationData, Language, TemplateMeta } from '../../invitations/types';
+import type { InviteContent, Language } from '../../invitations/content';
 
-export interface ThankCardInput {
-  partnerA?: string;
-  partnerB?: string;
-  /** The wedding itself: the card looks back at it, so it is a past date. */
-  isoDate?: string | null;
-  venue?: string;
-  venueDetail?: string;
-  language?: Language;
-  /** A line the couple wrote themselves; replaces the default middle. */
-  personalNote?: string;
-}
-
-interface Copy {
-  label: string;
-  introLines: string[];
+/** The words InviteCard sets in place of the invitation's. */
+export interface ThankWords {
+  /** Stands where the invitation said "Vi gifter os". */
+  eyebrow: string;
+  /** The default middle, for the couple with nothing particular to add. */
+  line: string;
   closing: string;
-  /** Stands where the invitation put "R.S.V.P." */
-  footer: string;
 }
 
-const COPY: Record<Language, Copy> = {
+const WORDS: Record<Language, ThankWords> = {
   da: {
-    label: 'Tak fordi I kom',
-    introLines: ['Tak, fordi I fejrede dagen med os.', 'Den blev, som den blev, på grund af jer.'],
+    eyebrow: 'Tak fordi I kom',
+    line: 'Tak, fordi I fejrede dagen med os. Den blev, som den blev, på grund af jer.',
     closing: 'Med kærlighed',
-    footer: 'Vi ses snart',
   },
   en: {
-    label: 'Thank you for coming',
-    introLines: ['Thank you for celebrating the day with us.', 'It was what it was because of you.'],
+    eyebrow: 'Thank you for coming',
+    line: 'Thank you for celebrating the day with us. It was what it was because of you.',
     closing: 'With love',
-    footer: 'See you soon',
   },
 };
 
-/** Where the invitation named the date ahead, the card names the day that was. */
-function lookBack(displayDate: string, language: Language): string {
-  if (!displayDate) return '';
-  return language === 'da' ? `Vi blev gift ${displayDate}` : `We were married ${displayDate}`;
+export function thankWords(language: Language = 'da'): ThankWords {
+  return WORDS[language];
 }
 
 /**
- * The same fields the templates already render, phrased for afterwards.
- * `meta` decides the date wording and which fields the template shows, exactly
- * as it does for an invitation.
+ * The invitation's facts, phrased for afterwards. Names and date stay (the
+ * card looks back at the day); venue, time and the reply date go, because a
+ * venue line on a thank-you reads as an instruction to attend something that
+ * already happened. The invitation's own note (dresscode, a line about the
+ * party) goes too: in its place are the couple's own words, if they wrote any.
  */
-export function thankCardData(meta: TemplateMeta, input: ThankCardInput): InvitationData {
-  const language: Language = input.language ?? 'da';
-  const base = defaultDataFor(meta, input);
-  const copy = COPY[language];
-  const note = input.personalNote?.trim();
-
+export function thankContent(content: InviteContent, personalNote?: string): InviteContent {
   return {
-    ...base,
-    label: copy.label,
-    // A note they wrote themselves is the point of the card; the default is a
-    // placeholder for the couple who has nothing particular to add.
-    introLines: note ? [note] : copy.introLines,
-    displayDate: lookBack(base.displayDate, language),
-    closing: copy.closing,
-    rsvpLabel: copy.footer,
-    // An invitation tells you where to go. A thank-you does not, and a venue
-    // line reads as an instruction to attend something that already happened.
+    ...content,
+    time: '',
     venue: '',
-    venueDetail: undefined,
-    time: undefined,
+    venueDetail: '',
+    rsvpBy: '',
+    note: personalNote?.trim() ?? '',
   };
 }
 
-/**
- * Whether this template renders the couple's own words at all.
- *
- * `introLines` is an optional field: only some templates lay it out, and the
- * rest drop it silently. A couple who writes a greeting and then picks a
- * design that swallows it has been quietly failed, so the gallery narrows to
- * the designs that carry it as soon as they write one.
- */
-export function showsNote(meta: TemplateMeta): boolean {
-  return meta.fields.includes('introLines');
+/** The card's words as a mail, so it is a thank-you when it opens rather than
+    an empty draft with a subject line. */
+export function thankMailBody(content: InviteContent): string {
+  const words = thankWords(content.language);
+  return [
+    greetingFor(null, content.language),
+    '',
+    content.note || words.line,
+    '',
+    words.closing,
+    [content.partnerA, content.partnerB].filter(Boolean).join(' & '),
+  ].join('\n');
 }
 
 /** Danish, because the card is addressed to one guest at a time. */

@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { hasWebsiteAccess } from "@/lib/website/generate";
-import { buildSiteHtml } from "@/lib/website/buildSite";
-import { logAgentError } from "@/lib/gemini/log";
+import { dispatchJob } from "@/lib/jobs/dispatch";
 import type { EventRow } from "@/lib/db/types";
 
 export const maxDuration = 120;
@@ -10,7 +9,8 @@ export const maxDuration = 120;
 /**
  * POST /api/website/design/refine — apply a change request ("gør den
  * mørkere", "større forsidebillede") to the active design; saves a new
- * version. Body: { eventId, instruction }.
+ * version. Body: { eventId, instruction } or { eventId, syncContent: true },
+ * which brings the built texts up to date with Indhold and keeps the design.
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -19,10 +19,11 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = (await request.json().catch(() => ({}))) as { eventId?: string; instruction?: string };
+  const body = (await request.json().catch(() => ({}))) as { eventId?: string; instruction?: string; syncContent?: boolean };
   const eventId = body.eventId ?? "";
   const instruction = (body.instruction ?? "").trim();
-  if (!eventId || !instruction) {
+  const syncContent = body.syncContent === true;
+  if (!eventId || (!instruction && !syncContent)) {
     return Response.json({ error: "eventId and instruction are required" }, { status: 400 });
   }
 
@@ -34,25 +35,22 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: "payment_required" }, { status: 402 });
   }
 
-  const { count } = await supabase
+  const { data: active } = await supabase
     .from("website_designs")
-    .select("id", { count: "exact", head: true })
+    .select("id, html")
     .eq("event_id", eventId)
-    .eq("active", true);
-  if ((count ?? 0) === 0) {
+    .eq("active", true)
+    .maybeSingle();
+  // New words need a built site to go into; without one this would be a
+  // whole new build under another name.
+  if (!active || (syncContent && !active.html)) {
     return Response.json({ error: "Ingen aktivt design at justere, generér først." }, { status: 409 });
   }
 
-  try {
-    const { row } = await buildSiteHtml({
-      supabase,
-      event,
-      userId: user.id,
-      instruction: instruction.slice(0, 1000),
-    });
-    return Response.json({ designId: row.id });
-  } catch (err) {
-    logAgentError("api/website/design/refine", err, { eventId });
-    return Response.json({ error: "Ava kunne ikke justere designet lige nu, prøv igen." }, { status: 502 });
-  }
+  // Minutes of work: a background job in production (src/lib/jobs).
+  return dispatchJob(request, "website.refine", {
+    eventId,
+    userId: user.id,
+    payload: syncContent ? { syncContent: true } : { instruction: instruction.slice(0, 1000) },
+  });
 }

@@ -36,7 +36,7 @@ export default function AnmeldelserTab() {
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-6 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-7"
+      className="flex flex-col gap-6 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-5 sm:p-7"
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <p className="max-w-md text-sm text-[#5f6b66]">
@@ -65,7 +65,11 @@ function VendorReview({ vendor, onSave }: {
 }) {
   const { t } = useLang();
   const [review, setReview] = useState(vendor.own_review ?? '');
+  // The stars under the pointer light up before the click, so the rating
+  // being given is visible before it is given.
+  const [hover, setHover] = useState(0);
   const rating = vendor.own_rating ?? 0;
+  const lit = hover || rating;
 
   return (
     <div className={cn(
@@ -81,20 +85,22 @@ function VendorReview({ vendor, onSave }: {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-0.5" onMouseLeave={() => setHover(0)}>
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 type="button"
                 // Clicking the current rating clears it, so a misclick is undoable.
                 onClick={() => void onSave(vendor.id, { own_rating: rating === n ? null : n })}
+                onMouseEnter={() => setHover(n)}
                 aria-label={t('Giv {n} ud af 5', { n })}
-                className="p-0.5 cursor-pointer"
+                aria-pressed={n === rating}
+                className="p-0.5 cursor-pointer transition-transform hover:scale-110"
               >
                 <Star
-                  size={18}
-                  className={n <= rating ? 'text-[#c9a227]' : 'text-[#c6cbc6]'}
-                  fill={n <= rating ? 'currentColor' : 'none'}
+                  size={20}
+                  className={cn('transition-colors', n <= lit ? 'text-[#c9a227]' : 'text-[#c6cbc6]', hover > 0 && n <= lit && n > rating && 'opacity-70')}
+                  fill={n <= lit ? 'currentColor' : 'none'}
                 />
               </button>
             ))}

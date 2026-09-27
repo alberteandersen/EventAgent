@@ -1,6 +1,8 @@
 import { Type, type FunctionDeclaration } from "@google/genai";
 import { AGENT_PAGES } from "@/lib/db/types";
 import { planningFunctionDeclarations } from "./planningTools";
+import { memoryFunctionDeclarations } from "./memory";
+import { websiteFunctionDeclarations } from "./websiteTools";
 
 export const functionDeclarations: FunctionDeclaration[] = [
   {
@@ -187,7 +189,7 @@ export const functionDeclarations: FunctionDeclaration[] = [
   {
     name: "update_website_design",
     description:
-      "Design or restyle the couple's wedding website. Use when they ask you to design their site, or to change how it looks (colors, fonts, layout, mood, e.g. 'gør hjemmesiden mørkere', 'større forsidebillede'). Pass their request as the instruction; set regenerate=true only when they want a completely fresh design instead of an adjustment.",
+      "Design or restyle the couple's wedding website. Use when they ask you to design their site, or to change how it looks (colors, fonts, layout, mood, e.g. 'gør hjemmesiden mørkere', 'større forsidebillede'). Pass their request as the instruction; set regenerate=true only when they want a completely fresh design instead of an adjustment. Every change is saved as a new version; use_website_version goes back. For what the site says (texts, sections, programme, FAQ) use update_website_content instead.",
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -204,4 +206,6 @@ export const functionDeclarations: FunctionDeclaration[] = [
     },
   },
   ...planningFunctionDeclarations,
+  ...memoryFunctionDeclarations,
+  ...websiteFunctionDeclarations,
 ];

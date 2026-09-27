@@ -109,3 +109,44 @@ export function countryFocus(name: string | null | undefined): GlobeFocus | null
     altitude: Math.min(1.8, Math.max(0.4, span / 14)),
   };
 }
+
+/* The Danish name for the countries a Danish couple would write in Danish,
+   built from the same aliases so the two cannot drift. The first alias listed
+   for a country wins, which is why 'danmark' comes before 'uk'. */
+const DA_NAMES: Record<string, string> = {};
+for (const [alias, name] of Object.entries(ALIASES)) {
+  if (name === 'United Kingdom' && alias !== 'storbritannien') continue;
+  if (name === 'Netherlands' && alias !== 'holland') continue;
+  if (name === 'United States of America' && alias !== 'usa') continue;
+  DA_NAMES[name] ??= alias === 'usa' ? 'USA' : alias.charAt(0).toUpperCase() + alias.slice(1);
+}
+
+/** How to show one of the globe's countries in the app's language. */
+export function countryLabel(name: string, lang: string): string {
+  return lang === 'da' ? DA_NAMES[name] ?? name : name;
+}
+
+/**
+ * Countries whose English or Danish name matches what was typed, best first:
+ * names that start with it before names that merely contain it. Returns the
+ * globe's own spelling, the one the rest of the app reads.
+ */
+export function searchCountries(query: string, limit = 6): string[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const starts: string[] = [];
+  const contains: string[] = [];
+  for (const c of COUNTRIES) {
+    const name = c.properties.name;
+    const names = [name.toLowerCase(), (DA_NAMES[name] ?? '').toLowerCase()].filter(Boolean);
+    if (names.some((n) => n.startsWith(q))) starts.push(name);
+    else if (names.some((n) => n.includes(q))) contains.push(name);
+  }
+  const byName = (a: string, b: string) => a.localeCompare(b);
+  const hits = [...starts.sort(byName), ...contains.sort(byName)];
+  // An alias typed in full ("england", "uk") means that country, ahead of
+  // Ukraine and the rest that merely start the same way.
+  const aliased = ALIASES[q];
+  const ranked = aliased ? [aliased, ...hits.filter((h) => h !== aliased)] : hits;
+  return ranked.slice(0, limit);
+}

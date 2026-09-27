@@ -62,13 +62,15 @@ export function withAllSections(saved: SectionMeta[]): SectionMeta[] {
 
 /* The programme keeps its example times: the couple sees and edits these in
    the builder before the section renders, and a timeline with no rows is
-   harder to start from than one to adjust. Unlike the FAQ, nothing here
-   asserts a fact about their wedding that a guest could act on. */
+   harder to start from than one to adjust. No places: "Sonnerupgaard Kapel"
+   used to sit under the vielse, which is somebody else's church. The
+   builder replaces all of this with their own Bryllupsdagen when they have
+   one. */
 export const INIT_PROGRAM: ProgramEvent[] = [
-  { id: 'e1', time: '14:00', label: 'Vielse',                sublabel: 'Sonnerupgaard Kapel' },
-  { id: 'e2', time: '15:30', label: 'Velkomst & champagne',  sublabel: 'Terrassen'           },
-  { id: 'e3', time: '18:00', label: 'Middag',                sublabel: 'Den store sal'       },
-  { id: 'e4', time: '22:00', label: 'Fest, musik & dans',    sublabel: ''                    },
+  { id: 'e1', time: '14:00', label: 'Vielse',                sublabel: '' },
+  { id: 'e2', time: '15:30', label: 'Velkomst & champagne',  sublabel: '' },
+  { id: 'e3', time: '18:00', label: 'Middag',                sublabel: '' },
+  { id: 'e4', time: '22:00', label: 'Fest, musik & dans',    sublabel: '' },
 ];
 
 /* Questions, no answers. These used to ship with answers — a made-up RSVP
@@ -146,4 +148,44 @@ function readContact(raw: unknown): GuestContact {
 /** True when there is anything to show: a name and a way to reach them. */
 export function hasContact(c: GuestContact): boolean {
   return Boolean(c.name.trim() && (c.phone.trim() || c.email.trim()));
+}
+
+/** What Ava builds the site from: the enabled sections she lays out and
+    their texts. The hero and the guest-hub blocks are drawn by Kalas, not
+    by her, so they are not hers to render. */
+export function siteContent(config: SiteConfig) {
+  return {
+    sections: config.sections
+      .filter((s) => s.enabled && s.id !== 'hero' && s.id !== 'photos' && !HUB_SECTIONS.includes(s.id))
+      .map((s) => s.id),
+    heroTagline: config.heroTagline,
+    storyText: config.storyText,
+    countdown: config.countdown,
+    // Rows spelled out field by field: the same programme must read the same
+    // whichever way its objects were put together (builder, chat, database).
+    program: config.program.map((p) => ({ id: p.id, time: p.time, label: p.label, sublabel: p.sublabel })),
+    rsvpDeadline: config.rsvpDeadline,
+    transport: config.transport,
+    dresscode: config.dresscode,
+    giftsText: config.giftsText,
+    giftsUrl: config.giftsUrl,
+    faq: config.faq.map((f) => ({ id: f.id, q: f.q, a: f.a })),
+    hotels: config.hotels.map((h) => ({ id: h.id, name: h.name, dist: h.dist, price: h.price })),
+  };
+}
+
+/**
+ * A short fingerprint of the content a build was made from. A build bakes
+ * the texts into its HTML, so the builder compares this against the content
+ * as it stands to tell the couple their guests still see the old words.
+ * FNV-1a: it runs the same in the browser and on the server.
+ */
+export function contentKey(config: SiteConfig): string {
+  const text = JSON.stringify(siteContent(config));
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return (h >>> 0).toString(36);
 }

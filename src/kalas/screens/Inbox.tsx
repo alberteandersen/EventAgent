@@ -5,13 +5,14 @@
    files vendors sent back. All wired to the real coordination backend
    (outbound_emails · email_replies · email_attachments · reply_proposals). */
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, FileText, Star, Inbox as InboxIcon } from 'lucide-react';
+import { ArrowLeft, FileText, Star, Inbox as InboxIcon, MessagesSquare, Receipt, Paperclip, Send, type LucideIcon } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
 import { Chip, Pill, cn } from '../ui';
 import type { NavigateTarget } from '../lib/hub-nav';
+import { GuideLink } from './guides/GuideLink';
 import { createClient } from '@/lib/supabase/client';
 import type {
   EmailAttachmentRow, EmailReplyRow, OutboundEmailRow, ReplyProposalRow, VenueRow,
@@ -42,21 +43,35 @@ export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: Navig
     return venues.filter((v) => ids.has(v.id));
   }, [outbound, replies, venues]);
 
+  const [panesRef, panesHeight] = useFillHeight<HTMLDivElement>(tab, loading, contacted.length);
+
   if (loading) {
     return <div className="flex min-h-[60vh] items-center justify-center"><Dots /></div>;
   }
 
+  const header = !embedded && (
+    <div>
+      <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
+        {t('Inbox')}
+      </h1>
+      <GuideLink screen="inbox" />
+    </div>
+  );
+
   if (contacted.length === 0 && replies.length === 0) {
     return (
-      <div className={cn('flex flex-col items-center justify-center text-center', embedded ? 'min-h-[40vh] px-0' : 'min-h-[60vh] px-6')}>
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ink">
-          <InboxIcon size={20} className="text-canvas" />
+      <div className={embedded ? '' : 'flex min-h-full flex-col gap-6 px-6 py-8 sm:px-9 lg:px-12 lg:py-8'}>
+        {header}
+        <div className={cn('flex flex-col items-center justify-center text-center', embedded ? 'min-h-[40vh]' : 'min-h-[50vh]')}>
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ink">
+            <InboxIcon size={20} className="text-canvas" />
+          </div>
+          <h2 className="display mt-5 text-[1.8rem] text-ink">{t('Ingen henvendelser endnu')}</h2>
+          <p className="mt-2 max-w-sm text-[0.9rem] text-ink-soft">
+            {t('Når Ava skriver til venues og leverandører, samles alle samtaler, tilbud og filer her, så I har ét sted til al koordinering.')}
+          </p>
+          <div className="mt-6"><Pill arrow onClick={() => onNavigate?.('ava')}>{t('Bed Ava tage kontakt')}</Pill></div>
         </div>
-        <h2 className="display mt-5 text-[1.8rem] text-ink">{t('Ingen henvendelser endnu')}</h2>
-        <p className="mt-2 max-w-sm text-[0.9rem] text-ink-soft">
-          {t('Når Ava skriver til venues og leverandører, samles alle samtaler, tilbud og filer her, så I har ét sted til al koordinering.')}
-        </p>
-        <div className="mt-6"><Pill arrow onClick={() => onNavigate?.('ava')}>{t('Bed Ava tage kontakt')}</Pill></div>
       </div>
     );
   }
@@ -77,88 +92,97 @@ export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: Navig
     }
   };
 
-  const tabLabels: [Tab, string][] = [
-    ['threads', totalUnread ? t('Samtaler · {n}', { n: totalUnread }) : t('Samtaler')],
-    ['quotes', t('Tilbud')],
-    ['files', t('Filer · {n}', { n: attachments.length })],
+  const tabLabels: [Tab, string, LucideIcon][] = [
+    ['threads', totalUnread ? t('Samtaler · {n}', { n: totalUnread }) : t('Samtaler'), MessagesSquare],
+    ['quotes', t('Tilbud'), Receipt],
+    ['files', t('Filer · {n}', { n: attachments.length }), Paperclip],
   ];
 
   return (
-    <div className={embedded ? 'pt-2' : 'px-6 py-8 sm:px-9 lg:px-12 lg:py-8'}>
-      {!embedded && (
-        <p className="max-w-lg text-[0.9rem] text-ink-soft">
-          {t('Ava skriver på jeres vegne fra én central postkasse. Her ser I hvem hun har kontaktet, hvad de svarer, og godkender hendes svar før de sendes.')}
-        </p>
-      )}
+    <div className={embedded ? 'pt-2' : 'flex min-h-full flex-col px-6 py-8 sm:px-9 lg:px-12 lg:py-8'}>
+      {header}
 
-      {/* Tabs */}
-      <div className={cn('flex gap-1 rule-b', embedded ? 'mt-2' : 'mt-6')}>
-        {tabLabels.map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)}
-            className={cn('relative px-5 py-3 text-[0.85rem] transition-colors cursor-pointer',
+      {/* Tab bar. Scrolls sideways on a narrow phone rather than wrapping. */}
+      <nav aria-label={t('Inbox')}
+        className={cn('-mx-6 flex gap-1 overflow-x-auto border-b border-line px-6 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden',
+          embedded ? 'mt-2' : 'mt-6')}>
+        {tabLabels.map(([id, label, Icon]) => (
+          <button key={id} type="button" onClick={() => setTab(id)}
+            aria-current={tab === id ? 'true' : undefined}
+            className={cn('relative flex shrink-0 items-center gap-2 px-3 py-2.5 text-[0.85rem] font-semibold transition-colors cursor-pointer',
               tab === id ? 'text-ink' : 'text-muted hover:text-ink')}>
+            <Icon size={15} strokeWidth={2} className="hidden sm:block" aria-hidden />
             {label}
-            {tab === id && <motion.span layoutId="inbox-tab" className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-sage" />}
+            {tab === id && <motion.span layoutId="inbox-tab" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-ink" />}
           </button>
         ))}
-      </div>
+      </nav>
 
       {tab === 'threads' && (
-        <div className="mt-6 grid gap-6 lg:grid-cols-[320px_1fr]">
+        // Two panes that fill the screen below the tabs; each scrolls on its own,
+        // so the list and the reply box never leave view.
+        <div ref={panesRef} style={panesHeight ? { height: panesHeight } : undefined}
+          className="mt-6 grid min-h-0 gap-4 lg:grid-cols-[320px_1fr] lg:gap-5">
           {/* Vendor list */}
-          <div className={cn('min-w-0', selected && 'hidden lg:block')}>
+          <section aria-label={t('Leverandører')}
+            className={cn('flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl rule bg-card', selected && 'hidden lg:flex')}>
             {cats.length > 1 && (
-              <div className="mb-4 flex flex-wrap gap-2">
+              <div className="flex shrink-0 flex-wrap gap-2 rule-b px-4 py-3">
                 <FilterChip label={t('Alle')} active={catFilter === 'all'} onClick={() => setCatFilter('all')} />
                 {cats.map((c) => (
                   <FilterChip key={c} label={t(CAT_DA[c] ?? c)} active={catFilter === c} onClick={() => setCatFilter(c)} />
                 ))}
               </div>
             )}
-            <div className="divide-y divide-[var(--color-line)] rule rounded-2xl bg-card overflow-hidden">
+            <div className="min-h-0 flex-1 divide-y divide-[var(--color-line)] overflow-y-auto overscroll-contain">
               {visible.map((v) => {
                 const thread = buildThread(v.id, outbound, replies, attachments);
                 const last = thread[thread.length - 1];
                 const unread = unreadByVenue.get(v.id) ?? 0;
                 return (
-                  <button key={v.id} onClick={() => openThread(v.id)}
-                    className={cn('flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors',
+                  <button key={v.id} type="button" onClick={() => openThread(v.id)}
+                    aria-current={selectedId === v.id ? 'true' : undefined}
+                    className={cn('relative flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors cursor-pointer',
                       selectedId === v.id ? 'bg-shell' : 'hover:bg-shell')}>
+                    {selectedId === v.id && <span aria-hidden className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-ink" />}
                     <VenueThumb v={v} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="truncate font-serif text-[1rem] text-ink">{v.name}</span>
-                        {unread > 0 && <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--color-terracotta)]" />}
+                        <span className={cn('truncate font-serif text-[1rem] text-ink', unread > 0 && 'font-semibold')}>{v.name}</span>
+                        {last && <span className="shrink-0 text-[0.68rem] text-muted">{shortDate(last.at)}</span>}
                       </div>
                       <div className="mt-0.5 flex items-center gap-1.5 text-[0.7rem] text-muted">
                         <span>{t(CAT_DA[v.category] ?? v.category)}</span>
                         {v.booked_at && <Chip tone="sage">{t('Booket')}</Chip>}
                       </div>
-                      <p className="mt-1 truncate text-[0.76rem] text-muted">
-                        {last
-                          ? `${last.direction === 'out' ? `${t('Ava')}: ` : ''}${last.body.slice(0, 54)}`
-                          : t('Ingen beskeder')}
-                      </p>
+                      <div className="mt-1 flex items-center gap-2">
+                        <p className={cn('min-w-0 flex-1 truncate text-[0.76rem]', unread > 0 ? 'text-ink' : 'text-muted')}>
+                          {last
+                            ? `${last.direction === 'out' ? `${t('Ava')}: ` : ''}${last.body.slice(0, 80)}`
+                            : t('Ingen beskeder')}
+                        </p>
+                        {unread > 0 && <span aria-label={t('Ulæst')} className="h-2 w-2 shrink-0 rounded-full bg-[var(--color-terracotta)]" />}
+                      </div>
                     </div>
                   </button>
                 );
               })}
             </div>
-          </div>
+          </section>
 
           {/* Thread detail */}
-          <div className={cn('min-w-0', !selected && 'hidden lg:block')}>
+          <div className={cn('min-h-0 min-w-0', !selected && 'hidden lg:block')}>
             {selected ? (
-              <ThreadDetail venue={selected}
+              <ThreadDetail key={selected.id} venue={selected}
                 messages={buildThread(selected.id, outbound, replies, attachments)}
                 proposal={latestProposal(selected.id, replies, proposals)}
                 onBack={() => setSelectedId(null)}
                 onNavigate={onNavigate}
                 onChanged={refresh} />
             ) : (
-              <div className="flex h-full min-h-[40vh] items-center justify-center rounded-2xl rule bg-card px-8 text-center">
+              <div className="flex h-full items-center justify-center rounded-2xl rule bg-card px-8 text-center">
                 <div>
-                  <p className="text-[2rem]">📨</p>
+                  <MessagesSquare size={22} strokeWidth={1.6} className="mx-auto text-muted" aria-hidden />
                   <p className="mt-3 max-w-xs text-[0.85rem] text-muted">
                     {t('Vælg en leverandør for at se samtalen, deres svar og filer. Ava forbereder et svar til hvert svar, som I godkender.')}
                   </p>
@@ -201,6 +225,36 @@ function latestProposal(venueId: string, replies: EmailReplyRow[], proposals: Re
   return proposals.filter((p) => p.status === 'proposed' && p.email_reply_id === latestReply.id).slice(-1)[0] ?? null;
 }
 
+/* ── Filling the screen ──────────────────────────────────────────────── */
+/** Height that takes an element from where it sits down to the bottom of the
+ *  screen, less the page's bottom padding (and the phone's tab bar below lg).
+ *  Measured rather than hard-coded, so it holds in both shells. */
+function useFillHeight<T extends HTMLElement>(...deps: unknown[]) {
+  const ref = useRef<T>(null);
+  const [height, setHeight] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const fit = () => {
+      const el = ref.current;
+      if (!el) return;
+      const gap = window.matchMedia('(min-width: 1024px)').matches ? 32 : 144;
+      setHeight(Math.max(420, Math.round(window.innerHeight - el.getBoundingClientRect().top - gap)));
+    };
+    fit();
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+  return [ref, height] as const;
+}
+
+function shortDate(iso: string): string {
+  const d = new Date(iso);
+  const sameDay = d.toDateString() === new Date().toDateString();
+  return sameDay
+    ? d.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
+}
+
 /* ── Thread detail ───────────────────────────────────────────────────── */
 function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged }: {
   venue: VenueRow; messages: ThreadMsg[]; proposal: ReplyProposalRow | null;
@@ -208,6 +262,14 @@ function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged
 }) {
   const { t } = useLang();
   const [booking, setBooking] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Open on the newest message, and follow the thread as it grows.
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages.length]);
+
   const book = async () => {
     setBooking(true);
     try {
@@ -216,15 +278,18 @@ function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged
     } finally { setBooking(false); }
   };
 
+  const last = messages[messages.length - 1];
+
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      className="flex min-h-[40vh] flex-col rounded-2xl rule bg-card overflow-hidden">
-      <header className="flex items-center justify-between gap-3 rule-b px-5 py-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <button onClick={onBack} aria-label={t('Tilbage')} className="lg:hidden text-muted hover:text-ink cursor-pointer"><ArrowLeft size={18} /></button>
+    <section aria-label={venue.name}
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl rule bg-card">
+      <header className="flex shrink-0 items-center justify-between gap-3 rule-b px-5 py-3.5">
+        <div className="flex min-w-0 items-center gap-3">
+          <button type="button" onClick={onBack} aria-label={t('Tilbage')} className="lg:hidden text-muted hover:text-ink cursor-pointer"><ArrowLeft size={18} /></button>
+          <VenueThumb v={venue} />
           <div className="min-w-0">
-            <h2 className="truncate font-serif text-[1.2rem] text-ink">{venue.name}</h2>
-            <p className="text-[0.72rem] text-muted">
+            <h2 className="truncate font-serif text-[1.15rem] leading-tight text-ink">{venue.name}</h2>
+            <p className="mt-0.5 text-[0.72rem] text-muted">
               {t(CAT_DA[venue.category] ?? venue.category)}
               {venue.rating != null && <> · <Star size={10} className="inline -mt-0.5 text-sage" /> {Number(venue.rating).toFixed(1)}</>}
             </p>
@@ -232,21 +297,21 @@ function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged
         </div>
         {venue.booked_at
           ? <Chip tone="sage">{t('Booket 🎉')}</Chip>
-          : <button onClick={book} disabled={booking}
+          : <button type="button" onClick={book} disabled={booking}
               className="shrink-0 rounded-full border border-ink px-3.5 py-1.5 text-[0.72rem] font-medium text-ink hover:bg-sage-tint transition-colors cursor-pointer disabled:opacity-50">
               {booking ? '…' : t('Markér booket')}
             </button>}
       </header>
 
-      <div className="flex-1 space-y-3 px-5 py-5">
+      <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain bg-canvas/40 px-5 py-5">
         {messages.map((m) => (
-          <div key={m.id} className={cn('flex', m.direction === 'out' ? 'justify-end' : 'justify-start')}>
+          <div key={m.id} className={cn('flex flex-col', m.direction === 'out' ? 'items-end' : 'items-start')}>
             <div className={cn('max-w-[82%] rounded-2xl px-4 py-3',
-              m.direction === 'out' ? 'rounded-br-md bg-ink text-canvas' : 'rounded-bl-md rule bg-canvas text-ink')}>
+              m.direction === 'out' ? 'rounded-br-md bg-ink text-canvas' : 'rounded-bl-md rule bg-card text-ink')}>
               <p className="whitespace-pre-wrap text-[0.9rem] leading-relaxed">{m.body}</p>
               {m.reply?.quote?.summary && (
                 <div className="mt-2 rounded-lg bg-sage-tint px-3 py-2 text-[0.78rem] text-ink">
-                  💬 {m.reply.quote.summary}
+                  {m.reply.quote.summary}
                   {m.reply.quote.price_amount != null && (
                     <span className="ml-1 font-semibold">{m.reply.quote.price_amount.toLocaleString('da-DK')} {m.reply.quote.currency ?? ''}</span>
                   )}
@@ -254,18 +319,35 @@ function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged
               )}
               {m.attachments && m.attachments.length > 0 && <Attachments attachments={m.attachments} />}
             </div>
+            <span className="mt-1 px-1 text-[0.66rem] text-muted">
+              {m.direction === 'out' ? t('Ava') : venue.name} · {shortDate(m.at)}
+            </span>
           </div>
         ))}
       </div>
 
-      {proposal && (
-        <ProposalReply proposal={proposal} venueName={venue.name} onNavigate={onNavigate} onChanged={onChanged} />
-      )}
-    </motion.div>
+      <div className="shrink-0 rule-t bg-card">
+        {proposal ? (
+          <ProposalReply key={proposal.id} proposal={proposal} venueName={venue.name} onNavigate={onNavigate} onChanged={onChanged} />
+        ) : (
+          <div className="flex items-center justify-between gap-3 px-5 py-3.5">
+            <p className="min-w-0 text-[0.8rem] text-muted">
+              {last?.direction === 'out'
+                ? t('Venter på svar fra {name}. Ava foreslår et svar, så snart de skriver.', { name: venue.name })
+                : t('Intet svar at godkende lige nu.')}
+            </p>
+            <button type="button" onClick={() => onNavigate?.('ava')}
+              className="shrink-0 rounded-full rule px-4 py-2 text-[0.78rem] text-ink-soft hover:bg-shell transition-colors cursor-pointer">
+              {t('Tal med Ava')}
+            </button>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
-/* ── Ava's suggested reply (approve / dismiss / regenerate) ──────────── */
+/* ── Ava's suggested reply, the thread's composer ────────────────────── */
 function ProposalReply({ proposal, venueName, onNavigate, onChanged }: {
   proposal: ReplyProposalRow; venueName: string; onNavigate?: (s: NavigateTarget) => void; onChanged: () => Promise<void>;
 }) {
@@ -295,34 +377,40 @@ function ProposalReply({ proposal, venueName, onNavigate, onChanged }: {
   };
 
   if (done) {
-    return <div className="rule-t bg-sage-tint px-5 py-3 text-[0.8rem] font-medium text-ink">
+    return <div className="bg-sage-tint px-5 py-3.5 text-[0.8rem] font-medium text-ink">
       {done === 'sent' ? t('Svar sendt ✓') : t('Svar afvist')}
     </div>;
   }
 
   return (
-    <div className="rule-t bg-shell px-5 py-4">
-      <div className="mb-2 flex items-center justify-between">
+    <div className="px-4 pb-3 pt-3 sm:px-5">
+      <div className="mb-2 flex items-center justify-between gap-3">
         <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ink">{t('Avas foreslåede svar')}</span>
-        <button disabled={busy} onClick={regenerate} className="text-[0.72rem] text-muted underline-offset-2 hover:underline disabled:opacity-50 cursor-pointer">{t('Generér igen')}</button>
+        <button type="button" disabled={busy} onClick={regenerate} className="text-[0.72rem] text-muted underline-offset-2 hover:underline disabled:opacity-50 cursor-pointer">{t('Generér igen')}</button>
       </div>
-      <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5}
-        className="w-full resize-none rounded-xl rule bg-canvas px-4 py-3 text-[0.9rem] leading-relaxed text-ink focus:border-ink focus:outline-none" />
-      <div className="mt-2.5 flex flex-wrap items-center gap-2.5">
-        <button disabled={busy || !body.trim()} onClick={send}
-          className="rounded-full bg-ink px-4 py-2 text-[0.78rem] font-medium text-canvas hover:bg-ink/90 transition-colors cursor-pointer disabled:opacity-50">
-          {busy ? t('Sender…') : t('Godkend & send')}
-        </button>
-        <button onClick={() => onNavigate?.('ava')}
-          className="rounded-full rule px-4 py-2 text-[0.78rem] text-ink-soft hover:bg-card transition-colors cursor-pointer">
-          {t('Tal med Ava')}
-        </button>
-        <button disabled={busy} onClick={dismiss}
-          className="rounded-full px-3 py-2 text-[0.78rem] text-muted hover:text-ink transition-colors cursor-pointer disabled:opacity-50">
-          {t('Afvis')}
-        </button>
+      <div className="rounded-2xl rule bg-canvas focus-within:border-ink">
+        <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3}
+          aria-label={t('Avas foreslåede svar')}
+          className="block max-h-[24vh] min-h-[4.5rem] w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 text-[0.9rem] leading-relaxed text-ink focus:outline-none" />
+        <div className="flex items-center justify-between gap-1 px-1.5 pb-2 pt-1 sm:gap-2 sm:px-2.5 sm:pb-2.5">
+          <div className="flex min-w-0 items-center">
+            <button type="button" onClick={() => onNavigate?.('ava')}
+              className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-[0.76rem] text-ink-soft hover:bg-shell transition-colors cursor-pointer sm:px-3">
+              {t('Tal med Ava')}
+            </button>
+            <button type="button" disabled={busy} onClick={dismiss}
+              className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-[0.76rem] text-muted hover:text-ink transition-colors cursor-pointer disabled:opacity-50 sm:px-3">
+              {t('Afvis')}
+            </button>
+          </div>
+          <button type="button" disabled={busy || !body.trim()} onClick={send}
+            className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-ink px-3.5 py-2 text-[0.78rem] font-medium text-canvas hover:bg-ink/90 transition-colors cursor-pointer disabled:opacity-50">
+            <Send size={13} strokeWidth={2} aria-hidden />
+            {busy ? t('Sender…') : t('Godkend & send')}
+          </button>
+        </div>
       </div>
-      <p className="mt-2 text-[0.68rem] text-muted">{t('Til {name} · sendes fra jeres Kalas-postkasse', { name: venueName })}</p>
+      <p className="mt-1.5 px-1 text-[0.66rem] text-muted">{t('Til {name} · sendes fra jeres Kalas-postkasse', { name: venueName })}</p>
     </div>
   );
 }

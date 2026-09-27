@@ -10,7 +10,9 @@ import { useMemo, useState } from 'react';
 import { WeddingFixtureProvider, type Couple, type WeddingData } from '@/kalas/useWedding';
 import { UndoProvider } from '@/kalas/undo';
 import type {
-  BudgetItemRow, BudgetSubItemRow, DayProgramItemRow, EventRow, GuestRow, SeatingPlanRow, TaskKind, TimelineTaskRow, VenueRow,
+  BudgetItemRow, BudgetSubItemRow, DayProgramItemRow, EmailReplyRow, EventRow, GuestRow, HoneymoonSaveRow,
+  OutboundEmailRow, RegistryClaimRow, RegistryItemRow, ReplyProposalRow, SeatingPlanRow, TaskKind, ThankMethod, ThankYouRow, TimelineTaskRow, VenueRow, WebsiteDesignRow,
+  WeddingSiteRow, InvitationDesignRow
 } from '@/lib/db/types';
 import type { JourneyStage } from '@/lib/journey';
 
@@ -45,7 +47,10 @@ type TaskDraft = { title: string; due_date?: string | null; category?: string | 
 
 export function FixtureWedding({
   children, guests: initialGuests = [], seating = null, budgetItems: initialItems = [], budgetSubItems: initialSubs = [],
-  tasks: initialTasks = [], couple: coupleOverride, event: eventOverride, venues = [], journey = [],
+  tasks: initialTasks = [], couple: coupleOverride, event: eventOverride, venues: initialVenues = [], journey = [],
+  honeymoonSaves: initialSaves = [], thankYous: initialThanks = [], registryItems = [], registryClaims = [],
+  weddingSite: initialSite = null, dayProgram = [], websiteDesigns = [], invitationDesigns = [],
+  outbound = [], replies = [], proposals = [],
 }: {
   children: React.ReactNode;
   guests?: GuestRow[];
@@ -58,26 +63,47 @@ export function FixtureWedding({
   event?: Partial<EventRow>;
   venues?: VenueRow[];
   journey?: JourneyStage[];
+  /** Bryllupsrejse and Nygift. */
+  honeymoonSaves?: HoneymoonSaveRow[];
+  thankYous?: ThankYouRow[];
+  registryItems?: RegistryItemRow[];
+  registryClaims?: RegistryClaimRow[];
+  weddingSite?: Partial<WeddingSiteRow> | null;
+  /** Bryllupsdagen. */
+  dayProgram?: DayProgramItemRow[];
+  /** Newest first; the active one is the site. */
+  websiteDesigns?: WebsiteDesignRow[];
+  /** Invitationer: versions of the card, one active. */
+  invitationDesigns?: InvitationDesignRow[];
+  /** Inbox: what Ava sent, what came back, and her proposed answers. */
+  outbound?: OutboundEmailRow[];
+  replies?: EmailReplyRow[];
+  proposals?: ReplyProposalRow[];
 }) {
   const [timelineTasks, setTimelineTasks] = useState(initialTasks);
-  const [dayProgramItems, setDayProgramItems] = useState<DayProgramItemRow[]>([]);
+  const [dayProgramItems, setDayProgramItems] = useState<DayProgramItemRow[]>(dayProgram);
   const [guests, setGuests] = useState(initialGuests);
   const [seatingPlan, setSeatingPlan] = useState<SeatingPlanRow | null>(
     seating ? { id: 'sp', event_id: 'dev', user_id: 'dev', data: seating, updated_at: now } as SeatingPlanRow : null,
   );
   const [budgetItems, setBudgetItems] = useState(initialItems);
   const [budgetSubItems, setBudgetSubItems] = useState(initialSubs);
+  const [venues, setVenues] = useState(initialVenues);
+  const [honeymoonSaves, setHoneymoonSaves] = useState(initialSaves);
+  const [thankYous, setThankYous] = useState(initialThanks);
+  const [weddingSite, setWeddingSite] = useState(initialSite);
 
   const value = useMemo(() => {
     const noop = async () => undefined;
     const event = { id: 'dev', user_id: 'dev', title: "Emma & Frederik's wedding", ...eventOverride } as EventRow;
     const base = {
       loading: false, hasWedding: true, event, profile: null, couple: { ...FIXTURE_COUPLE, ...coupleOverride },
-      venues, drafts: [], outbound: [], replies: [], attachments: [], proposals: [],
+      venues, drafts: [], outbound, replies, attachments: [], proposals,
       inviteOrders: [], inviteDesigns: [], invitations: [], journey,
-      dayProgramItems, timelineTasks, moodboardItems: [], weddingSite: null,
-      registryItems: [], registryClaims: [], thankYous: [], honeymoonSaves: [],
-      websiteDesigns: [], websiteDesign: null, sitePhotos: [], websiteOrders: [], websitePaid: false,
+      dayProgramItems, timelineTasks, moodboardItems: [], weddingSite,
+      registryItems, registryClaims, thankYous, honeymoonSaves,
+      websiteDesigns, websiteDesign: websiteDesigns.find((d) => d.active) ?? null, sitePhotos: [], websiteOrders: [], websitePaid: false,
+      invitationDesigns, invitationDesign: invitationDesigns.find((d) => d.active) ?? null,
       guests, seatingPlan, budgetItems, budgetSubItems,
 
       saveSeating: async (data: Record<string, unknown>) => {
@@ -150,6 +176,33 @@ export function FixtureWedding({
         setTimelineTasks((rows) => rows.filter((r) => (r.kind === 'check' ? 'check' : 'milestone') !== kind));
         return null;
       },
+      addHoneymoonSave: async (item: Partial<HoneymoonSaveRow> & { kind: HoneymoonSaveRow['kind']; name: string }) => {
+        setHoneymoonSaves((rows) => [{
+          id: id('h'), event_id: 'dev', user_id: 'dev', location: null, blurb: null, image_url: null,
+          place_id: null, rating: null, meta: {}, created_at: new Date().toISOString(), ...item,
+        } as HoneymoonSaveRow, ...rows]);
+      },
+      removeHoneymoonSave: async (hid: string) => setHoneymoonSaves((rows) => rows.filter((r) => r.id !== hid)),
+      setHoneymoonBooked: async (hid: string, booked: boolean) => {
+        setHoneymoonSaves((rows) => rows.map((r) => (r.id === hid ? { ...r, meta: { ...r.meta, booked } } : r)));
+      },
+      saveThankYou: async (
+        subject_key: string,
+        patch: { label: string; gift?: string | null; thanked_at?: string | null; method?: ThankMethod | null; note?: string | null },
+      ) => {
+        setThankYous((rows) => {
+          const existing = rows.find((r) => r.subject_key === subject_key);
+          if (existing) return rows.map((r) => (r === existing ? { ...r, ...patch } : r));
+          return [...rows, {
+            id: id('ty'), event_id: 'dev', user_id: 'dev', subject_key, gift: null, thanked_at: null,
+            method: null, note: null, created_at: now, ...patch,
+          } as ThankYouRow];
+        });
+      },
+      saveVenueReview: async (vid: string, patch: Partial<VenueRow>) => {
+        setVenues((rows) => rows.map((r) => (r.id === vid ? { ...r, ...patch } : r)));
+      },
+      saveSite: async (patch: Partial<WeddingSiteRow>) => setWeddingSite((site) => ({ ...site, ...patch })),
       seedBudgetSubItems: async (items: { category: string; label: string; amount: number; sort: number }[]) => {
         setBudgetSubItems((rows) => [...rows, ...items.map((item) => ({
           id: id('s'), event_id: 'dev', user_id: 'dev', vendor: null, paid: false, created_at: now, ...item,
@@ -161,7 +214,11 @@ export function FixtureWedding({
     return new Proxy(base, {
       get: (target, key) => (key in target ? target[key as keyof typeof target] : noop),
     }) as unknown as WeddingData;
-  }, [guests, seatingPlan, budgetItems, budgetSubItems, timelineTasks, dayProgramItems, coupleOverride, eventOverride, venues, journey]);
+  }, [
+    guests, seatingPlan, budgetItems, budgetSubItems, timelineTasks, dayProgramItems, coupleOverride, eventOverride,
+    venues, journey, honeymoonSaves, thankYous, registryItems, registryClaims, weddingSite, websiteDesigns,
+    outbound, replies, proposals,
+  ]);
 
   return (
     <WeddingFixtureProvider value={value}>

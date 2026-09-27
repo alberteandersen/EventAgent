@@ -396,6 +396,12 @@ async function findRow<T extends { id: string }>(
 
 // ── Overview ────────────────────────────────────────────────────────────
 
+/** The same live numbers get_planning_overview returns, for the chat route to
+ *  put in front of Ava every turn, whichever conversation she is in. */
+export function planningSnapshot(supabase: SupabaseClient, event: EventRow) {
+  return execPlanningOverview(supabase, event);
+}
+
 async function execPlanningOverview(
   supabase: SupabaseClient,
   event: EventRow

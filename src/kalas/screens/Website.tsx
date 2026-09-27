@@ -1,29 +1,38 @@
-import { useState, useId, useEffect, useMemo, useRef } from 'react';
+import { useState, useId, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  Check, Globe, Smartphone, Plus, Trash2, Palette, Loader2, Upload,
-  Lock, Copy, Eye, MapPin, Gift, HelpCircle, Bed, History, Star,
-  Camera, Clock, BookOpen, Image, QrCode, ChevronDown, RotateCcw,
+  Check, Globe, Smartphone, Plus, Trash2, Palette,
+  Lock, Copy, Eye, MapPin, Gift, HelpCircle, Bed,
+  Camera, Clock, BookOpen, Image, QrCode, CalendarClock,
 } from 'lucide-react';
 import { IMAGES as IMG, guests } from '../data';
 import { Eyebrow, Toggle, cn } from '../ui';
 import { useWedding, type Couple } from '../useWedding';
 import { SiteRenderer } from '../site/SiteRenderer';
 import {
-  parseConfig, slugify, INIT_SECTIONS, INIT_PROGRAM, INIT_FAQ, INIT_HOTELS, GALLERY_KEYS,
+  parseConfig, slugify, GALLERY_KEYS,
   type SiteConfig, type ProgramEvent, type FAQItem, type HotelItem, type SectionId, type SectionMeta,
 } from '../site/config';
 import { parseSiteDesign, DEFAULT_DESIGN, type SiteDesign } from '../site/design';
-import { googleFontsHref, fontStack, SITE_FONTS } from '../site/fonts';
+import { googleFontsHref, SITE_FONTS } from '../site/fonts';
 import { resolveHtml, familiesInHtml } from '@/lib/website/resolveHtml';
-import { SITE_PRESETS } from '../site/presets';
+import { settleJob } from '@/lib/jobs/client';
+import { fillSlots, needsRebuild } from '@/lib/website/slots';
 import { normalizeImage } from '../site/normalizeImage';
 import { websitePriceDkk } from '@/lib/website/pricing';
 import type { SitePhotoRow, WebsiteDesignRow } from '@/lib/db/types';
 import { useLang } from '../i18n';
-import { EMPTY_CONTACT, withAllSections, type GuestContact } from '../site/config';
+import type { GuestContact } from '../site/config';
+import { CONTENT_STEPS, outlineSummary, sectionStatus, stepSummary, type SectionStatus } from '../site/outline';
 import { ContactEditor, GuestbookModeration, QrBlock, SeatFinderInfo, SiteOverview } from './website/HubPanels';
+import { ContentStepNav, ContentStepRow, SectionStatusLine, StaleContentNotice } from './website/ContentOutline';
 import { BookHeart, Armchair, UserRound } from 'lucide-react';
+import WebsiteSteps, { type DesignStep } from './WebsiteSteps';
+import { builderStart, programFromDay, stableJson, venueLine as lineFor } from '../site/builderStart';
+import { AvaFaqPanel, AvaTextPanel, AvaWriteButton, useAvaText } from './website/AvaDraft';
+import { mergeFaqDraft } from '@/lib/website/draft';
+import { describeVersions } from '../site/versions';
+import { DesignVersions, versionWhat } from './website/DesignVersions';
 
 type WTab = 'design' | 'indhold' | 'indstillinger';
 
@@ -31,83 +40,94 @@ type WTab = 'design' | 'indhold' | 'indstillinger';
    MAIN EXPORT
 ══════════════════════════════════════════════════════════════════════ */
 export default function Website() {
-  const { t } = useLang();
+  const { loading, weddingSite } = useWedding();
+  // Content first: Ava builds from it. Until the couple picks a tab, a site
+  // that is already built opens on its design instead. Kept out here so a
+  // reload of the builder (below) leaves them where they were.
+  const [pickedTab, setTab] = useState<WTab | null>(null);
+  const [contentStep, setContentStep] = useState(0);
+
+  // The builder holds its own copy of the content and saves it as a whole,
+  // so a change made elsewhere (Ava in the chat) would be overwritten by the
+  // next keystroke. When the saved content turns into something the builder
+  // did not save itself, it starts over from it instead.
+  const [ownSave, setOwnSave] = useState<string | null>(null);
+  const [epoch, setEpoch] = useState(0);
+  const incoming = stableJson(weddingSite?.config ?? {});
+  const [seen, setSeen] = useState(incoming);
+  if (incoming !== seen) {
+    setSeen(incoming);
+    if (incoming !== ownSave) setEpoch((e) => e + 1);
+  }
+
+  // The builder starts from the saved site, so it waits until that is here
+  // (loading goes false once and stays there; refreshes do not unmount it).
+  if (loading) return <div className="min-h-screen" />;
+  return (
+    <WebsiteBuilder key={epoch}
+      pickedTab={pickedTab} setTab={setTab}
+      contentStep={contentStep} setContentStep={setContentStep}
+      onSaving={(config) => setOwnSave(stableJson(config))}
+    />
+  );
+}
+
+function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSaving }: {
+  pickedTab: WTab | null;
+  setTab: (tab: WTab) => void;
+  contentStep: number;
+  setContentStep: (step: number) => void;
+  /** Told what is about to be saved, so the save coming back is known as ours. */
+  onSaving: (config: Record<string, unknown>) => void;
+}) {
+  const { t, tn } = useLang();
   const {
-    couple, loading, event, weddingSite, saveSite, venues,
+    couple, event, weddingSite, saveSite, venues, dayProgramItems, registryItems,
     websiteDesign, websiteDesigns, sitePhotos, websitePaid, refresh,
   } = useWedding();
-  const [tab,      setTab]      = useState<WTab>('design');
+  const chosenVenue = venues.find((v) => v.id === event?.chosen_venue_id) ?? null;
+  const [start] = useState(() => builderStart({ site: weddingSite, venue: chosenVenue, dayProgram: dayProgramItems }));
+
+  const tab: WTab = pickedTab ?? (websiteDesign?.html ? 'design' : 'indhold');
 
   /* Sections */
-  const [sections, setSections] = useState<SectionMeta[]>(INIT_SECTIONS);
+  const [sections, setSections] = useState<SectionMeta[]>(start.sections);
   /* Sections that get an Ava-generated illustration in the build. */
-  const [aiImages, setAiImages] = useState<SectionId[]>(['dresscode', 'transport', 'gifts']);
+  const [aiImages, setAiImages] = useState<SectionId[]>(start.aiImages);
 
   /* Content */
-  const [heroTagline,  setHeroTagline]  = useState(`Kom og fejr dagen med os`);
-  const [storyText,    setStoryText]    = useState(`Vi mødte hinanden på en tilfældig tirsdag og har ikke kunnet slippe hinanden siden. Den ${couple.dateLabel} siger vi ja foran alle dem, vi holder af.`);
-  const [countdown,    setCountdown]    = useState(true);
-  const [program,      setProgram]      = useState<ProgramEvent[]>(INIT_PROGRAM);
-  const [rsvpDeadline, setRsvpDeadline] = useState('2026-08-01');
-  const [rsvpPlusOne,  setRsvpPlusOne]  = useState(true);
-  const [rsvpMeal,     setRsvpMeal]     = useState(true);
-  const [rsvpDietary,  setRsvpDietary]  = useState(true);
-  const [galleryKeys,  setGalleryKeys]  = useState<Set<keyof typeof IMG>>(new Set(['florals', 'olive', 'candles', 'arch']));
-  const [transport,    setTransport]    = useState('Sonnerupgaard Gods, Sonnerupvej 8, 4060 Kirke Såby');
-  const [dresscode,    setDresscode]    = useState('Festligt og elegant. Vi elsker at se jer klædt på til fejring. Kvinder bedes venligst undgå hvid eller cremefarvet.');
-  const [giftsText,    setGiftsText]    = useState('Din tilstedeværelse er vores største gave. Har du lyst til at give noget, sætter vi stor pris på bidrag til vores bryllupsrejse.');
-  const [giftsUrl,     setGiftsUrl]     = useState('');
-  const [faq,          setFaq]          = useState<FAQItem[]>(INIT_FAQ);
-  const [hotels,       setHotels]       = useState<HotelItem[]>(INIT_HOTELS);
-  const [contact,      setContact]      = useState<GuestContact>(EMPTY_CONTACT);
+  const [heroTagline,  setHeroTagline]  = useState(start.heroTagline);
+  const [storyText,    setStoryText]    = useState(start.storyText);
+  const [countdown,    setCountdown]    = useState(start.countdown);
+  const [program,      setProgram]      = useState<ProgramEvent[]>(start.program);
+  const [rsvpDeadline, setRsvpDeadline] = useState(start.rsvpDeadline);
+  const [rsvpPlusOne,  setRsvpPlusOne]  = useState(start.rsvpPlusOne);
+  const [rsvpMeal,     setRsvpMeal]     = useState(start.rsvpMeal);
+  const [rsvpDietary,  setRsvpDietary]  = useState(start.rsvpDietary);
+  const [galleryKeys,  setGalleryKeys]  = useState<Set<keyof typeof IMG>>(() => new Set(start.galleryKeys));
+  const [transport,    setTransport]    = useState(start.transport);
+  const [dresscode,    setDresscode]    = useState(start.dresscode);
+  const [giftsText,    setGiftsText]    = useState(start.giftsText);
+  const [giftsUrl,     setGiftsUrl]     = useState(start.giftsUrl);
+  const [faq,          setFaq]          = useState<FAQItem[]>(start.faq);
+  const [hotels,       setHotels]       = useState<HotelItem[]>(start.hotels);
+  const [contact,      setContact]      = useState<GuestContact>(start.contact);
 
   /* Publish */
-  const [domain,      setDomain]      = useState(`${slugify(couple.a)}-${slugify(couple.b)}`);
-  const [published,   setPublished]   = useState(false);
-  const [pwProtected, setPwProtected] = useState(false);
-  const [sitePassword,setSitePassword]= useState('');
+  const [domain,      setDomain]      = useState(start.domain ?? `${slugify(couple.a)}-${slugify(couple.b)}`);
+  const [published,   setPublished]   = useState(start.published);
+  const [pwProtected, setPwProtected] = useState(start.pwProtected);
+  const [sitePassword,setSitePassword]= useState(start.sitePassword);
   const [copied,      setCopied]      = useState(false);
-  const [hideBranding,setHideBranding]= useState(false);
+  const [hideBranding,setHideBranding]= useState(start.hideBranding);
   const [showLanding, setShowLanding] = useState(false);
   const [mobileView,  setMobileView]  = useState(false);
   const [showRsvp,    setShowRsvp]    = useState(false);
 
   // ── Persistence ──────────────────────────────────────────────────────
-  // Hydrate the whole builder from the saved config once the wedding loads,
-  // then autosave the config (debounced) as the couple edits.
-  const readyRef = useRef(false);
-  useEffect(() => {
-    if (readyRef.current || loading) return;
-    readyRef.current = true;
-    const c = (weddingSite?.config ?? {}) as Record<string, unknown>;
-    if (weddingSite && Object.keys(c).length > 0) {
-      // Sections added since the site was saved (the guest hub) join in off.
-      if (Array.isArray(c.sections)) setSections(withAllSections(c.sections as SectionMeta[]));
-      if (Array.isArray(c.aiImages)) setAiImages(c.aiImages as SectionId[]);
-      if (typeof c.heroTagline === 'string') setHeroTagline(c.heroTagline);
-      if (typeof c.storyText === 'string') setStoryText(c.storyText);
-      if (typeof c.countdown === 'boolean') setCountdown(c.countdown);
-      if (Array.isArray(c.program)) setProgram(c.program as ProgramEvent[]);
-      if (typeof c.rsvpDeadline === 'string') setRsvpDeadline(c.rsvpDeadline);
-      if (typeof c.rsvpPlusOne === 'boolean') setRsvpPlusOne(c.rsvpPlusOne);
-      if (typeof c.rsvpMeal === 'boolean') setRsvpMeal(c.rsvpMeal);
-      if (typeof c.rsvpDietary === 'boolean') setRsvpDietary(c.rsvpDietary);
-      if (Array.isArray(c.galleryKeys)) setGalleryKeys(new Set(c.galleryKeys as (keyof typeof IMG)[]));
-      if (typeof c.transport === 'string') setTransport(c.transport);
-      if (typeof c.dresscode === 'string') setDresscode(c.dresscode);
-      if (typeof c.giftsText === 'string') setGiftsText(c.giftsText);
-      if (typeof c.giftsUrl === 'string') setGiftsUrl(c.giftsUrl);
-      if (Array.isArray(c.faq)) setFaq(c.faq as FAQItem[]);
-      if (Array.isArray(c.hotels)) setHotels(c.hotels as HotelItem[]);
-      if (c.contact && typeof c.contact === 'object') setContact({ ...EMPTY_CONTACT, ...(c.contact as Partial<GuestContact>) });
-      if (typeof c.pwProtected === 'boolean') setPwProtected(c.pwProtected);
-      if (typeof c.sitePassword === 'string') setSitePassword(c.sitePassword);
-      if (typeof c.hideBranding === 'boolean') setHideBranding(c.hideBranding);
-    }
-    if (weddingSite?.domain) setDomain(weddingSite.domain);
-    if (weddingSite) setPublished(weddingSite.published);
-  }, [loading, weddingSite]);
-
+  // Autosave the config (debounced) as the couple edits. The first save
+  // also stores what a new site started from (venue, Bryllupsdagen), so
+  // Ava reads the same content the builder shows.
   const config = useMemo(
     () => ({
       sections, aiImages, heroTagline, storyText, countdown,
@@ -119,11 +139,20 @@ export default function Website() {
      giftsText, giftsUrl, faq, hotels, contact, pwProtected, sitePassword, hideBranding]
   );
 
+  const save = () => { onSaving(config); return saveSite({ config, domain, published }); };
   useEffect(() => {
-    if (!readyRef.current) return;
-    const saveTimer = setTimeout(() => { void saveSite({ config, domain, published }); }, 800);
+    const saveTimer = setTimeout(() => { void save(); }, 800);
     return () => clearTimeout(saveTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, domain, published, saveSite]);
+
+  // Ava's drafts read the saved content, so an edit waiting on the
+  // autosave goes first.
+  const flushSave = save;
+  const eventId = event?.id ?? null;
+  const avaTagline = useAvaText({ eventId, field: 'heroTagline', beforeCall: flushSave });
+  const avaStory = useAvaText({ eventId, field: 'story', beforeCall: flushSave });
+  const avaDresscode = useAvaText({ eventId, field: 'dresscode', beforeCall: flushSave });
 
   const toggleSection = (id: SectionId) =>
     setSections((prev) => prev.map((s) => s.id === id && !s.locked ? { ...s, enabled: !s.enabled } : s));
@@ -160,37 +189,72 @@ export default function Website() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [event?.id, photoIdsKey]);
 
-  const [working, setWorking] = useState<null | 'generate' | 'refine'>(null);
+  const [working, setWorking] = useState<null | 'generate' | 'refine' | 'sync'>(null);
   const [genError, setGenError] = useState<string | null>(null);
   const [needsPayment, setNeedsPayment] = useState(false);
 
-  const callDesignApi = async (path: string, body: Record<string, unknown>, kind: 'generate' | 'refine') => {
-    if (!event) return;
+  // Where the couple is in the design steps, and what they are telling Ava.
+  // Kept here because the panel itself unmounts on every tab switch.
+  const [designStep, setDesignStep] = useState<DesignStep | null>(null);
+  const [briefDraft, setBriefDraft] = useState<string | null>(null);
+  // Until they type, the box holds what they last told Ava: the newest
+  // version that carries it (picking a vibe saves a version without).
+  const savedBrief = useMemo(
+    () => websiteDesigns
+      .map((d) => (d.brief as { styleDirection?: string } | null)?.styleDirection)
+      .find((s): s is string => Boolean(s)) ?? '',
+    [websiteDesigns]
+  );
+
+  /** Resolves true when Ava's change went through and the wedding reloaded. */
+  const callDesignApi = async (path: string, body: Record<string, unknown>, kind: 'generate' | 'refine' | 'sync') => {
+    if (!event) return false;
     setWorking(kind);
     setGenError(null);
     try {
+      // Ava reads the saved content, so an edit still waiting on the
+      // autosave must land first.
+      await save();
       const res = await fetch(path, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: event.id, ...body }),
       });
-      if (res.status === 402) { setNeedsPayment(true); return; }
+      if (res.status === 402) { setNeedsPayment(true); return false; }
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { message?: string; error?: string };
         setGenError(data.message ?? data.error ?? 'Noget gik galt. Prøv igen.');
-        return;
+        return false;
+      }
+      // In production the build runs as a background job; wait for it.
+      const outcome = await settleJob(res);
+      if (!outcome.ok) {
+        setGenError(outcome.error ?? 'Noget gik galt. Prøv igen.');
+        return false;
       }
       await refresh();
+      return true;
     } catch {
       setGenError('Noget gik galt. Prøv igen.');
+      return false;
     } finally {
       setWorking(null);
     }
   };
 
-  const generateDesign = (styleDirection: string, fresh = false) =>
-    callDesignApi('/api/website/design', { styleDirection, fresh }, 'generate');
-  const refineDesign = (instruction: string) =>
-    callDesignApi('/api/website/design/refine', { instruction }, 'refine');
+  const generateDesign = (styleDirection: string) =>
+    callDesignApi('/api/website/design', { styleDirection }, 'generate');
+  // A change asked for while looking at an earlier version is a change to
+  // that version: it goes live first, and Ava works from it.
+  const refineDesign = async (instruction: string) => {
+    if (viewing) {
+      await activateDesign(viewing.id);
+      setViewingId(null);
+    }
+    return callDesignApi('/api/website/design/refine', { instruction }, 'refine');
+  };
+  /** New words into the built site, same design. */
+  const syncContent = () =>
+    callDesignApi('/api/website/design/refine', { syncContent: true }, 'sync');
 
   const [applyingPreset, setApplyingPreset] = useState<string | null>(null);
   const applyPreset = async (presetId: string) => {
@@ -312,15 +376,35 @@ export default function Website() {
 
   const previewConfig = useMemo(() => parseConfig(config), [config]);
 
+  // The outline: what is on the site, and what still misses something.
+  const outlineExtras = { hasRegistry: registryItems.length > 0 };
+  const stepSummaries = CONTENT_STEPS.map((s) => stepSummary(s, previewConfig, outlineExtras));
+  const contentSummary = outlineSummary(previewConfig, outlineExtras);
+  const statusOf = (id: SectionId) => sectionStatus(id, previewConfig, outlineExtras);
+
+  // Rewording flows into a built site through its text slots; a new
+  // section or row needs Ava. Older builds without slots need her for any
+  // change, and builds that recorded nothing say nothing (see slots.ts).
+  const contentStale = Boolean(
+    websiteDesign?.html
+    && needsRebuild(websiteDesign.html, websiteDesign.brief as Parameters<typeof needsRebuild>[1], previewConfig),
+  );
+
   // Model-built HTML (aliases → preview URLs, fonts detected from markup).
-  const activeHtml = websiteDesign?.html ?? null;
-  const previewHtml = useMemo(() => {
-    if (!activeHtml) return null;
-    const aliases = ((websiteDesign?.brief as { imageAliases?: Record<string, string> })?.imageAliases) ?? {};
+  // Under Design the couple can look at an earlier version without making
+  // it live; everywhere else the preview is the live one.
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const viewing = viewingId ? websiteDesigns.find((d) => d.id === viewingId && d.html && !d.active) ?? null : null;
+  const shownDesign = tab === 'design' && viewing ? viewing : websiteDesign;
+
+  const venueUrls = useMemo(() => {
     const venue = venues.find((v) => v.id === event?.chosen_venue_id) ?? null;
-    const venueUrls = venue
-      ? [venue.image_url, ...(venue.photo_urls ?? [])].filter((u): u is string => Boolean(u))
-      : [];
+    return venue ? [venue.image_url, ...(venue.photo_urls ?? [])].filter((u): u is string => Boolean(u)) : [];
+  }, [venues, event?.chosen_venue_id]);
+
+  /** A version's HTML as guests would get it: today's words, fresh images. */
+  const renderVersion = useCallback((row: WebsiteDesignRow): string => {
+    const aliases = ((row.brief as { imageAliases?: Record<string, string> })?.imageAliases) ?? {};
     const map: Record<string, string> = {};
     for (const [alias, source] of Object.entries(aliases)) {
       if (source.startsWith('photo:')) {
@@ -331,15 +415,35 @@ export default function Website() {
         if (u) map[alias] = u;
       }
     }
-    return resolveHtml(activeHtml, map);
-  }, [activeHtml, websiteDesign, venues, event?.chosen_venue_id, photoUrls]);
+    return resolveHtml(fillSlots(row.html ?? '', previewConfig), map);
+  }, [photoUrls, venueUrls, previewConfig]);
 
-  const htmlFontsHref = useMemo(() => {
-    if (!activeHtml) return null;
-    const fams = familiesInHtml(activeHtml, SITE_FONTS.map((f) => f.family));
+  const fontsHrefFor = (html: string | null | undefined): string | null => {
+    if (!html) return null;
+    const fams = familiesInHtml(html, SITE_FONTS.map((f) => f.family));
     const ids = SITE_FONTS.filter((f) => fams.includes(f.family)).map((f) => f.id);
     return ids.length > 0 ? googleFontsHref(ids) : null;
-  }, [activeHtml]);
+  };
+
+  const previewHtml = useMemo(
+    () => (shownDesign?.html ? renderVersion(shownDesign) : null),
+    [shownDesign, renderVersion],
+  );
+  const htmlFontsHref = useMemo(() => fontsHrefFor(shownDesign?.html), [shownDesign]);
+
+  // Every built version, newest first, for the row under the preview.
+  const versionInfos = useMemo(() => describeVersions(websiteDesigns), [websiteDesigns]);
+  const versionThumbs = useMemo(
+    () => versionInfos
+      .filter((v) => v.kind !== 'template')
+      .slice(0, 12)
+      .map((info) => {
+        const row = websiteDesigns.find((d) => d.id === info.id)!;
+        return { info, html: renderVersion(row), fontsHref: fontsHrefFor(row.html) };
+      }),
+    [versionInfos, websiteDesigns, renderVersion],
+  );
+  const viewingInfo = viewing ? versionInfos.find((v) => v.id === viewing.id) ?? null : null;
 
   // Per-section generated image thumbnails for the content-tab toggles.
   const sectionThumb = (id: SectionId): string | null => {
@@ -352,6 +456,275 @@ export default function Website() {
       setAiImages((prev) => (v ? [...new Set([...prev, id])] : prev.filter((x) => x !== id))),
     thumb: sectionThumb(id),
   });
+
+  /* ── Indhold: one editor per section, shown by the step it belongs to ── */
+  const step = CONTENT_STEPS[contentStep];
+  const venueLine = lineFor(chosenVenue);
+  // Offered while the programme differs from Bryllupsdagen, however it came to.
+  const dayRows = programFromDay(dayProgramItems);
+  const sameAsDay = dayRows.length === program.length
+    && dayRows.every((d, i) => d.time === program[i].time && d.label === program[i].label && d.sublabel === program[i].sublabel);
+  const importDayProgram = () => {
+    const edited = program.some((p) => p.label.trim() || p.time.trim());
+    if (edited && !window.confirm(t('Erstat programmet med jeres Bryllupsdagen? Det, der står her nu, forsvinder.'))) return;
+    setProgram(dayRows);
+  };
+
+  const card = (id: SectionId, icon: React.ReactNode, children: React.ReactNode, withAi = false) => (
+    <SectionCard section={sections.find((s) => s.id === id)!} status={statusOf(id)} onToggle={toggleSection}
+      icon={icon} ai={withAi ? aiToggle(id) : undefined}>
+      {children}
+    </SectionCard>
+  );
+
+  const editor = (id: SectionId): React.ReactNode => {
+    switch (id) {
+      case 'hero': return card('hero', <Image size={15} />, <>
+        <Label>{t('Navne')}</Label>
+        <p className="rule rounded-xl bg-shell px-4 py-3 text-[0.88rem] text-ink">{couple.a} & {couple.b} · {couple.dateLabel}</p>
+        <p className="mt-1 text-[0.7rem] text-muted">{t('Fra jeres profil')}</p>
+        <div className="mt-4">
+          <div className="flex items-center justify-between gap-3">
+            <Label>{t('Velkomstbesked')}</Label>
+            <AvaWriteButton onClick={avaTagline.start} busy={avaTagline.busy} />
+          </div>
+          <Textarea value={heroTagline} onChange={setHeroTagline} rows={2} placeholder={t('Kom og fejr dagen med os')} />
+          <AvaTextPanel state={avaTagline} hasText={Boolean(heroTagline.trim())} onUse={setHeroTagline} />
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <Label>{t('Nedtælling til brylluppet')}</Label>
+          <Toggle value={countdown} onChange={setCountdown} />
+        </div>
+      </>);
+
+      case 'story': return card('story', <BookOpen size={15} />, <>
+        <div className="flex items-center justify-between gap-3">
+          <Label>{t('Jeres historie')}</Label>
+          <AvaWriteButton onClick={avaStory.start} busy={avaStory.busy} />
+        </div>
+        <Textarea value={storyText} onChange={setStoryText} rows={5}
+          placeholder={t('Hvordan I mødtes, hvornår I vidste det, og hvad I glæder jer til…')} />
+        <AvaTextPanel state={avaStory} hasText={Boolean(storyText.trim())} onUse={setStoryText} />
+        <p className="mt-2 text-[0.7rem] text-muted">{t('Et par linjer er nok. Ava skriver den ind, som den står.')}</p>
+      </>, true);
+
+      case 'program': return card('program', <Clock size={15} />, <>
+        <div className="flex items-center justify-between gap-3">
+          <Label>{t('Programpunkter')}</Label>
+          {dayRows.length > 0 && !sameAsDay && (
+            <button type="button" onClick={importDayProgram}
+              className="mb-1.5 flex items-center gap-1.5 text-[0.72rem] text-muted hover:text-ink transition-colors cursor-pointer">
+              <CalendarClock size={12} /> {t('Hent fra Bryllupsdagen ({n})', { n: dayProgramItems.length })}
+            </button>
+          )}
+        </div>
+        <div className="mt-1 space-y-2">
+          {program.map((ev) => (
+            <div key={ev.id} className="flex gap-2 items-start">
+              <input value={ev.time} onChange={(e) => setProgram((p) => p.map((x) => x.id === ev.id ? { ...x, time: e.target.value } : x))}
+                className="w-16 shrink-0 rounded-lg rule bg-card px-2 py-1.5 text-[0.82rem] text-ink text-center focus:outline-none focus:ring-1 focus:ring-ink/20"
+                placeholder={t('00:00')} aria-label={t('Tidspunkt')} />
+              <div className="flex-1 space-y-1.5">
+                <input value={ev.label} onChange={(e) => setProgram((p) => p.map((x) => x.id === ev.id ? { ...x, label: e.target.value } : x))}
+                  className="w-full rounded-lg rule bg-card px-3 py-1.5 text-[0.82rem] text-ink focus:outline-none focus:ring-1 focus:ring-ink/20"
+                  placeholder={t('Programpunkt')} />
+                <input value={ev.sublabel} onChange={(e) => setProgram((p) => p.map((x) => x.id === ev.id ? { ...x, sublabel: e.target.value } : x))}
+                  className="w-full rounded-lg bg-transparent px-3 py-1 text-[0.74rem] text-muted focus:outline-none"
+                  placeholder={t('Sted / detalje (valgfrit)')} />
+              </div>
+              <button type="button" onClick={() => setProgram((p) => p.filter((x) => x.id !== ev.id))}
+                aria-label={t('Slet')}
+                className="mt-1.5 shrink-0 text-muted hover:text-ink transition-colors cursor-pointer">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+          <button type="button"
+            onClick={() => setProgram((p) => [...p, { id: `e${Date.now()}`, time: '', label: '', sublabel: '' }])}
+            className="flex items-center gap-2 text-[0.78rem] text-muted hover:text-ink transition-colors cursor-pointer mt-2">
+            <Plus size={14} /> {t('Tilføj programpunkt')}
+          </button>
+        </div>
+      </>, true);
+
+      case 'rsvp': return card('rsvp', <Check size={15} />, <>
+        <div className="space-y-4">
+          <div>
+            <Label>{t('RSVP-deadline')}</Label>
+            <input type="date" value={rsvpDeadline} onChange={(e) => setRsvpDeadline(e.target.value)}
+              className="mt-1 rounded-lg rule bg-card px-3 py-2 text-[0.85rem] text-ink focus:outline-none w-full" />
+          </div>
+          <ToggleRow label={t('+1 tilladet')} value={rsvpPlusOne} onChange={setRsvpPlusOne} />
+          <ToggleRow label={t('Måltidsvalg (vegetar/standard)')} value={rsvpMeal} onChange={setRsvpMeal} />
+          <ToggleRow label={t('Allergier & kostbehov')} value={rsvpDietary} onChange={setRsvpDietary} />
+        </div>
+        <p className="mt-4 text-[0.72rem] text-muted">{t('Svar synkroniseres automatisk med jeres gæsteliste.')}</p>
+      </>, true);
+
+      case 'gallery': return card('gallery', <Camera size={15} />, <>
+        <Label>{t('Vælg billeder til galleriet')}</Label>
+        <div className="mt-2 grid grid-cols-4 gap-2">
+          {GALLERY_KEYS.map((key) => {
+            const on = galleryKeys.has(key);
+            return (
+              <button key={key} type="button" aria-pressed={on} onClick={() => setGalleryKeys((prev) => {
+                const n = new Set(prev);
+                if (on) n.delete(key); else n.add(key);
+                return n;
+              })}
+                className={cn('relative aspect-square overflow-hidden rounded-xl cursor-pointer transition-all',
+                  on ? 'ring-2 ring-ink ring-offset-1 ring-offset-canvas' : 'opacity-50 hover:opacity-75')}>
+                <img src={IMG[key]} alt="" className="h-full w-full object-cover" />
+                {on && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-ink/30">
+                    <Check size={14} className="text-canvas" />
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-[0.7rem] text-muted">{t('{n} billeder valgt · Fra jeres moodboard', { n: galleryKeys.size })}</p>
+      </>);
+
+      case 'transport': return card('transport', <MapPin size={15} />, <>
+        <Label>{t('Adresse')}</Label>
+        <Textarea value={transport} onChange={setTransport} rows={2} placeholder={t('Venue-navn, adresse, postnummer')} />
+        {venueLine && transport.trim() !== venueLine && (
+          <button type="button" onClick={() => setTransport(venueLine)}
+            className="mt-2 text-[0.72rem] text-muted underline decoration-dotted underline-offset-2 hover:text-ink cursor-pointer">
+            {t('Brug {venue}', { venue: venueLine })}
+          </button>
+        )}
+        <p className="mt-2 text-[0.7rem] text-muted">{t('Ava tilføjer automatisk et kort-link til gæsterne.')}</p>
+      </>, true);
+
+      case 'dresscode': return card('dresscode', <Eye size={15} />, <>
+        <div className="flex items-center justify-between gap-3">
+          <Label>{t('Dresscode-tekst')}</Label>
+          <AvaWriteButton onClick={avaDresscode.start} busy={avaDresscode.busy} label={t('Foreslå med Ava')} />
+        </div>
+        <Textarea value={dresscode} onChange={setDresscode} rows={3}
+          placeholder={t('f.eks. Festligt og elegant. Tag gerne flade sko med til plænen.')} />
+        <AvaTextPanel state={avaDresscode} hasText={Boolean(dresscode.trim())} onUse={setDresscode} />
+      </>, true);
+
+      case 'gifts': return card('gifts', <Gift size={15} />, <>
+        <div className="space-y-4">
+          <div>
+            <Label>{t('Tekst til gæsterne')}</Label>
+            <Textarea value={giftsText} onChange={setGiftsText} rows={3} placeholder={t('Ingen ønskeliste, bryllupsrejse, eller link til registrering…')} />
+          </div>
+          {registryItems.length > 0 ? (
+            <p className="rule rounded-xl bg-shell px-4 py-3 text-[0.78rem] text-muted">
+              {tn(registryItems.length,
+                'Jeres ønskeliste med én gave vises under teksten.',
+                'Jeres ønskeliste med {n} gaver vises under teksten.',
+                { n: registryItems.length })}
+            </p>
+          ) : (
+            <div>
+              <Label>{t('Ønskeliste-link (valgfrit)')}</Label>
+              <input value={giftsUrl} onChange={(e) => setGiftsUrl(e.target.value)}
+                placeholder={t('https://...')}
+                className="mt-1 w-full rounded-lg rule bg-card px-3 py-2 text-[0.82rem] text-ink placeholder:text-muted focus:outline-none" />
+            </div>
+          )}
+        </div>
+      </>, true);
+
+      case 'hotel': return card('hotel', <Bed size={15} />, <>
+        <Label>{t('Anbefalede hoteller')}</Label>
+        <div className="mt-1 space-y-2">
+          {hotels.map((h) => (
+            <div key={h.id} className="rule rounded-xl bg-card p-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 space-y-1.5">
+                  <input value={h.name} onChange={(e) => setHotels((prev) => prev.map((x) => x.id === h.id ? { ...x, name: e.target.value } : x))}
+                    className="w-full text-[0.85rem] font-medium text-ink bg-transparent focus:outline-none border-b border-[var(--color-line)] pb-0.5"
+                    placeholder={t('Hotelnavn')} />
+                  <div className="flex gap-3">
+                    <input value={h.dist} onChange={(e) => setHotels((prev) => prev.map((x) => x.id === h.id ? { ...x, dist: e.target.value } : x))}
+                      className="flex-1 text-[0.75rem] text-muted bg-transparent focus:outline-none" placeholder={t('Afstand')} />
+                    <input value={h.price} onChange={(e) => setHotels((prev) => prev.map((x) => x.id === h.id ? { ...x, price: e.target.value } : x))}
+                      className="flex-1 text-[0.75rem] text-muted bg-transparent focus:outline-none" placeholder={t('Pris')} />
+                  </div>
+                </div>
+                <button type="button" onClick={() => setHotels((prev) => prev.filter((x) => x.id !== h.id))}
+                  aria-label={t('Slet')}
+                  className="shrink-0 text-muted hover:text-ink transition-colors cursor-pointer">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={() => setHotels((prev) => [...prev, { id: `h${Date.now()}`, name: '', dist: '', price: '' }])}
+            className="flex items-center gap-2 text-[0.78rem] text-muted hover:text-ink transition-colors cursor-pointer">
+            <Plus size={14} /> {t('Tilføj hotel')}
+          </button>
+        </div>
+      </>, true);
+
+      case 'faq': return card('faq', <HelpCircle size={15} />, <>
+        <div className="flex flex-wrap items-center justify-between gap-x-3">
+          <Label>{t('Spørgsmål & svar')}</Label>
+          <AvaFaqPanel eventId={eventId} beforeCall={flushSave} faq={faq}
+            onUse={(draft) => setFaq((prev) => mergeFaqDraft(prev, draft, (i) => `f${Date.now()}-${i}`))} />
+        </div>
+        <div className="mt-1 space-y-3">
+          {faq.map((item) => (
+            <div key={item.id} className="rule rounded-xl bg-card p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <div className="flex-1 space-y-2">
+                  <input value={item.q}
+                    onChange={(e) => setFaq((f) => f.map((x) => x.id === item.id ? { ...x, q: e.target.value } : x))}
+                    className="w-full text-[0.82rem] font-medium text-ink bg-transparent border-b border-[var(--color-line)] pb-0.5 focus:outline-none"
+                    placeholder={t('Spørgsmål…')} />
+                  <textarea value={item.a} rows={2}
+                    onChange={(e) => setFaq((f) => f.map((x) => x.id === item.id ? { ...x, a: e.target.value } : x))}
+                    className="w-full resize-none text-[0.78rem] text-muted bg-transparent focus:outline-none leading-relaxed"
+                    placeholder={t('Svar…')} />
+                </div>
+                <button type="button" onClick={() => setFaq((f) => f.filter((x) => x.id !== item.id))}
+                  aria-label={t('Slet')}
+                  className="mt-0.5 shrink-0 text-muted hover:text-ink transition-colors cursor-pointer">
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" onClick={() => setFaq((f) => [...f, { id: `f${Date.now()}`, q: '', a: '' }])}
+            className="flex items-center gap-2 text-[0.78rem] text-muted hover:text-ink transition-colors cursor-pointer">
+            <Plus size={14} /> {t('Tilføj spørgsmål')}
+          </button>
+        </div>
+      </>, true);
+
+      case 'photos': return card('photos', <Camera size={15} />, <>
+        <p className="text-[0.84rem] text-muted leading-relaxed">
+          {t('Gæsterne får en knap til at uploade egne billeder. Alle billeder samles i jeres private galleri.')}
+        </p>
+        {/* The upload page is live at /w/{domain}/del; the photos land
+           in the album under Nygift. A code on the tables is how most
+           guests will find it. */}
+        <div className="mt-3 flex items-center gap-4 rule rounded-xl bg-shell px-4 py-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.8rem] text-ink">{t('QR-kode til bordene')}</p>
+            <p className="mt-0.5 text-[0.72rem] text-muted">
+              {published
+                ? t('Gæsterne scanner den og uploader deres billeder til jeres album under Nygift.')
+                : t('Koden virker, når siden er udgivet.')}
+            </p>
+          </div>
+          <QrBlock url={`${publicUrl}/del`} caption={t('Del jeres billeder med os')} size={84} />
+        </div>
+      </>);
+
+      case 'contact': return card('contact', <UserRound size={15} />, <ContactEditor value={contact} onChange={setContact} />);
+      case 'seat': return card('seat', <Armchair size={15} />, <SeatFinderInfo />);
+      case 'guestbook': return card('guestbook', <BookHeart size={15} />, <GuestbookModeration />);
+    }
+  };
 
   const preview = (
     <ScaledPreview
@@ -375,8 +748,8 @@ export default function Website() {
         <div className="flex items-center justify-between px-6 pt-5 sm:px-9 lg:px-12">
           <div className="flex items-end gap-8 pb-0">
             {([
-              { id: 'design',         label: t('Design')         },
               { id: 'indhold',        label: t('Indhold')        },
+              { id: 'design',         label: t('Design')         },
               { id: 'indstillinger',  label: t('Indstillinger')  },
             ] as const).map(({ id, label }) => {
               const active = tab === id;
@@ -423,6 +796,22 @@ export default function Website() {
                     <Smartphone size={12} /> {mobileView ? t('Desktop') : t('Mobil')}
                   </button>
                 </div>
+                {viewingInfo && viewing && (
+                  <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-sage-tint/70 px-4 py-2.5">
+                    <p className="min-w-0 flex-1 text-[0.8rem] text-ink">
+                      <span className="font-medium">{t('Du ser version {n}', { n: viewingInfo.number ?? '' })}</span>
+                      <span className="text-muted"> · {versionWhat(viewingInfo, t)}</span>
+                    </p>
+                    <button type="button" onClick={() => { void activateDesign(viewing.id).then(() => setViewingId(null)); }}
+                      className="rounded-full bg-ink px-3.5 py-1.5 text-[0.64rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                      {published ? t('Gør den live') : t('Brug denne')}
+                    </button>
+                    <button type="button" onClick={() => setViewingId(null)}
+                      className="text-[0.74rem] text-muted hover:text-ink transition-colors cursor-pointer">
+                      {t('Tilbage til den aktive')}
+                    </button>
+                  </div>
+                )}
                 <div className={cn('transition-all duration-300', mobileView && 'mx-auto w-full max-w-[390px]')}>
                   {preview}
                 </div>
@@ -439,18 +828,24 @@ export default function Website() {
                   )}
                 </div>
               </div>
+              <DesignVersions versions={versionThumbs} viewingId={viewing?.id ?? null}
+                published={published} onView={setViewingId} />
             </div>
 
-            {/* Right: Ava design studio */}
+            {/* Right: Ava, one step at a time */}
             <div className="rule-t lg:rule-t-0 px-6 py-10 sm:px-9 lg:py-12 overflow-y-auto">
-              <DesignStudio
+              <WebsiteSteps
+                step={designStep}
+                onStep={setDesignStep}
+                brief={briefDraft ?? savedBrief}
+                onBrief={setBriefDraft}
                 hasDesign={Boolean(websiteDesign)}
                 hasHtml={Boolean(websiteDesign?.html)}
                 design={design}
                 designs={websiteDesigns}
-                activeId={websiteDesign?.id ?? null}
+                refineTarget={viewingInfo?.number ?? null}
                 activePresetId={(websiteDesign?.brief as { preset?: string } | null)?.preset ?? null}
-                photos={sitePhotos}
+                photos={sitePhotos.filter((p) => p.role !== 'section')}
                 photoUrls={photoUrls}
                 working={working}
                 applyingPreset={applyingPreset}
@@ -459,14 +854,17 @@ export default function Website() {
                 needsPayment={needsPayment}
                 websitePaid={websitePaid}
                 onApplyPreset={applyPreset}
-                onGenerate={generateDesign}
+                onBuild={generateDesign}
                 onRefine={refineDesign}
-                onActivate={activateDesign}
                 onRestart={restartDesign}
                 onCheckout={startCheckout}
                 onUpload={uploadPhotos}
                 onDeletePhoto={deletePhoto}
                 onSetHero={setHeroPhoto}
+                content={contentSummary}
+                onOpenContent={() => setTab('indhold')}
+                contentStale={contentStale}
+                onSyncContent={() => void syncContent()}
               />
             </div>
           </motion.div>
@@ -478,250 +876,55 @@ export default function Website() {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="grid lg:grid-cols-[1fr_380px] lg:min-h-[calc(100vh-76px)]">
 
-            {/* Left: section editors */}
-            <div className="px-6 py-10 sm:px-9 lg:px-12 lg:py-12 space-y-3 lg:rule-r">
-              <div className="mb-8">
-                <Eyebrow>{t('Sektioner')}</Eyebrow>
-                <p className="mt-2 text-[0.88rem] text-muted">{t('Tænd/sluk sektioner og rediger indholdet. Siden opdateres til højre.')}</p>
+            {/* Left: the site as an outline, one step at a time */}
+            <div className="px-6 py-10 sm:px-9 lg:px-12 lg:py-12 lg:rule-r">
+              <div className="mb-7">
+                <Eyebrow>{t('Indhold')}</Eyebrow>
+                <p className="mt-2 text-[0.88rem] text-muted">
+                  {contentSummary.todo === 0
+                    ? t('{n} sektioner på siden, og alle er klar.', { n: contentSummary.on })
+                    : tn(contentSummary.todo,
+                        '{on} sektioner på siden. Én mangler stadig noget.',
+                        '{on} sektioner på siden. {n} mangler stadig noget.',
+                        { on: contentSummary.on, n: contentSummary.todo })}
+                </p>
               </div>
 
-              {/* HERO */}
-              <SectionCard id="hero" section={sections.find((s) => s.id === 'hero')!} onToggle={toggleSection}
-                icon={<Image size={15} />}>
-                <Label>{t('Navne')}</Label>
-                <p className="rule rounded-xl bg-shell px-4 py-3 text-[0.88rem] text-ink">{couple.a} & {couple.b}</p>
-                <p className="mt-1 text-[0.7rem] text-muted">{t('Fra jeres profil · redigér under Indstillinger')}</p>
-                <div className="mt-4">
-                  <Label>{t('Velkomstbesked')}</Label>
-                  <Textarea value={heroTagline} onChange={setHeroTagline} rows={2} placeholder={t('Kom og fejr dagen med os')} />
+              {contentStale && (
+                <div className="mb-7">
+                  <StaleContentNotice syncing={working === 'sync'} onSync={() => void syncContent()} />
+                  {genError && working === null && (
+                    <p className="mt-2 text-[0.75rem] text-[var(--color-terracotta)]">{t(genError)}</p>
+                  )}
                 </div>
-                <div className="mt-4 flex items-center justify-between">
-                  <Label>{t('Nedtælling til brylluppet')}</Label>
-                  <Toggle value={countdown} onChange={setCountdown} />
-                </div>
-              </SectionCard>
+              )}
 
-              {/* VORES HISTORIE */}
-              <SectionCard id="story" section={sections.find((s) => s.id === 'story')!} onToggle={toggleSection} ai={aiToggle('story')}
-                icon={<BookOpen size={15} />}>
-                <Label>{t('Jeres historie')}</Label>
-                <Textarea value={storyText} onChange={setStoryText} rows={5}
-                  placeholder={t('Fortæl gæsterne jeres historie…')} />
-                <p className="mt-2 text-[0.7rem] text-muted">{t('Ava har skrevet et udkast. Tilpas det som I ønsker.')}</p>
-              </SectionCard>
+              <ContentStepRow steps={CONTENT_STEPS} summaries={stepSummaries}
+                current={contentStep} onStep={setContentStep} />
 
-              {/* PROGRAM */}
-              <SectionCard id="program" section={sections.find((s) => s.id === 'program')!} onToggle={toggleSection} ai={aiToggle('program')}
-                icon={<Clock size={15} />}>
-                <Label>{t('Programpunkter')}</Label>
-                <div className="mt-1 space-y-2">
-                  {program.map((ev) => (
-                    <div key={ev.id} className="flex gap-2 items-start">
-                      <input value={ev.time} onChange={(e) => setProgram((p) => p.map((x) => x.id === ev.id ? { ...x, time: e.target.value } : x))}
-                        className="w-16 shrink-0 rounded-lg rule bg-card px-2 py-1.5 text-[0.82rem] text-ink text-center focus:outline-none focus:ring-1 focus:ring-ink/20"
-                        placeholder={t('00:00')} />
-                      <div className="flex-1 space-y-1.5">
-                        <input value={ev.label} onChange={(e) => setProgram((p) => p.map((x) => x.id === ev.id ? { ...x, label: e.target.value } : x))}
-                          className="w-full rounded-lg rule bg-card px-3 py-1.5 text-[0.82rem] text-ink focus:outline-none focus:ring-1 focus:ring-ink/20"
-                          placeholder={t('Programpunkt')} />
-                        <input value={ev.sublabel} onChange={(e) => setProgram((p) => p.map((x) => x.id === ev.id ? { ...x, sublabel: e.target.value } : x))}
-                          className="w-full rounded-lg bg-transparent px-3 py-1 text-[0.74rem] text-muted focus:outline-none"
-                          placeholder={t('Sted / detalje (valgfrit)')} />
-                      </div>
-                      <button onClick={() => setProgram((p) => p.filter((x) => x.id !== ev.id))}
-                        className="mt-1.5 shrink-0 text-muted hover:text-ink transition-colors cursor-pointer">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => setProgram((p) => [...p, { id: `e${Date.now()}`, time: '', label: '', sublabel: '' }])}
-                    className="flex items-center gap-2 text-[0.78rem] text-muted hover:text-ink transition-colors cursor-pointer mt-2">
-                    <Plus size={14} /> {t('Tilføj programpunkt')}
-                  </button>
-                </div>
-              </SectionCard>
-
-              {/* RSVP */}
-              <SectionCard id="rsvp" section={sections.find((s) => s.id === 'rsvp')!} onToggle={toggleSection} ai={aiToggle('rsvp')}
-                icon={<Check size={15} />}>
-                <div className="space-y-4">
-                  <div>
-                    <Label>{t('RSVP-deadline')}</Label>
-                    <input type="date" value={rsvpDeadline} onChange={(e) => setRsvpDeadline(e.target.value)}
-                      className="mt-1 rounded-lg rule bg-card px-3 py-2 text-[0.85rem] text-ink focus:outline-none w-full" />
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div key={step.id}
+                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  className="mt-7">
+                  <p className="font-serif text-[1.4rem] leading-tight text-ink">{t(step.title)}</p>
+                  <p className="mt-2 text-[0.85rem] leading-relaxed text-muted">{t(step.intro)}</p>
+                  <div className="mt-5 space-y-3">
+                    {step.sections.map((id) => <div key={id}>{editor(id)}</div>)}
                   </div>
-                  <ToggleRow label={t('+1 tilladet')} value={rsvpPlusOne} onChange={setRsvpPlusOne} />
-                  <ToggleRow label={t('Måltidsvalg (vegetar/standard)')} value={rsvpMeal} onChange={setRsvpMeal} />
-                  <ToggleRow label={t('Allergier & kostbehov')} value={rsvpDietary} onChange={setRsvpDietary} />
-                </div>
-                <p className="mt-4 text-[0.72rem] text-muted">{t('Svar synkroniseres automatisk med jeres gæsteliste.')}</p>
-              </SectionCard>
-
-              {/* GALLERI */}
-              <SectionCard id="gallery" section={sections.find((s) => s.id === 'gallery')!} onToggle={toggleSection}
-                icon={<Camera size={15} />}>
-                <Label>{t('Vælg billeder til galleriet')}</Label>
-                <div className="mt-2 grid grid-cols-4 gap-2">
-                  {GALLERY_KEYS.map((key) => {
-                    const on = galleryKeys.has(key);
-                    return (
-                      <button key={key} onClick={() => setGalleryKeys((prev) => {
-                        const n = new Set(prev);
-                        on ? n.delete(key) : n.add(key);
-                        return n;
-                      })}
-                        className={cn('relative aspect-square overflow-hidden rounded-xl cursor-pointer transition-all',
-                          on ? 'ring-2 ring-ink ring-offset-1 ring-offset-canvas' : 'opacity-50 hover:opacity-75')}>
-                        <img src={IMG[key]} alt="" className="h-full w-full object-cover" />
-                        {on && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-ink/30">
-                            <Check size={14} className="text-canvas" />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-2 text-[0.7rem] text-muted">{t('{n} billeder valgt · Fra jeres moodboard', { n: galleryKeys.size })}</p>
-              </SectionCard>
-
-              {/* TRANSPORT */}
-              <SectionCard id="transport" section={sections.find((s) => s.id === 'transport')!} onToggle={toggleSection} ai={aiToggle('transport')}
-                icon={<MapPin size={15} />}>
-                <Label>{t('Adresse')}</Label>
-                <Textarea value={transport} onChange={setTransport} rows={2} placeholder={t('Venue-navn, adresse, postnummer')} />
-                <p className="mt-2 text-[0.7rem] text-muted">{t('Ava tilføjer automatisk et kort-link til gæsterne.')}</p>
-              </SectionCard>
-
-              {/* DRESSCODE */}
-              <SectionCard id="dresscode" section={sections.find((s) => s.id === 'dresscode')!} onToggle={toggleSection} ai={aiToggle('dresscode')}
-                icon={<Eye size={15} />}>
-                <Label>{t('Dresscode-tekst')}</Label>
-                <Textarea value={dresscode} onChange={setDresscode} rows={3} placeholder={t('Beskriv dresscode og ønsker…')} />
-              </SectionCard>
-
-              {/* GAVEØNSKER */}
-              <SectionCard id="gifts" section={sections.find((s) => s.id === 'gifts')!} onToggle={toggleSection} ai={aiToggle('gifts')}
-                icon={<Gift size={15} />}>
-                <div className="space-y-4">
-                  <div>
-                    <Label>{t('Tekst til gæsterne')}</Label>
-                    <Textarea value={giftsText} onChange={setGiftsText} rows={3} placeholder={t('Ingen ønskeliste, bryllupsrejse, eller link til registrering…')} />
-                  </div>
-                  <div>
-                    <Label>{t('Ønskeliste-link (valgfrit)')}</Label>
-                    <input value={giftsUrl} onChange={(e) => setGiftsUrl(e.target.value)}
-                      placeholder={t('https://...')}
-                      className="mt-1 w-full rounded-lg rule bg-card px-3 py-2 text-[0.82rem] text-ink placeholder:text-muted focus:outline-none" />
-                  </div>
-                </div>
-              </SectionCard>
-
-              {/* OVERNATNING */}
-              <SectionCard id="hotel" section={sections.find((s) => s.id === 'hotel')!} onToggle={toggleSection} ai={aiToggle('hotel')}
-                icon={<Bed size={15} />}>
-                <Label>{t('Anbefalede hoteller')}</Label>
-                <div className="mt-1 space-y-2">
-                  {hotels.map((h) => (
-                    <div key={h.id} className="rule rounded-xl bg-card p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1 space-y-1.5">
-                          <input value={h.name} onChange={(e) => setHotels((prev) => prev.map((x) => x.id === h.id ? { ...x, name: e.target.value } : x))}
-                            className="w-full text-[0.85rem] font-medium text-ink bg-transparent focus:outline-none border-b border-[var(--color-line)] pb-0.5"
-                            placeholder={t('Hotelnavn')} />
-                          <div className="flex gap-3">
-                            <input value={h.dist} onChange={(e) => setHotels((prev) => prev.map((x) => x.id === h.id ? { ...x, dist: e.target.value } : x))}
-                              className="flex-1 text-[0.75rem] text-muted bg-transparent focus:outline-none" placeholder={t('Afstand')} />
-                            <input value={h.price} onChange={(e) => setHotels((prev) => prev.map((x) => x.id === h.id ? { ...x, price: e.target.value } : x))}
-                              className="flex-1 text-[0.75rem] text-muted bg-transparent focus:outline-none" placeholder={t('Pris')} />
-                          </div>
-                        </div>
-                        <button onClick={() => setHotels((prev) => prev.filter((x) => x.id !== h.id))}
-                          className="shrink-0 text-muted hover:text-ink transition-colors cursor-pointer">
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button onClick={() => setHotels((prev) => [...prev, { id: `h${Date.now()}`, name: '', dist: '', price: '' }])}
-                    className="flex items-center gap-2 text-[0.78rem] text-muted hover:text-ink transition-colors cursor-pointer">
-                    <Plus size={14} /> {t('Tilføj hotel')}
-                  </button>
-                </div>
-              </SectionCard>
-
-              {/* FAQ */}
-              <SectionCard id="faq" section={sections.find((s) => s.id === 'faq')!} onToggle={toggleSection} ai={aiToggle('faq')}
-                icon={<HelpCircle size={15} />}>
-                <Label>{t('Spørgsmål & svar')}</Label>
-                <div className="mt-1 space-y-3">
-                  {faq.map((item) => (
-                    <div key={item.id} className="rule rounded-xl bg-card p-3 space-y-2">
-                      <div className="flex items-start gap-2">
-                        <div className="flex-1 space-y-2">
-                          <input value={item.q}
-                            onChange={(e) => setFaq((f) => f.map((x) => x.id === item.id ? { ...x, q: e.target.value } : x))}
-                            className="w-full text-[0.82rem] font-medium text-ink bg-transparent border-b border-[var(--color-line)] pb-0.5 focus:outline-none"
-                            placeholder={t('Spørgsmål…')} />
-                          <textarea value={item.a} rows={2}
-                            onChange={(e) => setFaq((f) => f.map((x) => x.id === item.id ? { ...x, a: e.target.value } : x))}
-                            className="w-full resize-none text-[0.78rem] text-muted bg-transparent focus:outline-none leading-relaxed"
-                            placeholder={t('Svar…')} />
-                        </div>
-                        <button onClick={() => setFaq((f) => f.filter((x) => x.id !== item.id))}
-                          className="mt-0.5 shrink-0 text-muted hover:text-ink transition-colors cursor-pointer">
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button onClick={() => setFaq((f) => [...f, { id: `f${Date.now()}`, q: '', a: '' }])}
-                    className="flex items-center gap-2 text-[0.78rem] text-muted hover:text-ink transition-colors cursor-pointer">
-                    <Plus size={14} /> {t('Tilføj spørgsmål')}
-                  </button>
-                </div>
-              </SectionCard>
-
-              {/* DEL BILLEDER */}
-              <SectionCard id="photos" section={sections.find((s) => s.id === 'photos')!} onToggle={toggleSection}
-                icon={<Camera size={15} />}>
-                <p className="text-[0.84rem] text-muted leading-relaxed">
-                  {t('Gæsterne får en knap til at uploade egne billeder. Alle billeder samles i jeres private galleri.')}
-                </p>
-                {/* The upload page is live at /w/{domain}/del; the photos land
-                   in the album under Nygift. A code on the tables is how most
-                   guests will find it. */}
-                <div className="mt-3 flex items-center gap-4 rule rounded-xl bg-shell px-4 py-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[0.8rem] text-ink">{t('QR-kode til bordene')}</p>
-                    <p className="mt-0.5 text-[0.72rem] text-muted">
-                      {published
-                        ? t('Gæsterne scanner den og uploader deres billeder til jeres album under Nygift.')
-                        : t('Koden virker, når siden er udgivet.')}
-                    </p>
-                  </div>
-                  <QrBlock url={`${publicUrl}/del`} caption={t('Del jeres billeder med os')} size={84} />
-                </div>
-              </SectionCard>
-
-              {/* GÆSTEKONTAKT */}
-              <SectionCard id="contact" section={sections.find((s) => s.id === 'contact')!} onToggle={toggleSection}
-                icon={<UserRound size={15} />}>
-                <ContactEditor value={contact} onChange={setContact} />
-              </SectionCard>
-
-              {/* FIND MIN PLADS */}
-              <SectionCard id="seat" section={sections.find((s) => s.id === 'seat')!} onToggle={toggleSection}
-                icon={<Armchair size={15} />}>
-                <SeatFinderInfo />
-              </SectionCard>
-
-              {/* GÆSTEBOG */}
-              <SectionCard id="guestbook" section={sections.find((s) => s.id === 'guestbook')!} onToggle={toggleSection}
-                icon={<BookHeart size={15} />}>
-                <GuestbookModeration />
-              </SectionCard>
+                  <ContentStepNav
+                    onBack={contentStep > 0 ? () => setContentStep(contentStep - 1) : undefined}
+                    onNext={contentStep < CONTENT_STEPS.length - 1
+                      ? () => setContentStep(contentStep + 1)
+                      // The last step hands over to the design, unless the site
+                      // is built and they came here only to fix a word.
+                      : websiteDesign?.html ? undefined : () => setTab('design')}
+                    nextLabel={contentStep < CONTENT_STEPS.length - 1
+                      ? t('Næste: {step}', { step: t(CONTENT_STEPS[contentStep + 1].label) })
+                      : t('Videre til design')}
+                  />
+                </motion.div>
+              </AnimatePresence>
             </div>
 
             {/* Right: mini preview (desktop only) */}
@@ -729,6 +932,13 @@ export default function Website() {
               <div className="sticky top-20">
                 <p className="eyebrow mb-5">{t('Live forhåndsvisning')}</p>
                 {preview}
+                {previewHtml && (
+                  <p className="mt-3 text-[0.72rem] leading-relaxed text-muted">
+                    {contentStale
+                      ? t('Jeres tekst vises med det samme. Nye sektioner og punkter kommer med, når I opdaterer.')
+                      : t('Siden, som Ava byggede den, med jeres tekst, som den står nu.')}
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>
@@ -1001,12 +1211,12 @@ export default function Website() {
   );
 }
 
-/* ── Section card (collapsible) ──────────────────────────────────────── */
+/* ── Section card: on or off, and whether it is ready ─────────────────── */
 function SectionCard({
-  id, section, onToggle, icon, children, ai,
+  section, status, onToggle, icon, children, ai,
 }: {
-  id: SectionId;
   section: SectionMeta;
+  status: SectionStatus;
   onToggle: (id: SectionId) => void;
   icon: React.ReactNode;
   children: React.ReactNode;
@@ -1014,41 +1224,34 @@ function SectionCard({
   ai?: { on: boolean; onChange: (v: boolean) => void; thumb?: string | null };
 }) {
   const { t } = useLang();
-  const [open, setOpen] = useState(section.enabled && !section.locked);
-  const fieldId = useId();
+  const labelId = useId();
+  // A step shows only a handful of sections, so what is on is open: the
+  // couple sees what they are writing without a click per card.
+  const open = section.enabled || Boolean(section.locked);
 
   return (
-    <div className={cn('rule rounded-2xl overflow-hidden transition-all',
-      section.enabled ? 'bg-card' : 'bg-card/50 opacity-70')}>
+    <div className={cn('rule rounded-2xl overflow-hidden transition-colors',
+      open ? 'bg-card' : 'bg-card/50')}>
       {/* Header */}
       <div className="flex items-center gap-3 px-5 py-4">
-        <span className={cn('shrink-0 transition-colors', section.enabled ? 'text-ink' : 'text-muted')}>
+        <span className={cn('shrink-0 transition-colors', open ? 'text-ink' : 'text-muted')}>
           {icon}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="font-serif text-[1rem] text-ink leading-tight">{t(section.label)}</p>
-          <p className="text-[0.7rem] text-muted mt-0.5">{t(section.desc)}</p>
+          <p id={labelId} className={cn('font-serif text-[1rem] leading-tight', open ? 'text-ink' : 'text-ink/60')}>{t(section.label)}</p>
+          <SectionStatusLine status={status} desc={section.desc} />
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          {section.locked ? (
-            <span className="text-[0.6rem] uppercase tracking-[0.1em] text-muted">{t('Altid')}</span>
-          ) : (
-            <button onClick={() => onToggle(id)} aria-label={section.enabled ? t('Sluk') : t('Tænd')}
-              aria-checked={section.enabled} role="switch" id={fieldId}
-              className={cn('relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer shrink-0',
-                section.enabled ? 'bg-ink' : 'bg-shell')}>
-              <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-canvas shadow-sm transition-all duration-200',
-                section.enabled ? 'translate-x-[18px]' : 'translate-x-0.5')} />
-            </button>
-          )}
-          <button onClick={() => setOpen((v) => !v)}
-            className="text-muted hover:text-ink transition-colors cursor-pointer"
-            aria-label={open ? t('Luk') : t('Åbn')}>
-            <motion.span animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }} className="block">
-              <ChevronDown size={16} />
-            </motion.span>
+        {section.locked ? (
+          <span className="shrink-0 text-[0.6rem] uppercase tracking-[0.1em] text-muted">{t('Altid')}</span>
+        ) : (
+          <button type="button" onClick={() => onToggle(section.id)} role="switch" aria-checked={section.enabled}
+            aria-labelledby={labelId}
+            className={cn('relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer shrink-0',
+              section.enabled ? 'bg-ink' : 'bg-shell')}>
+            <span className={cn('absolute left-0 top-0.5 h-4 w-4 rounded-full bg-canvas shadow-sm transition-all duration-200',
+              section.enabled ? 'translate-x-[18px]' : 'translate-x-0.5')} />
           </button>
-        </div>
+        )}
       </div>
 
       {/* Content */}
@@ -1197,457 +1400,5 @@ function ScaledPreview({ domain, couple, config, design, photoUrls, html, htmlFo
         )}
       </div>
     </div>
-  );
-}
-
-/* ── Ava design studio — templates, personalization, refinement ───────── */
-function DesignStudio({
-  hasDesign, hasHtml, design, designs, activeId, activePresetId, photos, photoUrls,
-  working, applyingPreset, restarting, genError, needsPayment, websitePaid,
-  onApplyPreset, onGenerate, onRefine, onActivate, onRestart, onCheckout,
-  onUpload, onDeletePhoto, onSetHero,
-}: {
-  hasDesign: boolean;
-  hasHtml: boolean;
-  design: SiteDesign;
-  designs: WebsiteDesignRow[];
-  activeId: string | null;
-  activePresetId: string | null;
-  photos: SitePhotoRow[];
-  photoUrls: Record<string, string>;
-  working: null | 'generate' | 'refine';
-  applyingPreset: string | null;
-  restarting: boolean;
-  genError: string | null;
-  needsPayment: boolean;
-  websitePaid: boolean;
-  onApplyPreset: (presetId: string) => void;
-  onGenerate: (styleDirection: string, fresh?: boolean) => void;
-  onRefine: (instruction: string) => void;
-  onActivate: (designId: string) => void;
-  onRestart: () => void;
-  onCheckout: () => void;
-  onUpload: (files: FileList | File[]) => Promise<void> | void;
-  onDeletePhoto: (id: string) => void;
-  onSetHero: (id: string) => void;
-}) {
-  const { t } = useLang();
-  const [styleDirection, setStyleDirection] = useState('');
-  const [instruction, setInstruction] = useState('');
-  const [showVersions, setShowVersions] = useState(false);
-  const [showTemplates, setShowTemplates] = useState(false);
-
-  const submitRefine = () => {
-    const text = instruction.trim();
-    if (!text || working) return;
-    setInstruction('');
-    onRefine(text);
-  };
-
-  /* Working / restart takes over the panel. */
-  if (restarting) {
-    return (
-      <div className="rule rounded-2xl bg-card p-8 text-center">
-        <Loader2 size={26} className="mx-auto animate-spin text-ink" />
-        <p className="mt-4 font-serif text-[1.25rem] text-ink">{t('Starter forfra…')}</p>
-      </div>
-    );
-  }
-  if (working) return <BuildProgress refine={working === 'refine'} />;
-
-  return (
-    <div className="space-y-8">
-      {genError && (
-        <p className="rule rounded-xl bg-[#f2e3dd] px-4 py-3 text-[0.82rem] text-[var(--color-terracotta)]">{t(genError)}</p>
-      )}
-
-      {/* Paywall notice, templates stay usable; Ava's edits unlock on purchase. */}
-      {needsPayment && !websitePaid && (
-        <div className="rule rounded-2xl bg-card p-6 text-center">
-          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-ink">
-            <Palette size={18} className="text-canvas" />
-          </div>
-          <p className="font-serif text-[1.25rem] text-ink leading-tight">{t('Lås Ava-designeren op')}</p>
-          <p className="mx-auto mt-2 max-w-xs text-[0.82rem] text-muted leading-relaxed">
-            {t('Skabelonerne er jeres, men Avas personalisering og ændringer via chat er en betalt funktion. Inkl. fjernelse af Kalas-branding.')}
-          </p>
-          <button onClick={onCheckout}
-            className="mt-5 rounded-full bg-ink px-6 py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.16em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
-            {t('Lås op · {price} kr', { price: websitePriceDkk() })}
-          </button>
-        </div>
-      )}
-
-      {!hasDesign ? (
-        /* ── First visit: pick a template ─────────────────────────────── */
-        <section>
-          <Eyebrow className="mb-2">{t('Trin 1 · Vælg jeres stil')}</Eyebrow>
-          <p className="font-serif text-[1.4rem] leading-tight text-ink">{t('Otte gennemarbejdede skabeloner')}</p>
-          <p className="mt-2 text-[0.85rem] leading-relaxed text-muted">
-            {t('Vælg den der ligner jer. Siden skifter med det samme i forhåndsvisningen, og bagefter gør Ava den personlig med jeres billeder. I kan bede hende om ændringer.')}
-          </p>
-          <div className="mt-4">
-            <TemplateGallery activePresetId={activePresetId} applyingPreset={applyingPreset} onPick={onApplyPreset} />
-          </div>
-        </section>
-      ) : (
-        /* ── Has a design: concept + refine + Ava actions ─────────────── */
-        <section className="rule rounded-2xl bg-card p-6">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <Eyebrow className="mb-2">{t('Jeres design')}</Eyebrow>
-              <p className="font-serif text-[1.5rem] leading-tight text-ink">{design.concept.name}</p>
-            </div>
-            <span className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage-tint">
-              <Palette size={15} className="text-ink" />
-            </span>
-          </div>
-          <p className="mt-2 text-[0.85rem] leading-relaxed text-muted">{design.concept.rationale}</p>
-          <div className="mt-4 flex items-center gap-1.5">
-            {[design.palette.bg, design.palette.surface, design.palette.accent, design.palette.text].map((c, i) => (
-              <span key={i} className="h-5 w-5 rounded-full rule" style={{ background: c }} />
-            ))}
-            <span className="ml-2 text-[0.7rem] text-muted">{design.typography.displayFont} · {design.typography.bodyFont}</span>
-          </div>
-
-          {/* Refine via chat */}
-          <div className="mt-5 rule-t pt-5">
-            <Label>{t('Fortæl Ava hvad der skal ændres')}</Label>
-            <div className="mt-2 flex gap-2">
-              <input
-                value={instruction}
-                onChange={(e) => setInstruction(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter') submitRefine(); }}
-                placeholder={t('f.eks. mere romantisk, mørkere, større billeder…')}
-                className="min-w-0 flex-1 rule rounded-xl bg-shell px-4 py-2.5 text-[0.85rem] text-ink placeholder:text-muted focus:outline-none"
-              />
-              <button onClick={submitRefine} disabled={!instruction.trim()}
-                className="shrink-0 rounded-full bg-ink px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 disabled:opacity-40 transition-colors cursor-pointer">
-                {t('Justér')}
-              </button>
-            </div>
-
-            {/* Build: images per section → venue + photos + template → full site */}
-            <button onClick={() => onGenerate(styleDirection)}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-ink py-3 text-[0.72rem] font-bold uppercase tracking-[0.16em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
-              <Palette size={13} /> {hasHtml ? t('Byg siden igen') : t('Byg jeres side med Ava')}
-            </button>
-            {!hasHtml && (
-              <p className="mt-2 text-center text-[0.7rem] text-muted">
-                {t('Ava genererer billeder til sektionerne, henter jeres venue-fotos og bygger hele siden ud fra skabelonen.')}
-              </p>
-            )}
-
-            <div className="mt-3 flex items-center justify-between gap-3">
-              <button onClick={() => setShowTemplates((v) => !v)}
-                className="flex items-center gap-1.5 text-[0.75rem] text-muted hover:text-ink transition-colors cursor-pointer">
-                <Image size={12} /> {t('Skift skabelon')}
-              </button>
-              <div className="flex items-center gap-3">
-                {designs.length > 1 && (
-                  <button onClick={() => setShowVersions((v) => !v)}
-                    className="flex items-center gap-1.5 text-[0.75rem] text-muted hover:text-ink transition-colors cursor-pointer">
-                    <History size={12} /> {t('Versioner ({n})', { n: designs.length })}
-                  </button>
-                )}
-                <button onClick={onRestart}
-                  className="flex items-center gap-1.5 text-[0.75rem] text-muted hover:text-[var(--color-terracotta)] transition-colors cursor-pointer">
-                  <RotateCcw size={12} /> {t('Start forfra')}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Template switcher */}
-          <AnimatePresence>
-            {showTemplates && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                <div className="mt-4">
-                  <TemplateGallery activePresetId={activePresetId} applyingPreset={applyingPreset} onPick={onApplyPreset} compact />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Version history */}
-          <AnimatePresence>
-            {showVersions && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                <div className="mt-4 space-y-2">
-                  {designs.map((d) => {
-                    const pd = parseSiteDesign(d.design);
-                    const isActive = d.id === activeId;
-                    return (
-                      <button key={d.id} onClick={() => { if (!isActive) void onActivate(d.id); }}
-                        className={cn('flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors cursor-pointer',
-                          isActive ? 'bg-sage-tint' : 'bg-shell hover:bg-card')}>
-                        <span className="flex gap-1">
-                          {[pd.palette.bg, pd.palette.accent, pd.palette.text].map((c, i) => (
-                            <span key={i} className="h-3.5 w-3.5 rounded-full rule" style={{ background: c }} />
-                          ))}
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-[0.82rem] text-ink">{pd.concept.name}</span>
-                        <span className="shrink-0 text-[0.65rem] text-muted">
-                          {new Date(d.created_at).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })}
-                        </span>
-                        {isActive && <Check size={13} className="shrink-0 text-ink" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </section>
-      )}
-
-      {/* Photos */}
-      <PhotoManager
-        photos={photos.filter((p) => p.role !== 'section')}
-        photoUrls={photoUrls}
-        step={hasDesign ? null : t('Trin 2 · Jeres billeder')}
-        onUpload={onUpload}
-        onDelete={onDeletePhoto}
-        onSetHero={onSetHero}
-      />
-
-      {/* Free-text brief feeds the next personalization run. */}
-      <section className="rule rounded-2xl bg-card p-6">
-        <Eyebrow className="mb-2">{hasDesign ? t('Jeres stil med egne ord') : t('Trin 3 · Med jeres egne ord')}</Eyebrow>
-        <textarea
-          value={styleDirection}
-          onChange={(e) => setStyleDirection(e.target.value)}
-          rows={3}
-          placeholder={t('f.eks. Vi drømmer om noget let og botanisk med varme toner, ikke for stift…')}
-          className="w-full resize-none rule rounded-xl bg-shell px-4 py-3 text-[0.85rem] text-ink placeholder:text-muted focus:outline-none"
-        />
-        <p className="mt-2 text-[0.7rem] text-muted">
-          {t('Ava læser dette når hun personaliserer eller designer forfra.')}
-        </p>
-        {hasDesign && (
-          <button onClick={() => onGenerate(styleDirection, true)}
-            className="mt-3 flex items-center gap-1.5 text-[0.75rem] text-muted hover:text-ink transition-colors cursor-pointer">
-            <Palette size={12} /> {t('Lad Ava designe helt forfra')}
-          </button>
-        )}
-      </section>
-    </div>
-  );
-}
-
-/* ── Build progress — the visible step sequence ───────────────────────── */
-const BUILD_STEPS = [
-  'Genererer billeder til sektionerne…',
-  'Henter billeder fra jeres venue…',
-  'Ava komponerer layout og typografi…',
-  'Bygger jeres side…',
-] as const;
-
-function BuildProgress({ refine }: { refine: boolean }) {
-  const { t } = useLang();
-  const [step, setStep] = useState(0);
-  useEffect(() => {
-    if (refine) return;
-    const t = setInterval(() => setStep((v) => Math.min(v + 1, BUILD_STEPS.length - 1)), 9000);
-    return () => clearInterval(t);
-  }, [refine]);
-
-  return (
-    <div className="rule rounded-2xl bg-card p-8 text-center">
-      <Loader2 size={26} className="mx-auto animate-spin text-ink" />
-      <p className="mt-4 font-serif text-[1.25rem] text-ink">
-        {refine ? t('Ava bygger siden om…') : t(BUILD_STEPS[step])}
-      </p>
-      <p className="mx-auto mt-2 max-w-xs text-[0.82rem] text-muted leading-relaxed">
-        {refine
-          ? t('Hun anvender jeres ændring på hele siden. Det tager typisk under et minut.')
-          : t('Venue-fotos, jeres billeder og skabelonen bliver til én samlet side. Det tager et par minutter første gang.')}
-      </p>
-      {!refine && (
-        <div className="mx-auto mt-5 flex max-w-[200px] gap-1.5">
-          {BUILD_STEPS.map((_, i) => (
-            <span key={i} className={cn('h-1 flex-1 rounded-full transition-colors', i <= step ? 'bg-ink' : 'bg-shell')} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Template gallery — live-typography cards for the 8 presets ───────── */
-function TemplateGallery({ activePresetId, applyingPreset, onPick, compact = false }: {
-  activePresetId: string | null;
-  applyingPreset: string | null;
-  onPick: (presetId: string) => void;
-  compact?: boolean;
-}) {
-  const { t } = useLang();
-  const fontIds = useMemo(
-    () => SITE_PRESETS.flatMap((p) => [p.design.typography.displayFont, p.design.typography.bodyFont]),
-    []
-  );
-  return (
-    <div className="grid grid-cols-2 gap-2.5">
-      <link rel="stylesheet" href={googleFontsHref(fontIds)} />
-      {SITE_PRESETS.map((p) => {
-        const d = p.design;
-        const active = p.id === activePresetId;
-        const busy = applyingPreset === p.id;
-        return (
-          <button
-            key={p.id}
-            onClick={() => onPick(p.id)}
-            disabled={busy}
-            className={cn(
-              'relative overflow-hidden rounded-xl text-left transition-all cursor-pointer',
-              active ? 'ring-2 ring-ink ring-offset-2 ring-offset-canvas' : 'rule hover:scale-[1.015]'
-            )}
-            style={{ background: d.palette.bg }}
-          >
-            {/* Palette strip */}
-            <div className="flex h-1.5">
-              {[d.palette.accent, d.palette.text, d.palette.surface, d.palette.muted].map((c, i) => (
-                <span key={i} className="flex-1" style={{ background: c }} />
-              ))}
-            </div>
-            <div className={cn('px-3', compact ? 'py-2.5' : 'py-3.5')}>
-              <p
-                className={cn('leading-tight', compact ? 'text-[1.05rem]' : 'text-[1.3rem]')}
-                style={{
-                  fontFamily: fontStack(d.typography.displayFont),
-                  fontWeight: d.typography.displayWeight,
-                  fontStyle: d.typography.displayItalic ? 'italic' : 'normal',
-                  color: d.palette.text,
-                }}
-              >
-                {t('Anna & Emil')}
-              </p>
-              <p className="mt-0.5 text-[0.62rem] font-bold uppercase tracking-[0.14em]" style={{ color: d.palette.accent }}>
-                {t(p.label)}
-              </p>
-              {!compact && (
-                <p className="mt-1 text-[0.68rem] leading-snug" style={{ color: d.palette.muted }}>
-                  {t(p.tagline)}
-                </p>
-              )}
-            </div>
-            {(active || busy) && (
-              <span className="absolute right-2 top-3 flex h-5 w-5 items-center justify-center rounded-full" style={{ background: d.palette.text }}>
-                {busy
-                  ? <Loader2 size={11} className="animate-spin" style={{ color: d.palette.bg }} />
-                  : <Check size={11} style={{ color: d.palette.bg }} />}
-              </span>
-            )}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/* ── Photo manager — drag & drop + iPhone-friendly picker ─────────────── */
-function PhotoManager({ photos, photoUrls, step, onUpload, onDelete, onSetHero }: {
-  photos: SitePhotoRow[];
-  photoUrls: Record<string, string>;
-  step: string | null;
-  onUpload: (files: FileList | File[]) => Promise<void> | void;
-  onDelete: (id: string) => void;
-  onSetHero: (id: string) => void;
-}) {
-  const { t } = useLang();
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [dragging, setDragging] = useState(false);
-  const dragDepth = useRef(0);
-
-  const handleFiles = async (files: FileList | File[] | null) => {
-    if (!files || files.length === 0) return;
-    setBusy(true);
-    try { await onUpload(files); } finally { setBusy(false); }
-  };
-
-  return (
-    <section
-      className={cn('rule rounded-2xl bg-card p-6 transition-colors', dragging && 'bg-sage-tint')}
-      onDragEnter={(e) => { e.preventDefault(); dragDepth.current += 1; setDragging(true); }}
-      onDragOver={(e) => e.preventDefault()}
-      onDragLeave={(e) => { e.preventDefault(); dragDepth.current -= 1; if (dragDepth.current <= 0) { dragDepth.current = 0; setDragging(false); } }}
-      onDrop={(e) => {
-        e.preventDefault();
-        dragDepth.current = 0;
-        setDragging(false);
-        const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/') || /\.(heic|heif)$/i.test(f.name));
-        void handleFiles(files);
-      }}
-    >
-      <div className="flex items-center justify-between">
-        <Eyebrow>{step ?? t('Jeres billeder')}</Eyebrow>
-        <span className="text-[0.7rem] text-muted">{photos.length} / 24</span>
-      </div>
-      <p className="mt-2 text-[0.8rem] leading-relaxed text-muted">
-        {t('Træk billeder herind eller tryk upload: forlovelsesbilleder, stedet, jer to. Ava designer ud fra dem. Markér ét som forsidebillede.')}
-      </p>
-
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        {photos.map((p) => {
-          const url = photoUrls[p.id];
-          return (
-            <div key={p.id} className="group relative aspect-square overflow-hidden rounded-xl bg-shell">
-              {url
-                ? <img src={url} alt="" className="h-full w-full object-cover" />
-                : <span className="flex h-full items-center justify-center"><Image size={16} className="text-muted" /></span>}
-              {p.role === 'hero' && (
-                <span className="absolute left-1.5 top-1.5 flex items-center gap-1 rounded-full bg-ink/80 px-2 py-0.5 text-[0.55rem] font-bold uppercase tracking-[0.1em] text-canvas">
-                  <Star size={8} /> {t('Forsidebillede')}
-                </span>
-              )}
-              {p.kind === 'generated' && (
-                <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-canvas/85">
-                  <Palette size={10} className="text-ink" />
-                </span>
-              )}
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/60 to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-                {p.role !== 'hero' ? (
-                  <button onClick={() => onSetHero(p.id)} title={t('Brug som forsidebillede')}
-                    className="flex h-6 w-6 items-center justify-center rounded-full bg-canvas/90 text-ink hover:bg-canvas cursor-pointer">
-                    <Star size={11} />
-                  </button>
-                ) : <span />}
-                <button onClick={() => onDelete(p.id)} title={t('Slet billede')}
-                  className="flex h-6 w-6 items-center justify-center rounded-full bg-canvas/90 text-ink hover:bg-canvas cursor-pointer">
-                  <Trash2 size={11} />
-                </button>
-              </div>
-            </div>
-          );
-        })}
-
-        <button
-          onClick={() => inputRef.current?.click()}
-          disabled={busy || photos.length >= 24}
-          className={cn(
-            'flex aspect-square flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed text-muted transition-colors hover:border-ink/40 hover:text-ink disabled:opacity-40 cursor-pointer',
-            dragging ? 'border-ink text-ink' : 'border-[var(--color-line-strong)]'
-          )}
-        >
-          {busy ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-          <span className="text-[0.62rem] font-semibold uppercase tracking-[0.1em]">{t('Upload')}</span>
-        </button>
-      </div>
-
-      {/* accept="image/*" opens the photo library directly on iPhone; HEIC and
-          large originals are re-encoded client-side before upload. */}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*,.heic,.heif"
-        multiple
-        className="hidden"
-        onChange={(e) => { void handleFiles(e.target.files); e.target.value = ''; }}
-      />
-      <p className="mt-3 text-[0.68rem] text-muted">{t('Alle almindelige billedformater, også direkte fra iPhone')}</p>
-    </section>
   );
 }

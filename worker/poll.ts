@@ -1,9 +1,10 @@
-// Standalone mailbox poller — the Render Cron Job entrypoint (render.yaml
-// runs `npm run poll` every 5 minutes). One pass over the platform inbox,
-// a JSON summary on stdout, then exit. Scheduled polling lives HERE, not in
-// the Next.js app: Netlify ignores vercel.json crons and caps function time.
+// Standalone mailbox poller — run every 5 minutes by GitHub Actions
+// (.github/workflows/poll-replies.yml → `npm run poll`). One pass over the
+// platform inbox, a JSON summary on stdout, then exit. Scheduled polling
+// lives HERE, not in the Next.js app: Netlify's scheduled functions run at
+// most hourly and stop after 30 seconds.
 //
-// Env comes from the Render service. Locally:
+// Env comes from the workflow's repository secrets. Locally:
 //   npx tsx --env-file=.env worker/poll.ts
 // Needs: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
 //        TOKEN_ENCRYPTION_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,

@@ -80,8 +80,8 @@ const PAGE_COPY: Partial<Record<ScreenId, { title: string; body: string }>> = {
     body: 'I skriver ønskerne, gæsterne reserverer dem på jeres side — og I kan ikke se hvem, før I selv vil.',
   },
   invites: {
-    title: 'Invitationer, der kan sendes som et link',
-    body: 'Vælg en skabelon, så laver jeg invitationen med jeres egne oplysninger. Den får sit eget link, I kan sende.',
+    title: 'Invitationskort, malet til jer',
+    body: 'Vælg en stemning og skriv jeres ord, så maler jeg et kort kun til jer. I henter det til Canva, hvor alt kan rettes, eller printer det, som det er.',
   },
   seating: {
     title: 'Bordplanen kender jeres gæster',

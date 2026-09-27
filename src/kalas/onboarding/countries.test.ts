@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { countryFocus, countryFromLocation, globeCountry } from './countries';
+import { countryFocus, countryFromLocation, countryLabel, globeCountry, searchCountries } from './countries';
 
 describe('countryFromLocation', () => {
   it('reads the country onboarding saved, alone or after a place', () => {
@@ -42,5 +42,39 @@ describe('countryFocus', () => {
   it('has nothing for a name that is not a country', () => {
     expect(countryFocus('Atlantis')).toBeNull();
     expect(countryFocus(null)).toBeNull();
+  });
+});
+
+describe('searchCountries', () => {
+  it('finds a country by its English or Danish name', () => {
+    expect(searchCountries('fra')[0]).toBe('France');
+    expect(searchCountries('Italien')).toEqual(['Italy']);
+    expect(searchCountries('dan')).toContain('Denmark');
+  });
+
+  it('puts names that start with the query before ones that contain it', () => {
+    const hits = searchCountries('land', 20);
+    const firstContains = hits.findIndex((h) => !h.toLowerCase().startsWith('land'));
+    expect(hits.slice(firstContains).every((h) => !h.toLowerCase().startsWith('land'))).toBe(true);
+    expect(searchCountries('ice')[0]).toBe('Iceland');
+  });
+
+  it('reads the aliases that are not display names', () => {
+    expect(searchCountries('uk')[0]).toBe('United Kingdom');
+    expect(searchCountries('england')[0]).toBe('United Kingdom');
+  });
+
+  it('gives nothing for an empty query', () => {
+    expect(searchCountries('  ')).toEqual([]);
+  });
+});
+
+describe('countryLabel', () => {
+  it('uses the Danish name in Danish and the globe name otherwise', () => {
+    expect(countryLabel('France', 'da')).toBe('Frankrig');
+    expect(countryLabel('United Kingdom', 'da')).toBe('Storbritannien');
+    expect(countryLabel('United States of America', 'da')).toBe('USA');
+    expect(countryLabel('France', 'en')).toBe('France');
+    expect(countryLabel('Japan', 'da')).toBe('Japan');
   });
 });

@@ -1,33 +1,22 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GmailNotConnectedError } from "@/lib/gmail/oauth";
-import {
-  getPlatformAccessToken,
-  getPlatformEmail,
-  ensureReplyTag,
-  plusAddress,
-} from "@/lib/gmail/platform";
-import { sendEmail } from "@/lib/gmail/send";
-import { labelOutreachThread } from "@/lib/gmail/labels";
-import { composeOutreachEmail, findVenueEmail } from "@/lib/gemini/agent";
-import type { EmailDraftRow, EventRow, VenueRow } from "@/lib/db/types";
+import { getPlatformAccessToken, getPlatformEmail } from "@/lib/gmail/platform";
+import { uncontactedVenues } from "@/lib/outreach/sendDraft";
+import { dispatchJob } from "@/lib/jobs/dispatch";
+import type { EmailDraftRow } from "@/lib/db/types";
 
 export const maxDuration = 300; // compose + send per vendor, sequentially
-
-interface VenueResult {
-  venueId: string;
-  venueName: string;
-  status: "sent" | "failed" | "skipped";
-  reason?: string;
-}
 
 /**
  * POST /api/drafts/[draftId]/approve — approve the master draft, then compose
  * and send an individual email to every liked vendor in the draft's category,
- * from the platform Kalas mailbox.
+ * from the platform Kalas mailbox. The checks run here; the sending is
+ * src/lib/outreach/sendDraft.ts, a background job in production because it
+ * goes one vendor at a time (202 { jobId } then, see src/lib/jobs).
  */
 export async function POST(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ draftId: string }> }
 ) {
   const supabase = await createClient();
@@ -48,30 +37,8 @@ export async function POST(
     return Response.json({ error: `Draft already ${draft.status}` }, { status: 409 });
   }
 
-  const { data: eventData } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", draft.event_id)
-    .single();
-  const event = eventData as EventRow | null;
-  if (!event) return Response.json({ error: "Event not found" }, { status: 404 });
-
-  // Liked vendors in this draft's category, minus those already contacted.
-  const { data: venuesData } = await supabase
-    .from("venues")
-    .select("*")
-    .eq("event_id", draft.event_id)
-    .eq("swipe_status", "liked")
-    .eq("category", draft.category);
-  const { data: contactedData } = await supabase
-    .from("outbound_emails")
-    .select("venue_id")
-    .eq("event_id", draft.event_id)
-    .in("status", ["sent", "replied"]);
-  const contacted = new Set(
-    ((contactedData ?? []) as { venue_id: string }[]).map((r) => r.venue_id)
-  );
-  const venues = ((venuesData ?? []) as VenueRow[]).filter((v) => !contacted.has(v.id));
+  // RLS-scoped: the draft is theirs, so its event is too.
+  const venues = await uncontactedVenues(supabase, draft);
   if (venues.length === 0) {
     return Response.json(
       { error: `No uncontacted liked ${draft.category}s to reach out to` },
@@ -80,11 +47,9 @@ export async function POST(
   }
 
   // Verify the platform mailbox before marking anything approved.
-  let accessToken: string;
-  let platformEmail: string | null;
   try {
-    accessToken = await getPlatformAccessToken();
-    platformEmail = await getPlatformEmail();
+    await getPlatformAccessToken();
+    await getPlatformEmail();
   } catch (err) {
     if (err instanceof GmailNotConnectedError) {
       return Response.json(
@@ -98,119 +63,12 @@ export async function POST(
     throw err;
   }
 
-  const replyTag = await ensureReplyTag(supabase, event);
-  const replyTo = platformEmail ? plusAddress(platformEmail, replyTag) : undefined;
-
   await supabase.from("email_drafts").update({ status: "approved" }).eq("id", draftId);
   await supabase.from("events").update({ status: "sending" }).eq("id", draft.event_id);
 
-  const results: VenueResult[] = [];
-  for (const venue of venues) {
-    // Last-chance email lookup for liked vendors still missing one.
-    let toEmail = venue.email;
-    if (!toEmail) {
-      try {
-        toEmail = await findVenueEmail(venue.name, venue.website);
-        await supabase
-          .from("venues")
-          .update({
-            email: toEmail ?? undefined,
-            email_lookup_status: toEmail ? "found" : "not_found",
-          })
-          .eq("id", venue.id);
-      } catch {
-        // fall through to skip
-      }
-    }
-    if (!toEmail) {
-      results.push({
-        venueId: venue.id,
-        venueName: venue.name,
-        status: "skipped",
-        reason: "No contact email found",
-      });
-      continue;
-    }
-
-    // Composed per vendor, in the vendor's own language — subject included,
-    // so a German venue doesn't get a Danish subject line.
-    const { subject, body } = await composeOutreachEmail({
-      template: draft.body_template,
-      subject: draft.subject,
-      event,
-      venue,
-    });
-
-    const { data: outboundData } = await supabase
-      .from("outbound_emails")
-      .insert({
-        event_id: draft.event_id,
-        venue_id: venue.id,
-        draft_id: draft.id,
-        user_id: user.id,
-        to_email: toEmail,
-        subject,
-        body,
-        kind: "outreach",
-      })
-      .select("id")
-      .single();
-
-    try {
-      const sent = await sendEmail(accessToken, {
-        to: toEmail,
-        subject,
-        body,
-        fromName: "Ava at Kalas",
-        fromEmail: platformEmail ?? undefined,
-        replyTo,
-      });
-      await supabase
-        .from("outbound_emails")
-        .update({
-          gmail_message_id: sent.messageId,
-          gmail_thread_id: sent.threadId,
-          status: "sent",
-          sent_at: new Date().toISOString(),
-        })
-        .eq("id", outboundData!.id);
-      await labelOutreachThread(accessToken, sent.threadId, replyTag);
-      results.push({ venueId: venue.id, venueName: venue.name, status: "sent" });
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : "Send failed";
-      await supabase
-        .from("outbound_emails")
-        .update({ status: "failed", error: reason })
-        .eq("id", outboundData!.id);
-      results.push({ venueId: venue.id, venueName: venue.name, status: "failed", reason });
-    }
-    // Gentle pacing between sends.
-    await new Promise((r) => setTimeout(r, 500));
-  }
-
-  const sentCount = results.filter((r) => r.status === "sent").length;
-  await supabase.from("email_drafts").update({ status: "sent" }).eq("id", draftId);
-  await supabase
-    .from("events")
-    .update({ status: sentCount > 0 ? "awaiting_replies" : "drafting" })
-    .eq("id", draft.event_id);
-
-  // Drop a summary into the chat so the transcript reflects what happened.
-  await supabase.from("chat_messages").insert({
-    event_id: draft.event_id,
-    user_id: user.id,
-    role: "assistant",
-    content:
-      sentCount > 0
-        ? `I've reached out to ${sentCount} ${draft.category}${sentCount === 1 ? "" : "s"} from my Kalas mailbox, replies come straight to me and I'll flag each one for you in the outreach inbox.`
-        : "I couldn't send any emails, check the contact details and approve again.",
-    payload: {
-      kind: "send_report",
-      sent: sentCount,
-      failed: results.filter((r) => r.status === "failed").length,
-      skipped: results.filter((r) => r.status === "skipped").length,
-    },
+  return dispatchJob(request, "outreach.send", {
+    eventId: draft.event_id,
+    userId: user.id,
+    payload: { draftId },
   });
-
-  return Response.json({ results });
 }

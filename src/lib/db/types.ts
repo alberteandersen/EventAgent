@@ -90,11 +90,57 @@ export type MessagePayload =
 export interface ChatMessageRow {
   id: string;
   event_id: string;
+  /** The conversation it belongs to; filled in by a trigger when omitted. */
+  thread_id?: string | null;
   user_id: string;
   role: MessageRole;
   content: string;
   payload: MessagePayload | null;
+  /** The tools Ava ran to produce this reply (assistant rows only). */
+  tool_calls?: ChatToolCall[] | null;
   created_at: string;
+}
+
+/** One tool Ava ran during a turn, as the couple gets to see it. */
+export interface ChatToolCall {
+  /** Stable within the turn, so a live step and its result can be matched. */
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+  ok: boolean;
+  /** Present when the tool failed. */
+  error?: string;
+  /** A short, trimmed view of what the tool returned. */
+  result?: string;
+}
+
+/** Streamed while a turn runs: a tool starting, then finishing. */
+export type ChatToolEvent =
+  | { phase: "start"; id: string; name: string; args: Record<string, unknown> }
+  | ({ phase: "end" } & ChatToolCall);
+
+/** One conversation with Ava. */
+export interface ChatThreadRow {
+  id: string;
+  event_id: string;
+  user_id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const MEMORY_CATEGORIES = ["preference", "decision", "fact", "followup"] as const;
+export type MemoryCategory = (typeof MEMORY_CATEGORIES)[number];
+
+/** Something Ava keeps about the couple across conversations. */
+export interface AvaMemoryRow {
+  id: string;
+  event_id: string;
+  user_id: string;
+  category: MemoryCategory;
+  content: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export type SwipeStatus = "pending" | "liked" | "rejected";
@@ -236,6 +282,8 @@ export interface EmailReplyRow {
   rfc822_message_id: string | null;
   read_at: string | null;
   matched_via: "thread" | "tag" | "sender";
+  /** When the couple was mailed about it; set before the send (0041). */
+  notified_at?: string | null;
   created_at: string;
 }
 
@@ -300,6 +348,8 @@ export interface ProfileRow {
   onboarded: boolean;
   active_event_id: string | null;
   language: AppLanguage;
+  /** Ava mails this person when a vendor replies (0041). */
+  email_notifications: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -353,6 +403,20 @@ export interface InvitationRow {
   status: InvitationStatus;
   created_at: string;
   updated_at: string;
+}
+
+/** A version of the invitation's design, built the way the website is: a
+    vibe's tokens, then Ava's HTML. One active per wedding (see 0039). */
+export interface InvitationDesignRow {
+  id: string;
+  event_id: string;
+  user_id: string;
+  brief: Record<string, unknown>;
+  design: Record<string, unknown>;
+  /** Sanitized model-built card markup; null → token card. */
+  html: string | null;
+  active: boolean;
+  created_at: string;
 }
 
 export interface GoogleTokensRow {

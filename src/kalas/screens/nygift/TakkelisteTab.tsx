@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, X, Plus, Gift, Mail, StickyNote } from 'lucide-react';
+import { Search, X, Plus, Gift, Mail, ChevronDown, Quote } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { cn, TaskCheckbox, taskRowTone, doneLabelClass } from '../../ui';
 import { useLang } from '../../i18n';
@@ -45,6 +45,13 @@ export default function TakkelisteTab() {
     if (q && !e.name.toLowerCase().includes(q) && !(e.gift ?? '').toLowerCase().includes(q)) return false;
     return true;
   });
+  /* The list is already sorted outstanding-first. Under "Alle" the line
+     between the two is drawn, so the done ones read as done rather than as
+     the bottom of a long list. */
+  const groups = [
+    { id: 'mangler', label: 'Mangler en tak', rows: visible.filter((e) => !e.thankedAt) },
+    { id: 'takket', label: 'Takket', rows: visible.filter((e) => e.thankedAt) },
+  ].filter((g) => g.rows.length > 0);
 
   function toggle(entry: ThankEntry) {
     void saveThankYou(entry.key, {
@@ -94,26 +101,23 @@ export default function TakkelisteTab() {
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-5 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-7"
+      className="flex flex-col gap-5 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-5 sm:p-7"
     >
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <p className="max-w-md text-sm text-[#5f6b66]">
           {t('Alle der kom, og alle der gav noget, samlet ét sted, så ingen bliver glemt.')}
         </p>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <p className="shrink-0 text-sm font-bold text-[#7d938a]">
-            {t('{done} af {total} takket', { done, total })}
-          </p>
-          <button
-            type="button"
-            onClick={openAdd}
-            className="flex h-8 items-center gap-1.5 rounded-full bg-[#12332b] px-3 text-xs font-semibold text-white cursor-pointer"
-          >
-            <Plus size={13} />
-            {t('Tilføj person')}
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={openAdd}
+          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-[#12332b] px-3 text-xs font-semibold text-white cursor-pointer"
+        >
+          <Plus size={13} />
+          {t('Tilføj person')}
+        </button>
       </div>
+
+      {total > 0 && <ThankProgress done={done} total={total} />}
 
       {/* Search + filters */}
       <div className="flex flex-wrap items-center gap-2">
@@ -198,16 +202,28 @@ export default function TakkelisteTab() {
           )}
         </AnimatePresence>
 
-        {visible.map((entry) => (
-          <ThankRow
-            key={entry.key}
-            entry={entry}
-            open={openId === entry.key}
-            onOpen={() => setOpenId((k) => (k === entry.key ? null : entry.key))}
-            onToggle={() => toggle(entry)}
-            onMethod={(m) => setMethod(entry, m)}
-            onNote={(n) => setNote(entry, n)}
-          />
+        {groups.map((g) => (
+          <React.Fragment key={g.id}>
+            {groups.length > 1 && (
+              <p className={cn(
+                'text-[11px] font-bold uppercase tracking-[0.14em] text-[#9a9686]',
+                g.id === 'takket' && 'mt-3',
+              )}>
+                {t(g.label)} · {g.rows.length}
+              </p>
+            )}
+            {g.rows.map((entry) => (
+              <ThankRow
+                key={entry.key}
+                entry={entry}
+                open={openId === entry.key}
+                onOpen={() => setOpenId((k) => (k === entry.key ? null : entry.key))}
+                onToggle={() => toggle(entry)}
+                onMethod={(m) => setMethod(entry, m)}
+                onNote={(n) => setNote(entry, n)}
+              />
+            ))}
+          </React.Fragment>
         ))}
       </div>
     </motion.section>
@@ -228,48 +244,53 @@ function ThankRow({ entry, open, onOpen, onToggle, onMethod, onNote }: {
   const done = Boolean(entry.thankedAt);
 
   return (
-    <div className={cn('rounded-[18px] border px-5 py-4', taskRowTone(done ? 'done' : 'default'))}>
-      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+    <div className={cn('rounded-[18px] border px-5 py-3.5 transition-colors', taskRowTone(done ? 'done' : 'default'))}>
+      <div className="flex items-center gap-3 sm:gap-4">
         <TaskCheckbox done={done} label={entry.name} onToggle={onToggle} />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className={cn('text-base font-semibold', done ? doneLabelClass : 'text-[#24413a]')}>
-            {entry.name}
-          </span>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-[#5f6b66]">
-            {entry.gift && (
-              <span className="flex items-center gap-1.5">
-                <Gift size={12} className="shrink-0" />
-                {entry.gift}
-              </span>
-            )}
-            {entry.email && (
-              // No send button anywhere in the app — mailto is the honest option.
-              <a href={`mailto:${entry.email}`} className="flex items-center gap-1.5 hover:text-[#24413a]">
-                <Mail size={12} className="shrink-0" />
-                {entry.email}
-              </a>
-            )}
-            {!entry.attended && !entry.gift && (
-              <span className="text-[#9a9686]">{t('Kom ikke')}</span>
-            )}
-          </div>
-        </div>
-
-        {done && entry.method && (
-          <span className="text-xs font-bold uppercase tracking-[0.12em] text-[#5f7d70]">
-            {t(methodLabel(entry.method) ?? '')}
-          </span>
-        )}
-
+        {/* The whole row opens the details, not just a small icon at the end. */}
         <button
           type="button"
           onClick={onOpen}
           aria-expanded={open}
           aria-label={t('Detaljer for {name}', { name: entry.name })}
-          className="flex size-8 items-center justify-center rounded-full text-[#9a9686] transition-colors hover:bg-white/70 hover:text-[#24413a] cursor-pointer"
+          className="flex min-w-0 flex-1 items-center gap-3 text-left cursor-pointer"
         >
-          <StickyNote size={16} />
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <span className={cn('text-base font-semibold', done ? doneLabelClass : 'text-[#24413a]')}>
+              {entry.name}
+            </span>
+            <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-[#5f6b66]">
+              {entry.gift && (
+                <span className="flex items-center gap-1.5">
+                  <Gift size={12} className="shrink-0" />
+                  {entry.gift}
+                </span>
+              )}
+              {!entry.attended && !entry.gift && (
+                <span className="text-[#9a9686]">{t('Kom ikke')}</span>
+              )}
+            </span>
+            {/* What they wrote is what the thank-you answers, so it shows
+                while the card is being written, not only when opened. */}
+            {entry.message && !open && (
+              <span className="flex min-w-0 items-center gap-1.5 text-[13px] italic text-[#7d938a]">
+                <Quote size={11} className="shrink-0" aria-hidden />
+                <span className="truncate pr-1">{entry.message}</span>
+              </span>
+            )}
+          </span>
+
+          {done && entry.method && (
+            <span className="hidden text-xs font-bold uppercase tracking-[0.12em] text-[#5f7d70] sm:inline">
+              {t(methodLabel(entry.method) ?? '')}
+            </span>
+          )}
+          <ChevronDown
+            size={16}
+            aria-hidden
+            className={cn('shrink-0 text-[#9a9686] transition-transform duration-200', open && 'rotate-180')}
+          />
         </button>
       </div>
 
@@ -288,6 +309,15 @@ function ThankRow({ entry, open, onOpen, onToggle, onMethod, onNote }: {
                   </p>
                   <p className="mt-1 text-sm italic leading-relaxed text-[#24413a]">{entry.message}</p>
                 </div>
+              )}
+
+              {entry.email && (
+                // No send button anywhere in the app — mailto is the honest option.
+                <a href={`mailto:${entry.email}`}
+                  className="flex w-fit items-center gap-1.5 text-[13px] font-medium text-[#5f6b66] hover:text-[#24413a]">
+                  <Mail size={13} className="shrink-0" />
+                  {entry.email}
+                </a>
               )}
 
               <div className="flex flex-wrap items-center gap-2">
@@ -324,6 +354,40 @@ function ThankRow({ entry, open, onOpen, onToggle, onMethod, onNote }: {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+/* ── How far they are ─────────────────────────────────────────────────── */
+function ThankProgress({ done, total }: { done: number; total: number }) {
+  const { t } = useLang();
+  const pct = Math.round((done / total) * 100);
+  const finished = done === total;
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className={cn('text-sm font-semibold', finished ? 'text-[#24413a]' : 'text-[#5f6b66]')}>
+          {finished
+            ? t('Alle er takket. Det var den sidste.')
+            : t('{done} af {total} takket', { done, total })}
+        </p>
+        <p className="font-serif text-lg tabular-nums text-[#24413a]">{pct}%</p>
+      </div>
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={done}
+        aria-label={t('{done} af {total} takket', { done, total })}
+        className="h-2 overflow-hidden rounded-full bg-[#eceeeb]"
+      >
+        <motion.div
+          className="h-full rounded-full bg-[#5f7d70]"
+          initial={false}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </div>
     </div>
   );
 }

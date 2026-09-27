@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Link2, Check, Eye, EyeOff, Users, Images, Heart } from 'lucide-react';
+import { Link2, Check, Eye, EyeOff, Users, Images, Heart, ArrowUpRight } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { cn } from '../../ui';
 import { useLang } from '../../i18n';
@@ -89,7 +89,7 @@ export default function DelTab({ onNavigate }: { onNavigate?: (s: 'website') => 
     <motion.section
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-5 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-7"
+      className="flex flex-col gap-5 rounded-[28px] border border-[#dcdfdb] bg-[#ffffff] p-5 sm:p-7"
     >
       <p className="max-w-md text-sm text-[#5f6b66]">
         {t('En lille side der opsummerer dagen, til dem der ikke kunne komme, og til jer selv om ti år.')}
@@ -159,9 +159,21 @@ export default function DelTab({ onNavigate }: { onNavigate?: (s: 'website') => 
         </button>
       </div>
 
-      <p className="text-[12px] text-[#9a9686]">
-        {t('Opsamlingen viser jeres hilsen og tallene ovenfor. Gæsternes billeder forbliver private.')}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[12px] text-[#9a9686]">
+          {t('Opsamlingen viser jeres hilsen og tallene ovenfor. Gæsternes billeder forbliver private.')}
+        </p>
+        {live && shareUrl && (
+          <a
+            href={shareUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-1 text-[0.78rem] font-semibold text-[#24413a] hover:underline"
+          >
+            {t('Se siden')} <ArrowUpRight size={13} aria-hidden />
+          </a>
+        )}
+      </div>
     </motion.section>
   );
 }

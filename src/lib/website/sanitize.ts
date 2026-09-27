@@ -42,8 +42,12 @@ export function scrubCss(css: string): string {
 /**
  * Sanitize a model-built HTML fragment. Returns the safe markup, or null when
  * the result is implausibly small (failed generation — keep the old version).
+ * The floor defaults to a whole site; an invitation card is one screen.
  */
-export function sanitizeSiteHtml(raw: string): string | null {
+export function sanitizeSiteHtml(
+  raw: string,
+  floor: { markup: number; text: number } = { markup: 800, text: 120 },
+): string | null {
   // Strip markdown fences the model might add despite instructions.
   const unfenced = raw.replace(/^\s*```(?:html)?\s*/i, "").replace(/\s*```\s*$/, "");
 
@@ -99,6 +103,6 @@ export function sanitizeSiteHtml(raw: string): string | null {
   });
 
   const textLength = withSafeInline.replace(/<[^>]*>/g, "").trim().length;
-  if (withSafeInline.length < 800 || textLength < 120) return null;
+  if (withSafeInline.length < floor.markup || textLength < floor.text) return null;
   return withSafeInline;
 }

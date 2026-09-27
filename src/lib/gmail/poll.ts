@@ -20,6 +20,7 @@ import { getPlatformAccessToken, getPlatformEmail } from "./platform";
 import { saveReplyAttachments } from "./attachments";
 import { applyLabels, ensureLabel } from "./labels";
 import { bareEmail, extractReplyTags, resolveVenueByEmail } from "./match";
+import { notifyNewReplies } from "@/lib/notifications/replies";
 import {
   extractQuote,
   quoteStatusFromExtraction,
@@ -117,6 +118,8 @@ export interface PollSummary {
   tagMatched: number;
   senderMatched: number;
   unmatchedLabeled: number;
+  notificationsSent: number;
+  notificationsFailed: number;
   error?: string;
 }
 
@@ -231,6 +234,8 @@ export async function pollPlatformReplies(): Promise<PollSummary> {
     tagMatched: 0,
     senderMatched: 0,
     unmatchedLabeled: 0,
+    notificationsSent: 0,
+    notificationsFailed: 0,
   };
 
   // All in-flight outreach threads, across every user. The thread anchor is
@@ -467,6 +472,16 @@ export async function pollPlatformReplies(): Promise<PollSummary> {
     .from("platform_gmail_tokens")
     .update({ last_polled_at: new Date().toISOString() })
     .eq("id", 1);
+
+  // Tell the couples what just came in. Also picks up anything a failed
+  // earlier pass left unnotified, so it runs even when this pass found none.
+  try {
+    const notified = await notifyNewReplies(admin, { accessToken, fromEmail: platformEmail });
+    summary.notificationsSent = notified.notificationsSent;
+    summary.notificationsFailed = notified.notificationsFailed;
+  } catch (err) {
+    console.error("Reply notifications failed:", err);
+  }
 
   return summary;
 }

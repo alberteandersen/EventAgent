@@ -600,6 +600,8 @@ export const WEBSITE_HTML_PROMPT = (args: {
   hasRegistry: boolean;
   currentHtml?: string;
   instruction?: string;
+  /** Update the texts in currentHtml to the content, leaving the design be. */
+  syncContent?: boolean;
 }) => {
   const lang = args.language === "en" ? "English" : "Danish";
   const images = args.imageManifest.length
@@ -626,6 +628,11 @@ ${args.templateSpec}
 
 CONTENT (render every enabled section; keep their texts verbatim where given):
 ${args.content}
+Their texts are theirs: headings, labels and short connecting lines are
+yours to write, but never write a text field yourself. An empty storyText,
+dresscode, transport, answer or hotel detail stays empty (render its slot
+with nothing in it); never invent a story, an address, a date, a price or
+an answer.
 
 IMAGES, attached for you to look at; reference ONLY by alias token:
 ${images}
@@ -649,6 +656,15 @@ THE CONTRACT (hard requirements)
    - RSVP buttons: <button data-kalas="rsvp">…</button>, style freely,
      place in nav/hero/RSVP section.
    - Registry/gifts grid: ${args.hasRegistry ? 'include an empty <div data-kalas="registry"></div> inside the gifts section, our platform renders the gift cards into it (style its section, not its contents).' : "the couple has no registry items; render their gifts text only."}
+   - Text slots: every one of their text fields goes in its own element
+     marked data-kalas="text:<key>", holding ONLY that text (no child
+     tags; put <br>-free multi-line texts in an element styled
+     white-space:pre-line). We refill these live when they edit. Keys:
+     heroTagline, storyText, transport, dresscode, giftsText;
+     program:<id>:time, program:<id>:label, program:<id>:sublabel;
+     faq:<id>:q, faq:<id>:a; hotel:<id>:name, hotel:<id>:dist,
+     hotel:<id>:price (ids from CONTENT). Example:
+     <p class="story" data-kalas="text:storyText">…their story…</p>
    - Countdown number: <span data-kalas="countdown"></span> where the
      days-left number should appear (we fill it live).
 6. Language: all copy in ${lang}. Warm, personal, concise, never lorem.
@@ -670,6 +686,25 @@ ART DIRECTION, make it feel designed, not assembled
   generous whitespace, tasteful hover states via CSS only.
 - End with the RSVP section as a strong closing invitation.`;
 
+  if (args.currentHtml && args.syncContent) {
+    return `${base}
+
+CONTENT UPDATE MODE
+Their current site HTML:
+"""
+${args.currentHtml}
+"""
+
+The couple has edited their content since this was built. Update the
+fragment so it matches CONTENT above exactly: every text verbatim, every
+programme item, question and hotel as listed; add a section for any id in
+"sections" the site lacks and remove any section whose id is no longer
+listed. Change NOTHING about the design: keep the <style> block, palette,
+fonts, layout, image placement and decoration as they are, and style any
+new section in the same way as its neighbours. The couple should see their
+new words in the site they already have. Output the complete fragment under
+the same contract.`;
+  }
   if (args.currentHtml && args.instruction) {
     return `${base}
 

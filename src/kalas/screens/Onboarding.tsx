@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import dynamic from 'next/dynamic';
 import {
-  Check, ArrowLeft, ArrowRight, MapPin, Heart, Lock, Star, X, Search, Expand,
+  Check, ArrowLeft, ArrowRight, MapPin, Lock, Star, X, Search, ImagePlus, Plus, Loader2,
 } from 'lucide-react';
 import { GUEST_BANDS, type OnboardingDate } from '@/lib/onboarding';
 import { isPlausibleEmail } from '@/lib/invites/email';
@@ -10,8 +10,8 @@ import { Wordmark, type ScreenId } from '../Shell';
 import { cn } from '../ui';
 import WeddingRings from '../icons/WeddingRings';
 import { useLang } from '../i18n';
-import type { DestinationSuggestion } from '@/app/api/onboarding/destinations/route';
-import { Lightbox } from '../onboarding/Lightbox';
+import { countryFocus, countryLabel, globeCountry, searchCountries } from '../onboarding/countries';
+import { normalizeImage } from '../site/normalizeImage';
 
 const WeddingDatePicker = dynamic(() => import('../onboarding/WeddingDatePicker'), { ssr: false });
 
@@ -29,26 +29,30 @@ function GlobeLoading() {
   );
 }
 
+/** A picked photo, held locally until the wedding exists to file it under. */
+export type PhotoDraft = { id: string; file: File; url: string };
+
 /* Structured onboarding state — chips + bands instead of loose text, so the
    journey logic and Ava's briefs get clean, bounded inputs. */
 export type FormState = {
   nameA: string; nameB: string;
-  location: string;
-  lovedDestinations: string[]; // "City, Country" hearts from the globe step
+  location: string;     // the globe's country name, or a place they typed
+  whereUndecided: boolean;
   dateChoice: string;   // '' | season key | 'exact' | 'undecided'
   exactDate: string;    // ISO, when dateChoice === 'exact'
   guestBand: string;    // '' | GUEST_BANDS key
   budgetAmount: number;
   budgetPrivate: boolean;
   partnerEmail: string;
+  photos: PhotoDraft[]; // first one becomes the hero
 };
 
 export const EMPTY_FORM: FormState = {
   nameA: '', nameB: '',
-  location: '', lovedDestinations: [],
+  location: '', whereUndecided: false,
   dateChoice: '', exactDate: '',
   guestBand: '', budgetAmount: 200_000, budgetPrivate: false,
-  partnerEmail: '',
+  partnerEmail: '', photos: [],
 };
 
 /* ── Danish chip vocabularies (reuse the shared band keys for the backend) ─ */
@@ -101,9 +105,8 @@ export function toOnboardingPayload(form: FormState) {
   return {
     name: form.nameA.trim(),
     partner_name: form.nameB.trim() || null,
-    city: form.location.trim(),
+    city: form.whereUndecided ? '' : form.location.trim(),
     date: buildDate(form),
-    loved_destinations: form.lovedDestinations,
     guest_band: form.guestBand || null,
     budget: buildBudget(form),
     partner_email: form.partnerEmail.trim() || null,
@@ -111,21 +114,23 @@ export function toOnboardingPayload(form: FormState) {
 }
 
 /* ── Display helpers ─────────────────────────────────────────────────── */
+type SetText = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 
 const inputCls = 'w-full rounded-2xl border border-[var(--color-line-strong)] bg-canvas px-4 py-3.5 text-[1rem] text-ink placeholder:text-muted focus:border-ink focus:outline-none transition-colors';
 
 /* ══════════════════════════════════════════════════════════════════════
    MAIN EXPORT, centered, traditional step flow (no chat pane)
 ══════════════════════════════════════════════════════════════════════ */
-const TOTAL_STEPS = 5;
+const STEPS = ['names', 'where', 'date', 'scope', 'photos', 'partner'] as const;
+const TOTAL_STEPS = STEPS.length;
 
-const STEP_LABELS = ['Jeres historie', 'Destination', 'Datoen', 'Omfang', 'Partner'] as const;
+const STEP_LABELS = ['Jeres historie', 'Destination', 'Datoen', 'Omfang', 'Billeder', 'Partner'] as const;
 
 const wonderInputCls =
   'h-[62px] w-full rounded-[14px] border bg-card px-[18px] text-base text-ink placeholder:text-muted transition-shadow focus:outline-none';
 
 export default function Onboarding({ onEnter, initialStep = 0 }: {
-  onEnter: (form: FormState, s?: ScreenId) => void;
+  onEnter: (form: FormState, s?: ScreenId) => void | Promise<void>;
   /* A seam for /dev/onboarding: every step has to fit the viewport, and the
      only way to check the later ones is to open on them — reaching step 3 for
      real needs a country picked off the auth-gated globe. Unused in the app. */
@@ -135,6 +140,8 @@ export default function Onboarding({ onEnter, initialStep = 0 }: {
   const [step, setStep] = useState(initialStep);
   const [dir, setDir] = useState(1);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [entering, setEntering] = useState(false);
+  const id = STEPS[step];
 
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -143,7 +150,11 @@ export default function Onboarding({ onEnter, initialStep = 0 }: {
 
   const go = (next: number) => {
     if (next >= TOTAL_STEPS) {
-      onEnter(form, 'home');
+      if (entering) return;
+      setEntering(true);
+      // Stays busy on success: onEnter navigates away. Only a throw hands the
+      // button back.
+      void Promise.resolve(onEnter(form, 'home')).catch(() => setEntering(false));
       return;
     }
     setDir(next > step ? 1 : -1);
@@ -151,11 +162,17 @@ export default function Onboarding({ onEnter, initialStep = 0 }: {
   };
 
   const canAdvance =
-    (step === 0 && Boolean(form.nameA.trim() && form.nameB.trim())) ||
-    (step === 1 && Boolean(form.location.trim())) ||
-    (step === 2 && (form.dateChoice === 'exact' ? Boolean(form.exactDate) : Boolean(form.dateChoice))) ||
-    (step === 3 && Boolean(form.guestBand)) ||
-    step === 4;
+    (id === 'names' && Boolean(form.nameA.trim() && form.nameB.trim())) ||
+    (id === 'where' && Boolean(form.location.trim() || form.whereUndecided)) ||
+    (id === 'date' && (form.dateChoice === 'exact' ? Boolean(form.exactDate) : Boolean(form.dateChoice))) ||
+    (id === 'scope' && Boolean(form.guestBand)) ||
+    id === 'photos' || id === 'partner';
+
+  const nextLabel =
+    entering ? t('Gør jeres rum klar…')
+    : step === TOTAL_STEPS - 1 ? t('Gå ind i Kalas')
+    : id === 'photos' && form.photos.length === 0 ? t('Spring over')
+    : t('Fortsæt');
 
   return (
     /* Locked to the viewport instead of growing past it: five short questions
@@ -179,13 +196,12 @@ export default function Onboarding({ onEnter, initialStep = 0 }: {
 
       <div className={cn(
         'flex min-h-0 flex-1 flex-col px-6 lg:px-14',
-        step === 1 ? 'py-3 lg:py-4' : 'gap-8 py-6 lg:flex-row lg:gap-[52px] lg:py-8',
+        id === 'where' ? 'py-5 lg:py-6' : 'gap-8 py-6 lg:flex-row lg:gap-[52px] lg:py-8',
       )}>
-        {step !== 1 && <ContextPanel step={step} t={t} />}
-        <div className={cn(
-          'flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto py-2',
-          step === 1 ? 'justify-start' : 'justify-center',
-        )}>
+        {id !== 'where' && <ContextPanel step={id} form={form} />}
+        {/* my-auto, not justify-center: a step taller than the screen then
+            scrolls from its top instead of having it cut off. */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto py-2">
           <AnimatePresence mode="wait" custom={dir}>
             <motion.div
               key={step}
@@ -194,23 +210,33 @@ export default function Onboarding({ onEnter, initialStep = 0 }: {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: dir * -28 }}
               transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-              className={cn('mx-auto w-full', step === 1 ? 'max-w-none' : 'max-w-[680px]')}
+              className={cn('m-auto w-full', id === 'where' ? 'max-w-[1240px]' : 'max-w-[680px]')}
             >
-              {step === 0 && <NamesStep form={form} set={set} onNext={() => canAdvance && go(1)} />}
-              {step === 1 && <DestinationStep form={form} setField={setField} />}
-              {step === 2 && <DateStep form={form} setField={setField} />}
-              {step === 3 && <ScopeStep form={form} setField={setField} />}
-              {step === 4 && <PartnerStep form={form} set={set} />}
+              {id === 'names' && <NamesStep form={form} set={set} onNext={() => canAdvance && go(step + 1)} />}
+              {id === 'where' && (
+                <WhereStep
+                  form={form}
+                  setField={setField}
+                  onSkip={() => {
+                    setForm((f) => ({ ...f, location: '', whereUndecided: true }));
+                    go(step + 1);
+                  }}
+                />
+              )}
+              {id === 'date' && <DateStep form={form} setField={setField} />}
+              {id === 'scope' && <ScopeStep form={form} setField={setField} />}
+              {id === 'photos' && <PhotosStep form={form} setField={setField} />}
+              {id === 'partner' && <PartnerStep form={form} set={set} />}
             </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
       <OnboardingFooter
-        onBack={step > 0 ? () => go(step - 1) : undefined}
+        onBack={step > 0 && !entering ? () => go(step - 1) : undefined}
         onNext={() => canAdvance && go(step + 1)}
-        nextLabel={step === TOTAL_STEPS - 1 ? t('Gå ind i Kalas') : t('Fortsæt')}
-        nextDisabled={!canAdvance}
+        nextLabel={nextLabel}
+        nextDisabled={!canAdvance || entering}
         t={t}
       />
     </div>
@@ -272,33 +298,45 @@ function LangPill({ lang, onLang }: { lang: 'da' | 'en'; onLang: (l: 'da' | 'en'
   );
 }
 
-const CONTEXT_PANEL_COPY: Record<number, { eyebrow: string; title: string; sub: string }> = {
-  0: {
+type StepId = (typeof STEPS)[number];
+
+const CONTEXT_PANEL_COPY: Partial<Record<StepId, { eyebrow: string; title: string; sub: string }>> = {
+  names: {
     eyebrow: 'En omtænksom start',
     title: 'Lad os gøre det til jeres.',
-    sub: 'Fem korte trin hjælper Ava med at skræddersy venues, opgaver og anbefalinger til jeres bryllup.',
+    sub: 'Et par korte trin hjælper Ava med at skræddersy opgaver og anbefalinger til jeres bryllup.',
   },
-  2: {
+  date: {
     eyebrow: 'Datoen',
     title: 'Hvornår siger I ja?',
     sub: 'En sæson, en dato eller “vi ved det ikke endnu”, Ava tilpasser sig.',
   },
-  3: {
+  scope: {
     eyebrow: 'Omfang',
     title: 'Hvor mange gæster?',
     sub: 'Et pejlemærke er nok, Ava bruger det til venues, budget og tidslinje.',
   },
-  4: {
+  photos: {
+    eyebrow: 'Jeres rum',
+    title: 'Det skal ligne jer.',
+    sub: 'Et billede på forsiden gør planlægningen til jeres egen. I kan skifte det når som helst.',
+  },
+  partner: {
     eyebrow: 'Sammen om det',
     title: 'Giv partneren adgang',
     sub: 'I deler samme plan, ingen duplikerede lister eller beskedkopiering. Valgfrit.',
   },
 };
 
-/** Wonder onboarding context panel — hidden on globe step (1). */
-function ContextPanel({ step, t }: { step: number; t: (s: string) => string }) {
-  const panel = CONTEXT_PANEL_COPY[step] ?? CONTEXT_PANEL_COPY[0];
+/** Wonder onboarding context panel — hidden on the globe step. Once they
+ *  have picked a photo it previews their front page instead. */
+function ContextPanel({ step, form }: { step: StepId; form: FormState }) {
+  const { t } = useLang();
+  const panel = CONTEXT_PANEL_COPY[step] ?? CONTEXT_PANEL_COPY.names!;
   const benefits = [t('Anbefalinger formet omkring jer'), t('Ændr ethvert svar senere')];
+  const cover = form.photos[0];
+
+  if (step === 'photos' && cover) return <CoverPreview url={cover.url} form={form} />;
 
   return (
     <aside className="hidden w-full max-w-[430px] shrink-0 flex-col justify-between rounded-3xl bg-ink p-[38px] shadow-[0px_18px_50px_rgba(36,65,58,0.16)] lg:flex lg:h-full lg:overflow-hidden">
@@ -323,6 +361,37 @@ function ContextPanel({ step, t }: { step: number; t: (s: string) => string }) {
             <span className="text-sm text-sage-tint">{line}</span>
           </div>
         ))}
+      </div>
+    </aside>
+  );
+}
+
+function CoverPreview({ url, form }: { url: string; form: FormState }) {
+  const { t, lang } = useLang();
+  const names = [form.nameA.trim(), form.nameB.trim()].filter(Boolean).join(' & ');
+  const country = globeCountry(form.location);
+  const place = form.whereUndecided ? '' : country ? countryLabel(country, lang) : form.location.trim();
+  return (
+    <aside className="relative hidden w-full max-w-[430px] shrink-0 overflow-hidden rounded-3xl bg-ink shadow-[0px_18px_50px_rgba(36,65,58,0.16)] lg:flex lg:h-full">
+      <motion.div
+        key={url}
+        initial={{ opacity: 0, scale: 1.04 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ backgroundImage: `url('${url}')` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#12332b]/85 via-[#12332b]/10 to-transparent" />
+      <div className="relative mt-auto flex flex-col gap-2 p-[38px]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-sage-tint">{t('Jeres forside')}</p>
+        <h2 className="font-serif text-[clamp(2rem,3.4vw,2.6rem)] leading-[1.05] tracking-[-0.03em] text-card">
+          {names || t('Jeres bryllup')}
+        </h2>
+        {place && (
+          <p className="inline-flex items-center gap-1.5 text-sm text-sage-tint">
+            <MapPin size={13} /> {place}
+          </p>
+        )}
       </div>
     </aside>
   );
@@ -407,7 +476,7 @@ function Chip({ selected, onClick, children }: { selected: boolean; onClick: () 
 /* ══════════════════════════════════════════════════════════════════════
    STEP 1, NAMES
 ══════════════════════════════════════════════════════════════════════ */
-function NamesStep({ form, set, onNext }: { form: FormState; set: any; onNext: () => void }) {
+function NamesStep({ form, set, onNext }: { form: FormState; set: SetText; onNext: () => void }) {
   const { t } = useLang();
   const [focus, setFocus] = useState<'a' | 'b' | null>('a');
 
@@ -471,402 +540,352 @@ function NamesStep({ form, set, onNext }: { form: FormState; set: any; onNext: (
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   STEP 2, DESTINATION (interactive globe + country panel)
+   STEP 2, WHERE (country search + globe)
 ══════════════════════════════════════════════════════════════════════ */
-/* Sized against what is left after the header and the footer, not against the
-   whole viewport: at 72vh the globe alone pushed the "Fortsæt" button off a
-   laptop screen. */
-const GLOBE_H = 'h-[min(calc(100dvh-260px),560px)] min-h-[300px]';
-/** Matches OnboardingHeader h-[92px]; mobile adds lang row below header. */
-const DRAWER_TOP = 'top-[92px] max-sm:top-[136px]';
-const DRAWER_BOTTOM = 'bottom-[96px]';
+/* One question, answered at the level couples actually know it this early:
+   the country. It used to open a drawer of cities and venues per country,
+   which was a venue finder wearing an onboarding step's clothes, and Venues
+   does that job properly once they are inside. The globe is here to make the
+   answer feel like a place, so it follows the search instead of being the
+   only way in. */
+const GLOBE_H = 'h-[150px] sm:h-[260px] lg:h-[min(calc(100dvh-240px),600px)]';
 
-function DestinationStep({ form, setField }: {
-  form: FormState; setField: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
-}) {
-  const { t, lang } = useLang();
-  const [custom, setCustom] = useState(false);
-  const [country, setCountry] = useState<string | null>(null);
-  const [cards, setCards] = useState<DestinationSuggestion[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
-  // Countries already fetched this session — reopening one is instant.
-  const seen = useRef<Record<string, DestinationSuggestion[]>>({});
-
-  const load = async (c: string) => {
-    setFailed(false);
-    const hit = seen.current[c];
-    if (hit) { setCards(hit); return; }
-    setLoading(true);
-    setCards([]);
-    try {
-      const res = await fetch(
-        `/api/onboarding/destinations?country=${encodeURIComponent(c)}&lang=${lang}`
-      );
-      if (!res.ok) throw new Error(String(res.status));
-      const data = (await res.json()) as { suggestions?: DestinationSuggestion[] };
-      const list = data.suggestions ?? [];
-      if (list.length === 0) { setFailed(true); return; }
-      seen.current[c] = list;
-      setCards(list);
-    } catch {
-      setFailed(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const pickCountry = (c: string) => {
-    setCustom(false);
-    setCountry(c);
-    setField('location', c);
-    void load(c);
-  };
-
-  const valueOf = (s: DestinationSuggestion) => `${s.name}, ${country}`;
-  const loved = (s: DestinationSuggestion) => form.lovedDestinations.includes(valueOf(s));
-  const toggleLove = (s: DestinationSuggestion) => {
-    const v = valueOf(s);
-    setField(
-      'lovedDestinations',
-      form.lovedDestinations.includes(v)
-        ? form.lovedDestinations.filter((x) => x !== v)
-        : [...form.lovedDestinations, v]
-    );
-  };
-
-  return (
-    <>
-      <div>
-        <div className={cn('relative w-full overflow-hidden rounded-3xl', GLOBE_H)}>
-          <DestinationGlobe selectedCountry={country} onCountryPick={pickCountry} />
-
-          <div className="absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-canvas/96 via-canvas/78 to-transparent px-5 pb-16 pt-4 sm:px-7 sm:pt-5">
-            <div className="flex items-start justify-between gap-4">
-              <div className="pointer-events-none min-w-0 flex-1">
-                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-muted">
-                  {t('Destination')}
-                </p>
-                <h2 className="mt-2 font-serif text-[clamp(1.75rem,4.5vw,2.5rem)] leading-[1.05] tracking-[-0.03em] text-ink">
-                  {t('Hvor i')} <span className="italic">{t('verden?')}</span>
-                </h2>
-                <p className="mt-2 max-w-lg text-[0.9rem] leading-relaxed text-muted sm:text-[0.95rem]">
-                  {t('Drej og zoom på kloden, og tryk på et land, så henter vi de største byer og smukkeste bryllupsdestinationer.')}
-                </p>
-              </div>
-              <div className="pointer-events-auto shrink-0 pt-1">
-                {custom ? (
-                  <button
-                    type="button"
-                    onClick={() => setCustom(false)}
-                    className="text-[0.78rem] font-medium text-muted underline-offset-2 transition-colors hover:text-ink hover:underline cursor-pointer"
-                  >
-                    {t('Tilbage til kloden')}
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setCustom(true)}
-                    className="rounded-full border border-line-strong bg-card/90 px-4 py-2 text-[0.78rem] font-semibold text-ink-soft shadow-sm transition-colors hover:border-ink hover:text-ink cursor-pointer"
-                  >
-                    {t('Skriv selv')}
-                  </button>
-                )}
-              </div>
-            </div>
-            <AnimatePresence>
-              {custom && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  className="pointer-events-auto mt-4 max-w-md sm:ml-auto"
-                >
-                  <input
-                    value={form.location}
-                    onChange={(e) => setField('location', e.target.value)}
-                    placeholder={t('f.eks. Odense · Sydfyn · jeres sommerhusby')}
-                    className={cn(wonderInputCls, 'border border-line-strong shadow-[0px_0px_0px_4px_rgba(122,144,104,0.12)] focus:border-2 focus:border-ink')}
-                    autoFocus
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {(form.location && !custom) || form.lovedDestinations.length > 0 ? (
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            {form.location && !custom && (
-              <motion.div key={form.location} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-2 rounded-full bg-sage-tint px-4 py-2">
-                <MapPin size={14} className="text-ink" />
-                <span className="text-[0.9rem] font-medium text-ink">{form.location}</span>
-              </motion.div>
-            )}
-            {form.lovedDestinations.length > 0 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-line-strong)] px-3 py-1.5 text-[0.78rem] text-ink-soft">
-                <Heart size={12} className="fill-clay text-clay" />
-                {t('{n} gemt til senere', { n: form.lovedDestinations.length })}
-              </span>
-            )}
-          </div>
-        ) : null}
-      </div>
-
-      {/* Page-level right drawer, below header, above footer, no backdrop */}
-      <AnimatePresence>
-        {country && (
-          <motion.aside
-            key={country}
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-            className={cn(
-              'fixed right-0 z-40 flex w-[min(420px,100vw)] flex-col border-l border-[var(--color-line-strong)] bg-card shadow-[-16px_0_48px_rgba(36,65,58,0.2)]',
-              DRAWER_TOP,
-              DRAWER_BOTTOM,
-            )}
-          >
-            <CountryPanel
-              country={country}
-              cards={cards}
-              loading={loading}
-              failed={failed}
-              onRetry={() => void load(country)}
-              onClose={() => setCountry(null)}
-              selectedValue={form.location}
-              valueOf={valueOf}
-              onChoose={(s) => { setCustom(false); setField('location', valueOf(s)); }}
-              loved={loved}
-              onToggleLove={toggleLove}
-              drawer
-            />
-          </motion.aside>
-        )}
-      </AnimatePresence>
-    </>
-  );
+/* countryFocus frames a country to fill the view, which for Italy or Denmark
+   zooms in until the globe is a flat map with square corners. Here the point
+   is the place on the planet, so the camera stays far enough out to keep it
+   round. */
+function globeFocus(country: string | null) {
+  const f = countryFocus(country);
+  return f ? { ...f, altitude: Math.max(f.altitude, 1.6) } : null;
 }
 
-function CountryPanel({
-  country, cards, loading, failed, onRetry, onClose, selectedValue, valueOf, onChoose, loved, onToggleLove, drawer,
-}: {
-  country: string;
-  cards: DestinationSuggestion[];
-  loading: boolean;
-  failed: boolean;
-  onRetry: () => void;
-  onClose: () => void;
-  selectedValue: string;
-  valueOf: (s: DestinationSuggestion) => string;
-  onChoose: (s: DestinationSuggestion) => void;
-  loved: (s: DestinationSuggestion) => boolean;
-  onToggleLove: (s: DestinationSuggestion) => void;
-  drawer?: boolean;
+function WhereStep({ form, setField, onSkip }: {
+  form: FormState;
+  setField: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+  onSkip: () => void;
 }) {
-  const { t } = useLang();
-  const cities = cards.filter((s) => s.kind === 'city');
-  const weddings = cards.filter((s) => s.kind === 'wedding');
-  const [tab, setTab] = useState<'city' | 'wedding'>('city');
-  const [lightbox, setLightbox] = useState<number | null>(null);
+  const { t, lang } = useLang();
+  const picked = globeCountry(form.location);
+  const shown = picked ? countryLabel(picked, lang) : form.location;
+  const [query, setQuery] = useState(shown);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
 
-  useEffect(() => {
-    if (cities.length > 0) setTab('city');
-    else if (weddings.length > 0) setTab('wedding');
-  }, [country, cities.length, weddings.length]);
-
-  // Close the viewer when the tab or country changes so the index stays valid.
-  useEffect(() => { setLightbox(null); }, [tab, country]);
-
-  const activeCards = tab === 'city' ? cities : weddings;
-  const galleryPhotos = activeCards.map((s) => s.photo).filter((p): p is string => Boolean(p));
-  const tabs = [
-    { id: 'city' as const, label: t('Største byer'), count: cities.length },
-    { id: 'wedding' as const, label: t('Bryllupsdestinationer'), count: weddings.length },
+  const hits = searchCountries(query);
+  const typed = query.trim();
+  // Somewhere the globe does not know ("Bornholm", "Sydfyn") is still an answer.
+  const options: { value: string; label: string; free?: boolean }[] = [
+    ...hits.map((c) => ({ value: c, label: countryLabel(c, lang) })),
+    ...(typed.length >= 2 && !hits.some((c) => countryLabel(c, lang).toLowerCase() === typed.toLowerCase())
+      ? [{ value: typed, label: t('Brug “{q}”', { q: typed }), free: true }]
+      : []),
   ];
 
+  const choose = (value: string) => {
+    const country = globeCountry(value);
+    setField('location', country ?? value);
+    setField('whereUndecided', false);
+    setQuery(country ? countryLabel(country, lang) : value);
+    setOpen(false);
+  };
+
+  const clear = () => {
+    setField('location', '');
+    setQuery('');
+    setOpen(true);
+  };
+
+  const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!open || options.length === 0) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => (i + 1) % options.length); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => (i - 1 + options.length) % options.length); }
+    else if (e.key === 'Enter') { e.preventDefault(); choose(options[Math.min(active, options.length - 1)].value); }
+    else if (e.key === 'Escape') setOpen(false);
+  };
+
   return (
-    <div className={cn(
-      'flex min-h-0 flex-1 flex-col bg-card',
-      drawer ? 'h-full' : 'max-h-[640px] rounded-3xl border border-[var(--color-line-strong)] lg:h-[min(72vh,640px)] lg:max-h-none',
-    )}>
-      <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[var(--color-line)] px-5 py-4">
-        <div className="min-w-0">
-          <p className="text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-muted">{t('Destination')}</p>
-          <h3 className="truncate font-serif text-[1.3rem] leading-tight text-ink">{country}</h3>
+    <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-12">
+      <div className="flex w-full flex-col gap-6 lg:max-w-[440px] lg:shrink-0">
+        <div className="flex flex-col gap-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted">{t('Destination')}</p>
+          <h1 className="font-serif text-[clamp(2.25rem,5vw,3.25rem)] leading-[1.04] tracking-[-0.03em] text-ink">
+            {t('Hvor i verden vil I')} <span className="italic">{t('giftes?')}</span>
+          </h1>
+          <p className="max-w-[420px] text-base leading-[1.6] text-muted">
+            {t('Hjemme eller langt væk. Et land er nok for nu, Ava hjælper jer med at finde stedet bagefter.')}
+          </p>
         </div>
-        <button type="button" onClick={onClose} aria-label={t('Luk')}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer">
-          <X size={16} />
-        </button>
-      </div>
 
-      {!loading && !failed && (cities.length > 0 || weddings.length > 0) && (
-        <div className="flex shrink-0 gap-0.5 border-b border-[var(--color-line)] px-3">
-          {tabs.map(({ id, label, count }) => (
+        <div className="relative">
+          <Search size={18} className="pointer-events-none absolute left-[18px] top-1/2 -translate-y-1/2 text-muted" />
+          <input
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value);
+              setActive(0);
+              setOpen(true);
+              if (form.location) setField('location', '');
+            }}
+            onFocus={() => setOpen(true)}
+            onBlur={() => setOpen(false)}
+            onKeyDown={onKey}
+            placeholder={t('Søg efter et land, f.eks. Italien')}
+            className={cn(
+              wonderInputCls,
+              'pl-12 pr-12',
+              form.location
+                ? 'border-2 border-ink'
+                : 'border border-line-strong focus:border-2 focus:border-ink focus:shadow-[0px_0px_0px_4px_rgba(122,144,104,0.18)]',
+            )}
+            role="combobox"
+            aria-expanded={open && options.length > 0}
+            aria-controls="where-options"
+            aria-autocomplete="list"
+            autoFocus
+          />
+          {form.location ? (
             <button
-              key={id}
               type="button"
-              disabled={count === 0}
-              onClick={() => setTab(id)}
-              className={cn(
-                'flex-1 border-b-2 px-2 py-3 text-center text-[0.68rem] font-semibold uppercase tracking-[0.1em] transition-colors cursor-pointer',
-                tab === id ? 'border-ink text-ink' : 'border-transparent text-muted hover:text-ink',
-                count === 0 && 'cursor-not-allowed opacity-40',
-              )}
+              onClick={clear}
+              aria-label={t('Ryd')}
+              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
             >
-              {label}
+              <X size={16} />
             </button>
-          ))}
+          ) : null}
+
+          <AnimatePresence>
+            {open && options.length > 0 && !form.location && (
+              <motion.ul
+                id="where-options"
+                role="listbox"
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.14 }}
+                className="absolute inset-x-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[14px] border border-line-strong bg-card py-1.5 shadow-[0px_14px_36px_rgba(36,65,58,0.14)]"
+              >
+                {options.map((o, i) => (
+                  <li key={o.value + (o.free ? ':free' : '')} role="option" aria-selected={i === active}>
+                    <button
+                      type="button"
+                      // mousedown, not click: the input's blur closes the list first.
+                      onMouseDown={(e) => { e.preventDefault(); choose(o.value); }}
+                      onMouseEnter={() => setActive(i)}
+                      className={cn(
+                        'flex w-full items-center gap-3 px-4 py-2.5 text-left text-[15px] transition-colors cursor-pointer',
+                        i === active ? 'bg-shell text-ink' : 'text-ink-soft',
+                        o.free && 'italic',
+                      )}
+                    >
+                      <MapPin size={15} className="shrink-0 text-muted" />
+                      {o.label}
+                    </button>
+                  </li>
+                ))}
+              </motion.ul>
+            )}
+          </AnimatePresence>
         </div>
-      )}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-        {loading && (
-          <div className="space-y-3">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="animate-pulse overflow-hidden rounded-2xl border border-[var(--color-line)]">
-                <div className="h-32 bg-shell" />
-                <div className="space-y-2 p-3">
-                  <div className="h-3.5 w-1/2 rounded bg-shell" />
-                  <div className="h-3 w-5/6 rounded bg-shell" />
-                </div>
-              </div>
-            ))}
-            <p className="text-center text-[0.78rem] italic text-muted">{t('Finder de smukkeste steder…')}</p>
-          </div>
-        )}
-
-        {failed && !loading && (
-          <div className="rounded-2xl bg-shell p-4 text-center">
-            <p className="text-[0.85rem] text-ink-soft">{t('Vi kunne ikke hente forslag lige nu.')}</p>
-            <button type="button" onClick={onRetry}
-              className="mt-3 rounded-full bg-ink px-4 py-2 text-[0.8rem] font-medium text-canvas transition-opacity hover:opacity-90 cursor-pointer">
-              {t('Prøv igen')}
+        <div className="flex flex-wrap items-center gap-3">
+          {form.location ? (
+            <motion.div key={form.location} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 rounded-full bg-sage-tint px-4 py-2">
+              <Check size={14} className="text-ink" />
+              <span className="text-[0.9rem] font-medium text-ink">{shown}</span>
+            </motion.div>
+          ) : (
+            <button
+              type="button"
+              onClick={onSkip}
+              className="rounded-full border border-line-strong px-4 py-2 text-[0.88rem] font-medium text-ink-soft transition-colors hover:border-ink hover:text-ink cursor-pointer"
+            >
+              {t('Vi er ikke sikre endnu')}
             </button>
-          </div>
-        )}
-
-        {!loading && !failed && activeCards.length > 0 && (
-          <div className="space-y-3">
-            {activeCards.map((s) => (
-              <DestinationCard key={valueOf(s)} s={s} country={country} selected={selectedValue === valueOf(s)}
-                loved={loved(s)} onChoose={() => onChoose(s)} onToggleLove={() => onToggleLove(s)}
-                onExpand={s.photo ? () => setLightbox(galleryPhotos.indexOf(s.photo!)) : undefined} />
-            ))}
-          </div>
-        )}
-
-        {!loading && !failed && activeCards.length === 0 && cities.length === 0 && weddings.length === 0 && (
-          <p className="px-1 text-center text-[0.85rem] text-ink-soft">{t('Ingen forslag for dette land endnu.')}</p>
-        )}
+          )}
+          <span className="text-[13px] text-muted">
+            {form.location ? t('I kan altid ændre det senere.') : t('Eller tryk på et land på kloden.')}
+          </span>
+        </div>
       </div>
 
-      <p className="shrink-0 border-t border-[var(--color-line)] px-5 py-3 text-[0.72rem] leading-snug text-muted">
-        {t('Hjerter gemmes, så Ava kan finde leverandører dér senere.')}
-      </p>
-
-      {lightbox !== null && galleryPhotos.length > 0 && (
-        <Lightbox
-          photos={galleryPhotos}
-          index={Math.min(Math.max(lightbox, 0), galleryPhotos.length - 1)}
-          onIndex={setLightbox}
-          onClose={() => setLightbox(null)}
-          alt={country}
+      <div className={cn('relative -order-1 min-w-0 overflow-hidden rounded-3xl lg:order-none lg:flex-1', GLOBE_H)}>
+        <DestinationGlobe
+          selectedCountry={picked}
+          onCountryPick={(c) => choose(c)}
+          focus={globeFocus(picked)}
         />
-      )}
+      </div>
     </div>
   );
 }
 
-function googleSearchUrl(s: DestinationSuggestion, country: string): string {
-  return `https://www.google.com/search?q=${encodeURIComponent(`${s.name}, ${country}`)}`;
+/* ══════════════════════════════════════════════════════════════════════
+   STEP 5, PHOTOS
+══════════════════════════════════════════════════════════════════════ */
+/* Held in the browser until the wedding exists: the photo API files every
+   picture under an event, and the event is only created when they finish.
+   The first one becomes the hero, which is what the home screen and the
+   website both show. */
+const MAX_ONBOARDING_PHOTOS = 6;
+
+function PhotosStep({ form, setField }: {
+  form: FormState; setField: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+}) {
+  const { t } = useLang();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [reading, setReading] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [dragging, setDragging] = useState(false);
+  // Latest list, so a batch that finishes decoding appends to what is there now.
+  const photosRef = useRef(form.photos);
+  useEffect(() => { photosRef.current = form.photos; }, [form.photos]);
+
+  const room = MAX_ONBOARDING_PHOTOS - form.photos.length;
+
+  const add = async (files: FileList | File[] | null) => {
+    const list = Array.from(files ?? []).filter((f) => f.type.startsWith('image/') || /\.hei[cf]$/i.test(f.name));
+    if (list.length === 0) return;
+    setError(null);
+    const take = list.slice(0, Math.max(0, MAX_ONBOARDING_PHOTOS - photosRef.current.length));
+    if (take.length < list.length) setError(t('Højst {n} billeder her, I kan tilføje flere senere.', { n: MAX_ONBOARDING_PHOTOS }));
+    setReading((n) => n + take.length);
+    const ready = await Promise.all(take.map((f) => normalizeImage(f).catch(() => null)));
+    setReading((n) => n - take.length);
+    const drafts = ready.flatMap((file) =>
+      file ? [{ id: crypto.randomUUID(), file, url: URL.createObjectURL(file) }] : [],
+    );
+    if (drafts.length < take.length) setError(t('Et billede kunne ikke læses, prøv et andet.'));
+    const next = [...photosRef.current, ...drafts].slice(0, MAX_ONBOARDING_PHOTOS);
+    photosRef.current = next;
+    setField('photos', next);
+    if (inputRef.current) inputRef.current.value = '';
+  };
+
+  const remove = (id: string) => {
+    const gone = form.photos.find((p) => p.id === id);
+    if (gone) URL.revokeObjectURL(gone.url);
+    setField('photos', form.photos.filter((p) => p.id !== id));
+  };
+
+  const makeCover = (id: string) => {
+    const p = form.photos.find((x) => x.id === id);
+    if (!p) return;
+    setField('photos', [p, ...form.photos.filter((x) => x.id !== id)]);
+  };
+
+  const [cover, ...rest] = form.photos;
+
+  return (
+    <div>
+      <StepHead
+        eyebrow="Jeres billeder"
+        title={<>{t('Et par billeder')} <span className="italic">{t('af jer')}</span></>}
+        sub="De pynter jeres forside, og Ava kan bruge dem på hjemmesiden og invitationerne. Det første bliver forsidebillede."
+      />
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+        multiple
+        hidden
+        onChange={(e) => void add(e.target.files)}
+      />
+
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(e) => { e.preventDefault(); setDragging(false); void add(e.dataTransfer.files); }}
+        className={cn('rounded-3xl transition-shadow', dragging && 'shadow-[0px_0px_0px_4px_rgba(122,144,104,0.3)]')}
+      >
+        {!cover ? (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="flex h-[min(38dvh,300px)] min-h-[200px] w-full flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-line-strong bg-shell/60 text-center transition-colors hover:border-ink cursor-pointer"
+          >
+            <span className="flex h-14 w-14 items-center justify-center rounded-full bg-card shadow-sm">
+              {reading > 0 ? <Loader2 size={22} className="animate-spin text-ink" /> : <ImagePlus size={22} className="text-ink" />}
+            </span>
+            <span className="font-serif text-[1.3rem] text-ink">{t('Vælg billeder')}</span>
+            <span className="max-w-[300px] text-[13px] text-muted">
+              {t('Eller træk dem herind. Op til {n}, JPEG, PNG eller HEIC.', { n: MAX_ONBOARDING_PHOTOS })}
+            </span>
+          </button>
+        ) : (
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+            <PhotoTile photo={cover} cover onRemove={() => remove(cover.id)}
+              className="col-span-3 row-span-2 h-[200px] sm:col-span-2 sm:h-auto sm:min-h-[260px]" />
+            {rest.map((p) => (
+              <PhotoTile key={p.id} photo={p} onRemove={() => remove(p.id)} onCover={() => makeCover(p.id)}
+                className="aspect-square" />
+            ))}
+            {reading > 0 && Array.from({ length: Math.min(reading, room) }).map((_, i) => (
+              <div key={`r${i}`} className="flex aspect-square items-center justify-center rounded-2xl bg-shell">
+                <Loader2 size={18} className="animate-spin text-muted" />
+              </div>
+            ))}
+            {room > reading && (
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                aria-label={t('Tilføj billede')}
+                className="flex aspect-square items-center justify-center rounded-2xl border-2 border-dashed border-line-strong text-muted transition-colors hover:border-ink hover:text-ink cursor-pointer"
+              >
+                <Plus size={20} />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {error && <p className="mt-3 text-[0.82rem] text-terracotta">{error}</p>}
+
+      <div className="mt-5 flex items-center gap-[9px]">
+        <Lock size={15} className="shrink-0 text-muted" />
+        <p className="text-[13px] text-muted">
+          {t('Billederne er private, indtil I selv lægger dem på hjemmesiden. Valgfrit.')}
+        </p>
+      </div>
+    </div>
+  );
 }
 
-function DestinationCard({ s, country, selected, loved, onChoose, onToggleLove, onExpand }: {
-  s: DestinationSuggestion; country: string; selected: boolean; loved: boolean;
-  onChoose: () => void; onToggleLove: () => void; onExpand?: () => void;
+function PhotoTile({ photo, cover, onRemove, onCover, className }: {
+  photo: PhotoDraft; cover?: boolean; onRemove: () => void; onCover?: () => void; className?: string;
 }) {
   const { t } = useLang();
   return (
-    <div className={cn(
-      'group relative overflow-hidden rounded-2xl border transition-colors',
-      selected ? 'border-ink shadow-[0px_6px_18px_rgba(36,65,58,0.12)]' : 'border-[var(--color-line)] hover:border-[var(--color-line-strong)]',
-    )}>
-      <button type="button" onClick={onChoose} className="block w-full text-left cursor-pointer">
-        {s.photo ? (
-          <div className="relative h-32 w-full overflow-hidden">
-            {/* Places photo URLs are remote googleusercontent links; next/image
-                would need a domain allowlist, so a plain img is the right tool. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={s.photo}
-              alt={s.name}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.05]"
-            />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
-          </div>
-        ) : (
-          <div className="flex h-32 w-full items-center justify-center bg-sage-tint">
-            <MapPin size={20} className="text-ink opacity-40" />
-          </div>
-        )}
-        <div className="p-3 pb-2">
-          <div className="flex items-baseline justify-between gap-2">
-            <p className="truncate font-serif text-[1rem] text-ink">{s.name}</p>
-            {s.rating != null && (
-              <span className="inline-flex shrink-0 items-center gap-1 text-[0.72rem] text-ink-soft">
-                <Star size={11} className="fill-[#d9a441] text-[#d9a441]" />{s.rating.toFixed(1)}
-              </span>
-            )}
-          </div>
-          {s.region && <p className="text-[0.72rem] text-muted">{s.region}</p>}
-          {s.blurb && <p className="mt-1.5 text-[0.78rem] leading-snug text-ink-soft">{s.blurb}</p>}
-          {selected && (
-            <p className="mt-2 inline-flex items-center gap-1.5 text-[0.72rem] font-semibold text-ink">
-              <Check size={12} /> {t('Valgt som jeres sted')}
-            </p>
-          )}
-        </div>
-      </button>
-
-      <div className="absolute right-2 top-2 flex items-center gap-1.5">
-        {onExpand && (
+    <div className={cn('group relative overflow-hidden rounded-2xl bg-shell', className)}>
+      {/* A local object URL — nothing for next/image to optimise. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={photo.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+      {cover && (
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-card/95 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink shadow-sm">
+          <Star size={11} className="fill-terracotta text-terracotta" /> {t('Forsidebillede')}
+        </span>
+      )}
+      <div className="absolute right-2 top-2 flex gap-1.5">
+        {onCover && (
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); onExpand(); }}
-            aria-label={t('Forstør billede')}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-ink-soft shadow-sm transition-colors hover:text-ink cursor-pointer"
+            onClick={onCover}
+            aria-label={t('Gør til forsidebillede')}
+            title={t('Gør til forsidebillede')}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-ink-soft opacity-100 shadow-sm transition-opacity hover:text-ink sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 cursor-pointer"
           >
-            <Expand size={15} />
+            <Star size={14} />
           </button>
-        )}
-        {s.kind === 'city' && (
-          <a
-            href={googleSearchUrl(s, country)}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            aria-label={t('Søg på Google')}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-ink-soft shadow-sm transition-colors hover:text-ink"
-          >
-            <Search size={15} />
-          </a>
         )}
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onToggleLove(); }}
-          aria-label={loved ? t('Fjern fra gemte') : t('Gem til senere')}
-          aria-pressed={loved}
-          className={cn(
-            'flex h-8 w-8 items-center justify-center rounded-full shadow-sm transition-all cursor-pointer',
-            loved ? 'bg-clay text-white scale-105' : 'bg-card/90 text-ink-soft hover:text-clay',
-          )}
+          onClick={onRemove}
+          aria-label={t('Fjern billede')}
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-card/90 text-ink-soft opacity-100 shadow-sm transition-opacity hover:text-ink sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 cursor-pointer"
         >
-          <Heart size={15} className={loved ? 'fill-current' : undefined} />
+          <X size={14} />
         </button>
       </div>
     </div>
@@ -876,44 +895,42 @@ function DestinationCard({ s, country, selected, loved, onChoose, onToggleLove, 
 /* ══════════════════════════════════════════════════════════════════════
    STEP 3, DATE
 ══════════════════════════════════════════════════════════════════════ */
+/* The calendar is always out. It used to hide behind a "Vi ved den allerede"
+   chip, which read as one more season among the chips, and couples with a
+   date never found where to put it. Picking a day answers the question; the
+   seasons beside it are the way out for everyone else. */
 function DateStep({ form, setField }: {
   form: FormState; setField: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
 }) {
   const { t, lang } = useLang();
+  const pickDay = (iso: string) => {
+    setField('exactDate', iso);
+    setField('dateChoice', 'exact');
+  };
+  const pickRough = (choice: string) => {
+    setField('dateChoice', choice);
+    setField('exactDate', '');
+  };
   return (
     <div>
       <StepHead eyebrow="Hvornår" title={<>{t('Hvornår siger I')} <span className="italic">{t('ja?')}</span></>}
-        sub="En sæson er fint, I behøver ikke en præcis dato endnu." />
-      <div className="flex flex-wrap gap-2">
-        <Chip
-          selected={form.dateChoice === 'exact'}
-          onClick={() => setField('dateChoice', 'exact')}
-        >
-          {t('Vi ved den allerede')}
-        </Chip>
-        {DATE_CHIPS.map((c) => (
-          <Chip key={c.key} selected={form.dateChoice === c.key}
-            onClick={() => setField('dateChoice', c.key)}>{chipLabel(c, t)}</Chip>
-        ))}
-        <Chip selected={form.dateChoice === 'undecided'} onClick={() => setField('dateChoice', 'undecided')}>{t('Ved ikke endnu')}</Chip>
+        sub="Vælg dagen, hvis I har den. Ellers er en sæson fint." />
+      <div className="flex flex-col gap-7 sm:flex-row sm:items-start sm:gap-8">
+        <div className="w-full sm:max-w-[360px] sm:shrink-0">
+          <WeddingDatePicker value={form.exactDate} onChange={pickDay} lang={lang} className="mt-0" />
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-3 sm:pt-1">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink-soft">{t('Ingen dato endnu?')}</p>
+          <div className="flex flex-wrap gap-2">
+            {DATE_CHIPS.map((c) => (
+              <Chip key={c.key} selected={form.dateChoice === c.key}
+                onClick={() => pickRough(c.key)}>{chipLabel(c, t)}</Chip>
+            ))}
+            <Chip selected={form.dateChoice === 'undecided'} onClick={() => pickRough('undecided')}>{t('Ved ikke endnu')}</Chip>
+          </div>
+          <p className="text-[13px] text-muted">{t('I kan altid ændre det senere.')}</p>
+        </div>
       </div>
-      <AnimatePresence>
-        {form.dateChoice === 'exact' && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 8 }}
-            transition={{ duration: 0.22 }}
-          >
-            <p className="mt-6 text-xs font-bold uppercase tracking-[0.16em] text-ink-soft">{t('Vælg jeres dato')}</p>
-            <WeddingDatePicker
-              value={form.exactDate}
-              onChange={(iso) => setField('exactDate', iso)}
-              lang={lang}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
@@ -1006,7 +1023,7 @@ function ScopeStep({ form, setField }: {
 /* ══════════════════════════════════════════════════════════════════════
    STEP 5, PARTNER
 ══════════════════════════════════════════════════════════════════════ */
-function PartnerStep({ form, set }: { form: FormState; set: any }) {
+function PartnerStep({ form, set }: { form: FormState; set: SetText }) {
   const { t, lang } = useLang();
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState<string | null>(null);

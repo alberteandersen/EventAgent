@@ -12,11 +12,12 @@ import { logAgentError } from "@/lib/gemini/log";
 import { WEBSITE_HTML_PROMPT } from "@/lib/gemini/prompts";
 import { generateSectionImage } from "@/lib/gemini/image";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { parseConfig, HUB_SECTIONS, type SiteConfig } from "@/kalas/site/config";
+import { parseConfig, siteContent, type SiteConfig } from "@/kalas/site/config";
 import { parseSiteDesign, DEFAULT_DESIGN, type SiteDesign } from "@/kalas/site/design";
 import { SITE_FONTS } from "@/kalas/site/fonts";
 import { findPreset } from "@/kalas/site/presets";
 import { sanitizeSiteHtml } from "./sanitize";
+import { buildStamp, fillSlots } from "./slots";
 import type {
   EventRow, ProfileRow, SitePhotoRow, VenueRow, WebsiteDesignRow, WeddingSiteRow,
 } from "@/lib/db/types";
@@ -93,7 +94,7 @@ export async function ensureSectionImages(args: EnsureImagesArgs): Promise<SiteP
 
 /* ── Alias manifest ────────────────────────────────────────────────────── */
 
-interface ManifestEntry {
+export interface ManifestEntry {
   alias: string;
   kind: string;
   note: string;
@@ -103,7 +104,7 @@ interface ManifestEntry {
   venueUrl?: string;
 }
 
-function buildManifest(photos: SitePhotoRow[], venue: VenueRow | null): ManifestEntry[] {
+export function buildManifest(photos: SitePhotoRow[], venue: VenueRow | null): ManifestEntry[] {
   const entries: ManifestEntry[] = [];
   let p = 0;
   for (const photo of photos) {
@@ -143,7 +144,7 @@ function buildManifest(photos: SitePhotoRow[], venue: VenueRow | null): Manifest
 
 /** Inline a subset of manifest images as multimodal parts (venue first, then
     hero/section/couple) so the model designs from what it can actually see. */
-async function inlineParts(entries: ManifestEntry[]): Promise<Part[]> {
+export async function inlineParts(entries: ManifestEntry[]): Promise<Part[]> {
   const admin = createAdminClient();
   const prioritized = [
     ...entries.filter((e) => e.venueUrl).slice(0, 3),
@@ -184,6 +185,8 @@ export interface BuildArgs {
   styleDirection?: string;
   /** Refinement: change request against the active build. */
   instruction?: string;
+  /** Bring the active build's texts up to date with the content, design untouched. */
+  syncContent?: boolean;
   onStatus?: (s: string) => void;
 }
 
@@ -213,6 +216,8 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
   // A change request against a not-yet-built design (template only) becomes
   // part of the brief for the first build instead of a no-op refinement.
   const instruction = active?.html ? args.instruction : undefined;
+  const syncContent = Boolean(args.syncContent && active?.html);
+  const keepDesign = Boolean(instruction || syncContent);
   const styleDirection =
     args.styleDirection
     ?? (args.instruction && !active?.html
@@ -248,21 +253,7 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
     ? Math.ceil((new Date(`${event.event_date}T00:00:00`).getTime() - Date.now()) / 86400000)
     : null;
 
-  const enabledSections = config.sections.filter((s) => s.enabled && s.id !== "hero" && s.id !== "photos" && !HUB_SECTIONS.includes(s.id));
-  const content = JSON.stringify({
-    sections: enabledSections.map((s) => s.id),
-    heroTagline: config.heroTagline,
-    storyText: config.storyText,
-    countdown: config.countdown,
-    program: config.program,
-    rsvpDeadline: config.rsvpDeadline,
-    transport: config.transport,
-    dresscode: config.dresscode,
-    giftsText: config.giftsText,
-    giftsUrl: config.giftsUrl,
-    faq: config.faq,
-    hotels: config.hotels,
-  }, null, 1);
+  const content = JSON.stringify(siteContent(config), null, 1);
 
   const prompt = WEBSITE_HTML_PROMPT({
     names, dateLabel, daysUntil,
@@ -278,8 +269,10 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
     imageManifest: manifest.map(({ alias, kind, note }) => ({ alias, kind, note })),
     fontCatalog: SITE_FONTS.map((f) => ({ family: f.family, category: f.category })),
     hasRegistry: (registryCount ?? 0) > 0,
-    currentHtml: instruction ? active?.html ?? undefined : undefined,
+    // With today's words in its slots, so Ava works from what guests see.
+    currentHtml: keepDesign && active?.html ? fillSlots(active.html, config) : undefined,
     instruction,
+    syncContent,
   });
 
   args.onStatus?.("Ava bygger jeres side…");
@@ -304,7 +297,7 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
   const designMeta = {
     ...(baseDesign as unknown as Record<string, unknown>),
     concept: {
-      name: instruction ? baseDesign.concept.name : preset ? `${preset.design.concept.name} · Ava` : baseDesign.concept.name,
+      name: keepDesign ? baseDesign.concept.name : preset ? `${preset.design.concept.name} · Ava` : baseDesign.concept.name,
       rationale: baseDesign.concept.rationale,
     },
   };
@@ -318,9 +311,14 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
       brief: {
         styleDirection, vibes,
         instruction: instruction ?? null,
+        contentSync: syncContent || undefined,
         preset: activeBrief.preset ?? null,
         mode: "html",
         imageAliases,
+        // What this HTML was built from, and that its texts sit in slots;
+        // the builder compares it with the content as it stands to tell
+        // whether the site needs Ava to catch up (see slots.ts).
+        ...buildStamp(config),
       },
       design: designMeta,
       html,
@@ -337,7 +335,7 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
 /** alias → URL map for a design row: signed storage URLs for photo sources,
     venue photo URLs for venue sources. Admin client, server only. */
 export async function urlMapForDesign(
-  design: WebsiteDesignRow,
+  design: Pick<WebsiteDesignRow, "brief">,
   photos: SitePhotoRow[],
   venue: VenueRow | null
 ): Promise<Record<string, string>> {

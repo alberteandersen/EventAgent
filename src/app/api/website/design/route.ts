@@ -1,8 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { hasWebsiteAccess } from "@/lib/website/generate";
-import { buildSiteHtml } from "@/lib/website/buildSite";
-import { logAgentError } from "@/lib/gemini/log";
+import { dispatchJob } from "@/lib/jobs/dispatch";
 import type { EventRow } from "@/lib/db/types";
 
 export const maxDuration = 120; // structured design gen + optional hero artwork
@@ -51,16 +50,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const { row } = await buildSiteHtml({
-      supabase,
-      event,
-      userId: user.id,
-      styleDirection: (body.styleDirection ?? "").trim() || undefined,
-    });
-    return Response.json({ designId: row.id });
-  } catch (err) {
-    logAgentError("api/website/design", err, { eventId });
-    return Response.json({ error: "Ava kunne ikke designe siden lige nu, prøv igen." }, { status: 502 });
-  }
+  // Minutes of work: a background job in production (src/lib/jobs).
+  return dispatchJob(request, "website.build", {
+    eventId,
+    userId: user.id,
+    payload: { styleDirection: (body.styleDirection ?? "").trim() },
+  });
 }

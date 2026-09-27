@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { GUEST_BANDS, weddingTitle, type OnboardingDate } from "@/lib/onboarding";
+import { countryLabel, globeCountry } from "@/kalas/onboarding/countries";
 
 interface OnboardingBody {
   name?: string;
@@ -12,7 +13,7 @@ interface OnboardingBody {
   guest_band?: string | null;
   budget?: string | null;
   vibes?: string[];
-  /** "City, Country" places hearted on the onboarding globe. */
+  /** "City, Country" places hearted on the old onboarding globe. */
   loved_destinations?: string[];
   /** Free-text dream description (Kalas interview) → requirements. */
   description?: string | null;
@@ -37,9 +38,10 @@ export async function POST(request: NextRequest) {
   const body = (await request.json()) as OnboardingBody;
   const name = (body.name ?? "").trim();
   const partner = (body.partner_name ?? "").trim() || null;
+  // Empty when they chose "we're not sure yet" on the where step.
   const city = (body.city ?? "").trim();
-  if (!name || !city) {
-    return Response.json({ error: "name and city are required" }, { status: 400 });
+  if (!name) {
+    return Response.json({ error: "name is required" }, { status: 400 });
   }
 
   const band = GUEST_BANDS.find((b) => b.key === body.guest_band);
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       title: weddingTitle(name, partner),
       event_type: "wedding",
-      location: city,
+      location: city || null,
       guest_count: guestCount,
       event_date: date.precision === "exact" ? date.iso ?? null : null,
       date_precision: date.precision,
@@ -101,8 +103,9 @@ export async function POST(request: NextRequest) {
      run-on sentence with their answers comma-joined into the middle of it —
      written out as a short greeting, a bulleted read-back they can check at a
      glance, and one question. RichText in the chat renders the bullets. */
+  const place = city ? countryLabel(globeCountry(city) ?? city, language) : null;
   const facts = [
-    city,
+    place,
     dateKnown,
     guestCount
       ? language === "en"
@@ -113,6 +116,25 @@ export async function POST(request: NextRequest) {
   ].filter(Boolean);
   const bullets = facts.map((f) => `- ${f}`).join("\n");
 
+  // The venue is the natural first move once they know where; when they
+  // don't yet, the place itself is.
+  const closing =
+    language === "en"
+      ? place
+        ? `The venue anchors everything else — flowers, music and catering are all local to it, so it's the first thing worth locking down.
+
+Shall I start researching venues in ${place}?`
+        : `Where you'll marry is still open, and that's fine. It's the choice everything else hangs on, so it's a good one to settle first.
+
+Shall I suggest a few places that suit your date and guest count?`
+      : place
+        ? `Venuet forankrer alt det andet — blomster, musik og catering er alle lokale til det, så det er det første, der er værd at få på plads.
+
+Skal jeg begynde at researche venues i ${place}?`
+        : `Hvor I skal giftes er stadig åbent, og det er helt fint. Det er det valg, alt det andet hænger på, så det er et godt sted at starte.
+
+Skal jeg foreslå et par steder, der passer til jeres dato og antal gæster?`;
+
   const welcome =
     language === "en"
       ? `Hi ${names}! I'm Ava, your wedding planner.
@@ -121,18 +143,14 @@ Here's what I have so far:
 
 ${bullets}
 
-The venue anchors everything else — flowers, music and catering are all local to it, so it's the first thing worth locking down.
-
-Shall I start researching venues near ${city}?`
+${closing}`
       : `Hej ${names}! Jeg er Ava, jeres bryllupsplanlægger.
 
 Her er hvad jeg har indtil videre:
 
 ${bullets}
 
-Venuet forankrer alt det andet — blomster, musik og catering er alle lokale til det, så det er det første, der er værd at få på plads.
-
-Skal jeg begynde at researche venues nær ${city}?`;
+${closing}`;
 
   await supabase.from("chat_messages").insert({
     event_id: event.id,
@@ -146,7 +164,7 @@ Skal jeg begynde at researche venues nær ${city}?`;
       user_id: user.id,
       display_name: name,
       partner_name: partner,
-      home_city: city,
+      home_city: city || null,
       active_event_id: event.id,
       onboarded: true,
       language,

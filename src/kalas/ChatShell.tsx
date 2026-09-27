@@ -180,17 +180,21 @@ export default function ChatShell({
               </main>
             </section>
 
-            {/* Chat column, always mounted so the stream survives view flips */}
+            {/* Chat panel, always mounted so the stream survives view flips.
+                The same surface as the stage, so the two read as a pair. */}
             <section
               aria-label={t('Tal med Ava')}
               className={cn(
                 'h-full min-h-0 flex-col',
-                // Mobile: full width, toggled; desktop: fixed column on the right.
+                // Mobile: full width, toggled; desktop: fixed panel on the right.
                 mobileView === 'chat' ? 'flex w-full' : 'hidden',
-                'lg:flex lg:w-[400px] lg:shrink-0 xl:w-[448px]',
+                'lg:flex lg:w-[400px] lg:shrink-0 lg:pr-3 xl:w-[448px]',
               )}
             >
-              <div className="flex h-full w-full min-h-0 flex-col pb-[76px] lg:pb-0">
+              <div
+                className="flex h-full w-full min-h-0 flex-col overflow-hidden rounded-t-[20px] border border-[#e2e6e2] border-b-0 pb-[76px] lg:pb-0"
+                style={{ backgroundColor: PAGE_BG }}
+              >
                 {chat}
               </div>
             </section>

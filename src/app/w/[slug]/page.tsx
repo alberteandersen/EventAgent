@@ -8,6 +8,7 @@ import { parseSiteDesign, DEFAULT_DESIGN, type SiteDesign } from "@/kalas/site/d
 import { googleFontsHref, SITE_FONTS } from "@/kalas/site/fonts";
 import { urlMapForDesign } from "@/lib/website/buildSite";
 import { resolveHtml, familiesInHtml } from "@/lib/website/resolveHtml";
+import { fillSlots } from "@/lib/website/slots";
 import { siteCookieName, siteCookieValue } from "@/lib/site-auth";
 import { publicCouple, siteLanguage, siteTitle } from "@/lib/website/publicCouple";
 import type {
@@ -126,7 +127,8 @@ export default async function PublicWeddingSite({
       venue = v as VenueRow | null;
     }
     const urlMap = await urlMapForDesign(activeDesign, photos, venue);
-    siteHtml = resolveHtml(activeDesign.html, urlMap);
+    // Today's words into Ava's slots, then fresh image URLs.
+    siteHtml = resolveHtml(fillSlots(activeDesign.html, config), urlMap);
     htmlFamilies = familiesInHtml(activeDesign.html, SITE_FONTS.map((f) => f.family));
   }
 

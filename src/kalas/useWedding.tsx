@@ -22,6 +22,7 @@ import type {
   GuestRow,
   HoneymoonSaveKind,
   HoneymoonSaveRow,
+  InvitationDesignRow,
   InvitationRow,
   InviteDesignRow,
   InviteOrderRow,
@@ -107,6 +108,9 @@ export interface WeddingData {
   sitePhotos: SitePhotoRow[];
   websiteOrders: WebsiteOrderRow[];
   websitePaid: boolean;
+  /** Every version of the invitation's look, newest first; one is active. */
+  invitationDesigns: InvitationDesignRow[];
+  invitationDesign: InvitationDesignRow | null;
 
   refresh: () => Promise<void>;
   updateEvent: (patch: Partial<EventRow>) => Promise<void>;
@@ -176,7 +180,6 @@ export interface WeddingData {
       share slug server-side). Returns the saved row. */
   saveInvitation: (input: {
     id?: string;
-    templateId: string;
     data: Record<string, unknown>;
     publish?: boolean;
   }) => Promise<InvitationRow | null>;
@@ -280,6 +283,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const [websiteDesigns, setWebsiteDesigns] = useState<WebsiteDesignRow[]>([]);
   const [sitePhotos, setSitePhotos] = useState<SitePhotoRow[]>([]);
   const [websiteOrders, setWebsiteOrders] = useState<WebsiteOrderRow[]>([]);
+  const [invitationDesigns, setInvitationDesigns] = useState<InvitationDesignRow[]>([]);
 
   const load = useCallback(async () => {
     const {
@@ -318,7 +322,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     setEvent(ev);
 
     if (ev) {
-      const [v, d, o, r, at, p, io, idz, bi, bsi, dpi, g, tt, mb, ws, sp, ri, rc, wd, sph, wo, inv, hs, ty] = await Promise.all([
+      const [v, d, o, r, at, p, io, idz, bi, bsi, dpi, g, tt, mb, ws, sp, ri, rc, wd, sph, wo, inv, hs, ty, ivd] = await Promise.all([
         supabase.from("venues").select("*").eq("event_id", ev.id).order("created_at"),
         supabase.from("email_drafts").select("*").eq("event_id", ev.id),
         supabase.from("outbound_emails").select("*").eq("event_id", ev.id).order("created_at"),
@@ -343,6 +347,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         supabase.from("invitations").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
         supabase.from("honeymoon_saves").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
         supabase.from("thank_yous").select("*").eq("event_id", ev.id).order("created_at"),
+        supabase.from("invitation_designs").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
       ]);
       setVenues((v.data ?? []) as VenueRow[]);
       setDrafts((d.data ?? []) as EmailDraftRow[]);
@@ -367,6 +372,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       setSitePhotos((sph.data ?? []) as SitePhotoRow[]);
       setWebsiteOrders((wo.data ?? []) as WebsiteOrderRow[]);
       setInvitations((inv.data ?? []) as InvitationRow[]);
+      setInvitationDesigns((ivd.data ?? []) as InvitationDesignRow[]);
       setHoneymoonSaves((hs.data ?? []) as HoneymoonSaveRow[]);
     }
     setLoading(false);
@@ -940,7 +946,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   );
 
   const saveInvitation = useCallback(
-    async (input: { id?: string; templateId: string; data: Record<string, unknown>; publish?: boolean }) => {
+    async (input: { id?: string; data: Record<string, unknown>; publish?: boolean }) => {
       const res = await fetch("/api/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1056,6 +1062,14 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       )
       .on(
         "postgres_changes",
+        { event: "*", schema: "public", table: "invitation_designs", filter: `event_id=eq.${eventId}` },
+        (p) =>
+          p.eventType === "DELETE"
+            ? setInvitationDesigns((rows) => removeById(rows, (p.old as { id: string }).id))
+            : setInvitationDesigns((rows) => upsertById(rows, p.new as InvitationDesignRow))
+      )
+      .on(
+        "postgres_changes",
         { event: "*", schema: "public", table: "site_photos", filter: `event_id=eq.${eventId}` },
         (p) =>
           p.eventType === "DELETE"
@@ -1162,6 +1176,8 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       sitePhotos,
       websiteOrders,
       websitePaid: websiteOrders.some((o) => o.status === "paid"),
+      invitationDesigns,
+      invitationDesign: invitationDesigns.find((d) => d.active) ?? null,
       refresh: load,
       updateEvent,
       saveBudgetItem,
@@ -1199,7 +1215,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       inviteOrders, inviteDesigns, invitations, journey, budgetItems, budgetSubItems, dayProgramItems, guests, timelineTasks,
       moodboardItems, weddingSite, seatingPlan, registryItems, registryClaims, honeymoonSaves,
       thankYous, saveThankYou, saveVenueReview,
-      websiteDesigns, sitePhotos, websiteOrders, load, updateEvent, saveBudgetItem,
+      websiteDesigns, sitePhotos, websiteOrders, invitationDesigns, load, updateEvent, saveBudgetItem,
       deleteBudgetItem, addBudgetSubItem, updateBudgetSubItem, deleteBudgetSubItem, seedBudgetSubItems,
       addDayProgramItem, updateDayProgramItem, deleteDayProgramItem, seedDayProgram,
       addGuest, updateGuest, deleteGuest, addTask, updateTask, deleteTask, seedTasks, clearTasks,

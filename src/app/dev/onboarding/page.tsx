@@ -18,7 +18,7 @@ export default function DevOnboardingPage() {
       <LanguageProvider initialLang="da">
         <div className="theme-kalas">
           <div className="fixed right-3 top-3 z-50 flex gap-1">
-            {[0, 1, 2, 3, 4].map((n) => (
+            {[0, 1, 2, 3, 4, 5].map((n) => (
               <button
                 key={n}
                 type="button"

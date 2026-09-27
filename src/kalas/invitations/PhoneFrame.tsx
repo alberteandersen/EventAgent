@@ -20,13 +20,14 @@ export function PhoneFrame({ children, width, className }: { children: ReactNode
 
 /** A phone preview scaled down to a thumbnail `width` without distorting the
     280×590 design, used by the gallery grid, the category selector, and the
-    editor's AI-variant previews. */
-export function ScaledPhone({ width, children }: { width: number; children: ReactNode }) {
+    editor's AI-variant previews. Inert unless `interactive`, for a preview
+    large enough that a tap-to-open card should open. */
+export function ScaledPhone({ width, interactive = false, children }: { width: number; interactive?: boolean; children: ReactNode }) {
   const base = 280;
   const scale = width / base;
   const height = (base * 590) / 280; // phone aspect 280/590
   return (
-    <div style={{ width, height: height * scale, pointerEvents: 'none' }}>
+    <div style={{ width, height: height * scale, pointerEvents: interactive ? undefined : 'none' }}>
       <div style={{ width: base, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
         {children}
       </div>

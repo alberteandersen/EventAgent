@@ -69,6 +69,14 @@ function AppInner() {
     // which reads and strips the query param itself.
     try {
       if (new URLSearchParams(window.location.search).has('website_checkout')) return 'website';
+      // The "a vendor replied" mail links to /home?screen=inbox.
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('screen') === 'inbox') {
+        url.searchParams.delete('screen');
+        window.history.replaceState(null, '', url.toString());
+        sessionStorage.setItem('kalas_screen', 'inbox');
+        return 'inbox';
+      }
     } catch { /* ignore */ }
     const saved = sessionStorage.getItem('kalas_screen');
     if (saved === 'ava' || saved === 'inspiration') return 'home';
@@ -230,7 +238,6 @@ function AppInner() {
             onNavigate={navigate}
             onUiAction={applyUiAction}
             uiMode="chat"
-            variant="drawer"
           />
         }
         hideModeToggle={walkthroughActive}

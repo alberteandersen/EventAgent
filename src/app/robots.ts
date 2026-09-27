@@ -3,7 +3,7 @@ import { SITE_URL } from "@/lib/site-url";
 
 /* The landing page and the guide are for everyone, search engines and AI
    answer engines included. The app, its API and the dev harnesses are not.
-   Wedding sites (/w), invitations (/i) and shared programmes (/p) stay
+   Wedding sites (/w) and shared programmes (/p) stay
    crawlable on purpose: their pages carry noindex, and a crawler that is
    blocked here would never see it and could still list the bare URL. */
 const DISALLOW = ["/api/", "/auth/", "/dev/", "/home", "/onboarding", "/settings", "/invite/"];

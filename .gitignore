@@ -47,3 +47,6 @@ ui-ux-pro-max-skill/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scripts/try-card-design.mts output
+/public/invitations/dev-try.*

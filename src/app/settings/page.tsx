@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { EmailNotificationsSetting } from "@/components/settings/EmailNotificationsSetting";
 import { LanguageSetting } from "@/components/settings/LanguageSetting";
 import { RedoOnboardingButton } from "@/components/settings/RedoOnboardingButton";
 import { WeddingDetailsSetting } from "@/components/settings/WeddingDetailsSetting";
@@ -36,6 +37,8 @@ export default async function SettingsPage({
         tour: "Rundvisning",
         tourSub: "Ava viser jer rundt på siderne igen. Intet bliver nulstillet.",
         tourCta: "Vis mig rundt igen",
+        notify: "Mails om nye svar",
+        notifySub: "Ava skriver til dig, når en leverandør har svaret, så du ikke skal holde øje med indbakken.",
       }
     : {
         onboarding: "Onboarding",
@@ -43,6 +46,8 @@ export default async function SettingsPage({
         tour: "Guided tour",
         tourSub: "Ava walks you through each page again. Nothing is reset.",
         tourCta: "Show me around again",
+        notify: "Emails about new replies",
+        notifySub: "Ava emails you when a vendor writes back, so you don't have to keep checking the inbox.",
       };
   const platform = admin ? await getPlatformConnection() : null;
   const event = await getActiveEvent(supabase, user.id);
@@ -126,6 +131,13 @@ export default async function SettingsPage({
           sent from your personal email. Every conversation shows up in your
           outreach inbox, and you approve each reply before it goes out.
         </p>
+        <div className="mt-5 flex items-center justify-between gap-4 border-t border-[var(--color-line)] pt-5">
+          <div>
+            <h3 className="text-sm font-medium text-[var(--color-ink)]">{copy.notify}</h3>
+            <p className="mt-1 text-sm text-[var(--color-muted)]">{copy.notifySub}</p>
+          </div>
+          <EmailNotificationsSetting initial={profile.email_notifications ?? true} />
+        </div>
       </section>
 
       {admin && platform && (

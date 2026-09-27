@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import WeddingRings from './icons/WeddingRings';
-import { couple } from './data';
+import { useWedding } from './useWedding';
 import { cn } from './ui';
 import { useLang } from './i18n';
 import { SignOutButton } from '@/components/auth/SignOutButton';
@@ -68,8 +68,10 @@ export function Wordmark({ light = false }: { light?: boolean }) {
 }
 
 function Initials({ light = false }: { light?: boolean }) {
-  const a = couple.a?.[0] ?? '';
-  const b = couple.b?.[0] ?? '';
+  const { couple } = useWedding();
+  const a = couple.a.trim()[0] ?? '';
+  const b = couple.b.trim()[0] ?? '';
+  if (!a && !b) return null;
   return (
     <div
       className={cn(
@@ -85,7 +87,6 @@ function Initials({ light = false }: { light?: boolean }) {
 export default function Shell({
   current,
   onNavigate,
-  pendingCount,
   inboxBadge = 0,
   chatMode = false,
   onChatModeChange,
@@ -93,7 +94,6 @@ export default function Shell({
 }: {
   current: ScreenId;
   onNavigate: (s: ScreenId) => void;
-  pendingCount: number;
   inboxBadge?: number;
   chatMode?: boolean;
   /** Toggle between chat mode and classic shell. */
@@ -169,7 +169,7 @@ export default function Shell({
             <nav className={cn('min-h-0 flex-1 overflow-y-auto', sidebarRail ? 'pt-1' : 'mt-1 pt-[18px]')}>
               {NAV.filter((n) => n.group === 'main').map((n) => (
                 <NavRow key={n.id} item={n} active={current === n.id} onClick={() => navigate(n.id)}
-                  badge={n.id === 'home' ? pendingCount : n.id === 'inbox' ? inboxBadge : undefined}
+                  badge={n.id === 'inbox' ? inboxBadge : undefined}
                   collapsed={sidebarRail}
                 />
               ))}

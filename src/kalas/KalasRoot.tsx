@@ -10,7 +10,6 @@ import Shell, { type ScreenId } from './Shell';
 import ChatShell from './ChatShell';
 import { armTour, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS } from './walkthrough';
 import GuidedTour from './GuidedTour';
-import { KalasProvider, useKalas } from './store';
 import { WeddingProvider, useWedding } from './useWedding';
 import { LanguageProvider, type Lang } from './i18n';
 import { UndoProvider } from './undo';
@@ -40,13 +39,11 @@ export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }
     <MotionConfig reducedMotion="user">
       <LanguageProvider initialLang={initialLang}>
         <WeddingProvider>
-          <KalasProvider>
-            <div className="theme-kalas min-h-screen bg-canvas font-sans text-ink">
-              <UndoProvider>
-                <AppInner />
-              </UndoProvider>
-            </div>
-          </KalasProvider>
+          <div className="theme-kalas min-h-screen bg-canvas font-sans text-ink">
+            <UndoProvider>
+              <AppInner />
+            </UndoProvider>
+          </div>
         </WeddingProvider>
       </LanguageProvider>
     </MotionConfig>
@@ -54,7 +51,6 @@ export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }
 }
 
 function AppInner() {
-  const { pendingCount } = useKalas();
   const { replies } = useWedding();
   const inboxBadge = replies.filter((r) => !r.read_at).length;
   const [hubTick, setHubTick] = useState(0);
@@ -231,7 +227,6 @@ function AppInner() {
         onNavigate={navigate}
         onChatModeChange={toggleChatMode}
         stageSignal={stageTick}
-        pendingCount={pendingCount}
         inboxBadge={inboxBadge}
         chat={
           <Ava
@@ -252,7 +247,6 @@ function AppInner() {
     <Shell
       current={activeScreen}
       onNavigate={navigate}
-      pendingCount={pendingCount}
       inboxBadge={inboxBadge}
       chatMode={false}
       onChatModeChange={toggleChatMode}

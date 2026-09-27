@@ -19,8 +19,7 @@ import PhoneBanner from './home/PhoneBanner';
 import { venueCardImage } from './home/venueImage';
 import WeddingDatePicker from '../onboarding/WeddingDatePicker';
 
-const HERO_IMG =
-  'https://cdn.wonder.so/images/019d9110-e1f2-74f3-85e8-c89f82be5a63/6d0cada0901a800c9f43a2cf68a9d52f6cf2620687565337240b2d069d261834.jpg';
+const HERO_IMG = '/landing/hero.jpg';
 /* Only used until the couple has a venue of their own. The photo it replaces
    was an American ballroom — chandeliers and gold chiavari chairs — on a card
    inviting a Danish couple to find somewhere that matches their mood. */

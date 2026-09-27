@@ -22,8 +22,7 @@ type Draft = Partial<RegistryItemRow> & { id?: string };
 
 const EMPTY: Draft = { title: '', currency: 'DKK', quantity: 1, favourite: false };
 
-const FALLBACK_PHOTO =
-  'https://cdn.wonder.so/images/019d9110-e1f2-74f3-85e8-c89f82be5a63/6d0cada0901a800c9f43a2cf68a9d52f6cf2620687565337240b2d069d261834.jpg';
+const FALLBACK_PHOTO = '/landing/hero.jpg';
 
 export default function Registry({ onNavigate }: { onNavigate?: (s: import('../Shell').ScreenId) => void }) {
   const { t, tn } = useLang();

@@ -11,6 +11,7 @@ import { LanguageProvider, type Lang } from '@/kalas/i18n';
 import Guides from '@/kalas/screens/Guides';
 import { GuideLink } from '@/kalas/screens/guides/GuideLink';
 import { OPEN_GUIDE_EVENT } from '@/kalas/screens/guides/links';
+import { FixtureWedding } from '../_fixture/wedding';
 
 export default function Harness() {
   const [params] = useState(() => new URLSearchParams(window.location.search));
@@ -31,7 +32,8 @@ export default function Harness() {
   return (
     <LanguageProvider initialLang={(params.get('lang') as Lang | null) ?? 'da'} lock>
       <div className="theme-kalas min-h-screen bg-canvas font-sans text-ink">
-        <Shell current={screen} onNavigate={setScreen} pendingCount={0}>
+        <FixtureWedding>
+        <Shell current={screen} onNavigate={setScreen}>
           {screen === 'guides' ? (
             <Guides onNavigate={(target) => setLog(`navigate: ${target}`)} />
           ) : (
@@ -44,6 +46,7 @@ export default function Harness() {
             </div>
           )}
         </Shell>
+        </FixtureWedding>
         {log && (
           <p data-testid="log" className="fixed right-4 bottom-4 z-50 rounded-full bg-ink px-4 py-2 text-xs text-canvas">{log}</p>
         )}

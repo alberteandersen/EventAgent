@@ -5,7 +5,7 @@ import {
   Lock, Copy, Eye, MapPin, Gift, HelpCircle, Bed,
   Camera, Clock, BookOpen, Image, QrCode, CalendarClock,
 } from 'lucide-react';
-import { IMAGES as IMG, guests } from '../data';
+import { IMAGES as IMG } from '../data';
 import { Eyebrow, Toggle, cn } from '../ui';
 import { useWedding, type Couple } from '../useWedding';
 import { SiteRenderer } from '../site/SiteRenderer';
@@ -83,7 +83,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   const { t, tn } = useLang();
   const {
     couple, event, weddingSite, saveSite, venues, dayProgramItems, registryItems,
-    websiteDesign, websiteDesigns, sitePhotos, websitePaid, refresh,
+    websiteDesign, websiteDesigns, sitePhotos, websitePaid, refresh, guests,
   } = useWedding();
   const chosenVenue = venues.find((v) => v.id === event?.chosen_venue_id) ?? null;
   const [start] = useState(() => builderStart({ site: weddingSite, venue: chosenVenue, dayProgram: dayProgramItems }));

@@ -23,7 +23,6 @@ export default function ChatShell({
   onNavigate,
   onChatModeChange,
   stageSignal,
-  pendingCount = 0,
   inboxBadge = 0,
   hideModeToggle = false,
   chat,
@@ -34,7 +33,6 @@ export default function ChatShell({
   onChatModeChange: (on: boolean) => void;
   /** Increments every time the agent navigates — flips mobile to the stage. */
   stageSignal: number;
-  pendingCount?: number;
   inboxBadge?: number;
   /** Hidden during the walkthrough — the couple chooses their mode at the end. */
   hideModeToggle?: boolean;
@@ -86,7 +84,7 @@ export default function ChatShell({
                   item={n}
                   active={current === n.id}
                   onClick={() => navigate(n.id)}
-                  badge={n.id === 'home' ? pendingCount : n.id === 'inbox' ? inboxBadge : undefined}
+                  badge={n.id === 'inbox' ? inboxBadge : undefined}
                   collapsed
                 />
               ))}

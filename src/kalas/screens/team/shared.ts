@@ -76,11 +76,6 @@ export function readHubDeepLink(): { tab?: HubTab; cat?: HubCat } {
   return { tab, cat };
 }
 
-export function writeHubDeepLink(tab: HubTab, cat?: HubCat) {
-  sessionStorage.setItem(HUB_TAB_KEY, tab);
-  if (cat) sessionStorage.setItem(HUB_CAT_KEY, cat);
-}
-
 export function legacyScreenToHub(screen: 'venues' | 'vendors'): { tab: HubTab; cat?: HubCat } {
   switch (screen) {
     case 'venues':
@@ -122,23 +117,6 @@ export function hubBadges(
     shortlist: shortlist || undefined,
     booked: booked || undefined,
   };
-}
-
-/**
- * Vendor categories (everything except venue) stay locked until the couple has
- * locked in a location from the shortlist — i.e. a venue is chosen/booked.
- * Venue is always first; the venue category itself is never locked. Locked =
- * browse allowed, but the expensive actions (Ava outreach, research) are gated.
- */
-export function venueLockedIn(venues: VenueRow[], chosenVenueId: string | null | undefined): boolean {
-  if (chosenVenueId) return true;
-  return venues.some((v) => Boolean(v.booked_at));
-}
-
-export function catLocked(cat: HubCat, venues: VenueRow[], chosenVenueId: string | null | undefined): boolean {
-  // Venue is always first — never locked.
-  if (cat === 'venue') return false;
-  return !venueLockedIn(venues, chosenVenueId);
 }
 
 export function matchesHubCat(row: VenueRow, cat: HubCat): boolean {

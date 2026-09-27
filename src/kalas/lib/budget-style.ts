@@ -79,8 +79,6 @@ export const BUDGET_COLORS = [
   '#9A6B5A', // terracotta soft
 ] as const;
 
-export type BudgetColor = (typeof BUDGET_COLORS)[number] | string;
-
 export function isBudgetIconId(v: string | null | undefined): v is BudgetIconId {
   return Boolean(v && v in BUDGET_ICON_MAP);
 }

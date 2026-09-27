@@ -76,14 +76,6 @@ export const CATEGORY_META: Record<
   },
 };
 
-/** The four launch vendor categories shown on the hub. */
-export const HUB_VENDOR_CATEGORIES = [
-  "florist",
-  "photographer",
-  "musician",
-  "caterer",
-] as const;
-
 export function venueChosen(event: EventRow): boolean {
   return (
     Boolean(event.chosen_venue_id) || event.journey_overrides?.venue === "complete"

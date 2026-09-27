@@ -12,7 +12,6 @@ import ExplorePanel from './ExplorePanel';
 import ShortlistPanel from './ShortlistPanel';
 import BookedPanel from './BookedPanel';
 import LocationChip from './LocationChip';
-import { cn } from '../../ui';
 import { effectiveLocation } from '../../lib/location';
 import {
   hubBadges,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { readAmenities, isEmpty, EMPTY_AMENITIES } from "./amenities";
+import { readAmenities, EMPTY_AMENITIES } from "./amenities";
 import type { PlaceResult } from "@/lib/places/client";
 
 const place = (over: Partial<PlaceResult> = {}): PlaceResult => ({ id: "p1", ...over });
@@ -7,7 +7,6 @@ const place = (over: Partial<PlaceResult> = {}): PlaceResult => ({ id: "p1", ...
 describe("readAmenities, absent is not false", () => {
   it("returns all-null for a place Google knows nothing about", () => {
     expect(readAmenities(place())).toEqual(EMPTY_AMENITIES);
-    expect(isEmpty(readAmenities(place()))).toBe(true);
   });
 
   it("does not read a missing flag as a no", () => {

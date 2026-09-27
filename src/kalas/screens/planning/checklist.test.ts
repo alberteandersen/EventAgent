@@ -1,10 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { defaultTimeline as MOCK_TIMELINE } from './defaultTimeline';
 import { EN } from '../../strings';
-import { DEFAULT_CHECKLIST, PHASES, currentPhase, defaultChecklist, isDueBy, missingChecklistItems, phaseOf } from './checklist-data';
+import { DEFAULT_CHECKLIST, PHASES, currentPhase, defaultChecklist, missingChecklistItems, phaseOf } from './checklist-data';
 import {
-  CHECKLIST_AREAS, kindOf, areaOf, hasArea, onTimeline, groupByArea, nextSort, statusOf,
-  readOpenAreas, writeOpenAreas, type ChecklistArea,
+  CHECKLIST_AREAS, kindOf, areaOf, hasArea, nextSort, statusOf,
   PRIORITIES, priorityOf, assigneeName, assigneeInitials,
 } from './shared';
 import { defaultMilestones } from './milestones';
@@ -99,25 +98,6 @@ describe('kindOf', () => {
   });
 });
 
-describe('onTimeline', () => {
-  it('always keeps the milestones', () => {
-    expect(onTimeline({ kind: 'milestone', due_date: '2026-09-12' })).toBe(true);
-    // Ava can add a milestone without a date; it still belongs to that tab.
-    expect(onTimeline({ kind: 'milestone', due_date: null })).toBe(true);
-  });
-
-  it('lets a check on only once it has a date', () => {
-    expect(onTimeline({ kind: 'check', due_date: null })).toBe(false);
-    expect(onTimeline({ kind: 'check', due_date: '2026-08-14' })).toBe(true);
-  });
-
-  it('treats an unknown kind as a milestone', () => {
-    // A client running ahead of migration 0020 sees undefined here.
-    expect(onTimeline({ kind: undefined, due_date: null })).toBe(true);
-    expect(onTimeline({ kind: null, due_date: null })).toBe(true);
-  });
-});
-
 describe('hasArea', () => {
   it('is true only for a real area id', () => {
     expect(hasArea({ category: 'mad' })).toBe(true);
@@ -157,62 +137,6 @@ describe('areaOf', () => {
     expect(areaOf({ category: 'mad' })).toBe('mad');
     expect(areaOf({ category: 'wedding_day' })).toBe('ovrigt');
     expect(areaOf({ category: null })).toBe('ovrigt');
-  });
-});
-
-describe('groupByArea', () => {
-  const row = (category: string | null, sort: number, created_at = '2026-01-01') =>
-    ({ category, sort, created_at });
-
-  it('orders groups by CHECKLIST_AREAS and drops empty ones', () => {
-    const groups = groupByArea([row('dagen', 0), row('venue', 0), row('mad', 0)]);
-    expect(groups.map((g) => g.area)).toEqual(['venue', 'mad', 'dagen']);
-  });
-
-  it('sorts within a group by sort, then created_at', () => {
-    const groups = groupByArea([
-      row('venue', 2), row('venue', 0, '2026-02-01'), row('venue', 0, '2026-01-01'),
-    ]);
-    expect(groups[0].items.map((i) => [i.sort, i.created_at])).toEqual([
-      [0, '2026-01-01'], [0, '2026-02-01'], [2, '2026-01-01'],
-    ]);
-  });
-
-  it('collects unknown categories into ovrigt', () => {
-    const groups = groupByArea([row('noget-ukendt', 0), row(null, 1)]);
-    expect(groups).toHaveLength(1);
-    expect(groups[0].area).toBe('ovrigt');
-    expect(groups[0].items).toHaveLength(2);
-  });
-});
-
-describe('open areas', () => {
-  // The memo is module scope, so it carries between cases unless reset.
-  beforeEach(() => writeOpenAreas(new Set()));
-
-  it('starts with every area folded away', () => {
-    expect(readOpenAreas()).toEqual(new Set());
-  });
-
-  it('remembers what was opened, so a tab switch does not lose your place', () => {
-    writeOpenAreas(new Set<ChecklistArea>(['mad', 'jura']));
-    expect(readOpenAreas()).toEqual(new Set(['mad', 'jura']));
-  });
-
-  it('hands back a copy, never the memo itself', () => {
-    // ChecklistTab builds its next set from what it reads. Sharing the object
-    // would hand setOpenAreas a reference React already has — no re-render.
-    writeOpenAreas(new Set<ChecklistArea>(['mad']));
-    const first = readOpenAreas();
-    first.add('jura');
-    expect(readOpenAreas()).toEqual(new Set(['mad']));
-  });
-
-  it('copies on write too, so a later mutation cannot reach in', () => {
-    const mine = new Set<ChecklistArea>(['mad']);
-    writeOpenAreas(mine);
-    mine.add('jura');
-    expect(readOpenAreas()).toEqual(new Set(['mad']));
   });
 });
 
@@ -298,12 +222,6 @@ describe('checklist phases', () => {
 
   it('keeps an item nobody seeded out of it', () => {
     expect(phaseOf('Vores helt egen opgave')).toBeNull();
-  });
-
-  it('counts what is now or already behind them as due', () => {
-    expect(isDueBy('12-18', '9-12')).toBe(true);
-    expect(isDueBy('9-12', '9-12')).toBe(true);
-    expect(isDueBy('6-9', '9-12')).toBe(false);
   });
 
   it('files the paperwork where the guide does: inside the four months a prøvelsesattest lasts', () => {

@@ -14,14 +14,6 @@ export function subjectKey(kind: ThankSubject, id: string): string {
   return `${kind}:${id}`;
 }
 
-export function parseSubjectKey(key: string): { kind: ThankSubject; id: string } | null {
-  const i = key.indexOf(':');
-  if (i < 0) return null;
-  const kind = key.slice(0, i);
-  if (kind !== 'guest' && kind !== 'claim' && kind !== 'manual') return null;
-  return { kind, id: key.slice(i + 1) };
-}
-
 export type ThankEntry = {
   key: string;
   name: string;

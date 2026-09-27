@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cacheGet, cacheSet, geocode } from "@/lib/places/client";
 import { searchArea, type VenueSuggestion } from "@/lib/venue/search";
 import { applyFilters, type VenueFilters } from "@/lib/venue/filter";
-import { findRegion } from "@/lib/venue/regions";
+import { areaDestination, findRegion } from "@/lib/venue/regions";
 import { VENUE_SETTINGS, type VenueSetting } from "@/lib/venue/facts";
 import { distanceBetween } from "@/lib/venue/distance";
 
@@ -99,12 +99,10 @@ export async function POST(request: NextRequest) {
 
   const body = (await request.json()) as Body;
 
-  // A region + area pair resolves to a country-qualified destination: "Møn"
-  // and "Ribe" are not unambiguous to Google Places on their own, and an
-  // unqualified area is how a Danish search quietly returns Dutch venues.
+  // A region + area pair resolves to a country-qualified destination.
   const region = findRegion(body.region);
   const area = (body.area ?? "").trim() || null;
-  const destination = area && region ? `${area}, ${region.country}` : (body.destination ?? "").trim();
+  const destination = area && region ? areaDestination(area, region) : (body.destination ?? "").trim();
 
   if (!destination || destination.length > 120) {
     return Response.json({ error: "destination is required" }, { status: 400 });

@@ -318,9 +318,3 @@ export function phaseLabel(id: Phase): string {
 export function currentPhase(daysLeft: number): Phase {
   return PHASES.find((p) => daysLeft >= p.minDays)!.id;
 }
-
-/** True when `phase` is now or already behind them: what "Nu" shows. */
-export function isDueBy(phase: Phase, now: Phase): boolean {
-  const order = PHASES.map((p) => p.id);
-  return order.indexOf(phase) <= order.indexOf(now);
-}

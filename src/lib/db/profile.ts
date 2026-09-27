@@ -26,14 +26,3 @@ export async function getOrCreateProfile(
   return created as ProfileRow;
 }
 
-/** Wedding planning templates used across onboarding and the home quick-start. */
-export const EVENT_TEMPLATES = [
-  { key: "wedding", label: "Full wedding", emoji: "💍", prompt: "Help us plan our wedding." },
-  { key: "ceremony", label: "Ceremony only", emoji: "🕊️", prompt: "Help us find a ceremony venue." },
-  { key: "reception", label: "Reception only", emoji: "🥂", prompt: "Help us plan our wedding reception." },
-  { key: "elopement", label: "Elopement", emoji: "✨", prompt: "Help us plan an intimate elopement." },
-  { key: "engagement", label: "Engagement party", emoji: "💐", prompt: "Help us plan an engagement party." },
-  { key: "rehearsal", label: "Rehearsal dinner", emoji: "🍽️", prompt: "Help us plan a rehearsal dinner." },
-  { key: "shower", label: "Bridal shower", emoji: "🎀", prompt: "Help us plan a bridal shower." },
-  { key: "destination", label: "Destination wedding", emoji: "✈️", prompt: "Help us plan a destination wedding." },
-] as const;

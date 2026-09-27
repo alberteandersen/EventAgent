@@ -1,8 +1,5 @@
 import type { GuestRow } from "@/lib/db/types";
 
-/** How a guest was matched to an existing row (or not). */
-export type GuestMatch = { guest: GuestRow; reason: "token" | "email" | "name" } | null;
-
 /**
  * Match a public RSVP submission to an existing guest row. Priority: the
  * per-guest token (from a personal link) → case-insensitive email → exact

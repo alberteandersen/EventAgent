@@ -29,7 +29,6 @@ import {
   VENDOR_SEARCH_PROMPT,
   VENUE_EXTRACTION_PROMPT,
   FIND_EMAIL_PROMPT,
-  PERSONALIZE_PROMPT,
   QUOTE_EXTRACTION_PROMPT,
   COMPOSE_OUTREACH_PROMPT,
   REPLY_PROPOSAL_PROMPT,
@@ -937,22 +936,6 @@ export function eventFactsLine(event: EventRow): string {
       .filter(Boolean)
       .join(", ") || "details still being gathered"
   );
-}
-
-/** Personalize the approved master template for one venue (plain call, no tools). */
-export async function personalizeEmail(args: {
-  template: string;
-  venueName: string;
-  venueDescription?: string | null;
-}): Promise<string> {
-  const ai = getGemini();
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: PERSONALIZE_PROMPT(args),
-  });
-  const text = (response.text ?? "").trim();
-  // Fall back to simple substitution if the model returns nothing usable.
-  return text || args.template.replaceAll("{{venue_name}}", args.venueName);
 }
 
 const outreachEmailSchema: Schema = {

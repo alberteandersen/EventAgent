@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildThankList, subjectKey, parseSubjectKey, thankProgress } from './thanks';
+import { buildThankList, subjectKey, thankProgress } from './thanks';
 import type { GuestRow, RegistryClaimRow, RegistryItemRow, ThankYouRow } from '@/lib/db/types';
 
 type G = Pick<GuestRow, 'id' | 'name' | 'email' | 'rsvp' | 'rsvp_token'>;
@@ -17,19 +17,6 @@ const items: I[] = [{ id: 'i1', title: 'Stelton kande' }, { id: 'i2', title: 'Dy
 
 const overlay = (subject_key: string, over: Partial<O> = {}): O =>
   ({ subject_key, label: 'Ukendt', gift: null, thanked_at: null, method: null, note: null, ...over });
-
-describe('subjectKey / parseSubjectKey', () => {
-  it('round-trips', () => {
-    expect(parseSubjectKey(subjectKey('guest', 'abc'))).toEqual({ kind: 'guest', id: 'abc' });
-    expect(parseSubjectKey(subjectKey('claim', 'x-y'))).toEqual({ kind: 'claim', id: 'x-y' });
-  });
-
-  it('survives ids containing colons and rejects junk', () => {
-    expect(parseSubjectKey('manual:a:b')).toEqual({ kind: 'manual', id: 'a:b' });
-    expect(parseSubjectKey('nonsense')).toBeNull();
-    expect(parseSubjectKey('vendor:1')).toBeNull();
-  });
-});
 
 describe('buildThankList', () => {
   it('lists everyone who attended, gift or not', () => {

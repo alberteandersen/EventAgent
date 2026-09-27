@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Check } from 'lucide-react';
-import { IMAGES } from './images';
 import { useLang } from './i18n';
 
 export function cn(...parts: Array<string | false | null | undefined>) {
@@ -10,7 +9,6 @@ export function cn(...parts: Array<string | false | null | undefined>) {
 
 /** Shared page gutters — keep Home / Timeline / Budget / Venues aligned. */
 export const pagePad = 'px-6 py-8 sm:px-9 lg:px-12 lg:py-8';
-export const pagePadX = 'px-6 sm:px-9 lg:px-12';
 
 /** Shared action-button size — matches shell primary CTA (h-8 / text-xs). */
 export const btnSize =
@@ -54,31 +52,6 @@ export function Pill({
       {children}
       {arrow && <ArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />}
     </button>
-  );
-}
-
-/* ── Full-bleed image — edge to edge, no inner frame. Pinterest feel. ─── */
-export function Bleed({
-  src,
-  alt,
-  className,
-  rounded = 'rounded-none',
-}: {
-  src: keyof typeof IMAGES | string;
-  alt: string;
-  className?: string;
-  rounded?: string;
-}) {
-  const url = (src as string) in IMAGES ? IMAGES[src as keyof typeof IMAGES] : (src as string);
-  return (
-    <div className={cn('relative overflow-hidden bg-shell', rounded, className)}>
-      <img
-        src={url}
-        alt={alt}
-        loading="lazy"
-        className="h-full w-full object-cover transition-transform duration-[1.2s] ease-out hover:scale-[1.04]"
-      />
-    </div>
   );
 }
 
@@ -222,19 +195,6 @@ export function taskRowTone(status: 'done' | 'overdue' | 'default') {
 /** Label styling for a completed task. */
 export const doneLabelClass = 'text-[#46574f] line-through decoration-[#46574f]/40';
 
-/* ── Preview note ────────────────────────────────────────────────────────
-   Marks a design-only screen: the layout is real, but nothing here is saved
-   to the couple's wedding yet. Keeps the app honest about what persists. */
-export function PreviewNote({ children }: { children?: React.ReactNode }) {
-  const { t } = useLang();
-  return (
-    <div className="mx-auto mb-6 flex max-w-fit items-center gap-2 rounded-full bg-sage-tint px-4 py-2 text-[0.72rem] font-medium tracking-[0.04em] text-ink">
-      <span className="inline-block h-1.5 w-1.5 rounded-full bg-sage-strong" />
-      {children ?? t('Forhåndsvisning, Ava arbejder på at gøre denne del interaktiv. Ændringer gemmes endnu ikke.')}
-    </div>
-  );
-}
-
 /* ── Animated screen wrapper ─────────────────────────────────────────── */
 export function Screen({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
@@ -250,12 +210,3 @@ export function Screen({ children, className }: { children: React.ReactNode; cla
   );
 }
 
-/* Stagger helpers for editorial reveals. */
-export const stagger = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
-};
-export const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] as const } },
-};

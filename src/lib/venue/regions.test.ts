@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   DK_REGIONS, regionsForCountry, findRegion, regionLabel, regionShortLabel,
-  searchAreas, groupByRegion, curatedCountryFromLocation, shardsFor, regionsLabel,
+  areaDestination, groupByRegion, curatedCountryFromLocation, shardsFor, regionsLabel,
 } from "./regions";
 
 describe("Danish taxonomy", () => {
@@ -46,10 +46,11 @@ describe("Danish taxonomy", () => {
   });
 });
 
-describe("searchAreas", () => {
+describe("areaDestination", () => {
   it("qualifies every area with its country", () => {
     // Unqualified, "Møn" and "Ribe" are not unambiguous to Google Places.
-    const areas = searchAreas(findRegion("sydsjaelland")!);
+    const region = findRegion("sydsjaelland")!;
+    const areas = region.areas.map((a) => areaDestination(a, region));
     expect(areas).toContain("Møn, Denmark");
     expect(areas.every((a) => a.endsWith(", Denmark"))).toBe(true);
   });

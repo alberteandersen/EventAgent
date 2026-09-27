@@ -163,14 +163,12 @@ export function curatedCountryFromLocation(location: string | null | undefined):
 }
 
 /**
- * The destinations a search should fan out over.
- *
- * Each area is qualified with its country, because "Møn" and "Ribe" are not
- * unambiguous to Google Places on their own — and an unqualified area is how
- * a Danish search quietly returns venues in the Netherlands.
+ * One area as a search destination, qualified with its country: "Møn" and
+ * "Ribe" are not unambiguous to Google Places on their own, and an
+ * unqualified area is how a Danish search quietly returns Dutch venues.
  */
-export function searchAreas(region: VenueRegion): string[] {
-  return region.areas.map((area) => `${area}, ${region.country}`);
+export function areaDestination(area: string, region: VenueRegion): string {
+  return `${area}, ${region.country}`;
 }
 
 /**

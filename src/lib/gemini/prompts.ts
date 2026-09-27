@@ -211,14 +211,6 @@ Only include businesses that actually exist with verifiable web presence.
 Genuinely great, well-reviewed options only, skip filler to reach a count.`;
 };
 
-/** @deprecated kept for callers that predate vendor categories. */
-export const VENUE_SEARCH_PROMPT = (args: {
-  query: string;
-  location: string;
-  guestCount?: number | null;
-  eventType?: string | null;
-}) => VENDOR_SEARCH_PROMPT(args);
-
 export const VENUE_EXTRACTION_PROMPT = (groundedText: string) =>
   `Extract the venues/vendors from the research notes below into structured JSON.
 Only include real businesses with at least a name. Use null for unknown fields.
@@ -365,20 +357,6 @@ Guidelines:
 - Plain text, 60-130 words, no subject line, sign off as
   "Ava, on behalf of ${args.coupleName}".
 Reply with ONLY the email body.`;
-
-export const PERSONALIZE_PROMPT = (args: {
-  template: string;
-  venueName: string;
-  venueDescription?: string | null;
-}) => `Personalize the email template below for the venue "${args.venueName}".
-${args.venueDescription ? `About the venue: ${args.venueDescription}` : ""}
-Replace {{venue_name}} with the venue's name and adjust the greeting naturally.
-You may add at most one short sentence referencing the venue specifically.
-Keep everything else (tone, asks, sign-off) identical. Reply with ONLY the
-final email body, no subject line, no commentary.
-
-Template:
-${args.template}`;
 
 export const QUOTE_EXTRACTION_PROMPT = (args: {
   venueName: string;

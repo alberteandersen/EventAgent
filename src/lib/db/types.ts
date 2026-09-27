@@ -315,17 +315,6 @@ export interface ReplyProposalRow {
   created_at: string;
 }
 
-export interface InviteDesignRow {
-  id: string;
-  event_id: string;
-  user_id: string;
-  style: string | null;
-  palette: string | null;
-  storage_path: string;
-  selected: boolean;
-  created_at: string;
-}
-
 export interface PlatformGmailTokensRow {
   id: number;
   google_email: string;
@@ -364,35 +353,11 @@ export function isAppLanguage(value: unknown): value is AppLanguage {
   return typeof value === "string" && (APP_LANGUAGES as readonly string[]).includes(value);
 }
 
-export type InviteOrderStatus =
-  | "draft"
-  | "pending_payment"
-  | "paid"
-  | "submitted_to_print"
-  | "shipped"
-  | "canceled";
-
-export interface InviteOrderRow {
-  id: string;
-  event_id: string;
-  user_id: string;
-  style: string | null;
-  palette: string | null;
-  wording: string | null;
-  quantity: number;
-  design_file_url: string | null;
-  amount_cents: number | null;
-  currency: string;
-  stripe_session_id: string | null;
-  stripe_payment_intent: string | null;
-  status: InviteOrderStatus;
-  created_at: string;
-}
-
 export type InvitationStatus = "draft" | "published";
 
-/** A digital invitation: chosen template + the content (InvitationData) it
-    renders, addressable publicly by slug. RSVPs land in the `guests` table. */
+/** What the couple's invitation card says (InviteContent, see
+    kalas/invitations/content.ts). 'published' once the card has been
+    exported for print. template_id and slug are kept for the columns. */
 export interface InvitationRow {
   id: string;
   event_id: string;
@@ -417,16 +382,6 @@ export interface InvitationDesignRow {
   html: string | null;
   active: boolean;
   created_at: string;
-}
-
-export interface GoogleTokensRow {
-  user_id: string;
-  google_email: string | null;
-  refresh_token_enc: string;
-  access_token: string | null;
-  access_token_expires_at: string | null;
-  scopes: string[];
-  updated_at: string;
 }
 
 // ── Planning tables (migration 0007) ────────────────────────────────────
@@ -577,17 +532,6 @@ export interface TimelineTaskRow {
   priority?: TaskPriority | null;
   assignee?: TaskAssignee | null;
   sort: number;
-  created_at: string;
-}
-
-export interface MoodboardItemRow {
-  id: string;
-  event_id: string;
-  user_id: string;
-  image_key: string | null;
-  image_url: string | null;
-  storage_path: string | null;
-  note: string | null;
   created_at: string;
 }
 

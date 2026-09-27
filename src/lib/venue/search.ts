@@ -173,20 +173,16 @@ export const factsSchemaProps: Record<string, Schema> = {
   outdoor: { type: Type.STRING, nullable: true, enum: ["garden", "terrace", "none", "unknown"] },
 };
 
-/**
- * Facts a grounded web search cannot see, so they are NOT asked for here.
- *
- * Measured on one region with the model stopped from guessing: own_drinks 2%,
- * exclusive 2%, rain_plan 2%, curfew_hour 9%. They live in FAQ and price
- * pages that a search-grounded pass never opens. Asking anyway produced
- * confident fabrication — "not_allowed" and "sole_use" for every venue —
- * and instructing against that made the model cautious across the board,
- * costing accommodation 64% -> 43%.
- *
- * The per-venue deep research pass opens a single venue's own site, which is
- * where these questions can actually be answered. See venue/research.ts.
- */
-export const DEEP_RESEARCH_ONLY_FACTS = ["rain_plan", "own_drinks", "exclusive", "curfew_hour"] as const;
+/* Facts a grounded web search cannot see, so the schema above does not ask
+   for them: rain_plan, own_drinks, exclusive, curfew_hour.
+
+   Measured on one region with the model stopped from guessing: own_drinks 2%,
+   exclusive 2%, rain_plan 2%, curfew_hour 9%. They live in FAQ and price
+   pages that a search-grounded pass never opens. Asking anyway produced
+   confident fabrication ("not_allowed" and "sole_use" for every venue), and
+   instructing against that made the model cautious across the board, costing
+   accommodation 64% -> 43%. The per-venue deep research pass opens a single
+   venue's own site, which is where these can be answered (venue/research.ts). */
 
 const suggestSchema: Schema = {
   type: Type.OBJECT,

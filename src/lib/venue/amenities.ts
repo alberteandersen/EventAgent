@@ -84,9 +84,3 @@ export function readAmenities(place: PlaceResult): PlaceAmenities {
     dogs: tri(place.allowsDogs),
   };
 }
-
-/** True when Google told us nothing at all — the card should stay quiet
- *  rather than print four "ukendt" badges. */
-export function isEmpty(a: PlaceAmenities): boolean {
-  return a.wheelchair === null && a.parking === null && a.children === null && a.dogs === null;
-}

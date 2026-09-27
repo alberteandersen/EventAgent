@@ -2,8 +2,6 @@ import type { MessagePayload } from "@/lib/db/types";
 import type { VendorCategory } from "@/lib/db/types";
 import type { HubCat, HubTab } from "@/kalas/screens/team/shared";
 
-export type BatchScreen = "team";
-
 /** UI category chip id used on the Suppliers page. */
 export type SupplierCatFilter =
   | "fotografi"
@@ -51,10 +49,6 @@ export function batchCategory(
   if (payload.category) return payload.category;
   const match = rows.find((row) => payload.venue_ids.includes(row.id));
   return match?.category ?? "venue";
-}
-
-export function batchScreen(_category: VendorCategory): BatchScreen {
-  return "team";
 }
 
 export function batchHubTab(category: VendorCategory): HubTab {

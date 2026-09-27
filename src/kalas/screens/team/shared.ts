@@ -60,19 +60,6 @@ export function readHubDeepLink(): { tab?: HubTab; cat?: HubCat } {
     ? rawTab
     : undefined;
   const cat = isHubCat(rawCat) ? rawCat : undefined;
-
-  // Legacy keys
-  const legacyVenuesView = sessionStorage.getItem('kalas_venues_view');
-  if (legacyVenuesView === 'picks' || legacyVenuesView === 'list') {
-    sessionStorage.removeItem('kalas_venues_view');
-    return { tab: 'shortlist', cat: cat ?? 'venue' };
-  }
-  const legacyVendorCat = sessionStorage.getItem('kalas_vendor_cat');
-  if (legacyVendorCat) {
-    sessionStorage.removeItem('kalas_vendor_cat');
-    return { tab: tab ?? 'explore', cat: isHubCat(legacyVendorCat) ? legacyVendorCat : 'fotografi' };
-  }
-
   return { tab, cat };
 }
 

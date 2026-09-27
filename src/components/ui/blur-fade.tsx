@@ -8,7 +8,7 @@ import {
   type MotionProps,
   type UseInViewOptions,
   type Variants,
-} from "framer-motion";
+} from "motion/react";
 
 type MarginType = UseInViewOptions["margin"];
 

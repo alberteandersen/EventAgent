@@ -4,7 +4,7 @@
    replies as comparable quotes. Alternating panels on a numbered spine —
    plain scrolling, no jacking; the mockups are live code miniatures. */
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { CapabilityMockup } from "./CapabilityMockups";
 

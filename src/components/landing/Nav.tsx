@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useScroll, useMotionValueEvent } from "framer-motion";
+import { useScroll, useMotionValueEvent } from "motion/react";
 import { useState } from "react";
 import { BlurFade } from "@/components/ui/blur-fade";
 

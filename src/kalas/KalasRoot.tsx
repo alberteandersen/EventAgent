@@ -74,9 +74,7 @@ function AppInner() {
         return 'inbox';
       }
     } catch { /* ignore */ }
-    const saved = sessionStorage.getItem('kalas_screen');
-    if (saved === 'ava' || saved === 'inspiration') return 'home';
-    return migrateSavedScreen(saved) || 'home';
+    return migrateSavedScreen(sessionStorage.getItem('kalas_screen')) || 'home';
   });
   // Ava's one-time guided tour, armed by onboarding completion (or
   // `?walkthrough=1` so it can be replayed on demand). One tour, mounted below

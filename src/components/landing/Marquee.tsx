@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion, type ViewportOptions } from "framer-motion";
+import { motion, type ViewportOptions } from "motion/react";
 import { cn } from "@/lib/utils";
 
 const eventCards = [

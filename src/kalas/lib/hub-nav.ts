@@ -1,4 +1,4 @@
-import type { ScreenId } from '../Shell';
+import { NAV, type ScreenId } from '../Shell';
 import type { AgentUiAction } from '@/lib/db/types';
 import { batchHubCat, batchHubTab } from '@/lib/vendor-batch';
 import {
@@ -42,13 +42,16 @@ export function agentActionToScreen(action: AgentUiAction): ScreenId {
   return action.page;
 }
 
+const PAGES = new Set<string>(NAV.map((n) => n.id));
+
+/** The screen a tab reopens on. Old hub ids go to the hub; anything that is
+ *  not a page any more (a removed screen, or chat) opens Hjem. */
 export function migrateSavedScreen(saved: string | null): ScreenId | null {
   if (!saved) return null;
-  if (saved === 'ava' || saved === 'inspiration') return 'home';
   if (isLegacyHubScreen(saved)) {
     const { tab, cat } = legacyScreenToHub(saved);
     navigateToHub(tab, cat);
     return 'team';
   }
-  return saved as ScreenId;
+  return PAGES.has(saved) ? (saved as ScreenId) : null;
 }

@@ -4,7 +4,7 @@
    orb, layered radial glows + a drifting conic shimmer, above a short
    manifesto. Pure CSS/motion, no assets. */
 
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { BlurFade } from "@/components/ui/blur-fade";
 
 function Orb() {

@@ -252,6 +252,10 @@ export default function Invites() {
     try {
       const job = { spec, content, artUrl, photoUrl, fileName: cardFileName(content) };
       await (kind === 'pptx' ? exportCardPptx(job) : exportCardPng(job));
+      if (invitation?.status !== 'published') {
+        const row = await saveInvitation({ id: idRef.current, data: { ...content }, publish: true });
+        if (row) idRef.current = row.id;
+      }
     } catch {
       setGenError('Kortet kunne ikke hentes. Prøv igen.');
     } finally {

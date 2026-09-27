@@ -239,7 +239,7 @@ function InviteBriefCard({ wording, style, onNavigate }: { wording: string; styl
       <div className="flex items-center gap-2 rule-t px-4 py-3">
         <button onClick={() => onNavigate?.('invites')}
           className="rounded-full bg-ink px-4 py-2 text-[0.76rem] font-medium text-canvas hover:bg-ink/90 transition-colors cursor-pointer">
-          {t('Bestil tryk →')}
+          {t('Se kortet →')}
         </button>
         <button onClick={copy}
           className="inline-flex items-center gap-1.5 rounded-full rule px-4 py-2 text-[0.76rem] text-ink-soft hover:bg-shell transition-colors cursor-pointer">

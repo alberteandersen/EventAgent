@@ -56,6 +56,12 @@ describe("computeJourney gating", () => {
     expect(stage(withDate, "invites").status).toBe("active");
   });
 
+  it("completes invites once the card has been exported", () => {
+    const e = makeEvent({ chosen_venue_id: "v1", date_precision: "season", date_hint: "Summer 2027" });
+    expect(stage(e, "invites", { ...noExtras, invitationExported: false }).status).toBe("active");
+    expect(stage(e, "invites", { ...noExtras, invitationExported: true }).status).toBe("complete");
+  });
+
   it("respects journey_overrides for manual venue completion", () => {
     const e = makeEvent({ journey_overrides: { venue: "complete" } });
     expect(stage(e, "venue").status).toBe("complete");

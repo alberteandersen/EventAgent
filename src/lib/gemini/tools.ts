@@ -106,20 +106,27 @@ export const functionDeclarations: FunctionDeclaration[] = [
   {
     name: "draft_invite_text",
     description:
-      "Draft the couple's wedding invitation wording. Only call once venue and date are known (or the user insists). Write warm, correctly formatted invitation text using the couple's names, date and venue. The user reviews the wording card and orders prints from the invites page.",
+      "Write the wording on the couple's printed invitation card (the Invitationer page), where it replaces the design's own lines. The card already states the facts (names, date, time, place, RSVP date): never repeat them here. Give only the lines you are changing. Write in the couple's language, warm and correct stationery phrasing; keep each line short, it has to fit a card.",
     parameters: {
       type: Type.OBJECT,
       properties: {
-        wording: {
+        eyebrow: {
           type: Type.STRING,
-          description: "Complete invitation text, line-broken as it should appear on the card",
+          description: "The small line above the names, e.g. 'Sammen med vores familier'",
         },
-        style: {
+        invite: {
           type: Type.STRING,
-          description: "Short style label, e.g. 'classic formal', 'playful garden'",
+          description: "The line after the names that invites the guest, e.g. 'inviterer jer til vores bryllup'",
+        },
+        closing: {
+          type: Type.STRING,
+          description: "The warm sign-off at the bottom, e.g. 'Vi glæder os til at fejre dagen med jer'. Promise nothing the facts don't say.",
+        },
+        note: {
+          type: Type.STRING,
+          description: "Optional practical line for guests: dresscode, a line about the party",
         },
       },
-      required: ["wording"],
     },
   },
   {

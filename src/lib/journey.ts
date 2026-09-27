@@ -24,7 +24,8 @@ export interface JourneyStage {
 export interface JourneyExtras {
   likedVenues: number;
   quotesIn: number;
-  inviteOrderStatus?: string | null;
+  /** The invitation card has been exported for print (invitations.status 'published'). */
+  invitationExported?: boolean;
   /** Count of booked vendors per category (from venues.booked_at). */
   bookedByCategory?: Partial<Record<VendorCategory, number>>;
   /** Count of contacted vendors per category (has an outreach email). */
@@ -122,8 +123,7 @@ export function computeJourney(event: EventRow, extras: JourneyExtras): JourneyS
       engagedCategories.every((c) => (booked[c] ?? 0) > 0));
 
   const invitesComplete =
-    event.journey_overrides?.invites === "complete" ||
-    ["paid", "submitted_to_print", "shipped"].includes(extras.inviteOrderStatus ?? "");
+    event.journey_overrides?.invites === "complete" || Boolean(extras.invitationExported);
 
   const vendorsHint = vendorsComplete
     ? "All your vendors are booked 🎉"
@@ -190,9 +190,9 @@ export function computeJourney(event: EventRow, extras: JourneyExtras): JourneyS
       emoji: "💌",
       status: invitesComplete ? "complete" : invitesUnlocked ? "active" : "locked",
       hint: invitesComplete
-        ? "Invites ordered"
+        ? "Invitation card exported"
         : invitesUnlocked
-          ? "Design, word and order your invitations"
+          ? "Design and word your invitation card"
           : venueComplete
             ? "Unlocks when the date is set"
             : "Unlocks after venue and date",

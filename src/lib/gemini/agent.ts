@@ -8,6 +8,7 @@ import {
   summarizeFunctionCallParts,
 } from "./log";
 import { functionDeclarations } from "./tools";
+import { parseInviteContent, type InviteContent } from "@/kalas/invitations/content";
 import { execPlanningTool } from "./planningTools";
 import { execMemoryTool } from "./memory";
 import { execWebsiteTool } from "./websiteTools";
@@ -219,40 +220,49 @@ export async function runAgentTurn(
             result = await execFindVenueEmail(supabase, args);
             break;
           case "draft_invite_text": {
-            onStatus("Drafting your invitation wording…");
-            const wording = String(args.wording ?? "").trim();
-            if (!wording) {
-              result = { error: "wording is required" };
+            onStatus("Writing the invitation wording…");
+            const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+            const lines: NonNullable<InviteContent["wording"]> = {};
+            for (const key of ["eyebrow", "invite", "closing"] as const) {
+              if (text(args[key])) lines[key] = text(args[key]);
+            }
+            const note = text(args.note);
+            if (!Object.keys(lines).length && !note) {
+              result = { error: "Give at least one of eyebrow, invite, closing or note" };
               break;
             }
-            const style = typeof args.style === "string" ? args.style : null;
-            // Persist the latest brief on the event for the invites page.
-            await supabase
-              .from("events")
-              .update({
-                requirements: {
-                  ...currentEvent.requirements,
-                  invites: {
-                    ...((currentEvent.requirements?.invites as object) ?? {}),
-                    wording,
-                    style,
-                  },
-                },
-              })
-              .eq("id", currentEvent.id);
-            currentEvent = {
-              ...currentEvent,
-              requirements: {
-                ...currentEvent.requirements,
-                invites: {
-                  ...((currentEvent.requirements?.invites as object) ?? {}),
-                  wording,
-                  style,
-                },
-              },
-            };
-            payload = { kind: "invite_brief", wording, style };
-            result = { ok: true };
+            // The words go on the couple's card, the one the Invitationer page edits.
+            const { data: existing } = await supabase
+              .from("invitations")
+              .select("id, data")
+              .eq("event_id", currentEvent.id)
+              .order("updated_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            const current = parseInviteContent(existing?.data);
+            const data = parseInviteContent({
+              ...current,
+              wording: { ...current.wording, ...lines },
+              ...(note ? { note } : {}),
+            });
+            const now = new Date().toISOString();
+            const { error } = existing
+              ? await supabase.from("invitations").update({ data, updated_at: now }).eq("id", existing.id)
+              : await supabase.from("invitations").insert({
+                  event_id: currentEvent.id,
+                  user_id: currentEvent.user_id,
+                  template_id: "card",
+                  data,
+                  status: "draft",
+                  updated_at: now,
+                });
+            if (error) {
+              result = { error: error.message };
+              break;
+            }
+            const wording = [lines.eyebrow, lines.invite, lines.closing, note].filter(Boolean).join("\n\n");
+            payload = { kind: "invite_brief", wording, style: null };
+            result = { ok: true, saved_to: "the invitation card on the Invitationer page" };
             break;
           }
           case "propose_email_draft": {

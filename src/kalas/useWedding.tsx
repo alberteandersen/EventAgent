@@ -1133,12 +1133,12 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
     return computeJourney(event, {
       likedVenues,
       quotesIn,
-      inviteOrderStatus: inviteOrders[0]?.status ?? null,
+      invitationExported: invitations.some((i) => i.status === "published"),
       bookedByCategory,
       contactedByCategory,
       unreadReplies: replies.filter((r) => !r.read_at).length,
     });
-  }, [event, venues, replies, outbound, inviteOrders]);
+  }, [event, venues, replies, outbound, invitations]);
 
   const value = useMemo<WeddingData>(
     () => ({

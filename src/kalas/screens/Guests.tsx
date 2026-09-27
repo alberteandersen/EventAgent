@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Upload, Send, Users, Clock, CheckCheck, ChevronRight, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil, Utensils, BedDouble, GlassWater, Baby, ShieldAlert } from 'lucide-react';
+import { Plus, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil, Utensils, BedDouble, GlassWater, Baby, ShieldAlert } from 'lucide-react';
 import { Pill, cn } from '../ui';
 import GuestDialog, { type GuestDraft } from './GuestDialog';
 import { dietarySummary } from './guests/dietary';
@@ -23,10 +23,10 @@ const RSVP_OPTIONS: { value: RsvpStatus; label: string }[] = [
   { value: 'nej', label: 'Afbud' },
 ];
 
-type Tab = 'gæsteliste' | 'overblik' | 'beskeder';
+type Tab = 'gæsteliste' | 'overblik';
 type Filter = 'alle' | 'ja' | 'afventer' | 'afbud';
 
-const TAB_LABELS: Record<Tab, string> = { gæsteliste: 'Gæsteliste', overblik: 'Overblik', beskeder: 'Beskeder' };
+const TAB_LABELS: Record<Tab, string> = { gæsteliste: 'Gæsteliste', overblik: 'Overblik' };
 
 /* The quick filters on the list, the same needs the Overblik tab counts.
    Combined with each other and with the RSVP tabs: "Afventer" + "Overnatning"
@@ -39,26 +39,6 @@ const NEED_FILTERS: { id: GuestNeed; label: string; Icon: typeof Utensils }[] = 
   { id: 'children', label: 'Børn', Icon: Baby },
 ];
 const FILTER_LABELS: Record<Filter, string> = { alle: 'Alle', ja: 'Ja', afventer: 'Afventer', afbud: 'Afbud' };
-
-type MessageThread = {
-  id: string; subject: string; preview: string;
-  recipientLabel: string; sentAt?: string; status: 'draft' | 'sent'; replies: number;
-};
-
-const THREADS: MessageThread[] = [
-  { id: 'm1', subject: 'Vi glæder os til at se jer! 🎉', preview: 'Kære alle, vi kan endelig afsløre alle detaljerne om vores store dag...', recipientLabel: 'Bekræftede gæster', sentAt: '3 dage siden', status: 'sent', replies: 12 },
-  { id: 'm2', subject: 'Mangler stadig dit svar', preview: 'Hej! Vi har endnu ikke hørt fra dig angående vores bryllup den 12. september...', recipientLabel: 'Afventende svar', sentAt: '1 uge siden', status: 'sent', replies: 4 },
-  { id: 'm3', subject: 'Praktisk info om dagen', preview: 'Her er alt I skal vide: parkering, overnatning og dresscode...', recipientLabel: 'Alle gæster', sentAt: undefined, status: 'draft', replies: 0 },
-];
-
-function makeTemplates(a: string, b: string, dateLabel: string) {
-  const sign = `${a} & ${b}`;
-  return [
-    { id: 'tp1', label: 'Praktisk info', subject: 'Alt du skal vide om dagen', recipients: 'Alle gæster', body: `Kære [navn],\n\nVi glæder os enormt til at fejre vores store dag med dig!\n\nHer er de vigtigste praktiske informationer:\n\n📍 Sted: [venue]\n🕐 Ceremoni starter kl. [tid]\n🚗 Parkering: [info]\n\nKontakt os hvis du har spørgsmål.\n\nMed kærlig hilsen,\n${sign}` },
-    { id: 'tp2', label: 'Rykker – RSVP', subject: 'Mangler stadig dit svar 💌', recipients: 'Afventende svar', body: `Hej [navn],\n\nVi mangler stadig at høre om du kan komme til vores bryllup den ${dateLabel}.\n\nVil du svare inden [dato]?\n\nMed håb om at se dig,\n${sign}` },
-    { id: 'tp3', label: 'Tak for svar', subject: 'Tak for dit svar! 🙏', recipients: 'Bekræftede', body: `Kære [navn],\n\nTusen tak, vi er så glade for at du kommer!\n\nKærlig hilsen,\n${sign}` },
-  ];
-}
 
 export default function Guests({ initialTab = 'gæsteliste' }: {
   /** Which tab opens first; the app always opens the list, harnesses may not. */
@@ -134,7 +114,6 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
           <GuideLink screen="guests" />
         </div>
         <div className="hidden items-center gap-2 sm:flex">
-          <Pill variant="outline"><Upload size={15} /> {t('Importér')}</Pill>
           <Pill arrow onClick={startAdding}><Plus size={15} /> {t('Tilføj')}</Pill>
         </div>
       </div>
@@ -148,7 +127,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
 
       {/* Section tabs */}
       <div className="mt-10 flex gap-1 border-b border-[var(--color-line)]">
-        {(['gæsteliste', 'overblik', 'beskeder'] as Tab[]).map((tabId) => (
+        {(['gæsteliste', 'overblik'] as Tab[]).map((tabId) => (
           <button key={tabId} onClick={() => setTab(tabId)}
             className={cn('relative px-5 py-3 text-[0.85rem] capitalize transition-colors cursor-pointer',
               tab === tabId ? 'text-ink' : 'text-muted hover:text-ink')}>
@@ -175,14 +154,16 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
                     {tn(rsvpStats.afventer, 'Én gæst mangler stadig svar', '{n} gæster mangler stadig svar')}
                   </p>
                   <p className="mt-0.5 text-[0.76rem] text-muted">
-                    {t('Ava sender en venlig påmindelse på jeres vegne')}
+                    {t('De svarer på jeres hjemmeside, når I har delt den.')}
                   </p>
                 </div>
-                <button
-                  onClick={() => setTab('beskeder')}
-                  className="shrink-0 h-8 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-[0.12em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
-                  {t('Send påmindelser')}
-                </button>
+                {filter !== 'afventer' && (
+                  <button
+                    onClick={() => { setNeeds(new Set()); setQuery(''); setFilter('afventer'); }}
+                    className="shrink-0 h-8 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-[0.12em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                    {t('Vis hvem')}
+                  </button>
+                )}
               </motion.div>
             )}
 
@@ -269,7 +250,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
               </p>
             )}
           </motion.div>
-        ) : tab === 'overblik' ? (
+        ) : (
           <motion.div key="overview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <CateringOverview
               guests={guestList}
@@ -283,10 +264,6 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
                 setTab('gæsteliste');
               }}
             />
-          </motion.div>
-        ) : (
-          <motion.div key="messaging" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <MessagingPanel />
           </motion.div>
         )}
       </AnimatePresence>
@@ -412,143 +389,6 @@ function GuestRow({ g, i, member, link, onRemove, onSetRsvp, onEdit }: { g: Gues
       </div>
 
     </motion.div>
-  );
-}
-
-function MessagingPanel() {
-  const { t } = useLang();
-  const { couple } = useWedding();
-  const TEMPLATES = makeTemplates(couple.a, couple.b, couple.dateLabel);
-  const [activeThread, setActiveThread] = useState<string | null>(null);
-  const [composing, setComposing] = useState(false);
-  const [messageBody, setMessageBody] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-
-  const thread = THREADS.find((t) => t.id === activeThread);
-
-  return (
-    <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_300px]">
-      {/* left: threads + compose */}
-      <div>
-        <div className="flex items-center justify-between mb-5">
-          <p className="text-[0.82rem] text-muted">{t('{n} beskeder sendt eller kladde', { n: THREADS.length })}</p>
-          <button
-            onClick={() => { setComposing(true); setActiveThread(null); }}
-            className="flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-widest text-canvas hover:opacity-90 transition-opacity cursor-pointer"
-          >
-            <Send size={11} /> {t('Ny besked')}
-          </button>
-        </div>
-
-        <ol className="divide-y divide-[var(--color-line)] border-t border-b border-[var(--color-line)]">
-          {THREADS.map((th) => (
-            <motion.li
-              key={th.id}
-              whileHover={{ backgroundColor: 'var(--color-shell)' }}
-              onClick={() => { setActiveThread(th.id); setComposing(false); }}
-              className={cn('cursor-pointer px-4 py-4 transition-colors', activeThread === th.id && 'bg-shell')}
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    {th.status === 'draft' && (
-                      <span className="rounded-full bg-[#e8ddd9] px-2 py-0.5 text-[0.6rem] uppercase tracking-wider text-[#8b5e52]">{t('Kladde')}</span>
-                    )}
-                    <h3 className="font-serif text-[0.95rem] text-ink truncate">{t(th.subject)}</h3>
-                  </div>
-                  <p className="text-[0.78rem] text-muted truncate">{t(th.preview)}</p>
-                  <div className="mt-2 flex items-center gap-3">
-                    <span className="flex items-center gap-1 text-[0.68rem] text-muted"><Users size={10} /> {t(th.recipientLabel)}</span>
-                    {th.sentAt && <span className="flex items-center gap-1 text-[0.68rem] text-muted"><Clock size={10} /> {t(th.sentAt)}</span>}
-                    {th.replies > 0 && <span className="flex items-center gap-1 text-[0.68rem] text-muted"><CheckCheck size={10} /> {t('{n} svar', { n: th.replies })}</span>}
-                  </div>
-                </div>
-                <ChevronRight size={14} className="mt-1 shrink-0 text-muted" />
-              </div>
-            </motion.li>
-          ))}
-        </ol>
-
-        {/* thread detail */}
-        <AnimatePresence>
-          {thread && (
-            <motion.div key={thread.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="mt-6 rounded-2xl border border-[var(--color-line)] p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="font-serif text-[1.1rem] text-ink">{t(thread.subject)}</h3>
-                  <p className="mt-1 text-[0.75rem] text-muted">{t(thread.recipientLabel)} · {thread.sentAt ? t(thread.sentAt) : t('Kladde')}</p>
-                </div>
-                <button onClick={() => setActiveThread(null)} className="text-[0.72rem] text-muted hover:text-ink cursor-pointer">{t('Luk')}</button>
-              </div>
-              <p className="text-[0.88rem] text-ink-soft leading-relaxed whitespace-pre-line">{t(thread.preview)}</p>
-              {thread.status === 'draft' && (
-                <button className="mt-5 flex items-center gap-2 rounded-full bg-[#8b5e52] px-5 py-2.5 text-[0.72rem] font-medium uppercase tracking-widest text-white hover:opacity-90 cursor-pointer">
-                  <Send size={11} /> {t('Send nu')}
-                </button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* compose */}
-        <AnimatePresence>
-          {composing && (
-            <motion.div key="compose" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              className="mt-6 rounded-2xl border border-[var(--color-line)] p-6">
-              <h3 className="font-serif text-[1rem] text-ink mb-5">{t('Ny besked')}</h3>
-              <div className="space-y-4">
-                <div>
-                  <label className="eyebrow text-[0.65rem] text-muted block mb-1.5">{t('Modtagere')}</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {['Alle gæster', 'Bekræftede', 'Afventende'].map((r) => (
-                      <button key={r} className="rounded-full border border-[var(--color-line)] px-3 py-1.5 text-[0.72rem] hover:bg-shell transition-colors cursor-pointer">{t(r)}</button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="eyebrow text-[0.65rem] text-muted block mb-1.5">{t('Emne')}</label>
-                  <input className="w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-2.5 text-[0.88rem] text-ink outline-none focus:border-ink transition-colors" placeholder={t('Emne...')} />
-                </div>
-                <div>
-                  <label className="eyebrow text-[0.65rem] text-muted block mb-1.5">{t('Besked')}</label>
-                  <textarea rows={6} value={messageBody} onChange={(e) => setMessageBody(e.target.value)}
-                    className="w-full rounded-xl border border-[var(--color-line)] bg-transparent px-4 py-3 text-[0.88rem] text-ink outline-none focus:border-ink transition-colors resize-none leading-relaxed"
-                    placeholder={t('Skriv din besked her...')} />
-                </div>
-                <div className="flex gap-3 pt-1">
-                  <button className="flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-widest text-canvas hover:opacity-90 cursor-pointer">
-                    <Send size={11} /> {t('Send')}
-                  </button>
-                  <button onClick={() => setComposing(false)} className="h-8 rounded-full border border-[var(--color-line)] px-3 text-xs font-semibold uppercase tracking-widest text-muted hover:text-ink cursor-pointer">
-                    {t('Annuller')}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* right: templates */}
-      <div>
-        <h2 className="font-serif text-[1rem] text-ink mb-4">{t('Skabeloner')}</h2>
-        <div className="space-y-3">
-          {TEMPLATES.map((tp) => (
-            <motion.button key={tp.id} whileHover={{ scale: 1.01 }}
-              onClick={() => { setSelectedTemplate(tp.id === selectedTemplate ? null : tp.id); setComposing(true); setMessageBody(tp.body); setActiveThread(null); }}
-              className={cn('w-full rounded-2xl border p-4 text-left transition-colors cursor-pointer',
-                selectedTemplate === tp.id ? 'border-ink bg-shell' : 'border-[var(--color-line)] hover:bg-shell')}>
-              <div className="flex items-center justify-between">
-                <span className="font-serif text-[0.95rem] text-ink">{t(tp.label)}</span>
-                <span className="text-[0.68rem] text-muted">{t(tp.recipients)}</span>
-              </div>
-              <p className="mt-1 text-[0.75rem] text-muted">{t(tp.subject)}</p>
-            </motion.button>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 

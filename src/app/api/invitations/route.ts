@@ -6,7 +6,9 @@ import type { EventRow, InvitationRow, ProfileRow } from "@/lib/db/types";
 /**
  * POST /api/invitations — save what the couple's card says (InviteContent,
  * plus their own wording over Ava's). The look is its own record,
- * invitation_designs. Body: { id?, data }.
+ * invitation_designs. Body: { id?, data, publish? }. `publish` marks the card
+ * as out of their hands: exported for print, which is what the journey's
+ * "Send the invites" step and the planning signals read as done.
  */
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -15,7 +17,7 @@ export async function POST(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const body = (await request.json()) as { id?: string; data?: Record<string, unknown> };
+  const body = (await request.json()) as { id?: string; data?: Record<string, unknown>; publish?: boolean };
   const data = parseInviteContent(body.data) as unknown as Record<string, unknown>;
   const now = new Date().toISOString();
 
@@ -23,7 +25,7 @@ export async function POST(request: NextRequest) {
     // RLS scopes the update to the wedding's members.
     const { data: row, error } = await supabase
       .from("invitations")
-      .update({ data, updated_at: now })
+      .update({ data, updated_at: now, ...(body.publish ? { status: "published" } : {}) })
       .eq("id", body.id)
       .select()
       .single();
@@ -52,7 +54,7 @@ export async function POST(request: NextRequest) {
   const { data: row, error } = await supabase
     .from("invitations")
     // template_id is kept for the column; the design lives in invitation_designs.
-    .insert({ event_id: eventId, user_id: user.id, template_id: "card", data, status: "draft", updated_at: now })
+    .insert({ event_id: eventId, user_id: user.id, template_id: "card", data, status: body.publish ? "published" : "draft", updated_at: now })
     .select()
     .single();
   if (error) return Response.json({ error: error.message }, { status: 500 });

@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 import Shell, { NAV, type ScreenId } from '@/kalas/Shell';
 import { LanguageProvider, type Lang } from '@/kalas/i18n';
 import Guides from '@/kalas/screens/Guides';
-import { GuideLink } from '@/kalas/screens/guides/GuideLink';
+import { Page, PageHeader } from '@/kalas/ui';
 import { OPEN_GUIDE_EVENT } from '@/kalas/screens/guides/links';
 import { FixtureWedding } from '../_fixture/wedding';
 
@@ -37,13 +37,9 @@ export default function Harness() {
           {screen === 'guides' ? (
             <Guides onNavigate={(target) => setLog(`navigate: ${target}`)} />
           ) : (
-            <div className="px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
-              <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-[#24413a]">
-                {NAV.find((n) => n.id === screen)?.label}
-              </h1>
-              <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-[#5f6b66]">Stand-in for the page.</p>
-              <GuideLink screen={screen} />
-            </div>
+            <Page>
+              <PageHeader title={NAV.find((n) => n.id === screen)?.label} subtitle="Stand-in for the page." guide={screen} />
+            </Page>
           )}
         </Shell>
         </FixtureWedding>

@@ -119,7 +119,7 @@ export function PicksView({
       {savedVenues.length >= 2 && (
         <div className={cn(padX, 'pt-8 flex justify-end')}>
           <button onClick={() => setComparing(true)}
-            className="rounded-full bg-ink px-4 py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.12em] text-canvas hover:opacity-85 transition-opacity cursor-pointer">
+            className="rounded-full bg-ink px-4 py-2.5 text-xs font-semibold text-canvas hover:opacity-85 transition-opacity cursor-pointer">
             {t('Sammenlign ({n})', { n: savedVenues.length })}
           </button>
         </div>
@@ -218,7 +218,7 @@ function OutreachBanner({
       {notContacted > 0 && (
         <button
           onClick={onReview}
-          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-[0.12em] text-paper hover:opacity-90 transition-opacity cursor-pointer"
+          className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold text-paper hover:opacity-90 transition-opacity cursor-pointer"
         >
           {t('Lad Ava kontakte ({n})', { n: notContacted })} <ArrowRight size={14} />
         </button>

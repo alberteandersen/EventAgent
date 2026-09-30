@@ -145,7 +145,7 @@ export default function TakkelisteTab() {
               type="button"
               onClick={() => setFilter(f)}
               className={cn(
-                'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.1em] transition-colors cursor-pointer',
+                'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors cursor-pointer',
                 active
                   ? 'bg-ink text-paper'
                   : 'border border-line-soft bg-paper text-muted hover:text-ink',

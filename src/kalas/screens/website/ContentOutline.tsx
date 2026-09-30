@@ -96,7 +96,7 @@ export function ContentStepNav({ onBack, onNext, nextLabel }: {
       )}
       {onNext && (
         <button type="button" onClick={onNext}
-          className="ml-auto flex shrink-0 items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-canvas transition-colors hover:bg-ink/80 cursor-pointer">
+          className="ml-auto flex shrink-0 items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-meta font-semibold text-canvas transition-colors hover:bg-ink/80 cursor-pointer">
           {nextLabel} <ArrowRight size={12} />
         </button>
       )}
@@ -116,7 +116,7 @@ export function StaleContentNotice({ syncing, onSync }: { syncing: boolean; onSy
         </p>
       </div>
       <button type="button" onClick={onSync} disabled={syncing}
-        className="flex shrink-0 items-center gap-2 rounded-full bg-ink px-4 py-2 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-canvas transition-colors hover:bg-ink/80 disabled:opacity-60 cursor-pointer">
+        className="flex shrink-0 items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs font-semibold text-canvas transition-colors hover:bg-ink/80 disabled:opacity-60 cursor-pointer">
         {syncing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
         {syncing ? t('Opdaterer…') : t('Opdatér siden')}
       </button>

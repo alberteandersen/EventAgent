@@ -151,7 +151,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
                 {filter !== 'afventer' && (
                   <button
                     onClick={() => { setNeeds(new Set()); setQuery(''); setFilter('afventer'); }}
-                    className="shrink-0 h-8 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-[0.12em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                    className="shrink-0 h-8 rounded-full bg-ink px-3 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
                     {t('Vis hvem')}
                   </button>
                 )}

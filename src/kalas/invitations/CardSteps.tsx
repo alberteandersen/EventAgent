@@ -48,7 +48,7 @@ const IDEAS = [
 ] as const;
 
 const primaryBtn =
-  'flex shrink-0 items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-canvas transition-colors hover:bg-ink/80 disabled:cursor-default disabled:opacity-40 cursor-pointer';
+  'flex shrink-0 items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-meta font-semibold text-canvas transition-colors hover:bg-ink/80 disabled:cursor-default disabled:opacity-40 cursor-pointer';
 
 export interface CardStepsProps {
   step: CardStep | null;
@@ -129,7 +129,7 @@ export default function CardSteps(props: CardStepsProps) {
             {t('Stemningerne og deres kort er jeres. Når Ava maler et kort kun til jer og ændrer det, er det samme køb som jeres hjemmeside: ét køb låser op for begge.')}
           </p>
           <button type="button" onClick={onCheckout}
-            className="mt-5 rounded-full bg-ink px-6 py-2.5 text-[0.72rem] font-bold uppercase tracking-[0.16em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+            className="mt-5 rounded-full bg-ink px-6 py-2.5 text-meta font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
             {t('Lås op · {price} kr', { price: websitePriceDkk() })}
           </button>
         </div>
@@ -299,7 +299,7 @@ export default function CardSteps(props: CardStepsProps) {
                     className="min-w-0 flex-1 rule rounded-xl bg-shell px-4 py-2.5 text-[0.85rem] text-ink placeholder:text-muted focus:outline-none"
                   />
                   <button type="button" onClick={submitRefine} disabled={!instruction.trim()}
-                    className="shrink-0 rounded-full bg-ink px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 disabled:opacity-40 transition-colors cursor-pointer">
+                    className="shrink-0 rounded-full bg-ink px-4 py-2 text-xs font-semibold text-canvas hover:bg-ink/80 disabled:opacity-40 transition-colors cursor-pointer">
                     {t('Justér')}
                   </button>
                 </div>

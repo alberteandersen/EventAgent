@@ -222,7 +222,7 @@ export default function BookedPanel({
                     onClick={() => toggleManual(slot.id)}
                     aria-pressed={manual.includes(slot.id)}
                     className={cn(
-                      'mt-auto inline-flex h-8 items-center gap-1.5 self-start rounded-full border px-3 text-xs font-semibold uppercase tracking-[0.1em] transition-colors cursor-pointer',
+                      'mt-auto inline-flex h-8 items-center gap-1.5 self-start rounded-full border px-3 text-xs font-semibold transition-colors cursor-pointer',
                       manual.includes(slot.id)
                         ? 'border-ink bg-ink text-paper'
                         : 'border-ink text-ink hover:bg-paper',
@@ -238,7 +238,7 @@ export default function BookedPanel({
                   <button
                     type="button"
                     onClick={() => onSwitchTab('explore', slot.id as HubCat)}
-                    className="mt-auto inline-flex h-8 items-center gap-1.5 self-start rounded-full border border-ink px-3 text-xs font-semibold uppercase tracking-[0.1em] text-ink hover:bg-paper transition-colors cursor-pointer"
+                    className="mt-auto inline-flex h-8 items-center gap-1.5 self-start rounded-full border border-ink px-3 text-xs font-semibold text-ink hover:bg-paper transition-colors cursor-pointer"
                   >
                     <Plus size={13} />
                     {t('Booket? Tilføj her')}

@@ -761,7 +761,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                 className="flex-1 bg-transparent font-serif text-[1.2rem] text-ink placeholder:text-muted/50 focus:outline-none border-b border-[var(--color-line-strong)] pb-1"
               />
               <button onClick={addLine}
-                className="h-8 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-[0.12em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                className="h-8 rounded-full bg-ink px-3 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
                 {t('Tilføj')}
               </button>
               <button onClick={() => { setAddingNew(false); setNewLabel(''); }}

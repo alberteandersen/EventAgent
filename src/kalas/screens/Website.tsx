@@ -803,7 +803,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                       <span className="text-muted"> · {versionWhat(viewingInfo, t)}</span>
                     </p>
                     <button type="button" onClick={() => { void activateDesign(viewing.id).then(() => setViewingId(null)); }}
-                      className="rounded-full bg-ink px-3.5 py-1.5 text-[0.64rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                      className="rounded-full bg-ink px-3.5 py-1.5 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
                       {published ? t('Gør den live') : t('Brug denne')}
                     </button>
                     <button type="button" onClick={() => setViewingId(null)}
@@ -985,7 +985,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                     </p>
                   </div>
                   <button onClick={() => setPublished((v) => !v)}
-                    className={cn('shrink-0 rounded-full px-5 py-2 text-[0.7rem] font-bold uppercase tracking-[0.16em] transition-all cursor-pointer',
+                    className={cn('shrink-0 rounded-full px-5 py-2 text-xs font-semibold transition-all cursor-pointer',
                       published ? 'bg-sage text-ink' : 'bg-ink text-canvas hover:bg-ink/80')}>
                     {published ? t('● Live') : t('Publicér')}
                   </button>
@@ -1041,7 +1041,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                       {publicUrl.replace(/^https?:\/\//, '')}
                     </div>
                     <button onClick={copyLink}
-                      className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                      className="flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
                       {copied ? <Check size={12} /> : <Copy size={12} />}
                       {copied ? t('Kopieret!') : t('Kopiér link')}
                     </button>
@@ -1069,7 +1069,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                     className="mt-4 rule rounded-xl bg-shell px-4 py-3 flex items-center justify-between gap-4">
                     <p className="text-[0.78rem] text-muted">{t('Branding fjernes når I låser Ava-designeren op')}</p>
                     <button onClick={() => void startCheckout()}
-                      className="shrink-0 rounded-full bg-ink px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                      className="shrink-0 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
                       {t('Lås op · {price} kr', { price: websitePriceDkk() })}
                     </button>
                   </motion.div>

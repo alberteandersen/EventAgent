@@ -211,7 +211,7 @@ function VendorShortlist({
                   <button
                     type="button"
                     onClick={() => setContacting(v)}
-                    className="flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold uppercase tracking-[0.12em] text-paper hover:opacity-85 transition-opacity cursor-pointer"
+                    className="flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold text-paper hover:opacity-85 transition-opacity cursor-pointer"
                   >
                     <Send size={12} /> {t('Kontakt')}
                   </button>

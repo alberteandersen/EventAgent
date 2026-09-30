@@ -111,7 +111,7 @@ export function AvaTextPanel({ state, onUse, hasText }: {
                 ))}
                 <button type="button" onClick={() => void run()}
                   disabled={!Object.values(answers).some((v) => v?.trim())}
-                  className="mt-1 flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-[0.66rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 disabled:opacity-40 transition-colors cursor-pointer">
+                  className="mt-1 flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-canvas hover:bg-ink/80 disabled:opacity-40 transition-colors cursor-pointer">
                   <Sparkles size={11} /> {t('Skriv historien')}
                 </button>
               </div>
@@ -127,7 +127,7 @@ export function AvaTextPanel({ state, onUse, hasText }: {
                 <p className="whitespace-pre-line text-[0.85rem] leading-relaxed text-ink">{draft}</p>
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <button type="button" onClick={() => { onUse(draft); close(); }}
-                    className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-[0.66rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                    className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
                     <Check size={11} /> {hasText ? t('Erstat min tekst') : t('Brug teksten')}
                   </button>
                   <button type="button" onClick={() => void run()}
@@ -207,7 +207,7 @@ export function AvaFaqPanel({ eventId, beforeCall, faq, onUse }: {
                   </ul>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <button type="button" onClick={() => { onUse(draft); close(); }}
-                      className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-[0.66rem] font-bold uppercase tracking-[0.14em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
+                      className="flex items-center gap-1.5 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
                       <Check size={11} /> {t('Brug svarene')}
                     </button>
                     <button type="button" onClick={() => void run()}

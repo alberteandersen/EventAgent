@@ -280,7 +280,7 @@ function VendorCard({
             onClick={onSave}
             disabled={saving || saved}
             className={cn(
-              'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.1em] transition-opacity cursor-pointer disabled:cursor-default',
+              'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-opacity cursor-pointer disabled:cursor-default',
               saved ? 'bg-sage-wash text-ink' : 'bg-ink text-paper hover:opacity-85',
             )}
           >

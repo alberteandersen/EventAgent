@@ -129,7 +129,7 @@ export function ComparisonView({
                       <button
                         type="button"
                         onClick={() => onBook(v.id)}
-                        className="flex items-center justify-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[0.7rem] font-bold uppercase tracking-[0.12em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer"
+                        className="flex items-center justify-center gap-1.5 rounded-full bg-ink px-4 py-2 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer"
                       >
                         {isBooked ? <><Check size={12} /> {t('Booket')}</> : t('Vælg venue')}
                       </button>

@@ -174,7 +174,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
               onClick={() => setOnlyFavorites(f.on)}
               aria-pressed={showFavorites === f.on}
               className={cn(
-                'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.1em] transition-colors cursor-pointer',
+                'flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors cursor-pointer',
                 showFavorites === f.on
                   ? 'bg-ink text-paper'
                   : 'border border-line-soft bg-paper text-muted hover:text-ink',

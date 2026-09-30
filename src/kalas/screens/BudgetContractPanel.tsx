@@ -125,7 +125,7 @@ export default function BudgetContractPanel({
           <button
             onClick={() => fileRef.current?.click()}
             disabled={busy !== 'idle'}
-            className="flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-canvas hover:bg-ink/80 transition-colors cursor-pointer disabled:opacity-60">
+            className="flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer disabled:opacity-60">
             {busy === 'uploading' ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
             {t('Upload')}
           </button>

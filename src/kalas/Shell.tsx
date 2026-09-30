@@ -12,7 +12,7 @@ import type { LucideIcon } from 'lucide-react';
 import WeddingRings from './icons/WeddingRings';
 import { useWedding } from './useWedding';
 import { nygiftInMenu } from './screens/nygift/shared';
-import { cn, Wordmark } from './ui';
+import { cn, ErrorState, Page, PageLoader, Wordmark } from './ui';
 import { useLang } from './i18n';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 
@@ -74,6 +74,29 @@ function Initials({ light = false }: { light?: boolean }) {
     >
       {a}{b ? `+${b}` : ''}
     </div>
+  );
+}
+
+/** The page, or, when the wedding could not be loaded, a way to try again:
+ *  never an empty wedding that screens would start filling with defaults. */
+function LoadGate({ children }: { children: React.ReactNode }) {
+  const { t } = useLang();
+  const { loadError, refresh } = useWedding();
+  const [retrying, setRetrying] = useState(false);
+  if (!loadError) return <>{children}</>;
+  if (retrying) return <PageLoader />;
+  return (
+    <Page narrow>
+      <ErrorState
+        title={t('Vi kunne ikke hente jeres bryllup')}
+        onRetry={() => {
+          setRetrying(true);
+          void refresh().finally(() => setRetrying(false));
+        }}
+      >
+        {t('Intet er gået tabt. Tjek forbindelsen, og prøv igen om lidt.')}
+      </ErrorState>
+    </Page>
   );
 }
 
@@ -308,7 +331,7 @@ export default function Shell({
               className="min-w-0 flex-1 overflow-y-auto rounded-tl-[20px] border border-line-soft border-b-0 border-r-0 pb-28 lg:pb-0 xl:rounded-tr-[20px] xl:border-r"
               style={{ backgroundColor: PAGE_BG }}
             >
-              <div className="min-h-full">{children}</div>
+              <div className="min-h-full"><LoadGate>{children}</LoadGate></div>
             </main>
 
             {ava && (

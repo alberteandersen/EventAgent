@@ -55,6 +55,10 @@ export interface Couple {
 
 export interface WeddingData {
   loading: boolean;
+  /** The wedding could not be loaded (network, session, or a core table
+   *  failing) and there is nothing to show yet. The shell shows it instead of
+   *  an empty wedding, which screens would otherwise start seeding. */
+  loadError: boolean;
   event: EventRow | null;
   profile: ProfileRow | null;
   couple: Couple;
@@ -221,6 +225,8 @@ function toCouple(
 export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const supabase = useMemo(() => createClient(), []);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const loadedOnce = React.useRef(false);
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [event, setEvent] = useState<EventRow | null>(null);
   const [email, setEmail] = useState("");
@@ -248,91 +254,125 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const [invitationDesigns, setInvitationDesigns] = useState<InvitationDesignRow[]>([]);
 
   const load = useCallback(async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    setEmail(user.email ?? "");
-    setUserId(user.id);
+    /* Throws when the wedding cannot be trusted: no network, no session, or
+       one of the queries failing. A table that does not exist yet (a migration
+       not run on this database) is not a failure; it loads empty, as before. */
+    const loadWedding = async () => {
+      const check = (result: { error: { code?: string; message: string } | null }, what: string) => {
+        const err = result.error;
+        if (!err) return;
+        if (err.code === "42P01" || err.code === "PGRST205") {
+          console.warn(`[useWedding] ${what}: table missing, loading empty`, err.message);
+          return;
+        }
+        throw new Error(`${what}: ${err.message}`);
+      };
 
-    const { data: profileRow } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    setProfile((profileRow as ProfileRow | null) ?? null);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      setEmail(user.email ?? "");
+      setUserId(user.id);
 
-    // The active wedding: profile pointer, else the most recent event.
-    let ev: EventRow | null = null;
-    const activeId = (profileRow as ProfileRow | null)?.active_event_id;
-    if (activeId) {
-      const { data } = await supabase.from("events").select("*").eq("id", activeId).maybeSingle();
-      ev = (data as EventRow | null) ?? null;
-    }
-    if (!ev) {
-      const { data } = await supabase
-        .from("events")
+      const profileResult = await supabase
+        .from("profiles")
         .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1)
+        .eq("user_id", user.id)
         .maybeSingle();
-      ev = (data as EventRow | null) ?? null;
-    }
-    setEvent(ev);
+      check(profileResult, "profiles");
+      const profileRow = profileResult.data;
+      setProfile((profileRow as ProfileRow | null) ?? null);
 
-    if (ev) {
-      const [v, d, o, r, at, p, bi, bsi, dpi, g, tt, ws, sp, ri, rc, wd, sph, wo, inv, ty, ivd] = await Promise.all([
-        supabase.from("venues").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("email_drafts").select("*").eq("event_id", ev.id),
-        supabase.from("outbound_emails").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("email_replies").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("email_attachments").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("reply_proposals").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("budget_items").select("*").eq("event_id", ev.id).order("sort"),
-        supabase.from("budget_sub_items").select("*").eq("event_id", ev.id).order("sort").order("created_at"),
-        supabase.from("day_program_items").select("*").eq("event_id", ev.id).order("time"),
-        supabase.from("guests").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("timeline_tasks").select("*").eq("event_id", ev.id).order("sort").order("due_date"),
-        supabase.from("wedding_sites").select("*").eq("event_id", ev.id).maybeSingle(),
-        supabase.from("seating_plans").select("*").eq("event_id", ev.id).maybeSingle(),
-        supabase.from("registry_items").select("*").eq("event_id", ev.id).order("sort"),
-        supabase.from("registry_claims").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("website_designs").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
-        supabase.from("site_photos").select("*").eq("event_id", ev.id).order("sort").order("created_at"),
-        supabase.from("website_orders").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
-        supabase.from("invitations").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
-        supabase.from("thank_yous").select("*").eq("event_id", ev.id).order("created_at"),
-        supabase.from("invitation_designs").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
-      ]);
-      setVenues((v.data ?? []) as VenueRow[]);
-      setDrafts((d.data ?? []) as EmailDraftRow[]);
-      setOutbound((o.data ?? []) as OutboundEmailRow[]);
-      setReplies((r.data ?? []) as EmailReplyRow[]);
-      setAttachments((at.data ?? []) as EmailAttachmentRow[]);
-      setProposals((p.data ?? []) as ReplyProposalRow[]);
-      setBudgetItems((bi.data ?? []) as BudgetItemRow[]);
-      setBudgetSubItems((bsi.data ?? []) as BudgetSubItemRow[]);
-      setDayProgramItems((dpi.data ?? []) as DayProgramItemRow[]);
-      setGuests((g.data ?? []) as GuestRow[]);
-      setTimelineTasks((tt.data ?? []) as TimelineTaskRow[]);
-      setWeddingSite((ws.data as WeddingSiteRow | null) ?? null);
-      setSeatingPlan((sp.data as SeatingPlanRow | null) ?? null);
-      setRegistryItems((ri.data ?? []) as RegistryItemRow[]);
-      setRegistryClaims((rc.data ?? []) as RegistryClaimRow[]);
-      setThankYous((ty.data ?? []) as ThankYouRow[]);
-      setWebsiteDesigns((wd.data ?? []) as WebsiteDesignRow[]);
-      setSitePhotos((sph.data ?? []) as SitePhotoRow[]);
-      setWebsiteOrders((wo.data ?? []) as WebsiteOrderRow[]);
-      setInvitations((inv.data ?? []) as InvitationRow[]);
-      setInvitationDesigns((ivd.data ?? []) as InvitationDesignRow[]);
+      // The active wedding: profile pointer, else the most recent event.
+      let ev: EventRow | null = null;
+      const activeId = (profileRow as ProfileRow | null)?.active_event_id;
+      if (activeId) {
+        const result = await supabase.from("events").select("*").eq("id", activeId).maybeSingle();
+        check(result, "events");
+        ev = (result.data as EventRow | null) ?? null;
+      }
+      if (!ev) {
+        const result = await supabase
+          .from("events")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        check(result, "events");
+        ev = (result.data as EventRow | null) ?? null;
+      }
+      setEvent(ev);
+
+      if (ev) {
+        const [v, d, o, r, at, p, bi, bsi, dpi, g, tt, ws, sp, ri, rc, wd, sph, wo, inv, ty, ivd] = await Promise.all([
+          supabase.from("venues").select("*").eq("event_id", ev.id).order("created_at"),
+          supabase.from("email_drafts").select("*").eq("event_id", ev.id),
+          supabase.from("outbound_emails").select("*").eq("event_id", ev.id).order("created_at"),
+          supabase.from("email_replies").select("*").eq("event_id", ev.id).order("created_at"),
+          supabase.from("email_attachments").select("*").eq("event_id", ev.id).order("created_at"),
+          supabase.from("reply_proposals").select("*").eq("event_id", ev.id).order("created_at"),
+          supabase.from("budget_items").select("*").eq("event_id", ev.id).order("sort"),
+          supabase.from("budget_sub_items").select("*").eq("event_id", ev.id).order("sort").order("created_at"),
+          supabase.from("day_program_items").select("*").eq("event_id", ev.id).order("time"),
+          supabase.from("guests").select("*").eq("event_id", ev.id).order("created_at"),
+          supabase.from("timeline_tasks").select("*").eq("event_id", ev.id).order("sort").order("due_date"),
+          supabase.from("wedding_sites").select("*").eq("event_id", ev.id).maybeSingle(),
+          supabase.from("seating_plans").select("*").eq("event_id", ev.id).maybeSingle(),
+          supabase.from("registry_items").select("*").eq("event_id", ev.id).order("sort"),
+          supabase.from("registry_claims").select("*").eq("event_id", ev.id).order("created_at"),
+          supabase.from("website_designs").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
+          supabase.from("site_photos").select("*").eq("event_id", ev.id).order("sort").order("created_at"),
+          supabase.from("website_orders").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
+          supabase.from("invitations").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
+          supabase.from("thank_yous").select("*").eq("event_id", ev.id).order("created_at"),
+          supabase.from("invitation_designs").select("*").eq("event_id", ev.id).order("created_at", { ascending: false }),
+        ]);
+        const names = ["venues", "email_drafts", "outbound_emails", "email_replies", "email_attachments", "reply_proposals",
+          "budget_items", "budget_sub_items", "day_program_items", "guests", "timeline_tasks", "wedding_sites", "seating_plans",
+          "registry_items", "registry_claims", "website_designs", "site_photos", "website_orders", "invitations", "thank_yous",
+          "invitation_designs"];
+        [v, d, o, r, at, p, bi, bsi, dpi, g, tt, ws, sp, ri, rc, wd, sph, wo, inv, ty, ivd].forEach((result, i) => check(result, names[i]));
+        setVenues((v.data ?? []) as VenueRow[]);
+        setDrafts((d.data ?? []) as EmailDraftRow[]);
+        setOutbound((o.data ?? []) as OutboundEmailRow[]);
+        setReplies((r.data ?? []) as EmailReplyRow[]);
+        setAttachments((at.data ?? []) as EmailAttachmentRow[]);
+        setProposals((p.data ?? []) as ReplyProposalRow[]);
+        setBudgetItems((bi.data ?? []) as BudgetItemRow[]);
+        setBudgetSubItems((bsi.data ?? []) as BudgetSubItemRow[]);
+        setDayProgramItems((dpi.data ?? []) as DayProgramItemRow[]);
+        setGuests((g.data ?? []) as GuestRow[]);
+        setTimelineTasks((tt.data ?? []) as TimelineTaskRow[]);
+        setWeddingSite((ws.data as WeddingSiteRow | null) ?? null);
+        setSeatingPlan((sp.data as SeatingPlanRow | null) ?? null);
+        setRegistryItems((ri.data ?? []) as RegistryItemRow[]);
+        setRegistryClaims((rc.data ?? []) as RegistryClaimRow[]);
+        setThankYous((ty.data ?? []) as ThankYouRow[]);
+        setWebsiteDesigns((wd.data ?? []) as WebsiteDesignRow[]);
+        setSitePhotos((sph.data ?? []) as SitePhotoRow[]);
+        setWebsiteOrders((wo.data ?? []) as WebsiteOrderRow[]);
+        setInvitations((inv.data ?? []) as InvitationRow[]);
+        setInvitationDesigns((ivd.data ?? []) as InvitationDesignRow[]);
+      }
+    };
+
+    try {
+      await loadWedding();
+      loadedOnce.current = true;
+      setLoadError(false);
+    } catch (err) {
+      console.error("[useWedding] load failed", err);
+      // A failed refresh keeps the wedding already on screen; only a first
+      // load with nothing to show becomes the error page.
+      if (!loadedOnce.current) setLoadError(true);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [supabase]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- fetching the wedding is what this effect is for
     void load();
   }, [load]);
 
@@ -700,7 +740,9 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   // called from a debounced autosave effect, and depending on `weddingSite`
   // here would re-fire that effect on every save (an infinite save loop).
   const weddingSiteRef = React.useRef(weddingSite);
-  weddingSiteRef.current = weddingSite;
+  useEffect(() => {
+    weddingSiteRef.current = weddingSite;
+  }, [weddingSite]);
   const saveSite = useCallback(
     async (patch: { config?: Record<string, unknown>; domain?: string | null; published?: boolean }) => {
       if (!eventId || !userId) return;
@@ -963,6 +1005,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<WeddingData>(
     () => ({
       loading,
+      loadError,
       event,
       profile,
       couple: toCouple(event, profile, email),
@@ -1019,7 +1062,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       saveInvitation,
     }),
     [
-      loading, event, profile, email, venues, drafts, outbound, replies, attachments, proposals,
+      loading, loadError, event, profile, email, venues, drafts, outbound, replies, attachments, proposals,
       invitations, journey, budgetItems, budgetSubItems, dayProgramItems, guests, timelineTasks,
       weddingSite, seatingPlan, registryItems, registryClaims,
       thankYous, saveThankYou,

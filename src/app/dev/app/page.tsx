@@ -5,6 +5,7 @@
      ?screen=budget      which screen (default home)
      ?loading=1          before the wedding's data has arrived
      ?empty=1            a wedding with nothing in it yet
+     ?error=1            the wedding could not be loaded
      ?ava=1              Ava's panel open (a stand-in; /dev/ava-chat has the real chat)
    Calls to /api are answered empty, so screens that fetch show their empty
    state rather than an auth error. */
@@ -106,6 +107,7 @@ function Harness() {
   return (
     <FixtureWedding
       loading={params.get('loading') === '1'}
+      loadError={params.get('error') === '1'}
       guests={fixture.guests}
       tasks={fixture.tasks}
       venues={fixture.venues}

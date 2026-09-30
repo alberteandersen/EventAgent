@@ -2133,5 +2133,7 @@ export const EN: Record<string, string> = {
   "eller": "or",
   "Sender dig videre…": "Taking you there…",
   "Fortsæt med Google": "Continue with Google",
+  'Vi kunne ikke hente jeres bryllup': 'We could not load your wedding',
+  'Intet er gået tabt. Tjek forbindelsen, og prøv igen om lidt.': 'Nothing is lost. Check your connection and try again in a moment.',
   'Betalingen kunne ikke startes. Prøv igen om lidt.': 'The payment could not be started. Try again in a moment.',
 };

@@ -50,11 +50,13 @@ export function FixtureWedding({
   tasks: initialTasks = [], couple: coupleOverride, event: eventOverride, venues: initialVenues = [], journey = [],
   thankYous: initialThanks = [], registryItems = [], registryClaims = [],
   weddingSite: initialSite = null, dayProgram = [], websiteDesigns = [], invitationDesigns = [],
-  outbound = [], replies = [], proposals = [], loading = false,
+  outbound = [], replies = [], proposals = [], loading = false, loadError = false,
 }: {
   children: React.ReactNode;
   /** The wedding has not arrived yet: what a screen shows before its data. */
   loading?: boolean;
+  /** The wedding could not be loaded: the shell's error page. */
+  loadError?: boolean;
   guests?: GuestRow[];
   seating?: Record<string, unknown> | null;
   budgetItems?: BudgetItemRow[];
@@ -97,7 +99,7 @@ export function FixtureWedding({
     const noop = async () => undefined;
     const event = { id: 'dev', user_id: 'dev', title: "Emma & Frederik's wedding", ...eventOverride } as EventRow;
     const base = {
-      loading, event, profile: null, couple: { ...FIXTURE_COUPLE, ...coupleOverride },
+      loading, loadError, event, profile: null, couple: { ...FIXTURE_COUPLE, ...coupleOverride },
       venues, drafts: [], outbound, replies, attachments: [], proposals,
       invitations: [], journey,
       dayProgramItems, timelineTasks, weddingSite,
@@ -204,7 +206,7 @@ export function FixtureWedding({
   }, [
     guests, seatingPlan, budgetItems, budgetSubItems, timelineTasks, dayProgramItems, coupleOverride, eventOverride,
     venues, journey, thankYous, registryItems, registryClaims, weddingSite, websiteDesigns,
-    outbound, replies, proposals, loading,
+    outbound, replies, proposals, loading, loadError,
   ]);
 
   return (

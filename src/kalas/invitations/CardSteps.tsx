@@ -116,7 +116,7 @@ export default function CardSteps(props: CardStepsProps) {
   return (
     <div className="space-y-7">
       {genError && (
-        <p className="rule rounded-xl bg-terracotta-tint px-4 py-3 text-[0.82rem] text-[var(--color-terracotta)]">{t(genError)}</p>
+        <p className="rule rounded-xl bg-terracotta-tint px-4 py-3 text-[0.82rem] text-terracotta">{t(genError)}</p>
       )}
 
       {needsPayment && !websitePaid && (
@@ -311,7 +311,7 @@ export default function CardSteps(props: CardStepsProps) {
                     </button>
                   )}
                   <button type="button" onClick={onRestart}
-                    className="flex items-center gap-1.5 text-[0.75rem] text-muted hover:text-[var(--color-terracotta)] transition-colors cursor-pointer">
+                    className="flex items-center gap-1.5 text-[0.75rem] text-muted hover:text-terracotta transition-colors cursor-pointer">
                     <RotateCcw size={12} /> {t('Start forfra')}
                   </button>
                 </div>
@@ -453,7 +453,7 @@ function PhotoPicker({ photos, content, onContent, uploading, onUpload }: CardSt
           );
         })}
         <button type="button" onClick={() => input.current?.click()} disabled={uploading}
-          className={cn('flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-[var(--color-line-strong)] text-muted transition-colors hover:border-ink/40 hover:text-ink disabled:opacity-50 cursor-pointer',
+          className={cn('flex flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line-strong text-muted transition-colors hover:border-ink/40 hover:text-ink disabled:opacity-50 cursor-pointer',
             photos.length === 0 ? 'col-span-4 h-28' : 'aspect-square')}>
           {uploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
           <span className="text-[0.6rem] font-semibold uppercase tracking-[0.1em]">{t('Upload')}</span>
@@ -520,7 +520,7 @@ function StepRow({ current, reached, open, onStep }: {
               </span>
               {active && <span className="whitespace-nowrap text-[0.78rem] font-semibold text-ink">{t(s.label)}</span>}
             </button>
-            {i < STEPS.length - 1 && <span aria-hidden className="h-px min-w-3 flex-1 bg-[var(--color-line)]" />}
+            {i < STEPS.length - 1 && <span aria-hidden className="h-px min-w-3 flex-1 bg-line" />}
           </li>
         );
       })}

@@ -320,7 +320,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
     if (data.url) { window.location.href = data.url; return; }
     // Paid already: the webhook beat us here, so just pick the order up.
     if (res?.status === 409) { await refresh(); setNeedsPayment(false); return; }
-    setGenError(t('Betalingen kunne ikke startes. Prøv igen om lidt.'));
+    setGenError('Betalingen kunne ikke startes. Prøv igen om lidt.');
   };
 
   // Back from Stripe: land on this screen and poll until the webhook lands.
@@ -649,7 +649,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 space-y-1.5">
                   <input value={h.name} onChange={(e) => setHotels((prev) => prev.map((x) => x.id === h.id ? { ...x, name: e.target.value } : x))}
-                    className="w-full text-[0.85rem] font-medium text-ink bg-transparent focus:outline-none border-b border-[var(--color-line)] pb-0.5"
+                    className="w-full text-[0.85rem] font-medium text-ink bg-transparent focus:outline-none border-b border-line pb-0.5"
                     placeholder={t('Hotelnavn')} />
                   <div className="flex gap-3">
                     <input value={h.dist} onChange={(e) => setHotels((prev) => prev.map((x) => x.id === h.id ? { ...x, dist: e.target.value } : x))}
@@ -686,7 +686,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                 <div className="flex-1 space-y-2">
                   <input value={item.q}
                     onChange={(e) => setFaq((f) => f.map((x) => x.id === item.id ? { ...x, q: e.target.value } : x))}
-                    className="w-full text-[0.82rem] font-medium text-ink bg-transparent border-b border-[var(--color-line)] pb-0.5 focus:outline-none"
+                    className="w-full text-[0.82rem] font-medium text-ink bg-transparent border-b border-line pb-0.5 focus:outline-none"
                     placeholder={t('Spørgsmål…')} />
                   <textarea value={item.a} rows={2}
                     onChange={(e) => setFaq((f) => f.map((x) => x.id === item.id ? { ...x, a: e.target.value } : x))}
@@ -895,7 +895,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                 <div className="mb-7">
                   <StaleContentNotice syncing={working === 'sync'} onSync={() => void syncContent()} />
                   {genError && working === null && (
-                    <p className="mt-2 text-[0.75rem] text-[var(--color-terracotta)]">{t(genError)}</p>
+                    <p className="mt-2 text-[0.75rem] text-terracotta">{t(genError)}</p>
                   )}
                 </div>
               )}
@@ -1080,7 +1080,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
               {/* Statistik */}
               <section className="rule rounded-2xl bg-card p-6">
                 <p className="font-serif text-[1.15rem] text-ink mb-4">{t('Statistik')}</p>
-                <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl rule bg-[var(--color-line)]">
+                <div className="grid grid-cols-3 gap-px overflow-hidden rounded-xl rule bg-line">
                   {/* Only real numbers. There is no analytics anywhere in the
                       app, so page views cannot be shown honestly. */}
                   {[
@@ -1260,7 +1260,7 @@ function ScaledPreview({ domain, couple, config, design, photoUrls, html, htmlFo
       {/* Browser chrome */}
       <div className="flex items-center gap-2 rule-b bg-shell px-4 py-2.5">
         <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => <span key={i} className="h-2 w-2 rounded-full bg-[var(--color-line-strong)]" />)}
+          {[0, 1, 2].map((i) => <span key={i} className="h-2 w-2 rounded-full bg-line-strong" />)}
         </div>
         <div className="mx-auto flex min-w-0 items-center gap-1.5 rounded-full bg-canvas px-3 py-1 text-[0.68rem] text-muted">
           <Lock size={9} className="shrink-0" /> <span className="truncate">{domain}.kalas.dk</span>

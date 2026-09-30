@@ -346,7 +346,7 @@ export function DayProgram({
             </div>
 
             {share.failed ? (
-              <p className="mt-3 text-[0.8rem] text-[var(--color-terracotta)]">{t('Linket kunne ikke laves. Prøv igen.')}</p>
+              <p className="mt-3 text-[0.8rem] text-terracotta">{t('Linket kunne ikke laves. Prøv igen.')}</p>
             ) : (
               <div className="mt-3 flex items-center gap-2">
                 <div className="flex min-w-0 flex-1 items-center gap-2 rounded-xl bg-shell px-3 py-2">
@@ -371,7 +371,7 @@ export function DayProgram({
                 <RefreshCw size={11} /> {t('Lav et nyt link (det gamle holder op med at virke)')}
               </button>
               <button type="button" disabled={share.busy} onClick={() => void runShare('stop')}
-                className="text-[var(--color-terracotta)] hover:opacity-80 disabled:opacity-40 cursor-pointer">
+                className="text-terracotta hover:opacity-80 disabled:opacity-40 cursor-pointer">
                 {t('Stop deling')}
               </button>
             </div>

@@ -116,7 +116,7 @@ export function toOnboardingPayload(form: FormState) {
 /* ── Display helpers ─────────────────────────────────────────────────── */
 type SetText = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 
-const inputCls = 'w-full rounded-2xl border border-[var(--color-line-strong)] bg-canvas px-4 py-3.5 text-[1rem] text-ink placeholder:text-muted focus:border-ink focus:outline-none transition-colors';
+const inputCls = 'w-full rounded-2xl border border-line-strong bg-canvas px-4 py-3.5 text-[1rem] text-ink placeholder:text-muted focus:border-ink focus:outline-none transition-colors';
 
 /* ══════════════════════════════════════════════════════════════════════
    MAIN EXPORT, centered, traditional step flow (no chat pane)
@@ -467,7 +467,7 @@ function Chip({ selected, onClick, children }: { selected: boolean; onClick: () 
       className={cn('rounded-full border px-4 py-2 text-[0.85rem] transition-colors cursor-pointer',
         selected
           ? 'border-ink bg-sage-tint text-ink font-medium'
-          : 'border-[var(--color-line-strong)] text-ink-soft hover:bg-shell')}>
+          : 'border-line-strong text-ink-soft hover:bg-shell')}>
       {children}
     </button>
   );
@@ -983,7 +983,7 @@ function ScopeStep({ form, setField }: {
                 aria-label={t('Samlet budget')}
               />
             </div>
-            <div className="flex max-w-sm items-center gap-2 rounded-xl border border-[var(--color-line-strong)] bg-shell px-4 py-2.5">
+            <div className="flex max-w-sm items-center gap-2 rounded-xl border border-line-strong bg-shell px-4 py-2.5">
               <input
                 type="number"
                 value={form.budgetAmount}
@@ -1002,7 +1002,7 @@ function ScopeStep({ form, setField }: {
               type="checkbox"
               checked={form.budgetPrivate}
               onChange={(e) => setField('budgetPrivate', e.target.checked)}
-              className="h-4 w-4 rounded border-[var(--color-line-strong)] text-ink focus:ring-sage-strong"
+              className="h-4 w-4 rounded border-line-strong text-ink focus:ring-sage-strong"
             />
             {t('Vil helst ikke sige')}
           </label>

@@ -48,7 +48,7 @@ export default function CategoryFilterBar({
             className={cn(
               'flex h-8 shrink-0 items-center gap-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer',
               active
-                ? 'bg-[var(--color-sage-tint)] text-ink border-[0.5px] border-[var(--color-sage-strong)] pl-3 pr-2.5'
+                ? 'bg-sage-tint text-ink border-[0.5px] border-sage-strong pl-3 pr-2.5'
                 : 'border border-line-soft bg-paper text-muted hover:text-ink hover:bg-shell px-3',
               locked && !active && 'opacity-70',
             )}

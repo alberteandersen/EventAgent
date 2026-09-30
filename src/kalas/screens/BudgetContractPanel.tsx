@@ -138,7 +138,7 @@ export default function BudgetContractPanel({
             <span className="truncate">{contract.filename}</span>
           </a>
           <button onClick={removeContract} aria-label={t('Fjern kontrakt')}
-            className="shrink-0 text-muted hover:text-[var(--color-terracotta)] transition-colors cursor-pointer">
+            className="shrink-0 text-muted hover:text-terracotta transition-colors cursor-pointer">
             <Trash2 size={14} />
           </button>
         </div>
@@ -152,7 +152,7 @@ export default function BudgetContractPanel({
           <Loader2 size={14} className="animate-spin" /> {t('Ava gennemgår kontrakten…')}
         </p>
       )}
-      {error && <p className="mt-3 text-[0.8rem] text-[var(--color-terracotta)]">{error}</p>}
+      {error && <p className="mt-3 text-[0.8rem] text-terracotta">{error}</p>}
 
       {/* Ava's review */}
       {review && (

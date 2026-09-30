@@ -85,12 +85,12 @@ export function OutreachReview({
       </p>
 
       {/* Recipients */}
-      <div className="mt-6 rounded-2xl border border-[var(--color-line)] bg-card p-5">
+      <div className="mt-6 rounded-2xl border border-line bg-card p-5">
         <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Modtagere')}</p>
         {recipients.length === 0 ? (
           <p className="mt-3 text-[0.88rem] text-ink-soft">{t('Alle på listen er allerede kontaktet.')}</p>
         ) : (
-          <div className="mt-3 flex flex-col divide-y divide-[var(--color-line)]">
+          <div className="mt-3 flex flex-col divide-y divide-line">
             {recipients.map((v) => (
               <div key={v.id} className="flex items-center gap-3 py-2.5">
                 <img src={imgSrc(v.image)} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
@@ -106,7 +106,7 @@ export function OutreachReview({
       </div>
 
       {/* Draft preview */}
-      <div className="mt-4 rounded-2xl border border-[var(--color-line)] bg-card p-5">
+      <div className="mt-4 rounded-2xl border border-line bg-card p-5">
         <div className="flex items-center justify-between">
           <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Avas udkast')}</p>
           <button onClick={onAva} className="text-[0.72rem] font-semibold text-sage hover:underline cursor-pointer">{t('Rediger med Ava')}</button>
@@ -129,7 +129,7 @@ export function OutreachReview({
       </div>
 
       {approveMsg && (
-        <p className="mt-4 rounded-xl bg-[var(--color-terracotta-tint)] px-4 py-3 text-[0.85rem] text-[var(--color-terracotta)]">{approveMsg}</p>
+        <p className="mt-4 rounded-xl bg-terracotta-tint px-4 py-3 text-[0.85rem] text-terracotta">{approveMsg}</p>
       )}
 
       {/* Actions */}

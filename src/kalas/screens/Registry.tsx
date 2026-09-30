@@ -174,7 +174,7 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
                     <button onClick={() => setDraft({ ...draft, favourite: !draft.favourite })}
                       aria-pressed={Boolean(draft.favourite)}
                       className={cn('flex items-center gap-1.5 rounded-full px-3 py-2 text-[0.78rem] transition-colors cursor-pointer',
-                        draft.favourite ? 'bg-[var(--color-terracotta-tint)] text-[var(--color-terracotta)]' : 'rule text-muted hover:text-ink')}>
+                        draft.favourite ? 'bg-terracotta-tint text-terracotta' : 'rule text-muted hover:text-ink')}>
                       <Heart size={13} className={draft.favourite ? 'fill-current' : ''} /> {t('Ønskes mest')}
                     </button>
                     <Button size="sm" icon={Check} onClick={save} disabled={!draft.title?.trim()}>
@@ -244,7 +244,7 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
                     <>
                       <TileButton label={t('Rediger')} onClick={() => setDraft({ ...it })}><Pencil size={15} /></TileButton>
                       <TileButton label={t('Ønskes mest')} onClick={() => toggleFavourite(it)}>
-                        <Heart size={15} className={it.favourite ? 'fill-[var(--color-terracotta)] text-[var(--color-terracotta)]' : ''} />
+                        <Heart size={15} className={it.favourite ? 'fill-terracotta text-terracotta' : ''} />
                       </TileButton>
                       {it.product_url && (
                         <TileButton label={t('Åbn produkt')} href={it.product_url}><ExternalLink size={15} /></TileButton>
@@ -263,7 +263,7 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
                     <p className="text-[0.78rem] text-ink">{t('Slet “{title}”?', { title: it.title })}</p>
                     <div className="mt-1.5 flex gap-2">
                       <button onClick={() => { setConfirmDelete(null); void deleteRegistryItem(it.id); }}
-                        className="rounded-full bg-[var(--color-terracotta)] px-3 py-1 text-[0.72rem] font-medium text-white cursor-pointer">
+                        className="rounded-full bg-terracotta px-3 py-1 text-[0.72rem] font-medium text-white cursor-pointer">
                         {t('Ja, slet')}
                       </button>
                       <button onClick={() => setConfirmDelete(null)}
@@ -307,7 +307,7 @@ function TileButton({ label, onClick, href, tone, children }: {
 }) {
   const className = cn(
     'flex h-8 w-8 items-center justify-center rounded-full bg-card transition-colors cursor-pointer',
-    tone === 'danger' ? 'text-[var(--color-terracotta)] hover:bg-terracotta-wash' : 'text-ink hover:bg-shell',
+    tone === 'danger' ? 'text-terracotta hover:bg-terracotta-wash' : 'text-ink hover:bg-shell',
   );
   if (href) {
     return (

@@ -79,11 +79,11 @@ const COPY = {
 } as const;
 
 const fieldCls =
-  "w-full rounded-xl border border-[var(--color-line)] bg-[var(--color-shell)] px-3.5 py-2.5 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]/60 focus:border-[var(--color-sage-strong)] focus:outline-none";
+  "w-full rounded-xl border border-line bg-shell px-3.5 py-2.5 text-sm text-ink placeholder:text-muted/60 focus:border-sage-strong focus:outline-none";
 
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-[var(--color-muted)]">
+    <span className="mb-1.5 block text-[0.68rem] font-semibold uppercase tracking-[0.12em] text-muted">
       {children}
     </span>
   );
@@ -160,9 +160,9 @@ export function WeddingDetailsSetting({ initial, lang }: { initial: WeddingDetai
   };
 
   return (
-    <section className="rounded-2xl border border-[var(--color-line)] bg-[var(--color-card)] p-6">
-      <h2 className="font-serif text-lg font-semibold text-[var(--color-ink)]">{copy.title}</h2>
-      <p className="mt-1 text-sm text-[var(--color-muted)]">{copy.sub}</p>
+    <section className="rounded-2xl border border-line bg-card p-6">
+      <h2 className="font-serif text-lg font-semibold text-ink">{copy.title}</h2>
+      <p className="mt-1 text-sm text-muted">{copy.sub}</p>
 
       <div className="mt-5 space-y-5" onChange={edited}>
         <div>
@@ -184,8 +184,8 @@ export function WeddingDetailsSetting({ initial, lang }: { initial: WeddingDetai
                 onClick={() => { setMode(m); edited(); if (m === "exact" && !date) setCalendarOpen(true); }}
                 className={`rounded-full border px-3 py-1.5 text-[0.78rem] font-medium transition-colors ${
                   mode === m
-                    ? "border-[var(--color-ink)] bg-[var(--color-ink)] text-[var(--color-card)]"
-                    : "border-[var(--color-line)] text-[var(--color-muted)] hover:border-[var(--color-ink)] hover:text-[var(--color-ink)]"
+                    ? "border-ink bg-ink text-card"
+                    : "border-line text-muted hover:border-ink hover:text-ink"
                 }`}
               >
                 {copy[m]}
@@ -198,7 +198,7 @@ export function WeddingDetailsSetting({ initial, lang }: { initial: WeddingDetai
                 type="button"
                 onClick={() => setCalendarOpen((o) => !o)}
                 aria-expanded={calendarOpen}
-                className={`${fieldCls} text-left sm:max-w-xs ${date ? "" : "text-[var(--color-muted)]"}`}
+                className={`${fieldCls} text-left sm:max-w-xs ${date ? "" : "text-muted"}`}
               >
                 {dateLabel}
               </button>
@@ -239,7 +239,7 @@ export function WeddingDetailsSetting({ initial, lang }: { initial: WeddingDetai
             <Label>{copy.budget}</Label>
             <div className="relative">
               <input inputMode="numeric" value={budget} onChange={(e) => setBudget(e.target.value)} className={`${fieldCls} pr-10`} />
-              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-[var(--color-muted)]">{copy.kr}</span>
+              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-muted">{copy.kr}</span>
             </div>
           </label>
         </div>
@@ -247,10 +247,10 @@ export function WeddingDetailsSetting({ initial, lang }: { initial: WeddingDetai
 
       <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
         {state === "error" && error && (
-          <p className="mr-auto text-sm text-[var(--color-terracotta)]">{error}</p>
+          <p className="mr-auto text-sm text-terracotta">{error}</p>
         )}
         {state === "saved" && (
-          <span className="inline-flex items-center gap-1.5 text-sm text-[var(--color-success)]">
+          <span className="inline-flex items-center gap-1.5 text-sm text-success">
             <Check size={14} /> {copy.saved}
           </span>
         )}
@@ -258,7 +258,7 @@ export function WeddingDetailsSetting({ initial, lang }: { initial: WeddingDetai
           type="button"
           onClick={save}
           disabled={state === "saving"}
-          className="inline-flex items-center gap-2 rounded-full bg-[var(--color-ink)] px-5 py-2 text-sm font-medium text-[var(--color-card)] transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-full bg-ink px-5 py-2 text-sm font-medium text-card transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {state === "saving" && <Loader2 size={14} className="animate-spin" />}
           {state === "saving" ? copy.saving : copy.save}

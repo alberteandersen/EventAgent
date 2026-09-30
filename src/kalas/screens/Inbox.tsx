@@ -110,7 +110,7 @@ export default function Inbox({ onNavigate }: { onNavigate?: (s: NavigateTarget)
                 ))}
               </div>
             )}
-            <div className="min-h-0 flex-1 divide-y divide-[var(--color-line)] overflow-y-auto overscroll-contain">
+            <div className="min-h-0 flex-1 divide-y divide-line overflow-y-auto overscroll-contain">
               {visible.map((v) => {
                 const thread = buildThread(v.id, outbound, replies, attachments);
                 const last = thread[thread.length - 1];
@@ -137,7 +137,7 @@ export default function Inbox({ onNavigate }: { onNavigate?: (s: NavigateTarget)
                             ? `${last.direction === 'out' ? `${t('Ava')}: ` : ''}${last.body.slice(0, 80)}`
                             : t('Ingen beskeder')}
                         </p>
-                        {unread > 0 && <span aria-label={t('Ulæst')} className="h-2 w-2 shrink-0 rounded-full bg-[var(--color-terracotta)]" />}
+                        {unread > 0 && <span aria-label={t('Ulæst')} className="h-2 w-2 shrink-0 rounded-full bg-terracotta" />}
                       </div>
                     </div>
                   </button>
@@ -477,7 +477,7 @@ function QuoteCard({ venue, outbound, replies, onChanged }: {
       {open && (
         <div className="rule-t px-5 py-4 text-[0.88rem]">
           {outbound?.status === 'failed' && (
-            <p className="text-[var(--color-terracotta)]">
+            <p className="text-terracotta">
               {t('Fejl ved afsendelse: {error}', { error: outbound.error ?? '' })}
             </p>
           )}
@@ -597,7 +597,7 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
   return (
     <button onClick={onClick}
       className={cn('rounded-full border px-3.5 py-1.5 text-[0.78rem] transition-colors cursor-pointer',
-        active ? 'border-ink bg-sage-tint text-ink font-medium' : 'border-[var(--color-line-strong)] text-ink-soft hover:bg-shell')}>
+        active ? 'border-ink bg-sage-tint text-ink font-medium' : 'border-line-strong text-ink-soft hover:bg-shell')}>
       {label}
     </button>
   );

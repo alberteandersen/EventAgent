@@ -20,7 +20,7 @@ import { phaseOf, phaseLabel } from './checklist-data';
 import type { TaskAssignee, TaskPriority, TimelineTaskRow } from '@/lib/db/types';
 
 const fieldCls =
-  'w-full rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 focus:outline-none focus:border-[var(--color-sage-strong)]';
+  'w-full rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 focus:outline-none focus:border-sage-strong';
 
 function Section({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: React.ReactNode }) {
   return (

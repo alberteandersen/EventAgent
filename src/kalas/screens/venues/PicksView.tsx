@@ -156,7 +156,7 @@ export function PicksView({
           <button
             type="button"
             onClick={onDiscover}
-            className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-[var(--color-line-strong)] p-6 text-center transition-colors hover:border-ink/40 hover:bg-card cursor-pointer"
+            className="flex min-h-[280px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed border-line-strong p-6 text-center transition-colors hover:border-ink/40 hover:bg-card cursor-pointer"
           >
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ink">
               <GlobeIcon size={18} className="text-white" />

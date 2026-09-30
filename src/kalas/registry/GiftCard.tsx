@@ -107,7 +107,7 @@ export default function GiftCard({
             className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/90 backdrop-blur-sm"
             title={t('Ønskes mest')}
           >
-            <Heart size={13} className="fill-[var(--color-terracotta)] text-[var(--color-terracotta)]" aria-hidden />
+            <Heart size={13} className="fill-terracotta text-terracotta" aria-hidden />
             <span className="sr-only">{t('Ønskes mest')}</span>
           </span>
         )}

@@ -146,7 +146,7 @@ export default function WebsiteSteps({
   return (
     <div className="space-y-7">
       {genError && (
-        <p className="rule rounded-xl bg-terracotta-tint px-4 py-3 text-[0.82rem] text-[var(--color-terracotta)]">{t(genError)}</p>
+        <p className="rule rounded-xl bg-terracotta-tint px-4 py-3 text-[0.82rem] text-terracotta">{t(genError)}</p>
       )}
 
       {/* Paywall notice, templates stay usable; Ava's edits unlock on purchase. */}
@@ -330,7 +330,7 @@ export default function WebsiteSteps({
                     <Palette size={12} /> {t('Nyt design fra bunden')}
                   </button>
                   <button type="button" onClick={onRestart}
-                    className="flex items-center gap-1.5 text-[0.75rem] text-muted hover:text-[var(--color-terracotta)] transition-colors cursor-pointer">
+                    className="flex items-center gap-1.5 text-[0.75rem] text-muted hover:text-terracotta transition-colors cursor-pointer">
                     <RotateCcw size={12} /> {t('Start forfra')}
                   </button>
                 </div>
@@ -376,7 +376,7 @@ function StepRow({ current, reached, open, onStep }: {
                 {t(s.label)}
               </span>
             </button>
-            {i < STEPS.length - 1 && <span aria-hidden className="h-px min-w-3 flex-1 bg-[var(--color-line)]" />}
+            {i < STEPS.length - 1 && <span aria-hidden className="h-px min-w-3 flex-1 bg-line" />}
           </li>
         );
       })}
@@ -602,7 +602,7 @@ export function PhotoManager({ photos, photoUrls, onUpload, onDelete, onSetHero 
           className={cn(
             'flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed text-muted transition-colors hover:border-ink/40 hover:text-ink disabled:opacity-40 cursor-pointer',
             empty ? 'col-span-3 h-40' : 'aspect-square',
-            dragging ? 'border-ink text-ink' : 'border-[var(--color-line-strong)]'
+            dragging ? 'border-ink text-ink' : 'border-line-strong'
           )}
         >
           {busy ? <Loader2 size={empty ? 20 : 16} className="animate-spin" /> : <Upload size={empty ? 20 : 16} />}

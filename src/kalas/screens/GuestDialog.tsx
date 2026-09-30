@@ -43,7 +43,7 @@ function SectionTitle({ icon: Icon, children }: { icon: LucideIcon; children: Re
 }
 
 const fieldCls =
-  'w-full rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 focus:outline-none focus:border-[var(--color-sage-strong)]';
+  'w-full rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 focus:outline-none focus:border-sage-strong';
 
 const RSVP_CHOICES: { value: RsvpStatus; label: string }[] = [
   { value: 'ja', label: 'Accepteret' },

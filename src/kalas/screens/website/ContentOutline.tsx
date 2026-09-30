@@ -38,7 +38,7 @@ export function ContentStepRow({ steps, summaries, current, onStep }: {
               )}>
                 {done && !active ? <Check size={12} /> : i + 1}
                 {sum.todo > 0 && (
-                  <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[var(--color-terracotta)] ring-2 ring-canvas" />
+                  <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-terracotta ring-2 ring-canvas" />
                 )}
               </span>
               {/* On a phone only the open step keeps its name. */}
@@ -49,7 +49,7 @@ export function ContentStepRow({ steps, summaries, current, onStep }: {
                 {t(s.label)}
               </span>
             </button>
-            {i < steps.length - 1 && <span aria-hidden className="h-px min-w-2 flex-1 bg-[var(--color-line)]" />}
+            {i < steps.length - 1 && <span aria-hidden className="h-px min-w-2 flex-1 bg-line" />}
           </li>
         );
       })}
@@ -73,8 +73,8 @@ export function SectionStatusLine({ status, desc }: { status: SectionStatus; des
     ? tn(status.n, status.one, status.note ?? '', { n: status.n })
     : t(status.note ?? '');
   return (
-    <p className="mt-0.5 flex items-center gap-1.5 text-[0.7rem] text-[var(--color-terracotta)]">
-      <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--color-terracotta)]" /> {note}
+    <p className="mt-0.5 flex items-center gap-1.5 text-[0.7rem] text-terracotta">
+      <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-terracotta" /> {note}
     </p>
   );
 }

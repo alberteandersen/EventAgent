@@ -141,7 +141,7 @@ export function ComparisonView({
                       <div
                         key={`${v.id}-${field.label}`}
                         className={cn(
-                          'rounded-[14px] border border-[var(--color-line)] bg-white px-4 py-3.5',
+                          'rounded-[14px] border border-line bg-white px-4 py-3.5',
                           field.wide && 'sm:col-span-2',
                         )}
                       >
@@ -159,7 +159,7 @@ export function ComparisonView({
                   </div>
 
                   {v.why.length > 0 && !v.research?.highlights?.length && (
-                    <ul className="space-y-2 border-t border-[var(--color-line)] pt-4">
+                    <ul className="space-y-2 border-t border-line pt-4">
                       {v.why.slice(0, 3).map((r) => (
                         <li key={r} className="flex items-start gap-2 text-[0.8rem] leading-snug text-ink-soft">
                           <Check size={11} className="mt-0.5 shrink-0 text-sage" />

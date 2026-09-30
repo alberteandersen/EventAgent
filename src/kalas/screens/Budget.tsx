@@ -462,7 +462,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
 
       <div>
       {/* Totals strip */}
-      <div className="grid gap-px overflow-hidden rounded-3xl rule bg-[var(--color-line)] sm:grid-cols-3">
+      <div className="grid gap-px overflow-hidden rounded-3xl rule bg-line sm:grid-cols-3">
         <Stat
           label="Samlet budget"
           value={total}
@@ -505,7 +505,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
       </div>
 
       {/* Editable lines */}
-      <div className="mt-10 divide-y divide-[var(--color-line)]">
+      <div className="mt-10 divide-y divide-line">
         {lines.map((b) => {
           const est = amounts[b.id] ?? 0;
           const actual = actuals[b.id] ?? 0;
@@ -562,7 +562,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                   <AnimateNumber value={est} suffix=" kr" />
                 </div>
                 <button onClick={() => removeLine(b.id)} aria-label={t('Fjern {label}', { label: t(b.label) })}
-                  className="text-muted hover:text-[var(--color-terracotta)] transition-colors cursor-pointer">
+                  className="text-muted hover:text-terracotta transition-colors cursor-pointer">
                   <X size={14} />
                 </button>
               </div>
@@ -607,7 +607,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                 {actual > 0 && (
                   <span className="inline-flex items-baseline gap-1.5">
                     <span className="text-muted">{t('Rest')}</span>
-                    <span className={cn('font-semibold tabular-nums', actual - paid > 0 ? 'text-[var(--color-terracotta)]' : 'text-success')}>
+                    <span className={cn('font-semibold tabular-nums', actual - paid > 0 ? 'text-terracotta' : 'text-success')}>
                       {kr(Math.max(0, actual - paid))}
                     </span>
                   </span>
@@ -758,7 +758,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                   if (e.key === 'Enter') addLine();
                   if (e.key === 'Escape') { setAddingNew(false); setNewLabel(''); }
                 }}
-                className="flex-1 bg-transparent font-serif text-[1.2rem] text-ink placeholder:text-muted/50 focus:outline-none border-b border-[var(--color-line-strong)] pb-1"
+                className="flex-1 bg-transparent font-serif text-[1.2rem] text-ink placeholder:text-muted/50 focus:outline-none border-b border-line-strong pb-1"
               />
               <button onClick={addLine}
                 className="h-8 rounded-full bg-ink px-3 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
@@ -798,7 +798,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           </p>
         ) : (
           <>
-            <div className="mt-8 space-y-0 divide-y divide-[var(--color-line)] rule rounded-2xl overflow-hidden">
+            <div className="mt-8 space-y-0 divide-y divide-line rule rounded-2xl overflow-hidden">
               {timeline.map((p, i) => {
                 const isNext = i === nextDueIdx;
                 const overdueDays = daysUntil(p.due);
@@ -810,7 +810,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                   <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${p.fullyPaid ? 'bg-sage-tint' : isNext ? 'bg-sage' : 'bg-shell'}`}>
                     {p.fullyPaid
                       ? <span className="h-2 w-2 rounded-full bg-sage" />
-                      : <span className={`h-2 w-2 rounded-full ${isNext ? 'bg-ink' : 'bg-[var(--color-line-strong)]'}`} />}
+                      : <span className={`h-2 w-2 rounded-full ${isNext ? 'bg-ink' : 'bg-line-strong'}`} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={`text-[0.88rem] ${p.fullyPaid ? 'text-muted line-through' : 'text-ink'}`}>
@@ -828,7 +828,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                         {kr(p.outstanding)} kr
                       </p>
                     )}
-                    <p className={`text-[0.68rem] uppercase tracking-[0.14em] mt-0.5 ${!p.fullyPaid && overdueDays != null && overdueDays < 0 ? 'text-[var(--color-terracotta)]' : 'text-muted'}`}>
+                    <p className={`text-[0.68rem] uppercase tracking-[0.14em] mt-0.5 ${!p.fullyPaid && overdueDays != null && overdueDays < 0 ? 'text-terracotta' : 'text-muted'}`}>
                       {p.due ? fmtDate(p.due) : t('ingen dato')}
                     </p>
                   </div>
@@ -967,7 +967,7 @@ function StylePicker({
                 aria-pressed={selected}
                 className={cn(
                   'h-7 w-7 rounded-full transition-transform cursor-pointer',
-                  selected ? 'ring-2 ring-ink ring-offset-2 ring-offset-[var(--color-canvas)] scale-105' : 'hover:scale-105',
+                  selected ? 'ring-2 ring-ink ring-offset-2 ring-offset-canvas scale-105' : 'hover:scale-105',
                 )}
                 style={{ background: hex }}
               />

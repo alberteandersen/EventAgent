@@ -25,14 +25,14 @@ function Stat({ icon: Icon, label, value, detail, tone, onClick }: {
   const alert = tone === 'alert' && value > 0;
   const cls = cn(
     'flex flex-col items-start justify-start rounded-2xl rule px-5 py-4 text-left',
-    alert ? 'bg-[var(--color-terracotta-tint)]' : 'bg-card',
+    alert ? 'bg-terracotta-tint' : 'bg-card',
   );
   const body = (
     <>
-      <p className={cn('flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em]', alert ? 'text-[var(--color-terracotta)]' : 'text-muted')}>
+      <p className={cn('flex items-center gap-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.16em]', alert ? 'text-terracotta' : 'text-muted')}>
         <Icon size={12} aria-hidden /> {label}
       </p>
-      <p className={cn('mt-2 font-serif text-[2.2rem] leading-none tabular-nums', alert ? 'text-[var(--color-terracotta)]' : 'text-ink')}>{value}</p>
+      <p className={cn('mt-2 font-serif text-[2.2rem] leading-none tabular-nums', alert ? 'text-terracotta' : 'text-ink')}>{value}</p>
       <p className="mt-1.5 min-h-[1.1rem] text-[0.74rem] text-muted">{detail ?? ''}</p>
     </>
   );
@@ -49,7 +49,7 @@ function Stat({ icon: Icon, label, value, detail, tone, onClick }: {
 function Card({ title, icon: Icon, children, tone }: { title: string; icon?: LucideIcon; children: React.ReactNode; tone?: 'alert' }) {
   return (
     <section>
-      <p className={cn('eyebrow flex items-center gap-1.5', tone === 'alert' && 'text-[var(--color-terracotta)]')}>
+      <p className={cn('eyebrow flex items-center gap-1.5', tone === 'alert' && 'text-terracotta')}>
         {Icon && <Icon size={12} aria-hidden />} {title}
       </p>
       <div className="mt-3 overflow-hidden rounded-2xl rule bg-card">{children}</div>
@@ -172,7 +172,7 @@ export default function CateringOverview({ guests, plan, title, subtitle, onShow
             {r.allergies.length === 0 && r.other.length === 0 ? (
               <Empty>{t('Ingen allergier på listen.')}</Empty>
             ) : (
-              <ul className="divide-y divide-[var(--color-line)]">
+              <ul className="divide-y divide-line">
                 {r.allergies.map((d) => <CountRow key={d.id} label={t(d.label)} names={d.guests} />)}
                 {r.other.map((o) => (
                   <li key={o.guest.id} className="flex gap-3 px-5 py-3 text-[0.82rem]">
@@ -188,7 +188,7 @@ export default function CateringOverview({ guests, plan, title, subtitle, onShow
             {r.diets.length === 0 ? (
               <Empty>{t('Ingen har valgt en særlig kost.')}</Empty>
             ) : (
-              <ul className="divide-y divide-[var(--color-line)]">
+              <ul className="divide-y divide-line">
                 {r.diets.map((d) => <CountRow key={d.id} label={t(d.label)} names={d.guests} />)}
               </ul>
             )}
@@ -196,7 +196,7 @@ export default function CateringOverview({ guests, plan, title, subtitle, onShow
 
           {r.meals.length > 0 && (
             <Card title={t('Menuvalg')} icon={ChefHat}>
-              <ul className="divide-y divide-[var(--color-line)]">
+              <ul className="divide-y divide-line">
                 {r.meals.map((m) => <CountRow key={m.label} label={m.label} names={m.guests} />)}
               </ul>
             </Card>
@@ -208,7 +208,7 @@ export default function CateringOverview({ guests, plan, title, subtitle, onShow
             {r.tables.length === 0 ? (
               <Empty>{t('Når gæsterne har en plads på bordplanen, står det her, hvad hvert bord skal have.')}</Empty>
             ) : (
-              <ul className="divide-y divide-[var(--color-line)]">
+              <ul className="divide-y divide-line">
                 {r.tables.map((tb) => (
                   <li key={tb.id} className="px-5 py-3.5">
                     <p className="flex items-baseline justify-between gap-3">
@@ -219,12 +219,12 @@ export default function CateringOverview({ guests, plan, title, subtitle, onShow
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {[...tb.allergies.map((d) => ({ ...d, alert: true })), ...tb.diets.map((d) => ({ ...d, alert: false }))].map((d) => (
                           <span key={d.label} className={cn('rounded-full px-2.5 py-0.5 text-[0.72rem]',
-                            d.alert ? 'bg-[var(--color-terracotta-tint)] text-[var(--color-terracotta)]' : 'bg-[var(--color-sage-tint)] text-sage-strong')}>
+                            d.alert ? 'bg-terracotta-tint text-terracotta' : 'bg-sage-tint text-sage-strong')}>
                             {d.count} {t(d.label).toLowerCase()}
                           </span>
                         ))}
                         {tb.other.map((o) => (
-                          <span key={o} className="rounded-full bg-[var(--color-terracotta-tint)] px-2.5 py-0.5 text-[0.72rem] text-[var(--color-terracotta)]">{o}</span>
+                          <span key={o} className="rounded-full bg-terracotta-tint px-2.5 py-0.5 text-[0.72rem] text-terracotta">{o}</span>
                         ))}
                       </div>
                     ) : (
@@ -238,7 +238,7 @@ export default function CateringOverview({ guests, plan, title, subtitle, onShow
 
           {r.children.length > 0 && (
             <Card title={t('Børn')} icon={Baby}>
-              <ul className="divide-y divide-[var(--color-line)]">
+              <ul className="divide-y divide-line">
                 {r.children.map((c) => (
                   <li key={c.id} className="flex items-center justify-between gap-3 px-5 py-3 text-[0.85rem]">
                     <span className="text-ink">{c.name}</span>
@@ -251,7 +251,7 @@ export default function CateringOverview({ guests, plan, title, subtitle, onShow
 
           {(r.overnight.length > 0 || r.noAlcohol.length > 0) && (
             <Card title={t('Drikkevarer og overnatning')}>
-              <ul className="divide-y divide-[var(--color-line)]">
+              <ul className="divide-y divide-line">
                 {r.noAlcohol.length > 0 && <CountRow label={t('Alkoholfri')} names={r.noAlcohol} />}
                 {r.overnight.length > 0 && <CountRow label={t('Overnatter')} names={r.overnight} />}
               </ul>

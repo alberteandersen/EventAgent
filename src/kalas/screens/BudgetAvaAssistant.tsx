@@ -107,7 +107,7 @@ export default function BudgetAvaAssistant({
 
           {state === 'error' && (
             <div className="flex flex-col items-center gap-3 rounded-2xl bg-shell px-6 py-10 text-center">
-              <AlertTriangle size={20} className="text-[var(--color-terracotta)]" />
+              <AlertTriangle size={20} className="text-terracotta" />
               <p className="text-[0.88rem] text-ink-soft">
                 {errorMsg || t('Ava kunne ikke regne på budgettet lige nu.')}
               </p>

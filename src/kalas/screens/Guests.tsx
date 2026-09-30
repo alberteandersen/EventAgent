@@ -195,8 +195,8 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
                   <button key={id} type="button" onClick={() => toggleNeed(id)} aria-pressed={on}
                     className={cn(
                       'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[0.76rem] transition-colors cursor-pointer',
-                      on ? 'border-[var(--color-sage-strong)] bg-[var(--color-sage-tint)] text-sage-strong'
-                        : 'border-[var(--color-line)] bg-card text-muted hover:border-ink hover:text-ink',
+                      on ? 'border-sage-strong bg-sage-tint text-sage-strong'
+                        : 'border-line bg-card text-muted hover:border-ink hover:text-ink',
                     )}>
                     <Icon size={13} aria-hidden /> {t(label)}
                   </button>
@@ -227,7 +227,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
               <span className="text-[0.62rem] font-semibold tracking-[0.2em] uppercase text-muted">{t('Måltid')}</span>
               <span className="text-[0.62rem] font-semibold tracking-[0.2em] uppercase text-muted">-</span>
             </div>
-            <div className="divide-y divide-[var(--color-line)]">
+            <div className="divide-y divide-line">
               {orderByHousehold(list).map(({ guest: g, member }, i) => <GuestRow key={g.id} g={g} i={i} member={member} link={guestLink(g.rsvp_token)} onRemove={() => removeGuest(g)} onSetRsvp={(v) => setRsvp(g, v)} onEdit={() => setDialog(g)} />)}
             </div>
             {list.length === 0 && (
@@ -325,7 +325,7 @@ function GuestRow({ g, i, member, link, onRemove, onSetRsvp, onEdit }: { g: Gues
       transition={{ delay: Math.min(i * 0.03, 0.25) }}
       // A household member sits indented under its head, so one envelope
       // reads as one block on the list.
-      className={cn('py-4', member && 'ml-6 border-l-2 border-l-[var(--color-sage-tint)] pl-4')}
+      className={cn('py-4', member && 'ml-6 border-l-2 border-l-sage-tint pl-4')}
     >
       <div className="grid items-center gap-4" style={{ gridTemplateColumns: '1fr 90px 90px 66px' }}>
         <div className="min-w-0">
@@ -333,7 +333,7 @@ function GuestRow({ g, i, member, link, onRemove, onSetRsvp, onEdit }: { g: Gues
             <span className="truncate">{g.name}</span>
             {g.responded_at && <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-success" title={t('Har svaret')} />}
             {ageGroupOf(g) !== 'adult' && (
-              <span className="shrink-0 rounded-full bg-[var(--color-sage-tint)] px-2 py-0.5 font-sans text-[0.6rem] font-semibold uppercase tracking-[0.1em] text-sage-strong">
+              <span className="shrink-0 rounded-full bg-sage-tint px-2 py-0.5 font-sans text-[0.6rem] font-semibold uppercase tracking-[0.1em] text-sage-strong">
                 {t(AGE_GROUPS.find((a) => a.id === ageGroupOf(g))!.label)}
               </span>
             )}
@@ -369,7 +369,7 @@ function GuestRow({ g, i, member, link, onRemove, onSetRsvp, onEdit }: { g: Gues
             </button>
           )}
           <button onClick={onRemove} aria-label={t('Fjern {name}', { name: g.name })}
-            className="text-muted/50 hover:text-[var(--color-terracotta)] transition-colors cursor-pointer">
+            className="text-muted/50 hover:text-terracotta transition-colors cursor-pointer">
             <Trash2 size={14} />
           </button>
         </div>

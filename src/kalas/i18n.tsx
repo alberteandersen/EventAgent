@@ -97,7 +97,7 @@ export function useLang(): LangCtx {
 /* ── Presentational language switch (one pill per registered language) ─── */
 export function LangSwitch({ lang, onSelect, className }: { lang: Lang; onSelect: (l: Lang) => void; className?: string }) {
   return (
-    <div className={`inline-flex items-center rounded-full border border-[var(--color-line-strong)] p-0.5 ${className ?? ''}`}>
+    <div className={`inline-flex items-center rounded-full border border-line-strong p-0.5 ${className ?? ''}`}>
       {LANGUAGES.map(({ code, label }) => (
         <button key={code} type="button" onClick={() => onSelect(code)}
           className={`rounded-full px-3 py-1.5 text-[0.78rem] font-medium transition-colors cursor-pointer ${

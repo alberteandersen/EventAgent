@@ -120,7 +120,7 @@ export function AvaTextPanel({ state, onUse, hasText }: {
             {busy && (
               <p className="flex items-center gap-2 text-[0.8rem] text-muted"><Loader2 size={13} className="animate-spin" /> {t('Ava skriver…')}</p>
             )}
-            {error && !busy && <p className="text-[0.78rem] text-[var(--color-terracotta)]">{t(error)}</p>}
+            {error && !busy && <p className="text-[0.78rem] text-terracotta">{t(error)}</p>}
 
             {draft && !busy && (
               <>
@@ -190,7 +190,7 @@ export function AvaFaqPanel({ eventId, beforeCall, faq, onUse }: {
                   className="text-muted hover:text-ink transition-colors cursor-pointer"><X size={13} /></button>
               </div>
               {busy && <p className="flex items-center gap-2 text-[0.8rem] text-muted"><Loader2 size={13} className="animate-spin" /> {t('Ava skriver…')}</p>}
-              {error && !busy && <p className="text-[0.78rem] text-[var(--color-terracotta)]">{t(error)}</p>}
+              {error && !busy && <p className="text-[0.78rem] text-terracotta">{t(error)}</p>}
               {draft && !busy && (
                 <>
                   <p className="mb-2 text-[0.74rem] leading-relaxed text-muted">

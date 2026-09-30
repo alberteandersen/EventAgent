@@ -52,12 +52,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const fieldCls =
-  'w-full rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 tabular-nums focus:outline-none focus:border-[var(--color-sage-strong)]';
+  'w-full rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 tabular-nums focus:outline-none focus:border-sage-strong';
 // Same look, no baked-in `w-full` — for a field that shares a flex row with
 // others, since `w-full` fights `flex-1`/a fixed width utility for which one
 // wins, and which one wins isn't reliable.
 const rowFieldCls =
-  'min-w-0 rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 tabular-nums focus:outline-none focus:border-[var(--color-sage-strong)]';
+  'min-w-0 rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink placeholder:text-muted/60 tabular-nums focus:outline-none focus:border-sage-strong';
 
 export default function BudgetLineDetail({
   eventId,
@@ -243,7 +243,7 @@ export default function BudgetLineDetail({
                       aria-pressed={selected}
                       className={cn(
                         'h-7 w-7 rounded-full transition-transform cursor-pointer',
-                        selected ? 'ring-2 ring-ink ring-offset-2 ring-offset-[var(--color-card)] scale-105' : 'hover:scale-105',
+                        selected ? 'ring-2 ring-ink ring-offset-2 ring-offset-card scale-105' : 'hover:scale-105',
                       )}
                       style={{ background: hex }}
                     />
@@ -289,7 +289,7 @@ export default function BudgetLineDetail({
               {dActual > 0 && (
                 <span>
                   {t('Rest')}{' '}
-                  <b className={cn('tabular-nums', rest > 0 ? 'text-[var(--color-terracotta)]' : 'text-success')}>
+                  <b className={cn('tabular-nums', rest > 0 ? 'text-terracotta' : 'text-success')}>
                     {kr(rest)} kr
                   </b>
                 </span>
@@ -371,7 +371,7 @@ export default function BudgetLineDetail({
                     type="button"
                     onClick={() => onDeleteSubItem(s.id)}
                     aria-label={t('Slet {label}', { label: s.label })}
-                    className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-shell hover:text-[var(--color-terracotta)] cursor-pointer"
+                    className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-shell hover:text-terracotta cursor-pointer"
                   >
                     <X size={14} />
                   </button>
@@ -429,7 +429,7 @@ export default function BudgetLineDetail({
                 value={dReminder}
                 onChange={(e) => setDReminder(e.target.value)}
                 aria-label={t('Påmindelsesdato')}
-                className="kalas-date rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink [color-scheme:light] focus:outline-none focus:border-[var(--color-sage-strong)]"
+                className="kalas-date rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.9rem] text-ink [color-scheme:light] focus:outline-none focus:border-sage-strong"
               />
               {dReminder && (
                 <button
@@ -441,7 +441,7 @@ export default function BudgetLineDetail({
                 </button>
               )}
               {days != null && (
-                <span className={cn('text-[0.78rem]', days < 0 ? 'text-[var(--color-terracotta)]' : 'text-muted')}>
+                <span className={cn('text-[0.78rem]', days < 0 ? 'text-terracotta' : 'text-muted')}>
                   {days < 0
                     ? tn(Math.abs(days), 'forfaldt i går', 'forfaldt for {n} dage siden')
                     : days === 0 ? t('forfalder i dag')
@@ -460,7 +460,7 @@ export default function BudgetLineDetail({
               placeholder={t('Fx aftaler, kontaktperson, hvad prisen dækker…')}
               onChange={(e) => setDNote(e.target.value)}
               aria-label={t('Noter')}
-              className="mt-3 w-full resize-none rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.85rem] text-ink placeholder:text-muted/60 focus:outline-none focus:border-[var(--color-sage-strong)]"
+              className="mt-3 w-full resize-none rule rounded-xl bg-shell px-3.5 py-2.5 text-[0.85rem] text-ink placeholder:text-muted/60 focus:outline-none focus:border-sage-strong"
             />
           </section>
 

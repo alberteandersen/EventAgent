@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ARTICLES, CATEGORIES } from "@/content/guide";
+import { PRIVACY_POLICY_LIVE } from "@/lib/legal";
 import { CtaLink, Eyebrow, SIGNUP_HREF, Wordmark } from "./kalas";
 
 export function GuideNav() {
@@ -53,8 +54,13 @@ export function GuideFooter() {
           ]}
         />
       </div>
-      <div className="mx-auto w-full max-w-6xl border-t border-line px-4 py-6 text-xs text-muted sm:px-6">
-        © {new Date().getFullYear()} Kalas
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-6 text-xs text-muted sm:px-6">
+        <span>© {new Date().getFullYear()} Kalas</span>
+        {PRIVACY_POLICY_LIVE && (
+          <Link href="/privatliv" className="transition-colors hover:text-ink">
+            Privatlivspolitik
+          </Link>
+        )}
       </div>
     </footer>
   );

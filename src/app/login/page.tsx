@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { LanguageProvider, useLang } from "@/kalas/i18n";
 import { Button, Card, Field, Wordmark, cn, inputClass } from "@/kalas/ui";
+import { PRIVACY_POLICY_LIVE } from "@/lib/legal";
 
 type Mode = "sign-in" | "sign-up";
 
@@ -153,6 +154,14 @@ function Login() {
           <Button variant="secondary" onClick={signInWithGoogle} disabled={googleLoading} className="w-full">
             {googleLoading ? t("Sender dig videre…") : t("Fortsæt med Google")}
           </Button>
+
+          {PRIVACY_POLICY_LIVE && (
+            <p className="mt-6 text-center text-xs text-muted">
+              <Link href="/privatliv" className="underline decoration-line-strong underline-offset-4 hover:text-ink">
+                {t("Sådan behandler vi jeres oplysninger")}
+              </Link>
+            </p>
+          )}
         </Card>
       </div>
     </main>

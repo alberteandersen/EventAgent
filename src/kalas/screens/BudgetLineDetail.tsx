@@ -15,8 +15,7 @@
    its own ids, independent of this draft, same as it always has for the
    contract panel. */
 
-import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import { useState } from 'react';
 import { X, Trash2, Check, ExternalLink, Plus } from 'lucide-react';
 import BudgetContractPanel from './BudgetContractPanel';
 import {
@@ -25,7 +24,7 @@ import {
   resolveBudgetIcon,
   type BudgetIconId,
 } from '../lib/budget-style';
-import { Eyebrow, cn } from '../ui';
+import { Button, Dialog, Eyebrow, cn } from '../ui';
 import { useLang } from '../i18n';
 import { subItemSuggestions } from './budget/estimate';
 import type { BudgetSubItemRow } from '@/lib/db/types';
@@ -128,12 +127,6 @@ export default function BudgetLineDetail({
   const [newSubVendor, setNewSubVendor] = useState('');
   const [newSubAmount, setNewSubAmount] = useState('');
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const days = daysUntil(dReminder);
   const rest = Math.max(0, dActual - dPaid);
   const dirty =
@@ -157,56 +150,47 @@ export default function BudgetLineDetail({
     setNewSubAmount('');
   };
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-4 py-8 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-line bg-card shadow-[0_32px_80px_-16px_rgba(24,32,24,0.28)]"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-              style={{ background: dColor }}
-              aria-hidden
-            >
-              {/* [dIcon].map(...), not a bare resolve-then-render: the lint
-                  rule for "component created during render" only exempts a
-                  dynamically resolved component when it is built inside an
-                  array .map() callback — the same reason BUDGET_ICON_IDS.map()
-                  a few lines down and every icon lookup elsewhere in this
-                  codebase already goes through .map(). A one-item array is
-                  the idiom for a single icon that still needs the exemption. */}
-              {[dIcon].map((id) => {
-                const Icon = resolveBudgetIcon(id);
-                return <Icon key={id} size={17} className="text-white" strokeWidth={2.25} />;
-              })}
-            </span>
-            <div className="min-w-0">
-              <Eyebrow>{t('Budgetpost')}</Eyebrow>
-              <h2 className="mt-0.5 truncate font-serif text-[1.35rem] text-ink">{dLabel || label}</h2>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('Luk')}
-            className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
-          >
-            <X size={18} />
+  const footer = (
+    <>
+      {confirmingDelete ? (
+        <div className="mr-auto flex items-center gap-3 text-meta">
+          <span className="text-muted">{t('Slet {label}?', { label })}</span>
+          <button type="button" onClick={onDelete} className="cursor-pointer font-semibold text-terracotta hover:opacity-80">
+            {t('Ja, slet')}
+          </button>
+          <button type="button" onClick={() => setConfirmingDelete(false)} className="cursor-pointer text-muted hover:text-ink">
+            {t('Behold')}
           </button>
         </div>
+      ) : (
+        <Button variant="ghost" icon={Trash2} onClick={() => setConfirmingDelete(true)}
+          className="mr-auto text-terracotta hover:bg-terracotta-tint hover:text-terracotta">
+          {t('Slet')}
+        </Button>
+      )}
+      <Button variant="ghost" onClick={onClose}>{t('Annuller')}</Button>
+      <Button onClick={save} disabled={!dirty}>{t('Gem ændringer')}</Button>
+    </>
+  );
 
-        {/* Body */}
-        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-6">
+  // The category's own icon and colour, which the couple can change below.
+  const title = (
+    <span className="flex min-w-0 items-center gap-2.5">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full" style={{ background: dColor }} aria-hidden>
+        {/* [dIcon].map(...): the lint rule for "component created during render"
+            only exempts a dynamically resolved component inside a .map(). */}
+        {[dIcon].map((id) => {
+          const Icon = resolveBudgetIcon(id);
+          return <Icon key={id} size={15} className="text-white" strokeWidth={2.25} />;
+        })}
+      </span>
+      <span className="truncate">{dLabel || label}</span>
+    </span>
+  );
+
+  return (
+    <Dialog open onClose={onClose} eyebrow={t('Budgetpost')} title={title} footer={footer}>
+        <div className="space-y-7">
           {/* Oplysninger */}
           <section>
             <Eyebrow>{t('Oplysninger')}</Eyebrow>
@@ -499,56 +483,6 @@ export default function BudgetLineDetail({
             </div>
           </section>
         </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-line px-6 py-4">
-          {confirmingDelete ? (
-            <div className="flex items-center gap-3 text-[0.82rem]">
-              <span className="text-muted">{t('Slet {label}?', { label })}</span>
-              <button
-                type="button"
-                onClick={onDelete}
-                className="font-semibold text-[var(--color-terracotta)] hover:opacity-80 cursor-pointer"
-              >
-                {t('Ja, slet')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setConfirmingDelete(false)}
-                className="text-muted hover:text-ink cursor-pointer"
-              >
-                {t('Behold')}
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setConfirmingDelete(true)}
-              className="flex items-center gap-1.5 rounded-full px-3 py-2 text-[0.82rem] font-medium text-[var(--color-terracotta)] transition-colors hover:bg-[var(--color-terracotta-tint)] cursor-pointer"
-            >
-              <Trash2 size={14} /> {t('Slet')}
-            </button>
-          )}
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full px-4 py-2 text-[0.82rem] font-medium text-muted transition-colors hover:text-ink cursor-pointer"
-            >
-              {t('Annuller')}
-            </button>
-            <button
-              type="button"
-              onClick={save}
-              disabled={!dirty}
-              className="rounded-full bg-ink px-5 py-2 text-[0.82rem] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            >
-              {t('Gem ændringer')}
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+    </Dialog>
   );
 }

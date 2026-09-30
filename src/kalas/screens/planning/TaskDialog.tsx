@@ -8,11 +8,10 @@
    backdrop and Annuller all discard cleanly. Only the fields that actually
    changed go to the database. */
 
-import { useEffect, useRef, useState } from 'react';
-import { motion } from 'motion/react';
+import { useRef, useState } from 'react';
 import { CalendarDays, CheckCircle2, Flag, StickyNote, Trash2, UserRound, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Eyebrow, SelectPill, Toggle, cn } from '../../ui';
+import { Button, Dialog, Eyebrow, SelectPill, Toggle, cn } from '../../ui';
 import { useLang } from '../../i18n';
 import {
   CHECKLIST_AREAS, PRIORITIES, areaOf, assigneeName, formatDate, hasArea, isCheck, priorityOf,
@@ -77,12 +76,6 @@ export default function TaskDialog({
   const [dNotes, setDNotes] = useState(task.notes ?? '');
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const title = dTitle.trim();
   const save = () => {
     if (!title) return;
@@ -106,38 +99,38 @@ export default function TaskDialog({
     { id: 'both', label: t('Begge') },
   ];
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-4 py-8 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-label={t('Rediger opgave')}
-        className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-line bg-card shadow-[0_32px_80px_-16px_rgba(24,32,24,0.28)]"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
-          <div className="min-w-0">
-            <Eyebrow>{t('Opgave')}</Eyebrow>
-            <h2 className="mt-0.5 truncate font-serif text-[1.35rem] text-ink">{title || t(task.title)}</h2>
-          </div>
-          <button
-            type="button" onClick={onClose} aria-label={t('Luk')}
-            className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
-          >
-            <X size={18} />
+  const footer = (
+    <>
+      {onDelete && (confirmingDelete ? (
+        <div className="mr-auto flex items-center gap-3 text-meta">
+          <span className="text-muted">{t('Slet opgaven?')}</span>
+          <button type="button" onClick={onDelete} className="cursor-pointer font-semibold text-terracotta hover:opacity-80">
+            {t('Ja, slet')}
+          </button>
+          <button type="button" onClick={() => setConfirmingDelete(false)} className="cursor-pointer text-muted hover:text-ink">
+            {t('Behold')}
           </button>
         </div>
+      ) : (
+        <Button
+          variant="ghost"
+          icon={Trash2}
+          onClick={() => setConfirmingDelete(true)}
+          aria-label={t(deleteLabel)}
+          className="mr-auto text-terracotta hover:bg-terracotta-tint hover:text-terracotta"
+        >
+          {/* Just the bin on a phone, where the label broke the footer onto two lines. */}
+          <span className="hidden sm:inline">{t(deleteLabel)}</span>
+        </Button>
+      ))}
+      <Button variant="ghost" onClick={onClose}>{t('Annuller')}</Button>
+      <Button onClick={save} disabled={!title}>{t('Gem ændringer')}</Button>
+    </>
+  );
 
-        {/* Body */}
-        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-6">
+  return (
+    <Dialog open onClose={onClose} eyebrow={t('Opgave')} title={title || t(task.title)} footer={footer}>
+        <div className="space-y-7">
           <Section icon={CheckCircle2} title={t('Opgaven')}>
             <div className="space-y-3">
               <label className="block">
@@ -243,50 +236,6 @@ export default function TaskDialog({
             />
           </Section>
         </div>
-
-        {/* Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-4 sm:gap-3 sm:px-6">
-          {onDelete ? (
-            confirmingDelete ? (
-              <div className="flex items-center gap-3 text-[0.82rem]">
-                <span className="text-muted">{t('Slet opgaven?')}</span>
-                <button type="button" onClick={onDelete}
-                  className="font-semibold text-[var(--color-terracotta)] hover:opacity-80 cursor-pointer">
-                  {t('Ja, slet')}
-                </button>
-                <button type="button" onClick={() => setConfirmingDelete(false)}
-                  className="text-muted hover:text-ink cursor-pointer">
-                  {t('Behold')}
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button" onClick={() => setConfirmingDelete(true)}
-                aria-label={t(deleteLabel)}
-                className="flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-2 text-[0.82rem] font-medium text-[var(--color-terracotta)] transition-colors hover:bg-[var(--color-terracotta-tint)] cursor-pointer"
-              >
-                {/* Just the bin on a phone, where the label broke the footer onto two lines. */}
-                <Trash2 size={14} /> <span className="hidden sm:inline">{t(deleteLabel)}</span>
-              </button>
-            )
-          ) : <span />}
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button" onClick={onClose}
-              className="whitespace-nowrap rounded-full px-3 py-2 text-[0.82rem] font-medium text-muted transition-colors hover:text-ink sm:px-4 cursor-pointer"
-            >
-              {t('Annuller')}
-            </button>
-            <button
-              type="button" onClick={save} disabled={!title}
-              className="whitespace-nowrap rounded-full bg-ink px-5 py-2 text-[0.82rem] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            >
-              {t('Gem ændringer')}
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+    </Dialog>
   );
 }

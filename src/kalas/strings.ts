@@ -1549,7 +1549,6 @@ export const EN: Record<string, string> = {
   'Sat efter jeres budget til Venue.': 'Set from your Venue budget.',
 
   // ── Tjekliste: opgavedetaljer ───────────────────────────────────────
-  'Rediger opgave': 'Edit task',
   'Opgave': 'Task',
   'Opgaven': 'The task',
   'Markér som fuldført': 'Mark as done',

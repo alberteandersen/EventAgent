@@ -13,11 +13,10 @@
    Escape, the backdrop and Annuller all discard cleanly. Same contract as
    BudgetLineDetail, which this borrows its chrome from. */
 
-import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { X, Trash2, UserRound, CircleCheck, HeartHandshake, House, Armchair, Utensils, NotebookPen } from 'lucide-react';
+import { useState } from 'react';
+import { Trash2, UserRound, CircleCheck, HeartHandshake, House, Armchair, Utensils, NotebookPen } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Eyebrow, SelectPill, Toggle, cn } from '../ui';
+import { Button, Dialog, Eyebrow, SelectPill, Toggle, cn } from '../ui';
 import { useLang } from '../i18n';
 import { DIETARY_TAGS, parseLegacyDietary } from './guests/dietary';
 import { AGE_GROUPS, ageGroupOf, householdHeadOptions, householdMembers } from './guests/household';
@@ -127,12 +126,6 @@ export default function GuestDialog({
   const heads = householdHeadOptions(guests, guest?.id ?? null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const toggleTag = (id: string) =>
     setDTags((tags) => (tags.includes(id) ? tags.filter((x) => x !== id) : [...tags, id]));
 
@@ -158,42 +151,32 @@ export default function GuestDialog({
     onClose();
   };
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-4 py-8 backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[88vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-line bg-card shadow-[0_32px_80px_-16px_rgba(24,32,24,0.28)]"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sage-tint" aria-hidden>
-              <UserRound size={17} className="text-sage-strong" strokeWidth={2.25} />
-            </span>
-            <div className="min-w-0">
-              <Eyebrow>{t('Gæst')}</Eyebrow>
-              <h2 className="mt-0.5 truncate font-serif text-[1.35rem] text-ink">
-                {name || (guest ? guest.name : t('Tilføj gæst'))}
-              </h2>
-            </div>
-          </div>
-          <button
-            type="button" onClick={onClose} aria-label={t('Luk')}
-            className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
-          >
-            <X size={18} />
+  const footer = (
+    <>
+      {onDelete && guest && (confirmingDelete ? (
+        <div className="mr-auto flex items-center gap-3 text-meta">
+          <span className="text-muted">{t('Fjern {name}?', { name: guest.name })}</span>
+          <button type="button" onClick={onDelete} className="cursor-pointer font-semibold text-terracotta hover:opacity-80">
+            {t('Ja, fjern')}
+          </button>
+          <button type="button" onClick={() => setConfirmingDelete(false)} className="cursor-pointer text-muted hover:text-ink">
+            {t('Behold')}
           </button>
         </div>
+      ) : (
+        <Button variant="ghost" icon={Trash2} onClick={() => setConfirmingDelete(true)}
+          className="mr-auto text-terracotta hover:bg-terracotta-tint hover:text-terracotta">
+          {t('Fjern')}
+        </Button>
+      ))}
+      <Button variant="ghost" onClick={onClose}>{t('Annuller')}</Button>
+      <Button onClick={save} disabled={!name}>{guest ? t('Gem ændringer') : t('Tilføj gæst')}</Button>
+    </>
+  );
 
-        {/* Body */}
-        <div className="min-h-0 flex-1 space-y-7 overflow-y-auto px-6 py-6">
+  return (
+    <Dialog open onClose={onClose} eyebrow={t('Gæst')} title={name || (guest ? guest.name : t('Tilføj gæst'))} footer={footer}>
+        <div className="space-y-7">
           {/* Grundlæggende */}
           <section>
             <SectionTitle icon={UserRound}>{t('Grundlæggende')}</SectionTitle>
@@ -384,48 +367,6 @@ export default function GuestDialog({
             />
           </section>
         </div>
-
-        {/* Footer */}
-        <div className="flex items-center justify-between gap-3 border-t border-line px-6 py-4">
-          {onDelete && guest ? (
-            confirmingDelete ? (
-              <div className="flex items-center gap-3 text-[0.82rem]">
-                <span className="text-muted">{t('Fjern {name}?', { name: guest.name })}</span>
-                <button type="button" onClick={onDelete}
-                  className="font-semibold text-[var(--color-terracotta)] hover:opacity-80 cursor-pointer">
-                  {t('Ja, fjern')}
-                </button>
-                <button type="button" onClick={() => setConfirmingDelete(false)}
-                  className="text-muted hover:text-ink cursor-pointer">
-                  {t('Behold')}
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button" onClick={() => setConfirmingDelete(true)}
-                className="flex items-center gap-1.5 rounded-full px-3 py-2 text-[0.82rem] font-medium text-[var(--color-terracotta)] transition-colors hover:bg-[var(--color-terracotta-tint)] cursor-pointer"
-              >
-                <Trash2 size={14} /> {t('Fjern')}
-              </button>
-            )
-          ) : <span />}
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button" onClick={onClose}
-              className="rounded-full px-4 py-2 text-[0.82rem] font-medium text-muted transition-colors hover:text-ink cursor-pointer"
-            >
-              {t('Annuller')}
-            </button>
-            <button
-              type="button" onClick={save} disabled={!name}
-              className="rounded-full bg-ink px-5 py-2 text-[0.82rem] font-semibold text-canvas transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            >
-              {guest ? t('Gem ændringer') : t('Tilføj gæst')}
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+    </Dialog>
   );
 }

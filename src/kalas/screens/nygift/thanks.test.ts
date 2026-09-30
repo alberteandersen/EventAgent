@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildThankList, subjectKey, thankProgress } from './thanks';
+import { buildThankList, thankProgress } from './thanks';
 import type { GuestRow, RegistryClaimRow, RegistryItemRow, ThankYouRow } from '@/lib/db/types';
 
 type G = Pick<GuestRow, 'id' | 'name' | 'email' | 'rsvp' | 'rsvp_token'>;

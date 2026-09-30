@@ -205,7 +205,7 @@ export function FixtureWedding({
     }) as unknown as WeddingData;
   }, [
     guests, seatingPlan, budgetItems, budgetSubItems, timelineTasks, dayProgramItems, coupleOverride, eventOverride,
-    venues, journey, thankYous, registryItems, registryClaims, weddingSite, websiteDesigns,
+    venues, journey, thankYous, registryItems, registryClaims, weddingSite, websiteDesigns, invitationDesigns,
     outbound, replies, proposals, loading, loadError,
   ]);
 

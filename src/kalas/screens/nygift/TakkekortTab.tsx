@@ -54,18 +54,21 @@ export default function TakkekortTab() {
 
   /* Their favourite photo, as the invitation shows it. */
   const favourite = sitePhotos.find((p) => p.role === 'hero') ?? sitePhotos.find((p) => p.role !== 'section') ?? null;
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  // The signed URL, for the photo it was signed for: a new favourite shows
+  // nothing until its own URL arrives.
+  const [signed, setSigned] = useState<{ id: string; url: string | null } | null>(null);
   useEffect(() => {
-    if (!event || !favourite) { setPhotoUrl(null); return; }
+    if (!event || !favourite) return;
     let alive = true;
     fetch(`/api/website/photos?eventId=${event.id}`)
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { photos?: (SitePhotoRow & { url: string | null })[] } | null) => {
-        if (alive) setPhotoUrl(d?.photos?.find((p) => p.id === favourite.id)?.url ?? null);
+        if (alive) setSigned({ id: favourite.id, url: d?.photos?.find((p) => p.id === favourite.id)?.url ?? null });
       })
       .catch(() => {});
     return () => { alive = false; };
   }, [event, favourite]);
+  const photoUrl = favourite && signed?.id === favourite.id ? signed.url : null;
 
   const [copied, setCopied] = useState(false);
 

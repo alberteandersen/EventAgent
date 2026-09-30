@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Check, Globe, Smartphone, Plus, Trash2, Palette,
   Lock, Copy, Eye, MapPin, Gift, HelpCircle, Bed,
-  Camera, Clock, BookOpen, Image, QrCode, CalendarClock,
+  Camera, Clock, BookOpen, Image as ImageIcon, QrCode, CalendarClock,
 } from 'lucide-react';
 import { IMAGES as IMG } from '../images';
 import { Button, Eyebrow, PageHeader, PageLoader, Tabs, Toggle, cn, useConfirm } from '../ui';
@@ -488,7 +488,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
 
   const editor = (id: SectionId): React.ReactNode => {
     switch (id) {
-      case 'hero': return card('hero', <Image size={15} />, <>
+      case 'hero': return card('hero', <ImageIcon size={15} />, <>
         <Label>{t('Navne')}</Label>
         <p className="rule rounded-xl bg-shell px-4 py-3 text-[0.88rem] text-ink">{couple.a} & {couple.b} · {couple.dateLabel}</p>
         <p className="mt-1 text-[0.7rem] text-muted">{t('Fra jeres profil')}</p>

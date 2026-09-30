@@ -70,6 +70,7 @@ export default function BudgetAvaAssistant({
       });
   };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the panel asks Ava as it opens
   useEffect(ask, [eventId]);
 
   const apply = () => {

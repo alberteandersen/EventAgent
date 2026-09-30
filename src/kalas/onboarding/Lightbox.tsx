@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useLang } from '../i18n';
+
+const noopSubscribe = () => () => {};
 
 /**
  * Fullscreen image viewer. Renders through a portal so it sits above the
@@ -23,8 +25,8 @@ export function Lightbox({
   alt?: string;
 }) {
   const { t } = useLang();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  // The portal needs document.body, which only the client has.
+  const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
 
   const count = photos.length;
   const go = useCallback(

@@ -129,6 +129,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
         color: i.color ?? std?.color ?? BUDGET_COLORS[0],
       };
     });
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- the editable draft follows the saved rows as they change
     setLines(nextLines);
     setAmounts((prev) => {
       const next = { ...prev };
@@ -515,7 +516,6 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
           const reminder = reminderById[b.id] ?? '';
           const note = noteById[b.id] ?? '';
           const Icon = resolveBudgetIcon(b.icon);
-          const custom = isCustomLine(b.id);
           const subs = subItems.filter((s) => s.category === b.id);
           const subCount = subs.length;
           const subTotal = subs.reduce((a, s) => a + s.amount, 0);

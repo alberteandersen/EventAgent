@@ -5,7 +5,6 @@
    event, seeding Ava's chat, marking the profile onboarded) and do a full
    navigation to /home so the server gate re-reads profiles.onboarded. */
 import { AnimatePresence, MotionConfig } from 'motion/react';
-import { type ScreenId } from './Shell';
 import Onboarding, { type FormState, type PhotoDraft, toOnboardingPayload } from './screens/Onboarding';
 import { LanguageProvider, useLang, type Lang } from './i18n';
 import { AVA_OPEN_KEY, tourHandoff, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY } from './walkthrough';
@@ -25,7 +24,7 @@ export default function KalasOnboardingRoot({ initialLang = 'da' }: { initialLan
 function OnboardingShell() {
   const { lang } = useLang();
 
-  const enter = async (form: FormState, _s?: ScreenId) => {
+  const enter = async (form: FormState) => {
     try {
       const res = await fetch('/api/onboarding', {
         method: 'POST',

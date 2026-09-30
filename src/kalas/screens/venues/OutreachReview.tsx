@@ -44,6 +44,8 @@ export function OutreachReview({
       }
     })();
     return () => { alive = false; };
+    // Prepared once, as the dialog opens; a language switch does not redo it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const approve = async () => {

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Upload, FileText, Trash2, ScanText, Send, Loader2, AlertTriangle } from 'lucide-react';
 import { useLang } from '../i18n';
 import { apiWrite } from '../notice';
-import { cn } from '../ui';
 import type { BudgetContractRow, ContractReview } from '@/lib/db/types';
 
 type Contract = BudgetContractRow & { url?: string | null };

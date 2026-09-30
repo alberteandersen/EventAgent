@@ -67,6 +67,7 @@ export function LanguageProvider({ initialLang = 'da', lock = false, children }:
     if (lock) return;
     try {
       const stored = localStorage.getItem('kalas_lang');
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- browser storage is only readable after hydration
       if (isAppLanguage(stored)) setLangState(stored);
     } catch { /* ignore */ }
   }, [lock]);

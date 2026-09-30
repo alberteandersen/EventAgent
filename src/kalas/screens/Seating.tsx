@@ -24,9 +24,8 @@ import {
   Plus, Minus, Trash2, Printer, Circle, RectangleHorizontal, Crown,
   Search, Maximize2, Users, X, CornerUpLeft, ChevronDown,
 } from 'lucide-react';
-import { Eyebrow, cn } from '../ui';
+import { Button, Dialog, Field, Page, PageHeader, PageLoader, cn, inputClass } from '../ui';
 import { useLang } from '../i18n';
-import { GuideLink } from './guides/GuideLink';
 import { useWedding } from '../useWedding';
 import { TableNode } from './seating/TableNode';
 import { ElementNode, ELEMENT_ICON } from './seating/ElementNode';
@@ -67,6 +66,8 @@ export default function Seating() {
   const [drag, setDrag] = useState<{ guestId: string; x: number; y: number } | null>(null);
   // A table or a floor element, never both: one thing is selected at a time.
   const [selected, setSelected] = useState<string | null>(null);
+  // The table being renamed, and the name as it is being typed.
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
   const [selectedEl, setSelectedEl] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   // The shape whose seat count is being asked for, before the table exists.
@@ -395,44 +396,28 @@ export default function Seating() {
   const heldGuest = held ? byId.get(held) ?? null : null;
   const dragGuest = drag ? byId.get(drag.guestId) ?? null : null;
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted" style={{ animationDelay: `${i * 0.15}s` }} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <PageLoader />;
+
+  const saveRename = () => {
+    const name = renaming?.name.trim();
+    if (renaming && name) patchTable(renaming.id, (x) => ({ ...x, name }));
+    setRenaming(null);
+  };
 
   return (
-    <div className="flex min-h-full flex-col gap-6 px-6 py-8 sm:px-9 lg:px-12">
-      {/* ── Header ───────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <Eyebrow>{t('Planlægning')}</Eyebrow>
-          <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-            {t('Bordplan')}
-          </h1>
-          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
-            {pool.length === 0
-              ? t('Tilføj gæster på gæstelisten, så kan I sætte dem på plads her.')
-              : unseatedGuests.length === 0
-                ? tn(pool.length, 'Gæsten har en plads.', 'Alle {n} gæster har en plads.')
-                : t('{n} af {total} gæster har en plads.', { n: seated.size, total: pool.length })}
-          </p>
-          <GuideLink screen="seating" />
-        </div>
-        <button
-          type="button"
-          onClick={printPlan}
-          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-[0.78rem] font-semibold text-ink transition-colors hover:border-ink cursor-pointer"
-        >
-          <Printer size={14} /> {t('Udskriv')}
-        </button>
-      </div>
+    <Page>
+      <PageHeader
+        title={t('Bordplan')}
+        subtitle={
+          pool.length === 0
+            ? t('Tilføj gæster på gæstelisten, så kan I sætte dem på plads her.')
+            : unseatedGuests.length === 0
+              ? tn(pool.length, 'Gæsten har en plads.', 'Alle {n} gæster har en plads.')
+              : t('{n} af {total} gæster har en plads.', { n: seated.size, total: pool.length })
+        }
+        guide="seating"
+        actions={<Button variant="secondary" icon={Printer} onClick={printPlan}>{t('Udskriv')}</Button>}
+      />
 
       {/* No breakpoint and no container query: plain wrapping flex.
           A media query measures the window, which this screen never gets (in
@@ -589,10 +574,7 @@ export default function Seating() {
                   onSeatClick={(i) => onSeatClick(tb.id, i)}
                   onSeatPointerDown={(gid, e) => startGesture(gid)(e)}
                   onTablePointerDown={startTableDrag(tb.id)}
-                  onRename={() => {
-                    const next = window.prompt(t('Navn på bordet'), tb.name);
-                    if (next?.trim()) patchTable(tb.id, (x) => ({ ...x, name: next.trim() }));
-                  }}
+                  onRename={() => setRenaming({ id: tb.id, name: tb.name })}
                 />
               ))}
             </div>
@@ -978,7 +960,31 @@ export default function Seating() {
           {dragGuest.name}
         </div>
       )}
-    </div>
+
+      <Dialog
+        open={renaming !== null}
+        onClose={() => setRenaming(null)}
+        title={t('Navn på bordet')}
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setRenaming(null)}>{t('Annuller')}</Button>
+            <Button onClick={saveRename} disabled={!renaming?.name.trim()}>{t('Gem')}</Button>
+          </>
+        }
+      >
+        <form onSubmit={(e) => { e.preventDefault(); saveRename(); }}>
+          <Field label={t('Navn på bordet')}>
+            <input
+              className={inputClass}
+              value={renaming?.name ?? ''}
+              onChange={(e) => setRenaming((r) => (r ? { ...r, name: e.target.value } : r))}
+              data-autofocus
+            />
+          </Field>
+        </form>
+      </Dialog>
+    </Page>
   );
 }
 

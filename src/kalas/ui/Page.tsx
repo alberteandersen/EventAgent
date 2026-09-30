@@ -11,14 +11,16 @@ export function Page({
   children,
   narrow = false,
   className,
+  ref,
 }: {
   children: React.ReactNode;
   /** Reading-width pages (Guides) cap the line length; the rest use the width. */
   narrow?: boolean;
   className?: string;
+  ref?: React.Ref<HTMLDivElement>;
 }) {
   return (
-    <div className={cn('flex min-h-full flex-col gap-6', pagePad, narrow && 'mx-auto w-full max-w-5xl', className)}>
+    <div ref={ref} className={cn('flex min-h-full flex-col gap-6', pagePad, narrow && 'mx-auto w-full max-w-5xl', className)}>
       {children}
     </div>
   );

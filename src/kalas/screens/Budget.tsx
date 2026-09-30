@@ -11,12 +11,11 @@ import {
   resolveBudgetIcon,
   type BudgetIconId,
 } from '../lib/budget-style';
-import { Eyebrow, Chip, CheckDot, cn } from '../ui';
+import { Button, Eyebrow, Chip, CheckDot, Page, PageHeader, PageLoader, cn } from '../ui';
 import AnimateNumber from '../AnimateNumber';
 import { useWedding } from '../useWedding';
 import { useUndo } from '../undo';
 import { useLang } from '../i18n';
-import { GuideLink } from './guides/GuideLink';
 import { navigateToHub, type NavigateTarget } from '../lib/hub-nav';
 import { estimatedTotal, estimatedLines, rentalSplit, subItemSeeds } from './budget/estimate';
 import type { HubCat } from './team/shared';
@@ -433,45 +432,35 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
   const fmtDate = (d: string) =>
     d ? new Date(d + 'T00:00:00').toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
 
+  if (loading) return <PageLoader />;
+
   return (
-    <div className="px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
-      {/* ── Header ────────────────────────────────────────────────────── */}
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-            {t('Budget')}
-          </h1>
-          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
+    <Page>
+      <PageHeader
+        title={t('Budget')}
+        subtitle={
+          <>
             {total > 0
               ? t('Fordelingen er lagt ud fra det I har fortalt, træk i den, så den passer jer.')
               : t('Hold styr på hvad brylluppet koster, og hvad I har tilbage.')}
-          </p>
-          <GuideLink screen="budget" />
-          {/* Nothing to estimate from. A split of zero would just be a column of empty
-              rows pretending to be a plan. */}
-          {total === 0 && (
-            <p className="mt-2 text-[13px] leading-relaxed text-[#8a7d5c]">
-              {t('Sæt et beløb eller et gæsteantal, så regner vi en fordeling ud.')}
-            </p>
-          )}
-        </div>
+            {/* Nothing to estimate from. A split of zero would just be a column
+                of empty rows pretending to be a plan. */}
+            {total === 0 && (
+              <span className="mt-1 block text-clay">{t('Sæt et beløb eller et gæsteantal, så regner vi en fordeling ud.')}</span>
+            )}
+          </>
+        }
+        guide="budget"
+        actions={
+          /* Ava needs a total or a headcount to reason from — the same guard
+             the API itself enforces, so the button never opens onto an error. */
+          total > 0 && event?.id ? (
+            <Button icon={MessageCircle} onClick={() => setAssistOpen(true)}>{t('Spørg Ava om fordelingen')}</Button>
+          ) : undefined
+        }
+      />
 
-        {/* Ava needs a total or a headcount to reason from — the same guard
-            the API itself enforces, so the button never opens onto an error. */}
-        {total > 0 && event?.id && (
-          <button
-            type="button"
-            onClick={() => setAssistOpen(true)}
-            className="flex shrink-0 items-center gap-2 rounded-full bg-ink-deep py-2.5 pl-2.5 pr-4 text-[0.82rem] font-semibold text-white transition-opacity hover:opacity-90 cursor-pointer"
-          >
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15">
-              <MessageCircle size={13} strokeWidth={2.25} />
-            </span>
-            {t('Spørg Ava om fordelingen')}
-          </button>
-        )}
-      </div>
-
+      <div>
       {/* Totals strip */}
       <div className="grid gap-px overflow-hidden rounded-3xl rule bg-[var(--color-line)] sm:grid-cols-3">
         <Stat
@@ -914,7 +903,8 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
         .kalas-date::-webkit-datetime-edit-year-field { color: #24413a; }
         .kalas-date::-webkit-calendar-picker-indicator { filter: invert(19%) sepia(18%) saturate(1200%) hue-rotate(60deg); }
       `}</style>
-    </div>
+      </div>
+    </Page>
   );
 }
 

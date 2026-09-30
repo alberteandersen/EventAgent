@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { ArrowLeft, ArrowRight, Check, ExternalLink, Search, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Check, ExternalLink, MessageCircleQuestion, Search, X } from 'lucide-react';
 import { ARTICLES, CATEGORIES, articlesIn, getArticle, getCategory, relatedTo } from '@/content/guide';
 import type { GuideArticle } from '@/content/guide/types';
 import { FAQ } from '@/content/faq';
@@ -14,7 +14,7 @@ import { Markdown } from '@/components/guide/Markdown';
 import { FaqItemCard } from '@/components/guide/FaqItemCard';
 import { parseMarkdown, readingMinutes } from '@/lib/guide/markdown';
 import { useLang } from '../i18n';
-import { cn, pagePad } from '../ui';
+import { Page, PageHeader, Tabs } from '../ui';
 import type { NavigateTarget } from '../lib/hub-nav';
 import { GUIDE_ACTION, OPEN_GUIDE_EVENT, peekPendingGuide, takePendingGuide } from './guides/links';
 
@@ -74,64 +74,50 @@ export default function Guides({ onNavigate }: { onNavigate?: (s: NavigateTarget
   const article = slug ? getArticle(slug) : undefined;
 
   return (
-    <div ref={top} className={cn(pagePad, 'mx-auto flex w-full max-w-5xl scroll-mt-4 flex-col gap-7')}>
+    <Page ref={top} narrow className="scroll-mt-4">
       {article ? (
         <ArticleView article={article} onBack={() => setSlug(null)} onNavigate={onNavigate} onOpen={open} onInternalLink={onInternalLink} />
       ) : (
         <>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage">{t('Hjælp')}</p>
-            <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-              {t('Guides & FAQ')}
-            </h1>
-            <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
-              {t('Råd til hele brylluppet, og svar på det, par spørger om.')}
-            </p>
-            {lang !== 'da' && (
-              <p className="mt-1 text-[13px] text-muted">{t('Guiderne findes indtil videre kun på dansk.')}</p>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <label className="focus-shell flex h-11 w-full items-center gap-2.5 rounded-full border border-line bg-card px-4 sm:max-w-sm">
-              <Search size={16} className="shrink-0 text-muted" aria-hidden />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t('Søg i guides og spørgsmål')}
-                aria-label={t('Søg i guides og spørgsmål')}
-                className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-faint"
-              />
-              {query && (
-                <button type="button" onClick={() => setQuery('')} aria-label={t('Ryd søgning')} className="cursor-pointer text-muted hover:text-ink">
-                  <X size={15} />
-                </button>
-              )}
-            </label>
-            {!results && (
-              <div role="tablist" className="flex gap-2">
-                {([
-                  ['guides', t('Guides'), ARTICLES.length],
-                  ['faq', t('Spørgsmål og svar'), FAQ_ITEMS.length],
-                ] as const).map(([id, label, n]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    aria-selected={tab === id}
-                    onClick={() => setTab(id)}
-                    className={cn(
-                      'cursor-pointer rounded-full border px-4 py-2 text-sm font-medium transition-colors',
-                      tab === id ? 'border-ink bg-ink text-canvas' : 'border-line bg-shell text-ink-soft hover:border-ink hover:text-ink',
-                    )}
-                  >
-                    {label} <span className={tab === id ? 'text-sage-tint' : 'text-muted'}>{n}</span>
+          <PageHeader
+            title={t('Guides & FAQ')}
+            subtitle={
+              <>
+                {t('Råd til hele brylluppet, og svar på det, par spørger om.')}
+                {lang !== 'da' && <span className="mt-1 block">{t('Guiderne findes indtil videre kun på dansk.')}</span>}
+              </>
+            }
+            actions={
+              <label className="focus-shell flex h-10 w-full items-center gap-2.5 rounded-full border border-line bg-card px-4 sm:w-72">
+                <Search size={16} className="shrink-0 text-muted" aria-hidden />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('Søg i guides og spørgsmål')}
+                  aria-label={t('Søg i guides og spørgsmål')}
+                  className="min-w-0 flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-faint"
+                />
+                {query && (
+                  <button type="button" onClick={() => setQuery('')} aria-label={t('Ryd søgning')} className="cursor-pointer text-muted hover:text-ink">
+                    <X size={15} />
                   </button>
-                ))}
-              </div>
+                )}
+              </label>
+            }
+          >
+            {!results && (
+              <Tabs
+                label={t('Guides & FAQ')}
+                value={tab}
+                onChange={setTab}
+                items={[
+                  { id: 'guides', label: `${t('Guides')} · ${ARTICLES.length}`, icon: BookOpen },
+                  { id: 'faq', label: `${t('Spørgsmål og svar')} · ${FAQ_ITEMS.length}`, icon: MessageCircleQuestion },
+                ]}
+              />
             )}
-          </div>
+          </PageHeader>
 
           {results ? (
             <SearchResults query={query} results={results} onOpen={open} onInternalLink={onInternalLink} />
@@ -161,7 +147,7 @@ export default function Guides({ onNavigate }: { onNavigate?: (s: NavigateTarget
           )}
         </>
       )}
-    </div>
+    </Page>
   );
 }
 

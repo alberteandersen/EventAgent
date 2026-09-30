@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Home, UsersRound,
@@ -48,7 +48,7 @@ export function useNav(): NavItem[] {
 const MOBILE_TABS: ScreenId[] = ['home', 'planning', 'inbox'];
 
 const SIDEBAR_W = 224;
-export const SIDEBAR_RAIL_W = 72;
+const SIDEBAR_RAIL_W = 72;
 
 const shellTransition = { type: 'spring' as const, stiffness: 380, damping: 36 };
 
@@ -94,33 +94,67 @@ export default function Shell({
   current,
   onNavigate,
   inboxBadge = 0,
-  chatMode = false,
-  onChatModeChange,
+  ava,
+  avaOpen = false,
+  onAvaOpenChange,
+  avaSignal = 0,
   children,
 }: {
   current: ScreenId;
   onNavigate: (s: ScreenId) => void;
   inboxBadge?: number;
-  chatMode?: boolean;
-  /** Toggle between chat mode and classic shell. */
-  onChatModeChange?: (on: boolean) => void;
+  /** Ava's chat. Beside the page from xl, over it as a drawer from lg, and a
+   *  full-screen sheet on a phone. Kept mounted while closed, so a reply that
+   *  is still streaming survives the panel being put away. */
+  ava?: React.ReactNode;
+  avaOpen?: boolean;
+  onAvaOpenChange?: (open: boolean) => void;
+  /** Bumped when Ava opens a page. On a phone the sheet steps aside, so the
+   *  couple sees the page she opened. */
+  avaSignal?: number;
   children: React.ReactNode;
 }) {
   const { t } = useLang();
   const nav = useNav();
   const [moreOpen, setMoreOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const main = useRef<HTMLElement>(null);
 
   const sidebarRail = sidebarCollapsed;
   const navigate = (s: ScreenId) => { setMoreOpen(false); onNavigate(s); };
   const moreActive = !MOBILE_TABS.includes(current);
+  const setAva = (open: boolean) => { setMoreOpen(false); onAvaOpenChange?.(open); };
+
+  // A new page starts at its top; the page scrolls inside <main>, not the window.
+  useEffect(() => { main.current?.scrollTo({ top: 0 }); }, [current]);
+
+  // The tab says which page this is. Next writes its own title into the head
+  // after the app mounts, so the page's is put back whenever the head changes.
+  const pageLabel = NAV.find((n) => n.id === current)?.label;
+  const tabTitle = pageLabel ? `${t(pageLabel)} · Kalas` : 'Kalas';
+  useEffect(() => {
+    const apply = () => { if (document.title !== tabTitle) document.title = tabTitle; };
+    apply();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { subtree: true, childList: true, characterData: true });
+    return () => observer.disconnect();
+  }, [tabTitle]);
+
+  const lastSignal = useRef(avaSignal);
+  const setAvaRef = useRef(setAva);
+  useEffect(() => { setAvaRef.current = setAva; });
+  useEffect(() => {
+    if (avaSignal === lastSignal.current) return;
+    lastSignal.current = avaSignal;
+    if (window.matchMedia('(max-width: 1023.98px)').matches) setAvaRef.current(false);
+  }, [avaSignal]);
 
   return (
     <div className="flex h-dvh overflow-hidden text-ink" style={{ backgroundColor: CHROME_BG }}>
       {/*
         Shared chrome frame: sidebar + header sit in one relative plane so a
-        single top-left wash can span both (Miceops-style). Main content is
-        solid so it clips the wash below the header.
+        single top-left wash can span both. Main content is solid so it clips
+        the wash below the header.
       */}
       <div className="relative flex min-h-0 min-w-0 flex-1">
         <div
@@ -216,32 +250,30 @@ export default function Shell({
                     <LogOut size={17} strokeWidth={1.6} aria-hidden />
                     <span className="sr-only">{t('Log ud')}</span>
                   </SignOutButton>
-                  <button
-                    type="button"
-                    onClick={() => navigate('invites')}
-                    aria-label={t('Invitér')}
-                    title={t('Invitér')}
+                  <a
+                    href="/settings#partner"
+                    aria-label={t('Invitér jeres partner')}
+                    title={t('Invitér jeres partner')}
                     className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[10px] text-muted transition-colors hover:bg-ink/8 hover:text-ink"
                   >
                     <UserPlus size={17} strokeWidth={1.6} />
-                  </button>
+                  </a>
                 </>
               ) : (
                 <>
                   <SignOutButton
-                    className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium text-ink-soft transition-colors hover:bg-ink/[0.06] hover:text-ink disabled:opacity-50"
+                    className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-meta font-medium text-ink-soft transition-colors hover:bg-ink/[0.06] hover:text-ink disabled:opacity-50"
                   >
                     <LogOut size={17} strokeWidth={1.6} className="shrink-0" />
                     {t('Log ud')}
                   </SignOutButton>
-                  <button
-                    type="button"
-                    onClick={() => navigate('invites')}
-                    className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-[13px] font-medium text-ink-soft transition-colors hover:bg-ink/[0.06] hover:text-ink"
+                  <a
+                    href="/settings#partner"
+                    className="flex w-full cursor-pointer items-center gap-3 rounded-[10px] px-3 py-2.5 text-left text-meta font-medium text-ink-soft transition-colors hover:bg-ink/[0.06] hover:text-ink"
                   >
                     <UserPlus size={17} strokeWidth={1.6} className="shrink-0" />
-                    {t('Invitér')}
-                  </button>
+                    {t('Invitér jeres partner')}
+                  </a>
                 </>
               )}
             </div>
@@ -255,8 +287,20 @@ export default function Shell({
               <span className="lg:hidden"><Wordmark /></span>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {onChatModeChange && (
-                <ModeToggle chatMode={chatMode} onChange={onChatModeChange} />
+              {ava && (
+                <button
+                  type="button"
+                  data-tour="ava-chat"
+                  aria-pressed={avaOpen}
+                  onClick={() => setAva(!avaOpen)}
+                  className={cn(
+                    'hidden h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors lg:flex',
+                    avaOpen ? 'border-ink bg-ink text-paper' : 'border-line bg-card/70 text-ink hover:border-ink',
+                  )}
+                >
+                  <MessageCircle size={14} strokeWidth={1.8} aria-hidden />
+                  {t('Ava')}
+                </button>
               )}
               <a
                 href="/settings"
@@ -269,22 +313,55 @@ export default function Shell({
             </div>
           </header>
 
-          {/* Solid page surface, covers the wash below the header */}
           <div className="flex min-h-0 flex-1 pl-2.5 lg:pl-3">
+            {/* Solid page surface, covers the wash below the header */}
             <main
-              className="min-w-0 flex-1 overflow-y-auto rounded-tl-[20px] border border-line-soft border-b-0 border-r-0 pb-28 lg:pb-0"
+              id="kalas-main"
+              ref={main}
+              className="min-w-0 flex-1 overflow-y-auto rounded-tl-[20px] border border-line-soft border-b-0 border-r-0 pb-28 lg:pb-0 xl:rounded-tr-[20px] xl:border-r"
               style={{ backgroundColor: PAGE_BG }}
             >
               <div className="min-h-full">{children}</div>
             </main>
+
+            {ava && (
+              <aside
+                aria-label={t('Ava')}
+                className={cn(
+                  avaOpen ? 'flex' : 'hidden',
+                  // Phone: the whole screen, over the page and the bottom bar.
+                  'fixed inset-0 z-50 flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]',
+                  // lg: a drawer over the page, so a two-column screen keeps its width.
+                  'lg:inset-auto lg:top-12 lg:right-3 lg:bottom-0 lg:z-30 lg:w-[400px] lg:rounded-t-[20px] lg:border lg:border-b-0 lg:border-line-soft lg:p-0 lg:shadow-[0_24px_60px_-20px_rgba(18,51,43,0.35)]',
+                  // xl: beside the page.
+                  'xl:static xl:z-auto xl:mx-3 xl:shrink-0 xl:shadow-none 2xl:w-[440px]',
+                )}
+                style={{ backgroundColor: PAGE_BG }}
+              >
+                {ava}
+              </aside>
+            )}
           </div>
         </div>
       </div>
 
       {/* ── Mobile bottom nav ───────────────────────────────────────── */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 lg:hidden">
+      {/* Put away while Ava's sheet is up: it would sit over her message box,
+          and the sheet has its own way down. */}
+      <nav className={cn('fixed inset-x-0 bottom-0 z-40 lg:hidden', avaOpen && Boolean(ava) && 'hidden')}>
         <div className="mx-auto mb-4 flex max-w-sm items-center justify-between gap-1 rounded-full bg-card/95 px-2 py-2 shadow-[0_8px_30px_rgba(46,51,37,0.10)] backdrop-blur-xl rule">
-          {MOBILE_TABS.map((id) => {
+          {[...MOBILE_TABS.slice(0, 2), 'ava' as const, ...MOBILE_TABS.slice(2)].map((id) => {
+            if (id === 'ava') {
+              if (!ava) return null;
+              return (
+                <button key="ava" type="button" data-tour="ava-chat" onClick={() => setAva(true)} aria-label={t('Ava')}
+                  className="relative flex flex-1 flex-col items-center gap-1 rounded-full py-2 cursor-pointer">
+                  <span className="relative z-10 flex size-7 -my-1 items-center justify-center rounded-full bg-ink text-paper">
+                    <MessageCircle size={15} strokeWidth={1.8} />
+                  </span>
+                </button>
+              );
+            }
             const item = NAV.find((n) => n.id === id)!;
             const Icon = item.icon;
             const active = current === id && !moreOpen;
@@ -296,6 +373,9 @@ export default function Shell({
                     transition={{ type: 'spring', stiffness: 320, damping: 30 }} />
                 )}
                 <Icon size={19} strokeWidth={1.6} className={cn('relative z-10', active ? 'text-ink' : 'text-muted')} />
+                {id === 'inbox' && inboxBadge > 0 && (
+                  <span className="absolute right-[22%] top-1 z-10 size-2 rounded-full bg-terracotta" aria-hidden />
+                )}
               </button>
             );
           })}
@@ -399,51 +479,3 @@ export function NavRow({ item, active, onClick, badge, collapsed = false }: {
     </button>
   );
 }
-
-export function ModeToggle({
-  chatMode,
-  onChange,
-}: {
-  chatMode: boolean;
-  onChange: (on: boolean) => void;
-}) {
-  const { t } = useLang();
-  const options = [
-    // The same icon the chat column uses for itself on mobile — sparkles read
-    // as "magic", which is not what this switch does.
-    { id: true as const, label: 'Chat', icon: MessageCircle },
-    { id: false as const, label: 'Klassisk', icon: PanelLeft },
-  ];
-  return (
-    <div
-      role="group"
-      aria-label={t('Skift mellem chat og klassisk')}
-      className="flex items-center rounded-full border border-line bg-white/70 p-0.5"
-    >
-      {options.map(({ id, label, icon: Icon }) => {
-        const active = chatMode === id;
-        return (
-          <button
-            key={label}
-            type="button"
-            aria-pressed={active}
-            {...(id ? { 'data-tour': 'ava-chat' } : {})}
-            aria-label={t(id ? 'Chat-tilstand' : 'Klassisk visning')}
-            title={t(id ? 'Chat-tilstand' : 'Klassisk visning')}
-            onClick={() => onChange(id)}
-            className={cn(
-              'relative flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors',
-              active
-                ? 'bg-ink text-paper'
-                : 'text-muted hover:text-ink',
-            )}
-          >
-            <Icon size={12} strokeWidth={1.8} />
-            <span className="hidden sm:inline">{t(label)}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-

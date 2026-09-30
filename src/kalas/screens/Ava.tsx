@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, Brain, CircleAlert, History, Plus } from 'lucide-react';
+import { ArrowLeft, Brain, ChevronDown, CircleAlert, History, Plus, X } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { cn } from '../ui';
 import { useLang } from '../i18n';
@@ -35,12 +35,13 @@ const SUGGESTIONS = [
 export default function Ava({
   onNavigate,
   onUiAction,
-  uiMode = 'classic',
+  onClose,
 }: {
   onNavigate?: (s: NavigateTarget) => void;
   /** Applies agent-driven client actions (page navigation) as they stream in. */
   onUiAction?: (action: AgentUiAction) => void;
-  uiMode?: 'chat' | 'classic';
+  /** Puts the panel away; shown at the end of the header when given. */
+  onClose?: () => void;
 }) {
   const { loading, event, couple } = useWedding();
   const { t } = useLang();
@@ -68,7 +69,7 @@ export default function Ava({
       coupleA={couple.a}
       onNavigate={onNavigate}
       onUiAction={onUiAction}
-      uiMode={uiMode}
+      onClose={onClose}
     />
   );
 }
@@ -78,13 +79,13 @@ function AvaChat({
   coupleA,
   onNavigate,
   onUiAction,
-  uiMode,
+  onClose,
 }: {
   eventId: string;
   coupleA: string;
   onNavigate?: (s: NavigateTarget) => void;
   onUiAction?: (action: AgentUiAction) => void;
-  uiMode: 'chat' | 'classic';
+  onClose?: () => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const { refresh } = useWedding();
@@ -122,7 +123,6 @@ function AvaChat({
       if (activeIdRef.current) bumpThread(activeIdRef.current);
     },
     onUiAction,
-    uiMode,
   });
 
   const fetchThreads = useCallback(
@@ -254,6 +254,12 @@ function AvaChat({
         >
           <Plus size={15} strokeWidth={2.2} /> {t('Ny')}
         </button>
+        {onClose && (
+          <IconButton label={t('Luk Ava')} onClick={onClose}>
+            <X size={17} className="hidden lg:block" />
+            <ChevronDown size={19} className="lg:hidden" />
+          </IconButton>
+        )}
       </header>
 
       {/* ── Body ───────────────────────────────────────────────────── */}

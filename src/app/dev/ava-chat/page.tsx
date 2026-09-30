@@ -5,7 +5,7 @@
    from the fixtures below, and POST /api/chat streams a scripted turn: two
    tools, one of them slow, then a reply. `?view=new` opens on an empty chat. */
 
-import ChatShell from '@/kalas/ChatShell';
+import Shell from '@/kalas/Shell';
 import Ava from '@/kalas/screens/Ava';
 import { LanguageProvider } from '@/kalas/i18n';
 import type { AvaMemoryRow, ChatMessageRow, ChatThreadRow } from '@/lib/db/types';
@@ -99,15 +99,9 @@ export default function DevAvaChatPage() {
     <LanguageProvider initialLang="da">
       <FixtureWedding>
         <div className="theme-kalas min-h-screen bg-canvas font-sans text-ink">
-          <ChatShell
-            current="budget"
-            onNavigate={() => {}}
-            onChatModeChange={() => {}}
-            stageSignal={0}
-            chat={<Ava uiMode="chat" />}
-          >
+          <Shell current="budget" onNavigate={() => {}} ava={<Ava onClose={() => {}} />} avaOpen>
             <div className="p-8"><div className="h-[900px] rounded-[20px] border border-line bg-shell" /></div>
-          </ChatShell>
+          </Shell>
         </div>
       </FixtureWedding>
     </LanguageProvider>

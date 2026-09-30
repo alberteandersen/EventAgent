@@ -3,7 +3,7 @@
 /* Harness for GuidedTour — the real component, without a signed-in wedding.
    Nothing is highlighted any more, so there is nothing to stand in for: what
    this exercises is the card itself, the forward/back buttons, the progress
-   ring and the final chat-vs-classic fork. The tall filler below is there so
+   ring and the final step. The tall filler below is there so
    the scroll-to-top on each step has something to scroll. */
 
 import { useState } from 'react';
@@ -40,7 +40,7 @@ export default function DevWalkthroughPage() {
           </div>
 
           <div className="min-w-0 flex-1">
-            {/* Stand-in for the mode switch the chat step rings. */}
+            {/* Stand-in for the Ava button the Ava step rings. */}
             <button
               data-tour="ava-chat"
               onClick={() => note('klik: ava-chat')}
@@ -62,7 +62,7 @@ export default function DevWalkthroughPage() {
         {running && (
           <GuidedTour
             onNavigate={(s: ScreenId) => note(`navigate: ${s}`)}
-            onFinish={(mode: 'chat' | 'classic') => { note(`finish: ${mode}`); setRunning(false); }}
+            onFinish={() => { note('finish'); setRunning(false); }}
             idx={step}
             setIdx={setStep}
           />

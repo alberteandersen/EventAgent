@@ -3,15 +3,14 @@
 /* Ava's guided tour — the only one.
  *
  * There used to be a second walkthrough that narrated by dropping bubbles into
- * the chat, and since onboarding lands every couple in chat mode, that was the
+ * the chat, and since onboarding opened on the chat, that was the
  * one everybody actually met: a column of text, nothing pointed at. This one
  * anchors to the real interface instead — it spotlights the control the step
  * is about, says in so many words what to press, and advances when they press
  * it. "Videre" is the escape hatch, not the intended path; that is the
  * difference between a tour you read and one you do.
  *
- * Mounted in both shells, so the mode the couple happens to be in decides
- * nothing about whether they are shown around.
+ * It ends on Hjem with Ava's panel open beside it.
  */
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
@@ -26,8 +25,8 @@ import {
 
 type Box = { top: number; left: number; width: number; height: number };
 
-/** The visible nav button for a page — the rail renders twice (sidebar and,
- *  in chat mode, the collapsed rail), and the hidden copy has no width. */
+/** The visible button for a target: some render twice (the header's Ava
+ *  button and the phone's bottom bar), and the hidden copy has no width. */
 function findNavButton(page: string): HTMLElement | null {
   const all = Array.from(document.querySelectorAll<HTMLElement>(`[data-tour="${page}"]`));
   return all.find((el) => el.getBoundingClientRect().width > 0) ?? null;
@@ -36,7 +35,6 @@ function findNavButton(page: string): HTMLElement | null {
 export default function GuidedTour({
   onNavigate,
   onFinish,
-  chatMode = false,
   idx,
   setIdx,
 }: {
@@ -47,9 +45,7 @@ export default function GuidedTour({
      is mounted under — which showed them the same step a second time. */
   idx: number;
   setIdx: Dispatch<SetStateAction<number>>;
-  onFinish: (mode: 'chat' | 'classic') => void;
-  /** Which mode the couple is in, so the last step offers them the other one. */
-  chatMode?: boolean;
+  onFinish: () => void;
 }) {
   const { t } = useLang();
 
@@ -140,7 +136,7 @@ export default function GuidedTour({
     /* Instant, not smooth: a smooth scroll here is silently dropped in at
        least one browser we run in, and a step that describes the top of a
        page while showing the middle of it is worse than an abrupt jump. */
-    window.scrollTo(0, 0);
+    document.getElementById('kalas-main')?.scrollTo(0, 0);
   }, [step.id]);
 
   /* Opening the step's page is KalasRoot's job, not this component's. Done
@@ -221,7 +217,7 @@ export default function GuidedTour({
             <span className="sr-only">{t('{n} af {total}', { n: idx + 1, total })}</span>
             <button
               type="button"
-              onClick={() => onFinish(chatMode ? 'chat' : 'classic')}
+              onClick={onFinish}
               aria-label={t('Spring rundvisningen over')}
               className="-mr-1 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-shell hover:text-ink"
             >
@@ -266,35 +262,14 @@ export default function GuidedTour({
           </div>
         )}
 
-        {/* The tour ends on a decision, not a dismissal. The two modes are a
-            real fork in how the couple will use Kalas every day, and until
-            now it was a text link next to a button — the choice was there,
-            the difference was not. */}
         {step.final && (
-          <div className="mt-5 flex flex-col gap-2">
-            <p className="eyebrow">{t('Hvordan vil I helst arbejde?')}</p>
-            <button
-              type="button"
-              onClick={() => onFinish('chat')}
-              className="flex cursor-pointer flex-col gap-0.5 rounded-2xl rule bg-shell px-4 py-3 text-left transition-colors hover:border-ink"
-            >
-              <span className="text-[13px] font-semibold text-ink">{t('Med Ava ved siden af')}</span>
-              <span className="text-[12.5px] leading-snug text-muted">
-                {t('I skriver, hvad I vil have. Jeg søger på nettet, skriver til stederne, retter budgettet og åbner den rigtige side undervejs.')}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onFinish('classic')}
-              className="flex cursor-pointer flex-col gap-0.5 rounded-2xl rule bg-shell px-4 py-3 text-left transition-colors hover:border-ink"
-            >
-              <span className="text-[13px] font-semibold text-ink">{t('Klassisk, med menuen')}</span>
-              <span className="text-[12.5px] leading-snug text-muted">
-                {t('Alt ligger i menuen — venues, budget, gæster, hjemmeside. I styrer selv, og kan altid tilkalde mig.')}
-              </span>
-            </button>
-            <p className="mt-1 text-[12px] text-muted">{t('I kan skifte når som helst oppe i hjørnet.')}</p>
-          </div>
+          <button
+            type="button"
+            onClick={onFinish}
+            className="mt-5 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-ink px-4 py-2.5 text-meta font-semibold text-paper transition-opacity hover:opacity-90"
+          >
+            {t('Kom i gang')} <ArrowRight size={14} />
+          </button>
         )}
       </div>
     </>,

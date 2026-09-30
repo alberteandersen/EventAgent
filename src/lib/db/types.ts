@@ -67,8 +67,8 @@ export function isAgentPage(value: unknown): value is AgentPage {
 
 /**
  * A client-side action the agent fires mid-turn. Streamed to the app as an
- * SSE `ui` frame from /api/chat; the client applies it (navigates the stage
- * in chat mode, or the main area behind the Ava drawer in classic mode).
+ * SSE `ui` frame from /api/chat; the client applies it (opens the page beside
+ * Ava's panel, and on a phone puts the panel away so the page shows).
  */
 export interface AgentUiAction {
   kind: "navigate";

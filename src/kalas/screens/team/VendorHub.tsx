@@ -53,7 +53,7 @@ export default function VendorHub({ onNavigate }: { onNavigate?: (s: NavigateTar
     if (nextCat) setCat(nextCat);
     if (next === 'explore') setVenueView('discover');
     if (next === 'shortlist') setVenueView('list');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('kalas-main')?.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
   const onTabChange = useCallback((next: HubTab) => {

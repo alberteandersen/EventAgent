@@ -160,14 +160,6 @@ export const EN: Record<string, string> = {
   'Send det med mail': 'Send it by email',
 
   // ── Classic-mode walkthrough ────────────────────────────────────────
-  'Hvordan vil I helst arbejde?': 'How would you rather work?',
-  'Med Ava ved siden af': 'With Ava alongside',
-  'I skriver, hvad I vil have. Jeg søger på nettet, skriver til stederne, retter budgettet og åbner den rigtige side undervejs.':
-    'You say what you want. I search the web, write to the places, adjust the budget and open the right page as we go.',
-  'Klassisk, med menuen': 'Classic, with the menu',
-  'Alt ligger i menuen — venues, budget, gæster, hjemmeside. I styrer selv, og kan altid tilkalde mig.':
-    'Everything is in the menu — venues, budget, guests, website. You drive, and can call me in any time.',
-  'I kan skifte når som helst oppe i hjørnet.': 'You can switch any time, up in the corner.',
   'Det her er jeres side': 'This is your page',
   'Tryk her': 'Click here',
   'Sådan kommer I i gang': 'Where to start',
@@ -249,7 +241,6 @@ export const EN: Record<string, string> = {
   'Hjemmeside': 'Website',
   'Ønskeliste': 'Registry',
   'Invitationer': 'Invitations',
-  'Invitér': 'Invite',
   'Log ud': 'Log out',
   'Bordplan': 'Seating',
   // Screen subtitles
@@ -264,14 +255,7 @@ export const EN: Record<string, string> = {
   'Planlægning': 'Planning',
 
   // ── Chat mode ───────────────────────────────────────────────────────
-  'Chat-tilstand': 'Chat mode',
-  'Klassisk visning': 'Classic view',
   'Klassisk': 'Classic',
-  'Viser: {page}': 'Showing: {page}',
-  'Ava styrer skærmen, sig hvad I vil se.': 'Ava drives the screen, tell her what you want to see.',
-  'Chat': 'Chat',
-  'Skærm': 'Screen',
-  'Skift mellem chat og klassisk': 'Switch between chat and classic',
 
   // ── Home dashboard (palette refresh) ────────────────────────────────
   'Brylluppet for': 'The wedding of',
@@ -2102,4 +2086,7 @@ export const EN: Record<string, string> = {
   'Resten af planen ligger under Planlægning →': 'The rest of the plan is under Planning →',
   'Her svarer gæsterne': 'This is where guests reply',
   'Svarene lander på jeres gæsteliste, når siden er udgivet.': 'Replies land on your guest list once the site is published.',
+  'Kom i gang': 'Get started',
+  'Invitér jeres partner': 'Invite your partner',
+  'Luk Ava': 'Close Ava',
 };

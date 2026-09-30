@@ -5,6 +5,7 @@
      ?screen=budget      which screen (default home)
      ?loading=1          before the wedding's data has arrived
      ?empty=1            a wedding with nothing in it yet
+     ?ava=1              Ava's panel open (a stand-in; /dev/ava-chat has the real chat)
    Calls to /api are answered empty, so screens that fetch show their empty
    state rather than an auth error. */
 
@@ -78,6 +79,7 @@ function Harness() {
   const empty = params.get('empty') === '1';
   const [screen, setScreen] = useState<ScreenId>(() => (params.get('screen') as ScreenId) || 'home');
   useState(() => { patchFetch(); return null; });
+  const [avaOpen, setAvaOpen] = useState(params.get('ava') === '1');
 
   const fixture = useMemo(() => ({
     guests: empty ? [] : [
@@ -112,7 +114,19 @@ function Harness() {
     >
       <ConfirmProvider>
         <div className="theme-kalas min-h-screen bg-canvas font-sans text-ink">
-          <Shell current={screen} onNavigate={navigate}>
+          <Shell
+            current={screen}
+            onNavigate={navigate}
+            avaOpen={avaOpen}
+            onAvaOpenChange={setAvaOpen}
+            ava={
+              <div data-testid="ava-standin" className="flex flex-1 flex-col gap-3 p-6">
+                <p className="font-serif text-title text-ink">Ava</p>
+                <p className="text-meta text-muted">Stand-in for the chat.</p>
+                <button type="button" onClick={() => setAvaOpen(false)} className="self-start text-meta text-terracotta">Luk</button>
+              </div>
+            }
+          >
             <div key={screen}>{SCREENS(navigate)[screen]}</div>
           </Shell>
         </div>

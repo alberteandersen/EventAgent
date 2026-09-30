@@ -21,6 +21,10 @@ export const WALKTHROUGH_KEY = 'kalas_walkthrough';
  *  mount — to start over, and it ran in a ring. */
 export const WALKTHROUGH_DONE_KEY = 'kalas_walkthrough_done';
 
+/** localStorage key: whether Ava's panel is open on this device. Onboarding
+ *  opens it, so a new couple meets her first. */
+export const AVA_OPEN_KEY = 'kalas_ava_open';
+
 export type WalkthroughStep = {
   id: string;
   /** The page the tour opens for this step. */
@@ -32,14 +36,14 @@ export type WalkthroughStep = {
   /** Overrides the card's eyebrow. Needed now that anchors are page regions
    *  rather than nav items, which used to supply the label. */
   eyebrow?: string;
-  /** Forces chat open or closed as the step opens. Left undefined, the
-   *  couple's current mode stands. */
+  /** Opens or puts away Ava's panel as the step opens. Left undefined, it
+   *  stays as it is. */
   chat?: boolean;
   /** What to ring, when it should not be the next page's menu button — a
-   *  `data-tour` value. Used by the chat step, where the thing to press is
-   *  the mode switch rather than a page. */
+   *  `data-tour` value. Used by the Ava step, where the thing to press is
+   *  her button rather than a page. */
   target?: string;
-  /** Renders the chat-vs-classic choice, and ends the tour. */
+  /** The last step: one button that ends the tour. */
   final?: boolean;
 };
 
@@ -74,16 +78,16 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     eyebrow: NAV.find((n) => n.id === page)?.label,
     title,
     body,
-    // Onboarding lands every couple in chat, so without this the tour
-    // explains a page from behind the chat column covering it.
+    // Onboarding opens Ava's panel, so without this the tour explains a
+    // page from behind it.
     ...(page === 'home' ? { chat: false } : {}),
   })),
   {
     id: 'chat',
     page: 'home',
     eyebrow: 'Ava',
-    /* Deliberately does NOT force chat on. The step is about the switch, so
-       they press it themselves and watch it happen — forcing it first would
+    /* Deliberately does NOT open the panel. The step is about her button, so
+       they press it themselves and watch it happen — opening it first would
        leave the ring pointing at a control that was already on, which is the
        exact fault this tour started with. */
     target: 'ava-chat',

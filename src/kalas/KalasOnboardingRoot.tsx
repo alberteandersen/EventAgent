@@ -8,7 +8,7 @@ import { AnimatePresence, MotionConfig } from 'motion/react';
 import { type ScreenId } from './Shell';
 import Onboarding, { type FormState, type PhotoDraft, toOnboardingPayload } from './screens/Onboarding';
 import { LanguageProvider, useLang, type Lang } from './i18n';
-import { tourHandoff, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY } from './walkthrough';
+import { AVA_OPEN_KEY, tourHandoff, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY } from './walkthrough';
 
 export default function KalasOnboardingRoot({ initialLang = 'da' }: { initialLang?: Lang }) {
   return (
@@ -46,18 +46,18 @@ function OnboardingShell() {
         // /home's server gate will bounce back here if nothing stuck.
       }
     }
-    // Hand off into chat mode with Ava's guided tour armed at step 0 — she
+    // Hand off to Hjem with Ava's panel open and her guided tour armed at step 0 — she
     // takes it from here. localStorage (not session) so a reload resumes it,
     // and the done marker is cleared because finishing the interview means
     // starting over: without that, a couple who had seen the tour once got
     // nothing on their second run through onboarding.
     try {
       const handoff = tourHandoff();
-      localStorage.setItem('kalas_chat_mode', '1');
+      localStorage.setItem(AVA_OPEN_KEY, '1');
       localStorage.setItem(WALKTHROUGH_KEY, handoff.setProgress);
       if (handoff.clearDone) localStorage.removeItem(WALKTHROUGH_DONE_KEY);
     } catch {
-      // Private mode: they just land in whatever mode they were in, no tour.
+      // Private mode: they land on Hjem as it was, without the tour.
     }
     sessionStorage.setItem('kalas_screen', 'home');
     window.location.assign('/home');

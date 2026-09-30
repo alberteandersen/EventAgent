@@ -28,8 +28,6 @@ interface Options {
   onTurnComplete?: () => void;
   /** Fired when the agent drives the client mid-turn (page navigation). */
   onUiAction?: (action: AgentUiAction) => void;
-  /** Which interface the user is in — the agent navigates more proactively in chat mode. */
-  uiMode?: "chat" | "classic";
 }
 
 export interface AgentChat {
@@ -54,7 +52,6 @@ export function useAgentChat({
   onEventCreated,
   onTurnComplete,
   onUiAction,
-  uiMode = "classic",
 }: Options): AgentChat {
   const [messages, setMessages] = useState<ChatMessageView[]>([]);
   const [busy, setBusy] = useState(false);
@@ -164,7 +161,6 @@ export function useAgentChat({
             threadId: threadIdRef.current ?? undefined,
             message: trimmed,
             contextReplyId: ctx?.contextReplyId,
-            uiMode,
             kickoff: ctx?.kickoff,
           }),
         });
@@ -206,7 +202,7 @@ export function useAgentChat({
         setTools([]);
       }
     },
-    [uiMode]
+    []
   );
 
   return { messages, setMessages, busy, liveTools, sendMessage };

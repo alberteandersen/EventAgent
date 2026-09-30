@@ -421,7 +421,7 @@ export default function Seating() {
 
       {/* No breakpoint and no container query: plain wrapping flex.
           A media query measures the window, which this screen never gets (in
-          chat mode it lives in a narrow stage beside Ava). A container query
+          beside Ava's panel it gets less than the window). A container query
           measures the right box but needs a browser that supports it. Flex
           basis needs neither: the two columns sit side by side whenever their
           bases fit on one line, and the rail wraps under and goes full width

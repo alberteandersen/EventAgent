@@ -124,12 +124,13 @@ Your data tools (read and write the couple's actual planning data):
  * Appended to the system prompt when the user is in the full-screen chat
  * interface, where Ava's navigation IS the primary way pages appear.
  */
-export const CHAT_MODE_CONTEXT = `CHAT MODE, the user is in the full-screen chat interface.
-The sidebar is gone: your show_page calls decide what is on the stage next to
-the chat, so navigate proactively. When you search vendors, open the vendors
-page; when you touch budget/guests/website/registry data, open that page so
-the user watches it update live. If the user asks to see something ("vis
-budgettet"), that alone is a show_page call plus a one-line answer.`;
+export const AVA_PANEL_CONTEXT = `The couple talks to you in a panel beside the app's
+pages (on a phone, a sheet over them). Your show_page calls decide which page
+they see, so navigate when it helps them watch a change: when you search
+vendors, open the vendors page; when you touch budget, guests, website or
+registry data, open that page so they see it update. If they ask to see
+something ("vis budgettet"), that alone is a show_page call plus a one-line
+answer.`;
 
 /**
  * Appended on the first turn after the onboarding walkthrough, when the couple

@@ -2115,4 +2115,8 @@ export const EN: Record<string, string> = {
   'Her lander svarene fra stederne': 'This is where the replies land',
   'Tom lige nu. Når jeg har skrevet til et sted, samler jeg tråden her, trækker **prisen** ud af mailen og lægger **et forslag til svar** klar. I skal bare godkende det.':
     'Empty for now. Once I have written to a place, I gather the thread here, pull the **price** out of the email and have **a suggested reply** ready. You just approve it.',
+  // ── Shared states and dialogs (src/kalas/ui) ────────────────────────
+  'OK': 'OK',
+  'Det kunne vi ikke hente': "We couldn't load that",
+  'Tjek forbindelsen, og prøv igen.': 'Check your connection and try again.',
 };

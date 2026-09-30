@@ -70,6 +70,19 @@ html {
   --color-terracotta: #b34e37;      /* the single accent — links / → / errors */
   --color-terracotta-tint: #f2e3dd; /* warm terracotta wash               */
   --color-success: #2f5a48;         /* olive-green (positive)             */
+
+  /* ── Kalas type scale ──────────────────────────────────────────────────
+     Between Tailwind's xs (12px) and sm (14px) sit the two sizes the app
+     leans on most. With xs, sm and base that is the whole scale for text;
+     the serif sizes are for card titles and the page heading. */
+  --text-micro: 0.6875rem;          /* 11px: badges, tracked labels       */
+  --text-micro--line-height: 1.4;
+  --text-meta: 0.8125rem;           /* 13px: subtitles, meta, buttons     */
+  --text-meta--line-height: 1.5;
+  --text-title: 1.3rem;             /* serif card and dialog titles       */
+  --text-title--line-height: 1.25;
+  --text-page: clamp(2rem, 4vw, 2.4rem); /* serif page heading          */
+  --text-page--line-height: 1.1;
 }
 
 /* ── Kalas subtree re-skin ───────────────────────────────────────────────

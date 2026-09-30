@@ -1,14 +1,18 @@
 import * as React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Check } from 'lucide-react';
-import { useLang } from './i18n';
+import { useLang } from '../i18n';
 
-export function cn(...parts: Array<string | false | null | undefined>) {
-  return parts.filter(Boolean).join(' ');
-}
+import { cn } from './base';
 
-/** Shared page gutters — keep Home / Timeline / Budget / Venues aligned. */
-export const pagePad = 'px-6 py-8 sm:px-9 lg:px-12 lg:py-8';
+export { cn, pagePad } from './base';
+export { Page, PageHeader, SectionTitle } from './Page';
+export { Tabs, type TabItem } from './Tabs';
+export { Button, IconButton, buttonClass } from './Button';
+export { Dialog, ConfirmProvider, useConfirm, type ConfirmOptions } from './Dialog';
+export { EmptyState, ErrorState, Loader, PageLoader, Skeleton } from './States';
+export { Field, inputClass, textareaClass } from './Field';
+export { Card, Stat } from './Card';
 
 /** Shared action-button size — matches shell primary CTA (h-8 / text-xs). */
 export const btnSize =

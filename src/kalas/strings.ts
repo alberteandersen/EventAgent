@@ -2133,4 +2133,5 @@ export const EN: Record<string, string> = {
   "eller": "or",
   "Sender dig videre…": "Taking you there…",
   "Fortsæt med Google": "Continue with Google",
+  'Betalingen kunne ikke startes. Prøv igen om lidt.': 'The payment could not be started. Try again in a moment.',
 };

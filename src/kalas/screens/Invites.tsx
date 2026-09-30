@@ -245,10 +245,11 @@ export default function Invites() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ eventId: event.id }),
     }).catch(() => null);
-    if (!res) return;
-    if (res.status === 503) { setNeedsPayment(false); return; } // Stripe not configured → unlocked
-    const data = (await res.json().catch(() => ({}))) as { url?: string };
-    if (data.url) window.location.href = data.url;
+    const data = res ? ((await res.json().catch(() => ({}))) as { url?: string; error?: string }) : {};
+    if (data.url) { window.location.href = data.url; return; }
+    // Paid already: the webhook beat us here, so just pick the order up.
+    if (res?.status === 409) { await refresh(); setNeedsPayment(false); return; }
+    setGenError(t('Betalingen kunne ikke startes. Prøv igen om lidt.'));
   };
 
   const [exporting, setExporting] = useState<null | 'pptx' | 'png'>(null);

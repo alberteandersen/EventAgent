@@ -3,10 +3,11 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-/** True when the event may use the AI designer: a paid order exists, or
-    Stripe isn't configured (dev/preview environments run unlocked). */
+/** True when the event may use the AI designer: a paid order exists. Without
+    Stripe configured, development runs unlocked, but production stays locked:
+    a missing key must never give the paid designers away. */
 export async function hasWebsiteAccess(supabase: SupabaseClient, eventId: string): Promise<boolean> {
-  if (!process.env.STRIPE_SECRET_KEY) return true;
+  if (!process.env.STRIPE_SECRET_KEY) return process.env.NODE_ENV !== "production";
   const { count } = await supabase
     .from("website_orders")
     .select("id", { count: "exact", head: true })

@@ -11,26 +11,17 @@
    Calls to /api are answered empty, so screens that fetch show their empty
    state rather than an auth error. */
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, startTransition, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams } from 'next/navigation';
 import { LanguageProvider } from '@/kalas/i18n';
 import Shell, { type ScreenId } from '@/kalas/Shell';
-import { ConfirmProvider } from '@/kalas/ui';
+import { ConfirmProvider, PageLoader } from '@/kalas/ui';
 import { resolveScreenNavigation, type NavigateTarget } from '@/kalas/lib/hub-nav';
 import { defaultMilestones } from '@/kalas/screens/planning/milestones';
 import Home from '@/kalas/screens/Home';
-import Planning from '@/kalas/screens/Planning';
-import Inbox from '@/kalas/screens/Inbox';
-import VendorHub from '@/kalas/screens/team/VendorHub';
-import Budget from '@/kalas/screens/Budget';
-import Guests from '@/kalas/screens/Guests';
-import Website from '@/kalas/screens/Website';
-import Registry from '@/kalas/screens/Registry';
-import Invites from '@/kalas/screens/Invites';
-import Seating from '@/kalas/screens/Seating';
-import Nygift from '@/kalas/screens/Nygift';
-import Guides from '@/kalas/screens/Guides';
+// The pages load as they do in the app: lazily, fetched on idle.
+import { Budget, Guests, Guides, Inbox, Invites, Nygift, Planning, Registry, Seating, VendorHub, Website, usePrefetchPages } from '@/kalas/pages';
 import { FixtureWedding, guest, task } from '../_fixture/wedding';
 import type { VenueRow } from '@/lib/db/types';
 
@@ -104,9 +95,10 @@ function Harness() {
     ],
   }), [empty]);
 
+  usePrefetchPages();
   const navigate = (s: NavigateTarget) => {
     if (s === 'ava') return;
-    setScreen(resolveScreenNavigation(s));
+    startTransition(() => setScreen(resolveScreenNavigation(s)));
   };
 
   return (
@@ -134,7 +126,9 @@ function Harness() {
               </div>
             }
           >
-            <div key={screen}>{SCREENS(navigate)[screen]}</div>
+            <Suspense fallback={<PageLoader />}>
+              <div key={screen}>{SCREENS(navigate)[screen]}</div>
+            </Suspense>
           </Shell>
         </div>
       </ConfirmProvider>

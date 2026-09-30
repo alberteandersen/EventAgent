@@ -3,8 +3,7 @@
 /* Authenticated Kalas app. Mounted at /home via next/dynamic with ssr:false,
    so sessionStorage/window access in the screens is safe. Onboarding lives
    on its own Next route (/onboarding), no phase state here. */
-import { useCallback, useEffect, useRef, useState } from 'react';
-import dynamic from 'next/dynamic';
+import { Suspense, startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import { armTour, AVA_OPEN_KEY, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS } from './walkthrough';
@@ -12,26 +11,15 @@ import GuidedTour from './GuidedTour';
 import { WeddingProvider, useWedding } from './useWedding';
 import { LanguageProvider, type Lang } from './i18n';
 import { UndoProvider } from './undo';
-import { ConfirmProvider } from './ui';
+import { ConfirmProvider, PageLoader } from './ui';
 import Home from './screens/Home';
 import Ava from './screens/Ava';
 import type { AgentUiAction } from '@/lib/db/types';
 import { agentActionToScreen, migrateSavedScreen, resolveScreenNavigation, type NavigateTarget } from './lib/hub-nav';
 import { isLegacyHubScreen } from './screens/team/shared';
-import VendorHub from './screens/team/VendorHub';
-import Planning from './screens/Planning';
-import Budget from './screens/Budget';
-import Guests from './screens/Guests';
-import Website from './screens/Website';
-import Invites from './screens/Invites';
-import Seating from './screens/Seating';
-import Registry from './screens/Registry';
-import Inbox from './screens/Inbox';
-import Nygift from './screens/Nygift';
 import { OPEN_GUIDE_EVENT } from './screens/guides/links';
+import { Budget, Guests, Guides, Inbox, Invites, Nygift, Planning, Registry, Seating, VendorHub, Website, usePrefetchPages } from './pages';
 
-// Every guide and FAQ answer ships with this screen; loaded when first opened.
-const Guides = dynamic(() => import('./screens/Guides'), { ssr: false });
 
 export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }) {
   return (
@@ -52,6 +40,7 @@ export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }
 }
 
 function AppInner() {
+  usePrefetchPages();
   const { replies } = useWedding();
   const inboxBadge = replies.filter((r) => !r.read_at).length;
   const [hubTick, setHubTick] = useState(0);
@@ -132,7 +121,7 @@ function AppInner() {
     const target = resolveScreenNavigation(s);
     if (target === 'team' && hadDeepLink) setHubTick((t) => t + 1);
     sessionStorage.setItem('kalas_screen', target);
-    setScreen(target);
+    startTransition(() => setScreen(target));
   };
 
   /* The page follows the tour, exactly once per step. It lives up here with
@@ -169,7 +158,7 @@ function AppInner() {
     const target = agentActionToScreen(action);
     if (target === 'team') setHubTick((t) => t + 1);
     sessionStorage.setItem('kalas_screen', target);
-    setScreen(target);
+    startTransition(() => setScreen(target));
     setAvaSignal((t) => t + 1);
   }, []);
 
@@ -182,7 +171,7 @@ function AppInner() {
     setWalkthroughActive(false);
     setAva(true);
     sessionStorage.setItem('kalas_screen', 'home');
-    setScreen('home');
+    startTransition(() => setScreen('home'));
   }, [setAva]);
 
   type AppScreen = Exclude<ScreenId, 'ava'>;
@@ -222,9 +211,13 @@ function AppInner() {
       onAvaOpenChange={setAva}
       avaSignal={avaSignal}
     >
-      <AnimatePresence mode="wait">
-        <div key={activeScreen}>{screens[activeScreen as AppScreen]}</div>
-      </AnimatePresence>
+      {/* Outside the keyed page, so a page change (a transition) keeps the
+          current page up rather than falling back to the loader. */}
+      <Suspense fallback={<PageLoader />}>
+        <AnimatePresence mode="wait">
+          <div key={activeScreen}>{screens[activeScreen as AppScreen]}</div>
+        </AnimatePresence>
+      </Suspense>
       {tour}
     </Shell>
   );

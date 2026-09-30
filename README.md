@@ -99,3 +99,9 @@ every `/dev` page is a 404 in a production build).
   `npx tsx --env-file=.env worker/poll.ts`.
 - **Stripe**: point a webhook at `/api/webhooks/stripe` for
   `checkout.session.completed` and `checkout.session.expired`.
+- **Stripe is required in production.** Without `STRIPE_SECRET_KEY` the AI
+  designers stay locked there (development runs them unlocked).
+- **Privacy policy** (`/privatliv`): fill in `src/lib/legal.ts` (the company,
+  contact, data region, retention, and the lawyer's answers) and set
+  `reviewed: true`. Until then the page is a 404 in production and nothing
+  links to it; `next dev` shows it with the gaps marked.

@@ -6,6 +6,7 @@
      ?loading=1          before the wedding's data has arrived
      ?empty=1            a wedding with nothing in it yet
      ?error=1            the wedding could not be loaded
+     ?apifail=1          every call to /api fails (a 500), for the error states
      ?ava=1              Ava's panel open (a stand-in; /dev/ava-chat has the real chat)
    Calls to /api are answered empty, so screens that fetch show their empty
    state rather than an auth error. */
@@ -40,8 +41,12 @@ function patchFetch() {
   if (fetchPatched || typeof window === 'undefined') return;
   fetchPatched = true;
   const real = window.fetch.bind(window);
+  const fail = new URLSearchParams(window.location.search).get('apifail') === '1';
   window.fetch = (input, init) => {
     const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    if (url.includes('/api/') && fail) {
+      return Promise.resolve(new Response(JSON.stringify({ error: 'dev: failing on purpose' }), { status: 500 }));
+    }
     if (url.includes('/api/')) {
       return Promise.resolve(new Response(JSON.stringify({ items: [], photos: [], threads: [], total: 0 }), {
         headers: { 'Content-Type': 'application/json' },

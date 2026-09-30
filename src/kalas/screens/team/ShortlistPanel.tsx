@@ -7,6 +7,7 @@ import VenueDiscovery, { type VenueHubView } from '../Venues';
 import OutreachDialog from '../../OutreachDialog';
 import { useWedding } from '../../useWedding';
 import { useLang } from '../../i18n';
+import { apiWrite } from '../../notice';
 import { Eyebrow, cn } from '../../ui';
 import type { NavigateTarget } from '../../lib/hub-nav';
 import type { HubCat, HubTab } from './shared';
@@ -141,11 +142,11 @@ function VendorShortlist({
   const toggle = async (id: string, liked: boolean) => {
     setBusy(id);
     try {
-      await fetch(`/api/venues/${id}/swipe`, {
+      await apiWrite(`/api/venues/${id}/swipe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ decision: liked ? 'rejected' : 'liked' }),
-      });
+      }, t);
       await refresh();
     } finally {
       setBusy(null);
@@ -155,11 +156,11 @@ function VendorShortlist({
   const book = async (id: string, booked: boolean) => {
     setBusy(id);
     try {
-      await fetch(`/api/venues/${id}`, {
+      await apiWrite(`/api/venues/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ booked: !booked }),
-      });
+      }, t);
       await refresh();
     } finally {
       setBusy(null);

@@ -7,6 +7,7 @@ import { useUndo, useWithoutPending } from '../../undo';
 import { Lightbox } from '../../onboarding/Lightbox';
 import { cn } from '../../ui';
 import { useLang } from '../../i18n';
+import { apiWrite } from '../../notice';
 import type { AlbumPhotoRow } from '@/lib/db/types';
 
 type Photo = AlbumPhotoRow & { url: string | null };
@@ -58,7 +59,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
       ids: id,
       label: t('Billedet er slettet'),
       commit: async () => {
-        await fetch(`/api/album/${id}`, { method: 'DELETE' });
+        if (!(await apiWrite(`/api/album/${id}`, { method: 'DELETE' }, t))) return;
         setPhotos((prev) => prev.filter((p) => p.id !== id));
         setTotal((n) => Math.max(0, n - 1));
       },
@@ -76,11 +77,12 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
   async function toggleFavorite(photo: Photo) {
     const favorite = !photo.favorite;
     setPhotos((prev) => prev.map((p) => (p.id === photo.id ? { ...p, favorite } : p)));
-    await fetch(`/api/album/${photo.id}`, {
+    const res = await apiWrite(`/api/album/${photo.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ favorite }),
-    });
+    }, t);
+    if (!res) setPhotos((prev) => prev.map((p) => (p.id === photo.id ? { ...p, favorite: !favorite } : p)));
   }
 
   function copyLink() {

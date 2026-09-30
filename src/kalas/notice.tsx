@@ -36,3 +36,17 @@ export function showError(title: string, body?: string) {
     </div>
   ), { id: 'kalas-error', duration: 5200 });
 }
+
+/** A change sent to our API. When it does not go through, the couple is told
+ *  (the same toast as a failed wedding write) and it resolves to null. */
+export async function apiWrite(
+  url: string,
+  init: RequestInit,
+  t: (s: string) => string,
+  failure = 'Det blev ikke gemt',
+): Promise<Response | null> {
+  const res = await fetch(url, init).catch(() => null);
+  if (res?.ok) return res;
+  showError(t(failure), t('Tjek forbindelsen, og prøv igen.'));
+  return null;
+}

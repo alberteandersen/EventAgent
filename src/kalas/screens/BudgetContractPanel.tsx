@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Upload, FileText, Trash2, ScanText, Send, Loader2, AlertTriangle } from 'lucide-react';
 import { useLang } from '../i18n';
+import { apiWrite } from '../notice';
 import { cn } from '../ui';
 import type { BudgetContractRow, ContractReview } from '@/lib/db/types';
 
@@ -87,10 +88,11 @@ export default function BudgetContractPanel({
 
   async function removeContract() {
     if (!contract) return;
-    const id = contract.id;
+    const removed = contract;
     setContract(null);
     setAnswer('');
-    await fetch(`/api/budget/contracts?id=${id}`, { method: 'DELETE' }).catch(() => {});
+    // Put it back if the delete did not go through.
+    if (!(await apiWrite(`/api/budget/contracts?id=${removed.id}`, { method: 'DELETE' }, t))) setContract(removed);
   }
 
   async function ask() {

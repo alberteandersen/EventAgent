@@ -5,7 +5,8 @@ import { motion } from 'motion/react';
 import { Heart, Check, Star, MapPin, X, Loader2, RotateCw, MessageCircle } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { useLang } from '../../i18n';
-import { cn } from '../../ui';
+import { Button, EmptyState, ErrorState, Skeleton, cn } from '../../ui';
+import { apiWrite } from '../../notice';
 import { effectiveLocation } from '../../lib/location';
 import type { NavigateTarget } from '../../lib/hub-nav';
 import type { HubCat } from './shared';
@@ -34,6 +35,7 @@ export default function VendorExplore({
   const [results, setResults] = useState<PlaceSuggestion[]>([]);
   const [backendCat, setBackendCat] = useState<string>('other');
   const [loading, setLoading] = useState(false);
+  // The search itself failed, as opposed to finding nobody.
   const [failed, setFailed] = useState(false);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [justSaved, setJustSaved] = useState<Set<string>>(new Set());
@@ -52,7 +54,7 @@ export default function VendorExplore({
       if (hit) {
         setResults(hit.vendors);
         setBackendCat(hit.category);
-        setFailed(hit.vendors.length === 0);
+        setFailed(false);
         return;
       }
       setLoading(true);
@@ -76,7 +78,6 @@ export default function VendorExplore({
         cache.current[key] = { vendors: list, category: data.category ?? 'other' };
         setResults(list);
         setBackendCat(data.category ?? 'other');
-        setFailed(list.length === 0);
       } catch {
         setFailed(true);
       } finally {
@@ -93,12 +94,12 @@ export default function VendorExplore({
   const saveVendor = async (v: PlaceSuggestion) => {
     setSavingId(v.id);
     try {
-      const res = await fetch('/api/venues', {
+      const res = await apiWrite('/api/venues', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ venue: v, category: backendCat }),
-      });
-      if (res.ok) {
+      }, t);
+      if (res) {
         setJustSaved((prev) => new Set(prev).add(v.id));
         await refresh();
       }
@@ -115,72 +116,56 @@ export default function VendorExplore({
   // ── No location yet → send them to set it on the venue page ──────────
   if (!location) {
     return (
-      <div className="rounded-2xl border border-line bg-shell px-5 py-6">
-        <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-shell">
-            <MapPin size={15} className="text-muted" />
-          </span>
-          <div>
-            <p className="text-[0.92rem] font-medium text-ink">{t('Vælg jeres lokation først')}</p>
-            <p className="mt-0.5 text-[0.8rem] text-muted">
-              {t('Sæt jeres lokation øverst på venue-siden, eller vælg et venue, så finder Ava leverandører i nærheden.')}
-            </p>
-            <button
-              type="button"
-              onClick={onGoToVenue}
-              className="mt-3 inline-flex h-8 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold text-paper hover:opacity-90 transition-opacity cursor-pointer"
-            >
-              {t('Til venues')}
-            </button>
-          </div>
-        </div>
-      </div>
+      <EmptyState
+        icon={MapPin}
+        title={t('Vælg jeres lokation først')}
+        action={<Button size="sm" onClick={onGoToVenue}>{t('Til venues')}</Button>}
+      >
+        {t('Sæt jeres lokation øverst på venue-siden, eller vælg et venue, så finder Ava leverandører i nærheden.')}
+      </EmptyState>
     );
   }
+
+  const retry = () => void load(location, cat);
 
   return (
     <div className="space-y-5">
       {/* Location context */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="inline-flex items-center gap-1.5 text-[0.78rem] text-muted">
+        <p className="inline-flex items-center gap-1.5 text-meta text-muted">
           <MapPin size={13} className="text-sage" />
           {t('Nær {area}', { area: location })}
         </p>
         {!loading && !failed && visible.length > 0 && (
-          <button
-            type="button"
-            onClick={() => void load(location, cat)}
-            className="inline-flex h-7 items-center gap-1.5 rounded-full border border-line-soft bg-white px-3 text-[0.7rem] font-semibold text-muted transition-colors hover:text-ink hover:border-ink cursor-pointer"
-          >
-            <RotateCw size={11} /> {t('Opdater')}
-          </button>
+          <Button variant="secondary" size="sm" icon={RotateCw} onClick={retry}>{t('Opdater')}</Button>
         )}
       </div>
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div role="status" aria-label={t('Ava leder efter leverandører…')} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="animate-pulse overflow-hidden rounded-2xl border border-line-soft bg-white">
-              <div className="h-40 bg-shell" />
+            <div key={i} className="overflow-hidden rounded-2xl border border-line-soft bg-card">
+              <Skeleton className="h-40 rounded-none" />
               <div className="space-y-2 p-4">
-                <div className="h-4 w-1/2 rounded bg-shell" />
-                <div className="h-3 w-5/6 rounded bg-shell" />
-                <div className="h-3 w-2/3 rounded bg-shell" />
+                <Skeleton className="h-4 w-1/2 rounded" />
+                <Skeleton className="h-3 w-5/6 rounded" />
+                <Skeleton className="h-3 w-2/3 rounded" />
               </div>
             </div>
           ))}
         </div>
-      ) : failed || visible.length === 0 ? (
-        <div className="rounded-2xl border border-line-soft bg-white p-8 text-center">
-          <p className="text-[0.9rem] text-ink-soft">{t('Ingen leverandører fundet her endnu.')}</p>
-          <button
-            type="button"
-            onClick={() => void load(location, cat)}
-            className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[0.78rem] font-bold text-white transition-opacity hover:opacity-90 cursor-pointer"
-          >
-            <RotateCw size={13} /> {t('Prøv igen')}
-          </button>
-        </div>
+      ) : failed ? (
+        <ErrorState title={t('Ava kunne ikke søge lige nu')} onRetry={retry}>
+          {t('Søgningen gik ikke igennem. Prøv igen om lidt.')}
+        </ErrorState>
+      ) : visible.length === 0 ? (
+        <EmptyState
+          icon={MapPin}
+          title={t('Ingen leverandører fundet her endnu.')}
+          action={<Button variant="secondary" size="sm" icon={RotateCw} onClick={retry}>{t('Søg igen')}</Button>}
+        >
+          {t('Ava fandt ingen i nærheden af {area}. Prøv igen, eller bed hende lede bredere.', { area: location })}
+        </EmptyState>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visible.map((v) => (
@@ -197,14 +182,9 @@ export default function VendorExplore({
       )}
 
       {/* Ask Ava */}
-      <button
-        type="button"
-        onClick={() => onNavigate?.('ava')}
-        className="flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-white px-5 py-3 text-sm text-ink transition-colors hover:bg-paper cursor-pointer"
-      >
-        <MessageCircle size={16} className="text-muted" />
+      <Button variant="secondary" icon={MessageCircle} className="w-full" onClick={() => onNavigate?.('ava')}>
         {t('Spørg Ava om at finde flere')}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -230,7 +210,7 @@ function VendorCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col overflow-hidden rounded-2xl border border-line bg-white"
+      className="flex flex-col overflow-hidden rounded-2xl border border-line bg-card"
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         {v.photo ? (

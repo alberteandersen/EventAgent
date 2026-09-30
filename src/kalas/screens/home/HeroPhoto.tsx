@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Camera, Loader2 } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { useLang } from '../../i18n';
+import { apiWrite } from '../../notice';
 import { cn } from '../../ui';
 import { normalizeImage } from '../../site/normalizeImage';
 import type { SitePhotoRow } from '@/lib/db/types';
@@ -98,11 +99,11 @@ export default function HeroPhoto({
     if (!heroId) return;
     setBusy(true);
     try {
-      await fetch(`/api/website/photos/${heroId}`, {
+      const res = await apiWrite(`/api/website/photos/${heroId}`, {
         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role: 'gallery' }),
-      });
-      setSigned(null);
+      }, t);
+      if (res) setSigned(null);
       await refresh();
     } finally { setBusy(false); }
   };

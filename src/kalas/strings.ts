@@ -2137,5 +2137,12 @@ export const EN: Record<string, string> = {
   'Intet er gået tabt. Tjek forbindelsen, og prøv igen om lidt.': 'Nothing is lost. Check your connection and try again in a moment.',
   'Betalingen kunne ikke startes. Prøv igen om lidt.': 'The payment could not be started. Try again in a moment.',
   'Det blev ikke gemt': 'That was not saved',
+  'Ava leder efter leverandører…': 'Ava is looking for vendors…',
+  'Ava kunne ikke søge lige nu': 'Ava could not search right now',
+  'Søg igen': 'Search again',
+  'Søgningen gik ikke igennem. Prøv igen om lidt.': 'The search did not go through. Try again in a moment.',
+  'Ava fandt ingen i nærheden af {area}. Prøv igen, eller bed hende lede bredere.': 'Ava found none near {area}. Try again, or ask her to look wider.',
+  'Svaret blev ikke sendt': 'The reply was not sent',
+  'Ava kunne ikke skrive et nyt forslag': 'Ava could not write a new suggestion',
   'Kortet kunne ikke hentes. Prøv igen.': 'The card could not be downloaded. Try again.',
 };

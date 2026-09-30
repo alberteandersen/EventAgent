@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
+import { apiWrite } from '../notice';
 import { PageHeader, PageLoader, useConfirm } from '../ui';
 import { createClient } from '@/lib/supabase/client';
 import { settleJob } from '@/lib/jobs/client';
@@ -135,8 +136,9 @@ export default function Invites() {
         form.append('file', file);
         form.append('eventId', event.id);
         const res = await fetch('/api/website/photos', { method: 'POST', body: form }).catch(() => null);
+        if (!res?.ok) { setGenError(t('Billedet kunne ikke uploades. Prøv et andet format.')); continue; }
         // The card takes the photo they just added.
-        const row = res?.ok ? ((await res.json().catch(() => null)) as { photo?: { id?: string } } | null) : null;
+        const row = (await res.json().catch(() => null)) as { photo?: { id?: string } } | null;
         if (row?.photo?.id) patchContent({ photoId: row.photo.id });
       }
       await refresh();
@@ -197,10 +199,10 @@ export default function Invites() {
     setApplying(vibe);
     setGenError(null);
     try {
-      await fetch('/api/invitations/design/preset', {
+      await apiWrite('/api/invitations/design/preset', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: event.id, vibe, format }),
-      });
+      }, t);
       await refresh();
     } finally {
       setApplying(null);
@@ -208,10 +210,10 @@ export default function Invites() {
   };
 
   const activate = async (designId: string) => {
-    await fetch('/api/invitations/design/activate', {
+    await apiWrite('/api/invitations/design/activate', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ designId }),
-    }).catch(() => {});
+    }, t);
     await refresh();
   };
 

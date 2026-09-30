@@ -9,6 +9,7 @@ import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ArrowLeft, FileText, Star, Inbox as InboxIcon, MessagesSquare, Receipt, Paperclip, Send } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
+import { apiWrite } from '../notice';
 import { Button, Chip, EmptyState, Page, PageHeader, PageLoader, Tabs, cn } from '../ui';
 import type { NavigateTarget } from '../lib/hub-nav';
 import { createClient } from '@/lib/supabase/client';
@@ -249,7 +250,7 @@ function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged
   const book = async () => {
     setBooking(true);
     try {
-      await fetch(`/api/venues/${venue.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ booked: true }) });
+      await apiWrite(`/api/venues/${venue.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ booked: true }) }, t);
       await onChanged();
     } finally { setBooking(false); }
   };
@@ -335,20 +336,24 @@ function ProposalReply({ proposal, venueName, onNavigate, onChanged }: {
   const send = async () => {
     setBusy(true);
     try {
-      const res = await fetch(`/api/proposals/${proposal.id}/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body }) });
-      if (res.ok) { setDone('sent'); await onChanged(); }
+      const res = await apiWrite(`/api/proposals/${proposal.id}/send`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ body }) }, t, 'Svaret blev ikke sendt');
+      if (res) { setDone('sent'); await onChanged(); }
     } finally { setBusy(false); }
   };
   const dismiss = async () => {
     setBusy(true);
-    try { await fetch(`/api/proposals/${proposal.id}/dismiss`, { method: 'POST' }); setDone('dismissed'); await onChanged(); }
+    try {
+      if (!(await apiWrite(`/api/proposals/${proposal.id}/dismiss`, { method: 'POST' }, t))) return;
+      setDone('dismissed');
+      await onChanged();
+    }
     finally { setBusy(false); }
   };
   const regenerate = async () => {
     setBusy(true);
     try {
-      const res = await fetch(`/api/replies/${proposal.email_reply_id}/propose`, { method: 'POST' });
-      if (res.ok) { const fresh = (await res.json()) as ReplyProposalRow; setBody(fresh.body); }
+      const res = await apiWrite(`/api/replies/${proposal.email_reply_id}/propose`, { method: 'POST' }, t, 'Ava kunne ikke skrive et nyt forslag');
+      if (res) { const fresh = (await res.json()) as ReplyProposalRow; setBody(fresh.body); }
     } finally { setBusy(false); }
   };
 
@@ -443,7 +448,7 @@ function QuoteCard({ venue, outbound, replies, onChanged }: {
   const book = async () => {
     setBusy(true);
     try {
-      await fetch(`/api/venues/${venue.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ booked: true }) });
+      await apiWrite(`/api/venues/${venue.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ booked: true }) }, t);
       await onChanged();
     } finally { setBusy(false); }
   };

@@ -22,7 +22,7 @@ import { normalizeImage } from '../site/normalizeImage';
 import { websitePriceDkk } from '@/lib/website/pricing';
 import type { SitePhotoRow, WebsiteDesignRow } from '@/lib/db/types';
 import { useLang } from '../i18n';
-import { showNotice } from '../notice';
+import { apiWrite, showNotice } from '../notice';
 import type { GuestContact } from '../site/config';
 import { CONTENT_STEPS, outlineSummary, sectionStatus, stepSummary, type SectionStatus } from '../site/outline';
 import { ContactEditor, GuestbookModeration, QrBlock, SeatFinderInfo, SiteOverview } from './website/HubPanels';
@@ -262,10 +262,10 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
     setApplyingPreset(presetId);
     setGenError(null);
     try {
-      await fetch('/api/website/design/preset', {
+      await apiWrite('/api/website/design/preset', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: event.id, presetId }),
-      });
+      }, t);
       await refresh();
     } finally {
       setApplyingPreset(null);
@@ -273,10 +273,10 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   };
 
   const activateDesign = async (designId: string) => {
-    await fetch('/api/website/design/activate', {
+    await apiWrite('/api/website/design/activate', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ designId }),
-    }).catch(() => {});
+    }, t);
     await refresh();
   };
 
@@ -353,7 +353,8 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
       const form = new FormData();
       form.append('file', file);
       form.append('eventId', event.id);
-      await fetch('/api/website/photos', { method: 'POST', body: form }).catch(() => { failed += 1; });
+      const res = await fetch('/api/website/photos', { method: 'POST', body: form }).catch(() => null);
+      if (!res?.ok) failed += 1;
     }
     if (failed > 0) {
       setGenError(
@@ -366,15 +367,15 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   };
 
   const deletePhoto = async (photoId: string) => {
-    await fetch(`/api/website/photos/${photoId}`, { method: 'DELETE' }).catch(() => {});
+    await apiWrite(`/api/website/photos/${photoId}`, { method: 'DELETE' }, t);
     await refresh();
   };
 
   const setHeroPhoto = async (photoId: string) => {
-    await fetch(`/api/website/photos/${photoId}`, {
+    await apiWrite(`/api/website/photos/${photoId}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role: 'hero' }),
-    }).catch(() => {});
+    }, t);
     await refresh();
   };
 

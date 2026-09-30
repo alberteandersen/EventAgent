@@ -4,7 +4,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { AnimatePresence } from 'motion/react';
 import OutreachDialog from '../OutreachDialog';
 import { useWedding } from '../useWedding';
-import { showNotice } from '../notice';
+import { apiWrite, showNotice } from '../notice';
 import type { NavigateTarget } from '../lib/hub-nav';
 import { useLang } from '../i18n';
 import type { HubCat, HubTab } from './team/shared';
@@ -73,10 +73,10 @@ export default function VenueDiscovery({
   const toggleSave = async (id: string) => {
     const v = venues.find((x) => x.id === id);
     const next = v?.swipe_status === 'liked' ? 'rejected' : 'liked';
-    await fetch(`/api/venues/${id}/swipe`, {
+    await apiWrite(`/api/venues/${id}/swipe`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ decision: next }),
-    });
+    }, t);
     await refresh();
   };
   // Contacting one venue: Ava composes, the couple approves in the dialog.
@@ -87,11 +87,12 @@ export default function VenueDiscovery({
   };
   const bookVenue = async (id: string) => {
     const alreadyChosen = booked === id;
-    await fetch(`/api/venues/${id}`, {
+    const res = await apiWrite(`/api/venues/${id}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ booked: true }),
-    });
+    }, t);
     await refresh();
+    if (!res) return;
     // Confirm the moment a venue becomes "jeres venue".
     if (!alreadyChosen) {
       const name = displayVenues.find((v) => v.id === id)?.name ?? null;

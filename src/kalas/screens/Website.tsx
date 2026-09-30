@@ -22,6 +22,7 @@ import { normalizeImage } from '../site/normalizeImage';
 import { websitePriceDkk } from '@/lib/website/pricing';
 import type { SitePhotoRow, WebsiteDesignRow } from '@/lib/db/types';
 import { useLang } from '../i18n';
+import { showNotice } from '../notice';
 import type { GuestContact } from '../site/config';
 import { CONTENT_STEPS, outlineSummary, sectionStatus, stepSummary, type SectionStatus } from '../site/outline';
 import { ContactEditor, GuestbookModeration, QrBlock, SeatFinderInfo, SiteOverview } from './website/HubPanels';
@@ -121,9 +122,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   const [sitePassword,setSitePassword]= useState(start.sitePassword);
   const [copied,      setCopied]      = useState(false);
   const [hideBranding,setHideBranding]= useState(start.hideBranding);
-  const [showLanding, setShowLanding] = useState(false);
   const [mobileView,  setMobileView]  = useState(false);
-  const [showRsvp,    setShowRsvp]    = useState(false);
 
   // ── Persistence ──────────────────────────────────────────────────────
   // Autosave the config (debounced) as the couple edits. The first save
@@ -744,7 +743,8 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
       html={previewHtml}
       htmlFontsHref={htmlFontsHref}
       mobile={mobileView}
-      onRsvp={() => setShowRsvp(true)}
+      // A preview answers nothing; say where the answers really come in.
+      onRsvp={() => showNotice(t('Her svarer gæsterne'), t('Svarene lander på jeres gæsteliste, når siden er udgivet.'))}
     />
   );
 
@@ -1096,114 +1096,6 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                 {!published && <p className="mt-3 text-[0.72rem] text-muted text-center">{t('Publicér siden for at se statistik')}</p>}
               </section>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── RSVP confirmation overlay (simulates what guest sees) ──────── */}
-      <AnimatePresence>
-        {showRsvp && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm px-5"
-            onClick={() => setShowRsvp(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 12 }}
-              transition={{ type: 'spring', stiffness: 360, damping: 32 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm rule rounded-3xl bg-canvas overflow-hidden shadow-[0_32px_80px_-16px_rgba(0,0,0,0.28)]"
-            >
-              {/* Confirmation */}
-              <div className="px-8 py-9 text-center">
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-sage-tint mb-5">
-                  <Check size={24} className="text-ink" />
-                </div>
-                <p className="font-serif text-[1.7rem] text-ink leading-tight">{t('Tak for dit svar!')}</p>
-                <p className="mt-2 text-[0.88rem] text-muted">{t('{a} & {b} glæder sig til at se dig den {date}.', { a: couple.a, b: couple.b, date: couple.dateLabel })}</p>
-              </div>
-
-              {/* Viral CTA */}
-              <div className="rule-t px-8 py-7 bg-shell/60">
-                <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-muted mb-2">
-                  {t('{a} & {b} bruger', { a: couple.a, b: couple.b })}
-                </p>
-                <p className="font-serif text-[1.2rem] text-ink leading-snug">
-                  {t('Planlægger I selv bryllup?')}<br />
-                  <span className="italic">{t('Ava gør arbejdet for jer.')}</span>
-                </p>
-                <p className="mt-2 text-[0.8rem] text-muted">{t('Tidslinje, venues, budget og bryllupsside på én platform.')}</p>
-                <button
-                  onClick={() => { setShowRsvp(false); setShowLanding(true); }}
-                  className="mt-5 w-full rounded-2xl py-3.5 text-[0.75rem] font-bold uppercase tracking-[0.16em] text-canvas hover:opacity-90 transition-opacity cursor-pointer"
-                  style={{ background: 'var(--color-ink)' }}
-                >
-                  {t('Prøv Kalas gratis →')}
-                </button>
-                <button onClick={() => setShowRsvp(false)}
-                  className="mt-3 w-full text-center text-[0.72rem] text-muted hover:text-ink transition-colors cursor-pointer">
-                  {t('Nej tak')}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ── Kalas landing overlay (simulates guest click) ─────────────── */}
-      <AnimatePresence>
-        {showLanding && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 backdrop-blur-sm px-5"
-            onClick={() => setShowLanding(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 24, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 12, scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 360, damping: 32 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rule rounded-3xl bg-canvas px-8 py-10 shadow-[0_32px_80px_-16px_rgba(0,0,0,0.28)]"
-            >
-              <p className="font-serif text-[2rem] leading-tight text-ink">
-                {t('Planlæg jeres bryllup.')}<br /><span className="italic">{t('Ava gør arbejdet.')}</span>
-              </p>
-              <p className="mt-3 text-[0.88rem] text-muted leading-relaxed">
-                {t('{a} & {b} bruger Kalas til at planlægge deres store dag. Kom i gang på 2 minutter.', { a: couple.a, b: couple.b })}
-              </p>
-
-              <div className="mt-7 space-y-3">
-                {[
-                  { n: t('Tidslinje på 2 minutter'), d: t('14 milepæle planlagt baglæns fra bryllupsdagen') },
-                  { n: t('3 venues fundet'),          d: t('Ava matchede til budget og stil, ingen Google') },
-                  { n: t('Invitationer klar'),         d: t('Udkast skrevet og klar til godkendelse på dag 1') },
-                ].map(({ n, d }) => (
-                  <div key={n} className="flex items-start gap-3">
-                    <div className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-sage-tint flex items-center justify-center">
-                      <Check size={11} className="text-ink" />
-                    </div>
-                    <div>
-                      <p className="text-[0.88rem] font-medium text-ink">{n}</p>
-                      <p className="text-[0.75rem] text-muted">{d}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                className="mt-8 w-full rounded-2xl py-4 text-[0.8rem] font-bold uppercase tracking-[0.18em] text-canvas hover:opacity-90 transition-opacity cursor-pointer"
-                style={{ background: 'var(--color-ink)' }}
-                onClick={() => setShowLanding(false)}
-              >
-                {t('Start gratis, ingen kreditkort')}
-              </button>
-              <p className="mt-3 text-center text-[0.7rem] text-muted">
-                {t('Én gang · 499 kr ved launch · normalt 799 kr')}
-              </p>
-            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

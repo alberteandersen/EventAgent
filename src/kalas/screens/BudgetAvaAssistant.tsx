@@ -8,11 +8,10 @@
    in never gets recommended a lower share than that. */
 
 import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { AlertTriangle, Check, Lightbulb, Loader2, MessageCircle, X } from 'lucide-react';
+import { AlertTriangle, Check, Lightbulb, Loader2 } from 'lucide-react';
 import { resolveBudgetIcon } from '../lib/budget-style';
 import { useLang } from '../i18n';
-import { cn } from '../ui';
+import { Button, Dialog } from '../ui';
 
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
 
@@ -73,12 +72,6 @@ export default function BudgetAvaAssistant({
 
   useEffect(ask, [eventId]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
   const apply = () => {
     if (!advice) return;
     onApply(advice.lines.map((l) => ({ category: l.category, amount: l.amount })));
@@ -87,47 +80,22 @@ export default function BudgetAvaAssistant({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink/60 px-4 py-8 backdrop-blur-sm"
-      onClick={onClose}
+    <Dialog
+      open
+      onClose={onClose}
+      size="lg"
+      eyebrow={t('Avas budgetforslag')}
+      title={state === 'ready' && advice?.headline ? advice.headline : t('Sådan ville jeg fordele jeres budget')}
+      footer={state === 'ready' && advice ? (
+        <>
+          <Button variant="ghost" onClick={onClose}>{t('Luk')}</Button>
+          <Button icon={applied ? Check : undefined} onClick={apply} disabled={applied}>
+            {applied ? t('Brugt') : t('Brug forslaget')}
+          </Button>
+        </>
+      ) : undefined}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 34 }}
-        onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[88vh] w-full max-w-2xl flex-col overflow-hidden rounded-3xl border border-line bg-card shadow-[0_32px_80px_-16px_rgba(24,32,24,0.28)]"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink-deep">
-              <MessageCircle size={17} className="text-white" strokeWidth={2.25} />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-sage">
-                {t('Avas budgetforslag')}
-              </p>
-              <h2 className="mt-0.5 truncate font-serif text-[1.3rem] leading-tight text-ink">
-                {state === 'ready' && advice?.headline
-                  ? advice.headline
-                  : t('Sådan ville jeg fordele jeres budget')}
-              </h2>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label={t('Luk')}
-            className="shrink-0 rounded-full p-1.5 text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
-          >
-            <X size={18} />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+        <div>
           {state === 'loading' && (
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
               <Loader2 size={22} className="animate-spin text-sage-strong" />
@@ -210,31 +178,6 @@ export default function BudgetAvaAssistant({
             </>
           )}
         </div>
-
-        {/* Footer */}
-        {state === 'ready' && advice && (
-          <div className="flex items-center justify-end gap-2 border-t border-line px-6 py-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full px-4 py-2 text-[0.82rem] font-medium text-muted transition-colors hover:text-ink cursor-pointer"
-            >
-              {t('Luk')}
-            </button>
-            <button
-              type="button"
-              onClick={apply}
-              disabled={applied}
-              className={cn(
-                'flex items-center gap-1.5 rounded-full px-5 py-2 text-[0.82rem] font-semibold transition-opacity cursor-pointer',
-                applied ? 'bg-success text-canvas' : 'bg-ink text-canvas hover:opacity-90',
-              )}
-            >
-              {applied ? (<><Check size={14} /> {t('Brugt')}</>) : t('Brug forslaget')}
-            </button>
-          </div>
-        )}
-      </motion.div>
-    </div>
+    </Dialog>
   );
 }

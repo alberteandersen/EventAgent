@@ -945,7 +945,6 @@ export default function Seating() {
       {askingShape && (
         <SeatCountDialog
           shape={askingShape}
-          icon={SHAPE_ICON[askingShape]}
           onCancel={() => setAskingShape(null)}
           onConfirm={(seats) => { addTable(askingShape, seats); setAskingShape(null); }}
         />

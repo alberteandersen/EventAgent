@@ -123,7 +123,7 @@ function DialogPanel({
             <div className="min-w-0">
               {eyebrow && <p className="eyebrow">{eyebrow}</p>}
               <h2 id={titleId} className="mt-0.5 font-serif text-title text-ink">{title}</h2>
-              {description && <p className="mt-1 text-meta text-muted">{description}</p>}
+              {description && <div className="mt-1 text-meta text-muted">{description}</div>}
             </div>
             <button
               type="button"

@@ -136,7 +136,7 @@ export function VenueDetail({
           </span>
           {venue.rating != null && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line-soft bg-paper px-3 py-1 text-[0.72rem] font-medium text-ink">
-              <Star size={12} fill="currentColor" className="text-[#8a7d5c]" />
+              <Star size={12} fill="currentColor" className="text-clay-ink" />
               {venue.rating.toFixed(1)}
               {venue.reviewCount > 0 && <span className="text-muted">· {tn(venue.reviewCount, '{n} anmeldelse', '{n} anmeldelser')}</span>}
             </span>
@@ -151,12 +151,12 @@ export function VenueDetail({
         )}
 
         {researchError && (
-          <p className="mt-4 rounded-[14px] border border-[#e8d5c8] bg-[#faf4ef] px-4 py-3 text-sm text-[#7b4032]">{researchError}</p>
+          <p className="mt-4 rounded-[14px] border border-terracotta/20 bg-terracotta-wash px-4 py-3 text-sm text-terracotta">{researchError}</p>
         )}
 
         {research?.briefing?.length ? (
           <div className="mt-6 rounded-[18px] bg-ink p-6 text-paper">
-            <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-[#a6b0aa]">{t('Avas briefing')}</p>
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-faint">{t('Avas briefing')}</p>
             <ul className="mt-4 space-y-2.5">
               {research.briefing.map((line) => (
                 <li key={line} className="flex items-start gap-3 text-[0.92rem] leading-snug">
@@ -198,7 +198,7 @@ export function VenueDetail({
             <p className="mt-2 text-[0.9rem] font-semibold leading-snug text-ink">{venue.price || '-'}</p>
           </div>
           <div className="flex min-h-[5.5rem] flex-col bg-ink px-4 py-4 sm:px-5 sm:py-5">
-            <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-[#c5ccc4]">{t('Bedømmelse')}</p>
+            <p className="text-[0.7rem] font-bold uppercase tracking-[0.14em] text-line-strong">{t('Bedømmelse')}</p>
             <p className="mt-2 font-serif text-[1.35rem] leading-none text-paper">
               {venue.rating != null ? `★ ${venue.rating.toFixed(1)}` : '-'}
             </p>
@@ -256,7 +256,7 @@ export function VenueDetail({
                     <span className={cn('font-serif text-[1.15rem]', pkg.featured ? 'text-paper' : 'text-ink')}>
                       {pkg.name}
                     </span>
-                    <span className={cn('mt-1 text-[0.76rem] leading-relaxed', pkg.featured ? 'text-[#a6b0aa]' : 'text-muted')}>
+                    <span className={cn('mt-1 text-[0.76rem] leading-relaxed', pkg.featured ? 'text-faint' : 'text-muted')}>
                       {pkg.desc}
                     </span>
                     <span className={cn('mt-4 font-serif text-[1.5rem] leading-none', pkg.featured ? 'text-paper' : 'text-ink')}>

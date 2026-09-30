@@ -71,6 +71,13 @@ html {
   --color-terracotta-tint: #f2e3dd; /* warm terracotta wash               */
   --color-success: #2f5a48;         /* olive-green (positive)             */
 
+  /* Status tones: one wash and one ink per state: positive, waiting on
+     someone (clay), and late or wrong (terracotta). */
+  --color-success-tint: #dde7d6;
+  --color-clay-tint: #ecdcd0;
+  --color-clay-ink: #7a543c;
+  --color-terracotta-wash: #faf4ef;
+
   /* ── Kalas type scale ──────────────────────────────────────────────────
      Between Tailwind's xs (12px) and sm (14px) sit the two sizes the app
      leans on most. With xs, sm and base that is the whole scale for text;

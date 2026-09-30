@@ -64,7 +64,7 @@ export function Wordmark({ light = false }: { light?: boolean }) {
     <span
       className={cn(
         'text-[1.75rem] leading-none',
-        light ? 'text-[#fffdf7]' : 'text-ink',
+        light ? 'text-paper' : 'text-ink',
       )}
       style={{ fontFamily: 'var(--font-wordmark)', fontWeight: 700, letterSpacing: 0 }}
     >
@@ -434,7 +434,7 @@ export function ModeToggle({
             className={cn(
               'relative flex h-7 cursor-pointer items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold transition-colors',
               active
-                ? 'bg-ink text-[#fffdf7]'
+                ? 'bg-ink text-paper'
                 : 'text-muted hover:text-ink',
             )}
           >

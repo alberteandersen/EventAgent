@@ -117,7 +117,7 @@ export default function VendorExplore({
     return (
       <div className="rounded-2xl border border-line bg-shell px-5 py-6">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#e0dccf]">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-shell">
             <MapPin size={15} className="text-muted" />
           </span>
           <div>
@@ -237,11 +237,11 @@ function VendorCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={v.photo} alt={v.name} className="h-full w-full object-cover transition-transform duration-700 hover:scale-[1.04]" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sage-wash to-[#e0dccf]">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-sage-wash to-shell">
             <MapPin size={22} className="text-sage" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#1a221540] to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-ink-deep/25 to-transparent" />
         {v.rating != null && (
           <span className="absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-paper/90 px-2.5 py-1 text-[0.68rem] font-semibold text-ink backdrop-blur-sm">
             <Star size={11} fill="currentColor" className="text-amber" />

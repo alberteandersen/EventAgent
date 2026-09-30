@@ -165,7 +165,7 @@ export default function BookedPanel({
               className={cn(
                 'group relative flex min-h-[200px] flex-col rounded-[18px] border p-5 transition-colors',
                 done
-                  ? 'border-[#d3dcc4] bg-sage-wash'
+                  ? 'border-sage-tint bg-sage-wash'
                   : 'border-dashed border-line bg-white',
               )}
             >

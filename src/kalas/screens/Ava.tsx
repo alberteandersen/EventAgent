@@ -228,7 +228,7 @@ function AvaChat({
   return (
     <div className="flex h-full min-h-0 flex-col">
       {/* ── Header ─────────────────────────────────────────────────── */}
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-[#e7eae6] px-3">
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line-soft px-3">
         {view === 'chat' ? (
           <Avatar small />
         ) : (
@@ -415,7 +415,7 @@ function Message({
     >
       {tools.length > 0 && <ToolSteps calls={tools} />}
       {msg.error ? (
-        <div className="flex items-start gap-2 rounded-xl border border-[#ecd3cb] bg-[#fbf3f0] px-3 py-2.5 text-[0.84rem] leading-snug text-[#8a3f2f]">
+        <div className="flex items-start gap-2 rounded-xl border border-terracotta/20 bg-terracotta-wash px-3 py-2.5 text-[0.84rem] leading-snug text-terracotta">
           <CircleAlert size={15} className="mt-px shrink-0" />
           <span>{t('Det gik galt: {error}. Prøv igen om lidt.', { error: msg.error })}</span>
         </div>

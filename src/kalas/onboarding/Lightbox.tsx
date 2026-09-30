@@ -63,7 +63,7 @@ export function Lightbox({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
         onClick={onClose}
-        className="fixed inset-0 z-[100] flex items-center justify-center bg-[#141a13]/90 p-4 backdrop-blur-sm sm:p-8"
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-ink-deep/90 p-4 backdrop-blur-sm sm:p-8"
         role="dialog"
         aria-modal="true"
       >

@@ -119,7 +119,7 @@ export default function BudgetContractPanel({
       {!contract ? (
         <div className="flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 text-[0.8rem] text-muted">
-            <ScanText size={14} className="text-[#6a5acd]" />
+            <ScanText size={14} className="text-sage-strong" />
             {t('Upload en kontrakt, så gennemgår Ava den for jer')}
           </span>
           <button
@@ -185,7 +185,7 @@ export default function BudgetContractPanel({
           )}
 
           {review.redFlags && review.redFlags.length > 0 && (
-            <div className="rounded-lg bg-[#f9edea] px-3 py-2">
+            <div className="rounded-lg bg-terracotta-wash px-3 py-2">
               <span className="flex items-center gap-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.1em] text-red-800">
                 <AlertTriangle size={12} /> {t('Vær opmærksom på')}
               </span>

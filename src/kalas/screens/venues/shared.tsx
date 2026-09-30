@@ -57,9 +57,9 @@ export function venueAreaLabel(region: string): string {
 export type VenueStage = 'idle' | 'contacted' | 'replied' | 'quoted';
 const STAGE_META: Record<VenueStage, { label: string; cls: string; Icon: typeof Mail }> = {
   idle:      { label: 'Ikke kontaktet', cls: 'bg-shell text-muted',                 Icon: Clock },
-  contacted: { label: 'Kontaktet',      cls: 'bg-[#e9edf2] text-[#3f5b6b]',          Icon: Send },
-  replied:   { label: 'Svar modtaget',  cls: 'bg-[#e5ead8] text-ink-soft',          Icon: Mail },
-  quoted:    { label: 'Tilbud',         cls: 'bg-[#f3d8cf] text-[#7b4032]',          Icon: Mail },
+  contacted: { label: 'Kontaktet',      cls: 'bg-clay-tint text-clay-ink',        Icon: Send },
+  replied:   { label: 'Svar modtaget',  cls: 'bg-sage-wash text-ink-soft',        Icon: Mail },
+  quoted:    { label: 'Tilbud',         cls: 'bg-terracotta-tint text-terracotta', Icon: Mail },
 };
 
 export function StageChip({ stage, className }: { stage: VenueStage; className?: string }) {

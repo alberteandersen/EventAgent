@@ -74,7 +74,7 @@ export default function TaskRow({
   const statusTone = done ? 'text-sage-strong'
     : overdue ? 'text-terracotta'
     : status === 'wedding' ? 'text-ink'
-    : isSoon || isToday ? 'text-[#8a7d5c]'
+    : isSoon || isToday ? 'text-clay-ink'
     : 'text-faint';
   const statusText = statusLabel(task, t);
   // A checklist item without a date: not "Vælg dato · INGEN DATO" 205 times over.
@@ -112,7 +112,7 @@ export default function TaskRow({
     <div
       className={cn(
         variant === 'list'
-          ? 'flex w-full items-start gap-3 rounded-xl px-1 py-3 transition-colors hover:bg-[#f6f7f5] sm:items-center sm:gap-4 sm:px-2'
+          ? 'flex w-full items-start gap-3 rounded-xl px-1 py-3 transition-colors hover:bg-paper sm:items-center sm:gap-4 sm:px-2'
           : cn(
             'flex w-full items-start gap-3 rounded-[18px] border px-4 py-3.5 sm:items-center sm:gap-4 sm:px-5 sm:py-4',
             taskRowTone(done ? 'done' : overdue ? 'overdue' : 'default'),
@@ -151,7 +151,7 @@ export default function TaskRow({
           {task.phase && (
             <span className={cn(
               'rounded-full px-2 py-0.5 text-[11px] font-semibold',
-              task.phaseDue && !done ? 'bg-[#f4ecdc] text-[#746b56]' : 'bg-[#eef1ee] text-muted',
+              task.phaseDue && !done ? 'bg-clay-tint text-clay-ink' : 'bg-shell text-muted',
             )}>
               {t(task.phase)}
             </span>
@@ -182,7 +182,7 @@ export default function TaskRow({
               type="button"
               onClick={suggestion.onAccept}
               aria-label={t("Sæt flueben ved '{title}': {reason}", { title: t(task.title), reason: t(suggestion.reason) })}
-              className="inline-flex items-center gap-1.5 rounded-full bg-sage-tint py-1 pl-2.5 pr-3 text-left text-[12px] font-semibold text-success transition-colors hover:bg-[#cddbd4] cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-sage-tint py-1 pl-2.5 pr-3 text-left text-[12px] font-semibold text-success transition-colors hover:bg-sage-tint cursor-pointer"
             >
               <Check size={12} strokeWidth={2.6} aria-hidden />
               {t(suggestion.reason)} · {t('Sæt flueben')}
@@ -193,7 +193,7 @@ export default function TaskRow({
               onClick={action.onClick}
               className={cn(
                 'group inline-flex items-center gap-1 text-[13px] font-semibold transition-colors cursor-pointer',
-                overdue ? 'text-terracotta hover:text-[#8f3d2b]' : 'text-muted hover:text-ink',
+                overdue ? 'text-terracotta hover:text-terracotta' : 'text-muted hover:text-ink',
               )}
             >
               {t(action.label)}
@@ -257,7 +257,7 @@ export default function TaskRow({
                 )}
                 {onDelete && (
                   <button type="button" onClick={onDelete}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-terracotta transition-colors hover:bg-[#faf4ef] cursor-pointer">
+                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-terracotta transition-colors hover:bg-terracotta-wash cursor-pointer">
                     <Trash2 size={14} /> {t(deleteLabel)}
                   </button>
                 )}

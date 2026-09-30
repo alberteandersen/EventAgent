@@ -81,25 +81,25 @@ export default function WeddingDatePicker({ value, onChange, lang, className }: 
   };
 
   return (
-    <div className={cn('w-full max-w-[380px] rounded-[20px] border border-[#d8d5ca] bg-[#fffdf7] p-5 shadow-[0px_12px_36px_rgba(18,51,43,0.06)]', className ?? 'mt-5')}>
+    <div className={cn('w-full max-w-[380px] rounded-[20px] border border-line bg-paper p-5 shadow-[0px_12px_36px_rgba(18,51,43,0.06)]', className ?? 'mt-5')}>
       <div className="mb-4 flex items-center justify-between">
         <button
           type="button"
           disabled={!canGoPrev}
           onClick={() => canGoPrev && setViewMonth((m) => addMonths(m, -1))}
           className={cn(
-            'flex h-9 w-9 items-center justify-center rounded-full border border-[#d8d5ca] transition-colors cursor-pointer',
-            canGoPrev ? 'text-[#23351f] hover:bg-[#f3f1ea]' : 'cursor-not-allowed text-[#b8bdb5] opacity-50',
+            'flex h-9 w-9 items-center justify-center rounded-full border border-line transition-colors cursor-pointer',
+            canGoPrev ? 'text-ink hover:bg-shell' : 'cursor-not-allowed text-line-strong opacity-50',
           )}
           aria-label={t('Forrige måned')}
         >
           <ChevronLeft size={18} />
         </button>
-        <p className="font-serif text-[1.1rem] capitalize tracking-[-0.02em] text-[#23351f]">{monthLabel}</p>
+        <p className="font-serif text-[1.1rem] capitalize tracking-[-0.02em] text-ink">{monthLabel}</p>
         <button
           type="button"
           onClick={() => setViewMonth((m) => addMonths(m, 1))}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d8d5ca] text-[#23351f] transition-colors hover:bg-[#f3f1ea] cursor-pointer"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-line text-ink transition-colors hover:bg-shell cursor-pointer"
           aria-label={t('Næste måned')}
         >
           <ChevronRight size={18} />
@@ -108,7 +108,7 @@ export default function WeddingDatePicker({ value, onChange, lang, className }: 
 
       <div className="mb-2 grid grid-cols-7 gap-1">
         {weekdayLabels.map((w) => (
-          <span key={w} className="py-1 text-center text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-[#6c755e]">
+          <span key={w} className="py-1 text-center text-[0.68rem] font-semibold uppercase tracking-[0.08em] text-muted">
             {w.replace('.', '')}
           </span>
         ))}
@@ -130,10 +130,10 @@ export default function WeddingDatePicker({ value, onChange, lang, className }: 
               onClick={() => pick(date)}
               className={cn(
                 'flex h-10 w-full items-center justify-center rounded-full text-[0.88rem] transition-colors cursor-pointer',
-                disabled && 'cursor-not-allowed text-[#c5cbc3]',
-                !disabled && !isSelected && 'text-[#23351f] hover:bg-[#eef2e8]',
-                isSelected && 'bg-ink-deep font-semibold text-[#fffdf7] shadow-[0px_4px_12px_rgba(18,51,43,0.2)]',
-                isToday && !isSelected && 'ring-1 ring-[#7b8e55] ring-inset',
+                disabled && 'cursor-not-allowed text-line-strong',
+                !disabled && !isSelected && 'text-ink hover:bg-sage-wash',
+                isSelected && 'bg-ink-deep font-semibold text-paper shadow-[0px_4px_12px_rgba(18,51,43,0.2)]',
+                isToday && !isSelected && 'ring-1 ring-sage-strong ring-inset',
               )}
             >
               {date.getDate()}
@@ -143,7 +143,7 @@ export default function WeddingDatePicker({ value, onChange, lang, className }: 
       </div>
 
       {selected && (
-        <p className="mt-4 text-center text-[0.82rem] text-[#56645b]">
+        <p className="mt-4 text-center text-[0.82rem] text-muted">
           {selected.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
         </p>
       )}

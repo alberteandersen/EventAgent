@@ -1189,7 +1189,7 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
             type="button"
             onClick={onExpand}
             aria-label={t('Se billeder af {name}', { name: v.name })}
-            className="absolute right-2.5 top-2.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-[#141a13]/40 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100"
+            className="absolute right-2.5 top-2.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-ink-deep/40 text-white opacity-0 backdrop-blur-sm transition-opacity duration-200 focus-visible:opacity-100 group-hover:opacity-100"
           >
             <Expand size={14} />
           </button>
@@ -1224,7 +1224,7 @@ function DiscoverVenueCard({ v, badges, saved, saving, open, onOpen, onSave, onD
                 className={cn(
                   'rounded-full px-2 py-0.5 text-[0.64rem] font-semibold',
                   b.tone === 'good' && 'bg-sage-wash text-ink',
-                  b.tone === 'warn' && 'bg-[#f7ece0] text-[#8a5a22]',
+                  b.tone === 'warn' && 'bg-clay-tint text-clay-ink',
                   b.tone === 'neutral' && 'bg-shell text-muted',
                 )}
               >

@@ -158,7 +158,7 @@ export default function TakkekortTab() {
               <button
                 type="button"
                 onClick={copyGreetings}
-                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-[#d9ded9] px-3 py-1.5 text-[0.74rem] font-semibold text-ink transition-colors hover:border-ink"
+                className="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-[0.74rem] font-semibold text-ink transition-colors hover:border-ink"
               >
                 {copied ? <Check size={13} /> : <Copy size={13} />}
                 {copied ? t('Kopieret') : t('Kopiér')}

@@ -94,7 +94,7 @@ export function ComparisonView({
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a221560] via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink-deep/40 via-transparent to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-transparent" />
                   <div className="absolute left-4 top-4 flex flex-wrap gap-2">
                     <RatingBadge rating={v.rating} count={v.reviewCount} />
                     {isBooked && (

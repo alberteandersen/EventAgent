@@ -470,7 +470,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
             <h3 className="font-serif text-3xl font-semibold leading-tight text-paper">
               {t('Find jeres venue')}
             </h3>
-            <p className="max-w-[420px] text-sm leading-relaxed text-[#e6ebe0]">
+            <p className="max-w-[420px] text-sm leading-relaxed text-sage-tint">
               {t('Steder der matcher gæsteantal, stemning, placering og budget.')}
             </p>
           </div>
@@ -506,9 +506,9 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
                   key={tile.id}
                   type="button"
                   onClick={() => goHub('explore', tile.hubCat)}
-                  className="flex flex-col gap-3 rounded-[18px] border border-line-soft bg-shell p-4 text-left transition-colors hover:bg-[#e8e4da]"
+                  className="flex flex-col gap-3 rounded-[18px] border border-line-soft bg-shell p-4 text-left transition-colors hover:bg-shell"
                 >
-                  <Icon size={20} className="text-[#35544a]" strokeWidth={1.8} />
+                  <Icon size={20} className="text-ink-soft" strokeWidth={1.8} />
                   <div>
                     <p className="text-sm font-bold text-ink">{tile.label}</p>
                     <p className="text-[11px] text-muted">{tile.meta}</p>
@@ -606,7 +606,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
 
       <PhoneBanner />
 
-      <p className="pb-4 text-center text-[13px] text-[#a6b0aa]">
+      <p className="pb-4 text-center text-[13px] text-faint">
         {t('Planlagt med omtanke af {names}, guidet af Ava.', { names: coupleLabel })}
       </p>
     </Page>

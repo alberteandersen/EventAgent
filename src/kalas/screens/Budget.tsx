@@ -911,8 +911,8 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
 const STAT_STYLES = {
   total:     { bg: 'bg-ink',          label: '!text-canvas/50',  value: 'text-canvas' },
   allocated: { bg: 'bg-sage-tint',    label: '!text-ink/50',     value: 'text-ink' },
-  remaining: { bg: 'bg-[#f5f0e4]',   label: '!text-clay/70',    value: 'text-clay' },
-  over:      { bg: 'bg-[#f9edea]',   label: '!text-red-700/70', value: 'text-red-700' },
+  remaining: { bg: 'bg-terracotta-wash',   label: '!text-clay/70',    value: 'text-clay' },
+  over:      { bg: 'bg-terracotta-wash',   label: '!text-red-700/70', value: 'text-red-700' },
 } as const;
 
 function StylePicker({

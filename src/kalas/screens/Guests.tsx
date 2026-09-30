@@ -279,8 +279,8 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
 function RsvpSelect({ value, name, onChange }: { value: RsvpStatus; name: string; onChange: (v: RsvpStatus) => void }) {
   const { t } = useLang();
   const tone =
-    value === 'ja' ? 'bg-[#dde7d6] text-success'
-    : value === 'afventer' ? 'bg-[#ecdcd0] text-[#7a543c]'
+    value === 'ja' ? 'bg-success-tint text-success'
+    : value === 'afventer' ? 'bg-clay-tint text-clay-ink'
     : 'rule text-muted';
   return (
     <span className="relative inline-flex">

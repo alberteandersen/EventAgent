@@ -330,7 +330,7 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
                       'mt-0.5 text-[11px] font-medium tabular-nums',
                       isSel ? 'text-canvas/75'
                         : isNow ? 'text-sage-strong'
-                        : i < nowAt && gLeft > 0 ? 'text-[#746b56]'
+                        : i < nowAt && gLeft > 0 ? 'text-clay-ink'
                         : 'text-muted',
                     )}>
                       {isNow ? t('Nu') : g.total === 0 ? '–'
@@ -407,7 +407,7 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
                   <span className={cn(
                     'rounded-full px-2.5 py-0.5 text-[12px] font-semibold',
                     standing.tone === 'now' && 'bg-sage-tint text-success',
-                    standing.tone === 'late' && 'bg-[#f4ecdc] text-[#746b56]',
+                    standing.tone === 'late' && 'bg-clay-tint text-clay-ink',
                     standing.tone === 'done' && 'bg-sage-tint text-success',
                     standing.tone === 'ahead' && 'bg-shell text-muted',
                   )}>
@@ -419,10 +419,10 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
 
             {/* What earlier phases left behind, on the phase they are in */}
             {(lateMilestones.length > 0 || leftovers.length > 0) && (
-              <div className="mt-6 rounded-[18px] border border-[#efe4cf] bg-[#fbf7ef] px-4 py-3.5 sm:px-5">
-                <p className="text-[13px] font-semibold text-[#746b56]">{t('Fra tidligere faser')}</p>
+              <div className="mt-6 rounded-[18px] border border-terracotta/20 bg-terracotta-wash px-4 py-3.5 sm:px-5">
+                <p className="text-[13px] font-semibold text-clay-ink">{t('Fra tidligere faser')}</p>
                 {lateMilestones.length > 0 && (
-                  <div className="mt-1 divide-y divide-[#efe4cf]">
+                  <div className="mt-1 divide-y divide-terracotta/20">
                     {lateMilestones.map((r) => <div key={r.id}><TaskRow variant="list" {...rowProps(r)} /></div>)}
                   </div>
                 )}
@@ -430,7 +430,7 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
                   <div className="mt-2 flex flex-wrap gap-2">
                     {leftovers.map((x) => (
                       <button key={x.phase} type="button" onClick={() => select(x.phase)}
-                        className="group inline-flex items-center gap-1.5 rounded-full border border-[#e6d8bd] bg-card px-3 py-1.5 text-[12px] font-semibold text-[#746b56] transition-colors hover:border-[#c9a15f] cursor-pointer">
+                        className="group inline-flex items-center gap-1.5 rounded-full border border-terracotta/20 bg-card px-3 py-1.5 text-[12px] font-semibold text-clay-ink transition-colors hover:border-amber cursor-pointer">
                         {t(PHASE_STEP[x.phase])} · {tn(x.left, 'én opgave', '{n} opgaver')}
                         <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
                       </button>

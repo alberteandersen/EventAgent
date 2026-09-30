@@ -113,7 +113,7 @@ export default function HeroPhoto({
     <div className={cn('flex w-full shrink-0 flex-col gap-2', className ?? 'lg:w-[380px]')}>
       <div
         className={cn(
-          'group relative w-full rounded-[22px] border-[6px] border-[#f8f6f0] bg-cover bg-center shadow-[0_16px_40px_rgba(36,65,58,0.18)]',
+          'group relative w-full rounded-[22px] border-[6px] border-paper bg-cover bg-center shadow-[0_16px_40px_rgba(36,65,58,0.18)]',
           frameClassName ?? 'h-[240px] lg:h-[300px]',
         )}
         style={{ backgroundImage: `url('${shown}')` }}
@@ -121,7 +121,7 @@ export default function HeroPhoto({
         aria-label={alt}
       >
         <div className={cn(
-          'absolute inset-0 flex items-center justify-center gap-2 rounded-[16px] bg-[#141a13]/35 transition-opacity duration-200',
+          'absolute inset-0 flex items-center justify-center gap-2 rounded-[16px] bg-ink-deep/35 transition-opacity duration-200',
           busy ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
         )}>
           {busy ? (

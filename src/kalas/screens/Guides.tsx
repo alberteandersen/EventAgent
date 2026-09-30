@@ -263,7 +263,7 @@ function ArticleView({
           <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{article.description}</p>
           <p className="mt-3 text-[13px] text-muted">{t('{n} min. læsning', { n: readingMinutes(article.body) })}</p>
         </div>
-        <div className="relative aspect-[4/3] overflow-hidden rounded-[22px] border-[6px] border-[#f8f6f0] shadow-[0_16px_40px_rgba(36,65,58,0.18)]">
+        <div className="relative aspect-[4/3] overflow-hidden rounded-[22px] border-[6px] border-paper shadow-[0_16px_40px_rgba(36,65,58,0.18)]">
           <Image src={article.image.src} alt={article.image.alt} fill sizes="(min-width: 1024px) 380px, 100vw" className="object-cover" />
         </div>
       </header>
@@ -275,7 +275,7 @@ function ArticleView({
           <button
             type="button"
             onClick={act}
-            className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-[#1b322c]"
+            className="mt-4 inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-paper transition-colors hover:bg-ink-deep"
           >
             {t(action.label)} <ArrowRight size={15} aria-hidden />
           </button>
@@ -318,7 +318,7 @@ function DoItInKalas({ article, label, onAct }: { article: GuideArticle; label?:
   return (
     <aside className="my-9 grid gap-5 rounded-[28px] bg-ink p-6 text-paper sm:p-8 md:grid-cols-[1.1fr_1fr] md:items-center">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#a9c2b6]">{t('Gør det i Kalas')}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-tint">{t('Gør det i Kalas')}</p>
         <p className="mt-2.5 font-serif text-[1.75rem] font-semibold leading-[1.1]">{article.kalas.title}</p>
       </div>
       <div>

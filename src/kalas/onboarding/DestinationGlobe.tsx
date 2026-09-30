@@ -195,7 +195,7 @@ export default function DestinationGlobe({
       )}
 
       {hovered && (
-        <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-ink-deep/90 px-4 py-1.5 text-[0.8rem] font-medium text-[#fffdf7]">
+        <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-ink-deep/90 px-4 py-1.5 text-[0.8rem] font-medium text-paper">
           {hovered}
         </div>
       )}

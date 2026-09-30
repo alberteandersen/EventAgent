@@ -140,7 +140,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
                   className={cn(
                     'rounded-full px-2.5 py-1 text-[0.68rem] font-semibold',
                     b.tone === 'good' && 'bg-sage-wash text-ink',
-                    b.tone === 'warn' && 'bg-[#f7ece0] text-[#8a5a22]',
+                    b.tone === 'warn' && 'bg-clay-tint text-clay-ink',
                     b.tone === 'neutral' && 'bg-shell text-muted',
                   )}
                 >

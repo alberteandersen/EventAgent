@@ -83,7 +83,7 @@ export function RequireSwitch({ label, hint, active, disabled, onClick }: {
     >
       <span className={cn(
         'mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border',
-        active ? 'border-ink bg-ink text-paper' : 'border-[#b5b1a3] bg-white',
+        active ? 'border-ink bg-ink text-paper' : 'border-line-strong bg-white',
       )}>
         {active && <Lock size={9} aria-hidden />}
       </span>

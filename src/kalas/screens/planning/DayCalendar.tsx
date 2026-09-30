@@ -181,7 +181,7 @@ export default function DayCalendar({
                   'group absolute overflow-hidden rounded-xl border px-2.5 py-1.5 text-left outline-none transition-shadow',
                   status === 'now' ? 'border-ink bg-ink text-canvas'
                     : status === 'done' ? 'border-line bg-shell text-muted'
-                    : 'border-sage-tint bg-[#eef3f0] text-ink hover:shadow-[0_6px_18px_rgba(36,65,58,0.12)]',
+                    : 'border-sage-tint bg-sage-wash text-ink hover:shadow-[0_6px_18px_rgba(36,65,58,0.12)]',
                   selected && 'ring-2 ring-ink ring-offset-2 ring-offset-card',
                   live ? 'z-20 cursor-grabbing shadow-[0_10px_28px_rgba(36,65,58,0.22)]' : 'cursor-grab',
                   'focus-visible:ring-2 focus-visible:ring-sage-strong',

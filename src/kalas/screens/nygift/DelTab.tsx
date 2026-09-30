@@ -137,7 +137,7 @@ export default function DelTab({ onNavigate }: { onNavigate?: (s: 'website') => 
           onClick={togglePublished}
           className={cn(
             'flex h-11 items-center gap-1.5 rounded-[14px] px-4 text-xs font-semibold transition-colors cursor-pointer',
-            live ? 'bg-ink-deep text-white' : 'border border-[#d9ded9] bg-white text-ink',
+            live ? 'bg-ink-deep text-white' : 'border border-line bg-white text-ink',
           )}
         >
           {live ? <Eye size={14} /> : <EyeOff size={14} />}

@@ -46,8 +46,8 @@ function ElementNodeInner({ element, selected, onSelect, onPointerDown }: {
         'group absolute flex cursor-grab flex-col items-center justify-center gap-1 rounded-2xl border transition-colors active:cursor-grabbing',
         selected
           ? 'border-solid border-ink shadow-[0_6px_20px_rgba(18,51,43,0.12)]'
-          : 'border-dashed border-[#9fb3a8]',
-        floor ? 'bg-sage-wash' : 'bg-[#f1f5f2]',
+          : 'border-dashed border-sage',
+        floor ? 'bg-sage-wash' : 'bg-sage-wash',
       )}
       style={{
         left: element.x,

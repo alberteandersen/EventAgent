@@ -259,7 +259,7 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
                 {/* Confirming inline rather than in a dialog: deleting used to
                     happen on a single click, with no way back. */}
                 {confirmDelete === it.id && (
-                  <div className="rounded-xl border border-[#e2b9ab] bg-[#faf4ef] px-3 py-2.5">
+                  <div className="rounded-xl border border-terracotta/20 bg-terracotta-wash px-3 py-2.5">
                     <p className="text-[0.78rem] text-ink">{t('Slet “{title}”?', { title: it.title })}</p>
                     <div className="mt-1.5 flex gap-2">
                       <button onClick={() => { setConfirmDelete(null); void deleteRegistryItem(it.id); }}
@@ -307,7 +307,7 @@ function TileButton({ label, onClick, href, tone, children }: {
 }) {
   const className = cn(
     'flex h-8 w-8 items-center justify-center rounded-full bg-card transition-colors cursor-pointer',
-    tone === 'danger' ? 'text-[var(--color-terracotta)] hover:bg-[#faf4ef]' : 'text-ink hover:bg-shell',
+    tone === 'danger' ? 'text-[var(--color-terracotta)] hover:bg-terracotta-wash' : 'text-ink hover:bg-shell',
   );
   if (href) {
     return (

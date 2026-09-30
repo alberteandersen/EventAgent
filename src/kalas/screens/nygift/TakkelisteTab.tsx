@@ -178,7 +178,7 @@ export default function TakkelisteTab() {
               exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.22 }}
               className="overflow-hidden"
             >
-              <div className="flex flex-wrap items-center gap-3 rounded-[18px] border border-[#d3dcc4] bg-sage-wash px-5 py-4">
+              <div className="flex flex-wrap items-center gap-3 rounded-[18px] border border-sage-tint bg-sage-wash px-5 py-4">
                 <span className="flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-line-strong">
                   <Plus size={14} className="text-ink" />
                 </span>

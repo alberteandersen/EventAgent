@@ -54,7 +54,7 @@ export default function ToolSteps({ calls, live = false }: { calls: (ChatToolCal
           ? t(toolLabel(calls[0].name, calls[0].args).label)
           : tn(calls.length, '{n} handling', '{n} handlinger')}
         {failed > 0 && (
-          <span className="inline-flex items-center gap-0.5 text-[#a4513f]">
+          <span className="inline-flex items-center gap-0.5 text-terracotta">
             <CircleAlert size={12} /> {failed}
           </span>
         )}
@@ -86,9 +86,9 @@ function StepRow({ step, expandable = false }: { step: Step; expandable?: boolea
   const status = step.running ? (
     <LoaderCircle size={13} className="shrink-0 animate-spin text-muted" aria-label={t('I gang')} />
   ) : step.ok ? (
-    <Check size={13} className="shrink-0 text-[#4f7a63]" aria-label={t('Færdig')} />
+    <Check size={13} className="shrink-0 text-sage-strong" aria-label={t('Færdig')} />
   ) : (
-    <CircleAlert size={13} className="shrink-0 text-[#a4513f]" aria-label={t('Fejlede')} />
+    <CircleAlert size={13} className="shrink-0 text-terracotta" aria-label={t('Fejlede')} />
   );
 
   const row = (
@@ -133,7 +133,7 @@ function Detail({ label, value, tone }: { label: string; value: unknown; tone?: 
   return (
     <div>
       <div className="font-sans text-[0.6rem] font-semibold uppercase tracking-[0.12em] text-muted">{label}</div>
-      <pre className={cn('max-h-40 overflow-auto whitespace-pre-wrap break-words', tone === 'error' && 'text-[#a4513f]')}>
+      <pre className={cn('max-h-40 overflow-auto whitespace-pre-wrap break-words', tone === 'error' && 'text-terracotta')}>
         {text}
       </pre>
     </div>

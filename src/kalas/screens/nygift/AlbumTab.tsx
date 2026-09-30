@@ -149,7 +149,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
           type="button"
           onClick={toggleOpen}
           title={albumOpen ? t('Luk for nye billeder') : t('Åbn for nye billeder')}
-          className="flex h-11 items-center gap-1.5 rounded-[14px] border border-[#d9ded9] bg-white px-4 text-xs font-semibold text-ink cursor-pointer"
+          className="flex h-11 items-center gap-1.5 rounded-[14px] border border-line bg-white px-4 text-xs font-semibold text-ink cursor-pointer"
         >
           {albumOpen ? <Unlock size={14} /> : <Lock size={14} />}
           {albumOpen ? t('Åbent') : t('Lukket')}
@@ -273,7 +273,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
           type="button"
           onClick={() => { const next = page + 1; setPage(next); setLoading(true); void load(next); }}
           disabled={loading}
-          className="mx-auto flex h-9 items-center gap-1.5 rounded-full border border-[#d9ded9] bg-white px-4 text-xs font-semibold text-ink cursor-pointer disabled:opacity-50"
+          className="mx-auto flex h-9 items-center gap-1.5 rounded-full border border-line bg-white px-4 text-xs font-semibold text-ink cursor-pointer disabled:opacity-50"
         >
           {loading && <Loader2 size={13} className="animate-spin" />}
           {t('Hent flere')}

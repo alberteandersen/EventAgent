@@ -6,8 +6,8 @@ import {
 } from 'lucide-react';
 import { GUEST_BANDS, type OnboardingDate } from '@/lib/onboarding';
 import { isPlausibleEmail } from '@/lib/invites/email';
-import { Wordmark, type ScreenId } from '../Shell';
-import { cn } from '../ui';
+import type { ScreenId } from '../Shell';
+import { Wordmark, cn } from '../ui';
 import WeddingRings from '../icons/WeddingRings';
 import { useLang } from '../i18n';
 import { countryFocus, countryLabel, globeCountry, searchCountries } from '../onboarding/countries';

@@ -12,7 +12,7 @@ import type { LucideIcon } from 'lucide-react';
 import WeddingRings from './icons/WeddingRings';
 import { useWedding } from './useWedding';
 import { nygiftInMenu } from './screens/nygift/shared';
-import { cn } from './ui';
+import { cn, Wordmark } from './ui';
 import { useLang } from './i18n';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 
@@ -59,19 +59,6 @@ export const CHROME_BG = 'var(--color-chrome)';
 export const CHROME_WASH =
   'radial-gradient(ellipse 520px 380px at 0% 0%, rgba(31,77,64,0.16) 0%, rgba(31,77,64,0.07) 42%, transparent 72%)';
 
-export function Wordmark({ light = false }: { light?: boolean }) {
-  return (
-    <span
-      className={cn(
-        'text-[1.75rem] leading-none',
-        light ? 'text-paper' : 'text-ink',
-      )}
-      style={{ fontFamily: 'var(--font-wordmark)', fontWeight: 700, letterSpacing: 0 }}
-    >
-      Kalas
-    </span>
-  );
-}
 
 function Initials({ light = false }: { light?: boolean }) {
   const { couple } = useWedding();

@@ -4,11 +4,32 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { LanguageProvider, useLang } from "@/kalas/i18n";
+import { Button, Card, Field, Wordmark, cn, inputClass } from "@/kalas/ui";
 
 type Mode = "sign-in" | "sign-up";
 
+/** A Supabase auth error, said the way a couple needs to hear it. */
+function authError(message: string, t: (s: string) => string): string {
+  const m = message.toLowerCase();
+  if (m.includes("rate limit")) return t("Der er sendt for mange mails på kort tid. Vent lidt, eller log ind med Google.");
+  if (m.includes("email not confirmed")) return t("Bekræft din e-mail først. Tjek indbakken, og spam.");
+  if (m.includes("invalid login credentials")) return t("Forkert e-mail eller adgangskode.");
+  if (m.includes("already registered")) return t("Der findes allerede en konto med den e-mail. Log ind i stedet.");
+  return t("Det gik ikke. Prøv igen.");
+}
+
 export default function LoginPage() {
+  return (
+    <LanguageProvider>
+      <Login />
+    </LanguageProvider>
+  );
+}
+
+function Login() {
   const router = useRouter();
+  const { t } = useLang();
   const [mode, setMode] = useState<Mode>("sign-in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,10 +40,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("error") === "auth_failed") {
-      setError("Sign-in failed. Please try again.");
-    }
-  }, []);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- read once from the URL on arrival
+    if (params.get("error") === "auth_failed") setError(t("Login mislykkedes. Prøv igen."));
+  }, [t]);
 
   function switchMode(next: Mode) {
     setMode(next);
@@ -36,12 +56,10 @@ export default function LoginPage() {
     const supabase = createClient();
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     if (oauthError) {
-      setError(oauthError.message);
+      setError(authError(oauthError.message, t));
       setGoogleLoading(false);
     }
   }
@@ -51,65 +69,25 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
     setMessage(null);
-
     const supabase = createClient();
 
     if (mode === "sign-up") {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
       });
-
       setLoading(false);
-      if (signUpError) {
-        if (signUpError.message.toLowerCase().includes("email rate limit exceeded")) {
-          setError(
-            "Too many sign-up emails sent. Supabase's default mailer allows about 2 per hour for the whole project. " +
-              "Wait ~1 hour, use Continue with Google, or disable “Confirm email” in Supabase for local dev."
-          );
-        } else {
-          setError(signUpError.message);
-        }
-        return;
-      }
-
-      if (data.session) {
-        router.push("/");
-        router.refresh();
-        return;
-      }
-
-      setMessage("Check your email for a confirmation link, then sign in.");
+      if (signUpError) { setError(authError(signUpError.message, t)); return; }
+      if (data.session) { router.push("/"); router.refresh(); return; }
+      setMessage(t("Tjek din mail for et link, der bekræfter kontoen, og log så ind."));
       setMode("sign-in");
       return;
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
-    if (signInError) {
-      if (signInError.message.toLowerCase().includes("email rate limit exceeded")) {
-        setError(
-          "Supabase's built-in email limit was hit (about 2 confirmation emails per hour for the whole project). " +
-            "Password sign-in does not send email, if you were creating an account, wait an hour or use Google. " +
-            "For dev, turn off “Confirm email” in Supabase → Authentication → Providers → Email."
-        );
-      } else if (signInError.message.toLowerCase().includes("email not confirmed")) {
-        setError(
-          "Confirm your email first (check inbox/spam), or ask an admin to confirm your user in Supabase Auth."
-        );
-      } else {
-        setError(signInError.message);
-      }
-      return;
-    }
-
+    if (signInError) { setError(authError(signInError.message, t)); return; }
     router.push("/");
     router.refresh();
   }
@@ -117,126 +95,65 @@ export default function LoginPage() {
   return (
     <main className="theme-kalas flex min-h-screen flex-1 flex-col bg-canvas font-sans text-ink">
       <header className="mx-auto flex w-full max-w-5xl items-center px-6 py-6">
-        <Link
-          href="/"
-          className="font-serif text-[22px] font-semibold tracking-[-0.55px] text-[var(--color-ink)]"
-        >
-          kalas
-        </Link>
+        <Link href="/" aria-label="Kalas"><Wordmark /></Link>
       </header>
 
       <div className="flex flex-1 items-center justify-center px-6 pb-24">
-        <div className="w-full max-w-sm rounded-3xl border border-[var(--color-line)] bg-[var(--color-card)] p-10 shadow-[0px_8px_30px_rgba(74,78,60,0.06)]">
-          <p className="text-center text-[11px] font-medium uppercase tracking-[1.1px] text-[var(--color-ink)]">
-            Welcome
-          </p>
-          <h1 className="mt-4 text-center font-serif text-2xl font-semibold tracking-[-0.5px] text-[var(--color-ink)]">
-            {mode === "sign-in" ? "Sign in to Kalas" : "Create your account"}
+        <Card className="w-full max-w-sm p-8 sm:p-10">
+          <h1 className="text-center font-serif text-page tracking-[-0.02em] text-ink">
+            {mode === "sign-in" ? t("Log ind") : t("Opret en konto")}
           </h1>
-          <p className="mt-3 text-center text-sm leading-relaxed text-[var(--color-muted)]">
-            Plan your wedding with Ava, find venues, manage guests, and send
-            quote requests.
+          <p className="mt-3 text-center text-meta text-muted">
+            {t("Planlæg brylluppet med Ava: find steder, hold styr på gæsterne, og få tilbud fra leverandørerne.")}
           </p>
 
-          <div className="mt-6 flex rounded-xl border border-[var(--color-line)] p-1">
-            <button
-              type="button"
-              onClick={() => switchMode("sign-in")}
-              className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
-                mode === "sign-in"
-                  ? "bg-[var(--color-ink)] text-[var(--color-card)]"
-                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-              }`}
-            >
-              Sign in
-            </button>
-            <button
-              type="button"
-              onClick={() => switchMode("sign-up")}
-              className={`flex-1 rounded-lg py-2 text-sm font-medium transition ${
-                mode === "sign-up"
-                  ? "bg-[var(--color-ink)] text-[var(--color-card)]"
-                  : "text-[var(--color-muted)] hover:text-[var(--color-ink)]"
-              }`}
-            >
-              Sign up
-            </button>
+          <div role="group" className="mt-6 flex rounded-full border border-line p-0.5">
+            {(["sign-in", "sign-up"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={mode === m}
+                onClick={() => switchMode(m)}
+                className={cn(
+                  "flex-1 cursor-pointer rounded-full py-1.5 text-meta font-semibold transition-colors",
+                  mode === m ? "bg-ink text-paper" : "text-muted hover:text-ink",
+                )}
+              >
+                {m === "sign-in" ? t("Log ind") : t("Opret konto")}
+              </button>
+            ))}
           </div>
 
-          <form onSubmit={handleEmailAuth} className="mt-6 space-y-3">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="w-full rounded-xl border border-[var(--color-line)] bg-white/60 px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[#8a8568] focus:border-[var(--color-ink)] focus:outline-none"
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
-                required
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={mode === "sign-up" ? "Password (min. 6 characters)" : "Password"}
-                className="w-full rounded-xl border border-[var(--color-line)] bg-white/60 px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[#8a8568] focus:border-[var(--color-ink)] focus:outline-none"
-              />
-            </div>
+          <form onSubmit={handleEmailAuth} className="mt-6 flex flex-col gap-3">
+            <Field label={t("E-mail")}>
+              <input type="email" autoComplete="email" required value={email}
+                onChange={(e) => setEmail(e.target.value)} className={inputClass} />
+            </Field>
+            <Field label={t("Adgangskode")} hint={mode === "sign-up" ? t("Mindst 6 tegn.") : undefined}>
+              <input type="password" autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+                required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+            </Field>
 
-            {error && (
-              <p className="rounded-lg bg-[#f5e8e8] px-3 py-2 text-sm text-[#8b3a3a]" role="alert">
-                {error}
-              </p>
-            )}
-            {message && (
-              <p className="rounded-lg bg-[#e8f0e8] px-3 py-2 text-sm text-[#3a5c3a]" role="status">
-                {message}
-              </p>
-            )}
+            {error && <p role="alert" className="rounded-xl bg-terracotta-wash px-3 py-2 text-sm text-terracotta">{error}</p>}
+            {message && <p role="status" className="rounded-xl bg-sage-wash px-3 py-2 text-sm text-success">{message}</p>}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full rounded-xl bg-[var(--color-ink)] px-4 py-3 text-sm font-medium text-[var(--color-card)] shadow-[0px_3px_10px_rgba(74,78,60,0.3)] transition hover:bg-[#575B47] disabled:opacity-50"
-            >
+            <Button type="submit" disabled={loading} className="mt-1 w-full">
               {loading
-                ? mode === "sign-up"
-                  ? "Creating account…"
-                  : "Signing in…"
-                : mode === "sign-up"
-                  ? "Create account"
-                  : "Sign in"}
-            </button>
+                ? mode === "sign-up" ? t("Opretter kontoen…") : t("Logger ind…")
+                : mode === "sign-up" ? t("Opret konto") : t("Log ind")}
+            </Button>
           </form>
 
-          <div className="my-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-[var(--color-line)]" />
-            <span className="text-xs uppercase tracking-[0.12em] text-[#8a8568]">or</span>
-            <div className="h-px flex-1 bg-[var(--color-line)]" />
+          <div className="my-6 flex items-center gap-3" aria-hidden>
+            <div className="h-px flex-1 bg-line" />
+            <span className="text-xs text-muted">{t("eller")}</span>
+            <div className="h-px flex-1 bg-line" />
           </div>
 
-          <button
-            type="button"
-            onClick={signInWithGoogle}
-            disabled={googleLoading}
-            className="w-full rounded-xl border border-[var(--color-line)] bg-white/60 px-4 py-3 text-sm font-medium text-[var(--color-ink)] transition hover:bg-white disabled:opacity-50"
-          >
-            {googleLoading ? "Redirecting…" : "Continue with Google"}
-          </button>
-        </div>
+          <Button variant="secondary" onClick={signInWithGoogle} disabled={googleLoading} className="w-full">
+            {googleLoading ? t("Sender dig videre…") : t("Fortsæt med Google")}
+          </Button>
+        </Card>
       </div>
     </main>
   );

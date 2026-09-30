@@ -12,6 +12,7 @@ export { Dialog, ConfirmProvider, useConfirm, type ConfirmOptions } from './Dial
 export { EmptyState, ErrorState, Loader, PageLoader, Skeleton } from './States';
 export { Field, inputClass, textareaClass } from './Field';
 export { Card, Stat } from './Card';
+export { Wordmark } from './Wordmark';
 
 /* ── Eyebrow / tracked label ─────────────────────────────────────────── */
 export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {

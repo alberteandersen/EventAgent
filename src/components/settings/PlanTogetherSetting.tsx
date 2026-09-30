@@ -56,8 +56,8 @@ function Person({ label, name, tone }: { label: string; name: string; tone: "ivo
     <div className="flex w-full max-w-[9.5rem] flex-col items-center gap-3 rounded-3xl border border-white/10 bg-white/[0.04] px-4 py-6">
       <span className={
         "flex h-14 w-14 items-center justify-center rounded-full font-serif text-[1.6rem] " +
-        (tone === "ivory" ? "bg-[#ece6d6] text-[#24413a]"
-          : tone === "sage" ? "bg-[#a9c2b6] text-[#24413a]"
+        (tone === "ivory" ? "bg-paper text-ink"
+          : tone === "sage" ? "bg-sage-tint text-ink"
           : "border border-dashed border-white/30 text-white/40")
       }>
         {tone === "empty" ? "+" : initial}
@@ -100,9 +100,9 @@ export function PlanTogetherSetting({ lang, members, pendingEmail }: {
   };
 
   return (
-    <section className="overflow-hidden rounded-2xl bg-[#1b1f1d] p-6 text-white sm:p-8">
-      <p className="flex items-center gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[#a9c2b6]">
-        <span aria-hidden className="h-px w-8 bg-[#a9c2b6]" /> {copy.eyebrow}
+    <section className="overflow-hidden rounded-2xl bg-ink-deep p-6 text-white sm:p-8">
+      <p className="flex items-center gap-3 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-sage-tint">
+        <span aria-hidden className="h-px w-8 bg-sage-tint" /> {copy.eyebrow}
       </p>
       <h2 className="mt-3 font-serif text-[2rem] leading-tight text-white">{copy.title}</h2>
       <p className="mt-2 max-w-md text-sm leading-relaxed text-white/60">
@@ -135,14 +135,14 @@ export function PlanTogetherSetting({ lang, members, pendingEmail }: {
           <button
             type="submit"
             disabled={state === "sending" || !email.trim()}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-[#ece6d6] px-5 py-2.5 text-sm font-medium text-[#24413a] transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-paper px-5 py-2.5 text-sm font-medium text-ink transition-opacity hover:opacity-90 disabled:opacity-50"
           >
             {state === "sending" ? <Loader2 size={14} className="animate-spin" /> : state === "sent" ? <Check size={14} /> : <Send size={14} />}
             {state === "sent" ? copy.sent : sentTo ? copy.resend : copy.send}
           </button>
         </form>
       )}
-      {!partner && state === "error" && <p className="mt-2 text-sm text-[#e8a797]">{copy.failed}</p>}
+      {!partner && state === "error" && <p className="mt-2 text-sm text-terracotta-tint">{copy.failed}</p>}
       {!partner && sentTo && state !== "error" && (
         <p className="mt-2 text-[0.78rem] text-white/50">{copy.invited.replace("{email}", sentTo)}</p>
       )}

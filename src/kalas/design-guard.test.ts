@@ -18,7 +18,9 @@ function files(dir: string): string[] {
   });
 }
 
-const APP = files(join(SRC, 'kalas')).map((path) => ({ path: relative(SRC, path), text: readFileSync(path, 'utf8') }));
+// The app, and the settings page that is part of it.
+const APP = [...files(join(SRC, 'kalas')), ...files(join(SRC, 'components', 'settings'))]
+  .map((path) => ({ path: relative(SRC, path), text: readFileSync(path, 'utf8') }));
 
 /** Paint in the couple's own colours, not the app's: the public site, the gift
  *  card it embeds, and the invitation card. */

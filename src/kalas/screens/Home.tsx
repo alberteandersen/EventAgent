@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import {
   MapPin, Flower2, Music, Camera, UtensilsCrossed, Pencil, SlidersHorizontal, Check, Plus,
 } from 'lucide-react';
-import { cn, CheckDot, taskRowTone, doneLabelClass } from '../ui';
+import { cn, CheckDot, Page, PageLoader, taskRowTone, doneLabelClass } from '../ui';
 import { useWedding } from '../useWedding';
 import type { NavigateTarget } from '../lib/hub-nav';
 import { navigateToHub } from '../lib/hub-nav';
@@ -55,7 +55,7 @@ function kr(n: number): string {
 
 export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) => void }) {
   const {
-    couple, event, journey, venues, guests, budgetItems, weddingSite, updateEvent,
+    loading, couple, event, journey, venues, guests, budgetItems, weddingSite, updateEvent,
   } = useWedding();
   const [editingDate, setEditingDate] = useState(false);
   const [customising, setCustomising] = useState(false);
@@ -264,8 +264,12 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
     if (item.screen) onNavigate(item.screen);
   };
 
+  // Before the wedding arrives the hero would read "Jeres bryllup" and a
+  // countdown of nothing.
+  if (loading) return <PageLoader />;
+
   return (
-    <div className="flex min-h-full flex-col gap-10 bg-canvas px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
+    <Page>
       {/* Hero */}
       <motion.section
         initial={{ opacity: 0, y: 12 }}
@@ -442,7 +446,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
               onClick={() => onNavigate('planning')}
               className="-mt-1 w-fit cursor-pointer text-[13px] text-muted transition-colors hover:text-ink"
             >
-              {t('Resten af tjeklisten ligger under Tidslinje & tjekliste →')}
+              {t('Resten af planen ligger under Planlægning →')}
             </button>
           )}
         </div>
@@ -605,7 +609,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
       <p className="pb-4 text-center text-[13px] text-[#a6b0aa]">
         {t('Planlagt med omtanke af {names}, guidet af Ava.', { names: coupleLabel })}
       </p>
-    </div>
+    </Page>
   );
 }
 

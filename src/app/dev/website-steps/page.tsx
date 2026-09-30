@@ -198,7 +198,7 @@ function Harness() {
           <pre className="mt-6 whitespace-pre-wrap text-[12px] text-ink-soft">{log.join('\n') || 'ingen handling endnu'}</pre>
         </div>
 
-        <div className="rule-t lg:rule-t-0 px-6 py-10 sm:px-9 lg:py-12">
+        <div className="border-t-[0.5px] border-line lg:border-t-0 px-6 py-10 sm:px-9 lg:py-12">
           <WebsiteSteps
             step={step}
             onStep={setStep}

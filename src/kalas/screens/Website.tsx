@@ -6,7 +6,7 @@ import {
   Camera, Clock, BookOpen, Image, QrCode, CalendarClock,
 } from 'lucide-react';
 import { IMAGES as IMG } from '../images';
-import { Eyebrow, Toggle, cn } from '../ui';
+import { Button, Eyebrow, PageHeader, PageLoader, Tabs, Toggle, cn, useConfirm } from '../ui';
 import { useWedding, type Couple } from '../useWedding';
 import { SiteRenderer } from '../site/SiteRenderer';
 import {
@@ -62,7 +62,7 @@ export default function Website() {
 
   // The builder starts from the saved site, so it waits until that is here
   // (loading goes false once and stays there; refreshes do not unmount it).
-  if (loading) return <div className="min-h-screen" />;
+  if (loading) return <PageLoader />;
   return (
     <WebsiteBuilder key={epoch}
       pickedTab={pickedTab} setTab={setTab}
@@ -81,6 +81,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   onSaving: (config: Record<string, unknown>) => void;
 }) {
   const { t, tn } = useLang();
+  const confirm = useConfirm();
   const {
     couple, event, weddingSite, saveSite, venues, dayProgramItems, registryItems,
     websiteDesign, websiteDesigns, sitePhotos, websitePaid, refresh, guests,
@@ -283,9 +284,12 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   const [restarting, setRestarting] = useState(false);
   const restartDesign = async () => {
     if (!event || restarting) return;
-    const ok = window.confirm(
-      t('Start forfra? Jeres designs og Ava-genererede billeder slettes. Jeres egne uploads beholdes.')
-    );
+    const ok = await confirm({
+      title: t('Start forfra?'),
+      body: t('Jeres designs og de billeder, Ava har lavet, slettes. Jeres egne billeder beholdes.'),
+      confirmLabel: t('Start forfra'),
+      danger: true,
+    });
     if (!ok) return;
     setRestarting(true);
     setGenError(null);
@@ -464,9 +468,13 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   const dayRows = programFromDay(dayProgramItems);
   const sameAsDay = dayRows.length === program.length
     && dayRows.every((d, i) => d.time === program[i].time && d.label === program[i].label && d.sublabel === program[i].sublabel);
-  const importDayProgram = () => {
+  const importDayProgram = async () => {
     const edited = program.some((p) => p.label.trim() || p.time.trim());
-    if (edited && !window.confirm(t('Erstat programmet med jeres Bryllupsdagen? Det, der står her nu, forsvinder.'))) return;
+    if (edited && !(await confirm({
+      title: t('Erstat programmet med jeres Bryllupsdagen?'),
+      body: t('Det, der står her nu, forsvinder.'),
+      confirmLabel: t('Erstat'),
+    }))) return;
     setProgram(dayRows);
   };
 
@@ -741,40 +749,32 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   );
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-full">
 
-      {/* ── Sticky tab header ─────────────────────────────────────────── */}
-      <div className="sticky top-0 z-20 bg-canvas/95 backdrop-blur-md rule-b">
-        <div className="flex items-center justify-between px-6 pt-5 sm:px-9 lg:px-12">
-          <div className="flex items-end gap-8 pb-0">
-            {([
-              { id: 'indhold',        label: t('Indhold')        },
-              { id: 'design',         label: t('Design')         },
-              { id: 'indstillinger',  label: t('Indstillinger')  },
-            ] as const).map(({ id, label }) => {
-              const active = tab === id;
-              return (
-                <button key={id} onClick={() => setTab(id)} className="relative pb-4 cursor-pointer group">
-                  <span className={cn('font-serif text-[clamp(1.2rem,2vw,1.6rem)] leading-none transition-colors',
-                    active ? 'text-ink' : 'text-muted/50 group-hover:text-ink/60')}>
-                    {label}
-                  </span>
-                  {active && (
-                    <motion.span layoutId="website-underline"
-                      className="absolute inset-x-0 bottom-0 h-0.5 bg-ink rounded-full" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <button onClick={() => setPublished((v) => !v)}
-            className={cn(
-              'mb-3 h-8 rounded-full px-3 text-xs font-semibold uppercase tracking-[0.12em] transition-all cursor-pointer',
-              published ? 'bg-sage text-ink' : 'bg-ink text-canvas hover:bg-ink/80',
-            )}>
-            {published ? t('● Live') : t('Publicér')}
-          </button>
-        </div>
+      {/* The builder's panes run edge to edge below, so the header carries
+          the page's gutters itself instead of a Page around everything. */}
+      <div className="px-6 pt-8 sm:px-9 lg:px-12">
+        <PageHeader
+          title={t('Hjemmeside')}
+          subtitle={t('Jeres side til gæsterne, med programmet, svar og ønskelisten. Ava bygger den ud fra det, I skriver her.')}
+          guide="website"
+          actions={
+            <Button variant={published ? 'secondary' : 'primary'} onClick={() => setPublished((v) => !v)}>
+              {published ? t('● Live') : t('Publicér')}
+            </Button>
+          }
+        >
+          <Tabs
+            label={t('Hjemmeside')}
+            value={tab}
+            onChange={setTab}
+            items={[
+              { id: 'indhold', label: t('Indhold') },
+              { id: 'design', label: t('Design') },
+              { id: 'indstillinger', label: t('Indstillinger') },
+            ]}
+          />
+        </PageHeader>
       </div>
 
       {/* ── Tab content ───────────────────────────────────────────────── */}
@@ -787,7 +787,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
 
             {/* Left: live preview */}
             <div className="px-6 py-10 sm:px-9 lg:px-12 lg:py-12 lg:rule-r">
-              <div className="sticky top-20">
+              <div className="sticky top-6">
                 <div className="flex items-center justify-between mb-5">
                   <p className="eyebrow">{t('Live forhåndsvisning')}</p>
                   <button onClick={() => setMobileView((v) => !v)}
@@ -833,7 +833,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
             </div>
 
             {/* Right: Ava, one step at a time */}
-            <div className="rule-t lg:rule-t-0 px-6 py-10 sm:px-9 lg:py-12 overflow-y-auto">
+            <div className="border-t-[0.5px] border-line lg:border-t-0 px-6 py-10 sm:px-9 lg:py-12 overflow-y-auto">
               <WebsiteSteps
                 step={designStep}
                 onStep={setDesignStep}
@@ -928,8 +928,8 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
             </div>
 
             {/* Right: mini preview (desktop only) */}
-            <div className="hidden lg:block px-8 py-12 rule-t lg:rule-t-0">
-              <div className="sticky top-20">
+            <div className="hidden lg:block px-8 py-12 border-t-[0.5px] border-line lg:border-t-0">
+              <div className="sticky top-6">
                 <p className="eyebrow mb-5">{t('Live forhåndsvisning')}</p>
                 {preview}
                 {previewHtml && (

@@ -1,6 +1,6 @@
 "use client";
 
-/* The real Tidslinje & tjekliste screen against a fixture wedding: the plan,
+/* The real Planlægning screen against a fixture wedding: the plan,
    phase by phase, and the wedding day. The milestones are laid out from the
    couple's date and the checklist seeds itself, both in memory.
      ?tab=bryllupsdagen           open on the wedding day

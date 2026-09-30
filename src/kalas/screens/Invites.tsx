@@ -12,6 +12,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
+import { PageHeader, PageLoader, useConfirm } from '../ui';
 import { createClient } from '@/lib/supabase/client';
 import { settleJob } from '@/lib/jobs/client';
 import { normalizeImage } from '../site/normalizeImage';
@@ -26,6 +27,7 @@ import CardSteps, { type CardStep } from '../invitations/CardSteps';
 
 export default function Invites() {
   const { t } = useLang();
+  const confirm = useConfirm();
   const {
     loading, couple, profile, event, venues, invitations, saveInvitation,
     invitationDesigns, invitationDesign, websitePaid, refresh, sitePhotos,
@@ -216,7 +218,12 @@ export default function Invites() {
   const [restarting, setRestarting] = useState(false);
   const restart = async () => {
     if (!event || restarting) return;
-    if (!window.confirm(t('Start forfra? Alle versioner af kortet og Avas malerier slettes. Kortets ord beholdes.'))) return;
+    if (!(await confirm({
+      title: t('Start forfra?'),
+      body: t('Alle versioner af kortet og Avas malerier slettes. Kortets ord beholdes.'),
+      confirmLabel: t('Start forfra'),
+      danger: true,
+    }))) return;
     setRestarting(true);
     setGenError(null);
     try {
@@ -263,23 +270,26 @@ export default function Invites() {
     }
   };
 
-  if (loading || !content) {
-    return <div className="flex min-h-screen items-center justify-center text-[0.85rem] text-muted">{t('Indlæser…')}</div>;
-  }
+  if (loading || !content) return <PageLoader />;
 
   const landscape = spec?.format === '7x5';
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1fr_440px]">
+    <div className="min-h-full">
+      {/* The card and the steps run edge to edge below, so the header carries
+          the page's gutters itself. */}
+      <div className="px-6 pt-8 sm:px-9 lg:px-12">
+        <PageHeader
+          title={t('Invitationer')}
+          subtitle={t('Vælg en stemning, skriv jeres ord, og lad Ava male et kort kun til jer. Hent det til Canva, hvor alt kan rettes.')}
+          guide="invites"
+        />
+      </div>
+
+    <div className="grid lg:grid-cols-[1fr_440px]">
       {/* The card, as it prints */}
-      <div className="px-6 pt-8 sm:px-9 lg:rule-r lg:px-12 lg:py-8">
-        <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-          {t('Invitationer')}
-        </h1>
-        <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
-          {t('Vælg en stemning, skriv jeres ord, og lad Ava male et kort kun til jer. Hent det til Canva, hvor alt kan rettes.')}
-        </p>
-        <div className="sticky top-8 flex justify-center py-8 lg:py-12">
+      <div className="px-6 sm:px-9 lg:rule-r lg:px-12">
+        <div className="sticky top-6 flex justify-center py-8 lg:py-12">
           <div className={landscape ? 'w-full max-w-[620px]' : 'w-full max-w-[440px]'}>
             {spec ? (
               <div className="overflow-hidden rounded-[3px] shadow-[0_30px_60px_-28px_rgba(40,30,20,0.45),0_2px_6px_rgba(40,30,20,0.08)]">
@@ -296,7 +306,7 @@ export default function Invites() {
       </div>
 
       {/* Ava, one step at a time */}
-      <div className="rule-t px-6 py-10 sm:px-9 lg:rule-t-0 lg:py-12">
+      <div className="border-t-[0.5px] border-line px-6 py-10 sm:px-9 lg:border-t-0 lg:py-12">
         <CardSteps
           step={step}
           onStep={setStep}
@@ -327,6 +337,7 @@ export default function Invites() {
           onUpload={uploadPhotos}
         />
       </div>
+    </div>
     </div>
   );
 }

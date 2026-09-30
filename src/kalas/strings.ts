@@ -113,8 +113,6 @@ export const EN: Record<string, string> = {
   'Tilføj de første 10 gæster': 'Add the first 10 guests',
   'I har været hele vejen igennem. Resten holder jeg øje med.':
     "You've been all the way through. I'll keep an eye on the rest.",
-  'Resten af tjeklisten ligger under Tidslinje & tjekliste →':
-    'The rest of the checklist is under Timeline & checklist →',
   'Forslag': 'Suggested',
   'Brancheestimat for et dansk bryllup. Ret det hele.':
     'Industry estimate for a Danish wedding. Change all of it.',
@@ -799,7 +797,6 @@ export const EN: Record<string, string> = {
   'Spørgsmål & svar': 'Questions & answers',
   'Spørgsmål…': 'Question…',
   'Start forfra': 'Start over',
-  'Start forfra? Jeres designs og Ava-genererede billeder slettes. Jeres egne uploads beholdes.': 'Start over? Your designs and Ava-generated images will be deleted. Your own uploads are kept.',
   'Start gratis, ingen kreditkort': 'Start free, no credit card',
   'Starter forfra…': 'Starting over…',
   'Statistik': 'Statistics',
@@ -1983,7 +1980,6 @@ export const EN: Record<string, string> = {
   'Videre til design': 'On to design',
   'Jeres tekst vises med det samme. Nye sektioner og punkter kommer med, når I opdaterer.': 'Your text shows right away. New sections and items come in when you update.',
   'Siden, som Ava byggede den, med jeres tekst, som den står nu.': 'The site as Ava built it, with your text as it stands now.',
-  'Erstat programmet med jeres Bryllupsdagen? Det, der står her nu, forsvinder.': 'Replace the programme with your wedding day plan? What is here now will be lost.',
   'Fra jeres profil': 'From your profile',
   'Hvordan I mødtes, hvornår I vidste det, og hvad I glæder jer til…': 'How you met, when you knew, and what you are looking forward to…',
   'Et par linjer er nok. Ava skriver den ind, som den står.': 'A few lines is plenty. Ava uses it exactly as written.',
@@ -2043,7 +2039,6 @@ export const EN: Record<string, string> = {
   'Nordisk grønt': 'Nordic greenery',
   'Romantiske roser': 'Romantic roses',
   'Sprog på kortet': 'Language on the card',
-  'Start forfra? Alle versioner af kortet og Avas malerier slettes. Kortets ord beholdes.': 'Start over? Every version of the card and Ava\'s paintings are deleted. The card\'s words are kept.',
   'Stemningerne og deres kort er jeres. Når Ava maler et kort kun til jer og ændrer det, er det samme køb som jeres hjemmeside: ét køb låser op for begge.': 'The vibes and their cards are yours. Having Ava paint a card just for you and change it is the same purchase as your website: one purchase unlocks both.',
   'Svarfrist': 'Reply by',
   'Til Canva': 'For Canva',
@@ -2117,4 +2112,12 @@ export const EN: Record<string, string> = {
   'Filer': 'Files',
   'Udforsk': 'Explore',
   'Hold styr på gæsterne, deres svar, og hvad hver enkelt har brug for.': 'Keep track of your guests, their replies, and what each of them needs.',
+  'Jeres side til gæsterne, med programmet, svar og ønskelisten. Ava bygger den ud fra det, I skriver her.': 'Your page for the guests, with the programme, RSVPs and the wishlist. Ava builds it from what you write here.',
+  'Start forfra?': 'Start over?',
+  'Jeres designs og de billeder, Ava har lavet, slettes. Jeres egne billeder beholdes.': 'Your designs and the images Ava made are deleted. Your own photos are kept.',
+  'Erstat programmet med jeres Bryllupsdagen?': 'Replace the programme with your wedding day?',
+  'Det, der står her nu, forsvinder.': 'What is here now will be gone.',
+  'Erstat': 'Replace',
+  'Alle versioner af kortet og Avas malerier slettes. Kortets ord beholdes.': 'Every version of the card and Ava\'s paintings are deleted. The card\'s words are kept.',
+  'Resten af planen ligger under Planlægning →': 'The rest of the plan is under Planning →',
 };

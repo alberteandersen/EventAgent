@@ -11,6 +11,8 @@ import { createContext, useContext, useEffect, useMemo, useState, useCallback } 
 import { createClient } from "@/lib/supabase/client";
 import { computeJourney, type JourneyStage } from "@/lib/journey";
 import { resolveWeddingDate } from "@/lib/wedding-date";
+import { useLang } from "./i18n";
+import { showError } from "./notice";
 import type {
   BudgetItemRow,
   BudgetSubItemRow,
@@ -382,13 +384,28 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
   // the returned row, and realtime reconciles other tabs.
   const eventId = event?.id ?? null;
 
+  // A write that fails says so, once, instead of the change quietly not
+  // sticking (or, for a delete, vanishing until the next reload).
+  const { t } = useLang();
+  const tRef = React.useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+  const writeFailed = useCallback((what: string, error: { message: string } | null): boolean => {
+    if (!error) return false;
+    console.error(`[useWedding] ${what} failed:`, error.message);
+    showError(tRef.current("Det blev ikke gemt"), tRef.current("Tjek forbindelsen, og prøv igen."));
+    return true;
+  }, []);
+
   const updateEvent = useCallback(
     async (patch: Partial<EventRow>) => {
       if (!eventId) return;
-      const { data } = await supabase.from("events").update(patch).eq("id", eventId).select().single();
+      const { data, error } = await supabase.from("events").update(patch).eq("id", eventId).select().single();
+      writeFailed("events update", error);
       if (data) setEvent(data as EventRow);
     },
-    [supabase, eventId]
+    [supabase, eventId, writeFailed]
   );
 
   const saveBudgetItem = useCallback(
@@ -402,7 +419,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       if (!eventId || !userId) return;
       const existing = budgetItems.find((b) => b.category === item.category);
       if (existing) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("budget_items")
           .update({
             label: item.label,
@@ -420,9 +437,10 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
           .eq("id", existing.id)
           .select()
           .single();
+        writeFailed("budget_items update", error);
         if (data) setBudgetItems((rows) => upsertById(rows, data as BudgetItemRow));
       } else {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from("budget_items")
           .insert({
             event_id: eventId,
@@ -441,26 +459,28 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
           })
           .select()
           .single();
+        writeFailed("budget_items insert", error);
         if (data) setBudgetItems((rows) => upsertById(rows, data as BudgetItemRow));
       }
     },
-    [supabase, eventId, userId, budgetItems]
+    [supabase, eventId, userId, budgetItems, writeFailed]
   );
 
   const deleteBudgetItem = useCallback(
     async (category: string) => {
       const existing = budgetItems.find((b) => b.category === category);
       if (!existing) return;
-      await supabase.from("budget_items").delete().eq("id", existing.id);
+      const { error } = await supabase.from("budget_items").delete().eq("id", existing.id);
+      if (writeFailed("budget_items delete", error)) return;
       setBudgetItems((rows) => removeById(rows, existing.id));
     },
-    [supabase, budgetItems]
+    [supabase, budgetItems, writeFailed]
   );
 
   const addBudgetSubItem = useCallback(
     async (item: { category: string; label: string; vendor?: string | null; amount: number; sort?: number }) => {
       if (!eventId || !userId) return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("budget_sub_items")
         .insert({
           event_id: eventId,
@@ -473,20 +493,22 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         })
         .select()
         .single();
+      writeFailed("budget_sub_items insert", error);
       if (data) setBudgetSubItems((rows) => upsertById(rows, data as BudgetSubItemRow));
       return (data as BudgetSubItemRow) ?? null;
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   const updateBudgetSubItem = useCallback(
     async (id: string, patch: Partial<Pick<BudgetSubItemRow, 'label' | 'vendor' | 'amount' | 'sort' | 'paid'>>) => {
       // Optimistic: a tick should land the moment it is pressed.
       setBudgetSubItems((rows) => rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
-      const { data } = await supabase.from("budget_sub_items").update(patch).eq("id", id).select().single();
+      const { data, error } = await supabase.from("budget_sub_items").update(patch).eq("id", id).select().single();
+      writeFailed("budget_sub_items update", error);
       if (data) setBudgetSubItems((rows) => upsertById(rows, data as BudgetSubItemRow));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const seedBudgetSubItems = useCallback(
@@ -509,10 +531,11 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
 
   const deleteBudgetSubItem = useCallback(
     async (id: string) => {
-      await supabase.from("budget_sub_items").delete().eq("id", id);
+      const { error } = await supabase.from("budget_sub_items").delete().eq("id", id);
+      if (writeFailed("budget_sub_items delete", error)) return;
       setBudgetSubItems((rows) => removeById(rows, id));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const addDayProgramItem = useCallback(
@@ -539,17 +562,17 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         })
         .select()
         .single();
-      if (error) console.error("addDayProgramItem failed:", error.message);
+      writeFailed("day_program_items insert", error);
       if (data) setDayProgramItems((rows) => upsertById(rows, data as DayProgramItemRow));
       return (data as DayProgramItemRow) ?? null;
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   const seedDayProgram = useCallback(
     async (items: { time: string; title: string; subtitle?: string | null; duration_min?: number; owner?: string | null }[]) => {
       if (!eventId || !userId || items.length === 0) return;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("day_program_items")
         .insert(items.map((item, i) => ({
           event_id: eventId,
@@ -562,31 +585,34 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
           sort: i,
         })))
         .select();
+      writeFailed("day_program_items insert", error);
       if (data) setDayProgramItems((rows) => (data as DayProgramItemRow[]).reduce((acc, r) => upsertById(acc, r), rows));
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   const updateDayProgramItem = useCallback(
     async (id: string, patch: Partial<Pick<DayProgramItemRow, 'time' | 'title' | 'subtitle' | 'duration_min' | 'owner' | 'notes' | 'sort'>>) => {
-      const { data } = await supabase.from("day_program_items").update(patch).eq("id", id).select().single();
+      const { data, error } = await supabase.from("day_program_items").update(patch).eq("id", id).select().single();
+      writeFailed("day_program_items update", error);
       if (data) setDayProgramItems((rows) => upsertById(rows, data as DayProgramItemRow));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const deleteDayProgramItem = useCallback(
     async (id: string) => {
-      await supabase.from("day_program_items").delete().eq("id", id);
+      const { error } = await supabase.from("day_program_items").delete().eq("id", id);
+      if (writeFailed("day_program_items delete", error)) return;
       setDayProgramItems((rows) => removeById(rows, id));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const addGuest = useCallback(
     async (guest: Partial<GuestRow> & { name: string }) => {
       if (!eventId || !userId) return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("guests")
         .insert({
           event_id: eventId,
@@ -612,32 +638,35 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         })
         .select()
         .single();
+      writeFailed("guests insert", error);
       if (data) setGuests((rows) => upsertById(rows, data as GuestRow));
       return (data as GuestRow) ?? null;
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   const updateGuest = useCallback(
     async (id: string, patch: Partial<GuestRow>) => {
-      const { data } = await supabase.from("guests").update(patch).eq("id", id).select().single();
+      const { data, error } = await supabase.from("guests").update(patch).eq("id", id).select().single();
+      writeFailed("guests update", error);
       if (data) setGuests((rows) => upsertById(rows, data as GuestRow));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const deleteGuest = useCallback(
     async (id: string) => {
-      await supabase.from("guests").delete().eq("id", id);
+      const { error } = await supabase.from("guests").delete().eq("id", id);
+      if (writeFailed("guests delete", error)) return;
       setGuests((rows) => removeById(rows, id));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const addTask = useCallback(
     async (task: { title: string; due_date?: string | null; category?: string | null; kind?: TaskKind; sort?: number; done?: boolean }) => {
       if (!eventId || !userId) return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("timeline_tasks")
         .insert({
           event_id: eventId,
@@ -651,26 +680,29 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         })
         .select()
         .single();
+      writeFailed("timeline_tasks insert", error);
       if (data) setTimelineTasks((rows) => upsertById(rows, data as TimelineTaskRow));
       return (data as TimelineTaskRow) ?? null;
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   const updateTask = useCallback(
     async (id: string, patch: Partial<TimelineTaskRow>) => {
-      const { data } = await supabase.from("timeline_tasks").update(patch).eq("id", id).select().single();
+      const { data, error } = await supabase.from("timeline_tasks").update(patch).eq("id", id).select().single();
+      writeFailed("timeline_tasks update", error);
       if (data) setTimelineTasks((rows) => upsertById(rows, data as TimelineTaskRow));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const deleteTask = useCallback(
     async (id: string) => {
-      await supabase.from("timeline_tasks").delete().eq("id", id);
+      const { error } = await supabase.from("timeline_tasks").delete().eq("id", id);
+      if (writeFailed("timeline_tasks delete", error)) return;
       setTimelineTasks((rows) => removeById(rows, id));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   /**
@@ -711,7 +743,7 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
       patch: { label: string; gift?: string | null; thanked_at?: string | null; method?: ThankMethod | null; note?: string | null }
     ) => {
       if (!eventId || !userId) return;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("thank_yous")
         .upsert(
           { event_id: eventId, user_id: userId, subject_key: subjectKey, ...patch },
@@ -719,9 +751,10 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         )
         .select()
         .single();
+      writeFailed("thank_yous upsert", error);
       if (data) setThankYous((rows) => upsertById(rows, data as ThankYouRow));
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   /** Returns null on success, else the error message — see `seedTasks`. */
@@ -755,20 +788,21 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         published: patch.published !== undefined ? patch.published : current?.published ?? false,
         updated_at: new Date().toISOString(),
       };
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("wedding_sites")
         .upsert(row, { onConflict: "event_id" })
         .select()
         .single();
+      writeFailed("wedding_sites upsert", error);
       if (data) setWeddingSite(data as WeddingSiteRow);
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   const saveSeating = useCallback(
     async (data: Record<string, unknown>) => {
       if (!eventId || !userId) return;
-      const { data: row } = await supabase
+      const { data: row, error } = await supabase
         .from("seating_plans")
         .upsert(
           { event_id: eventId, user_id: userId, data, updated_at: new Date().toISOString() },
@@ -776,15 +810,16 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         )
         .select()
         .single();
+      writeFailed("seating_plans upsert", error);
       if (row) setSeatingPlan(row as SeatingPlanRow);
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   const addRegistryItem = useCallback(
     async (item: Partial<RegistryItemRow> & { title: string }) => {
       if (!eventId || !userId) return null;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("registry_items")
         .insert({
           event_id: eventId,
@@ -801,26 +836,29 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         })
         .select()
         .single();
+      writeFailed("registry_items insert", error);
       if (data) setRegistryItems((rows) => upsertById(rows, data as RegistryItemRow));
       return (data as RegistryItemRow) ?? null;
     },
-    [supabase, eventId, userId]
+    [supabase, eventId, userId, writeFailed]
   );
 
   const updateRegistryItem = useCallback(
     async (id: string, patch: Partial<RegistryItemRow>) => {
-      const { data } = await supabase.from("registry_items").update(patch).eq("id", id).select().single();
+      const { data, error } = await supabase.from("registry_items").update(patch).eq("id", id).select().single();
+      writeFailed("registry_items update", error);
       if (data) setRegistryItems((rows) => upsertById(rows, data as RegistryItemRow));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const deleteRegistryItem = useCallback(
     async (id: string) => {
-      await supabase.from("registry_items").delete().eq("id", id);
+      const { error } = await supabase.from("registry_items").delete().eq("id", id);
+      if (writeFailed("registry_items delete", error)) return;
       setRegistryItems((rows) => removeById(rows, id));
     },
-    [supabase]
+    [supabase, writeFailed]
   );
 
   const saveInvitation = useCallback(
@@ -829,13 +867,16 @@ export function WeddingProvider({ children }: { children: React.ReactNode }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
-      });
-      if (!res.ok) return null;
+      }).catch(() => null);
+      if (!res?.ok) {
+        writeFailed("invitations save", { message: res ? `HTTP ${res.status}` : "network" });
+        return null;
+      }
       const row = (await res.json()) as InvitationRow;
       setInvitations((rows) => upsertById(rows, row));
       return row;
     },
-    []
+    [writeFailed]
   );
 
   // Realtime: keep the wedding fresh as the agent/cron writes rows.

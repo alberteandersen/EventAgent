@@ -345,11 +345,11 @@ export default function GuestDialog({
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               <div className="flex items-center justify-between rounded-xl bg-shell px-3.5 py-2.5">
                 <span className="text-[0.85rem] text-ink">{t('Overnatning')}</span>
-                <Toggle value={dOvernight} onChange={setDOvernight} />
+                <Toggle value={dOvernight} onChange={setDOvernight} label={t('Overnatning')} />
               </div>
               <div className="flex items-center justify-between rounded-xl bg-shell px-3.5 py-2.5">
                 <span className="text-[0.85rem] text-ink">{t('Drikker ikke alkohol')}</span>
-                <Toggle value={dNoAlcohol} onChange={setDNoAlcohol} />
+                <Toggle value={dNoAlcohol} onChange={setDNoAlcohol} label={t('Drikker ikke alkohol')} />
               </div>
             </div>
           </section>

@@ -129,7 +129,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
         <p className="max-w-md text-sm text-muted">
           {t('Del linket med gæsterne, de kan lægge billeder op uden at oprette noget. Kun I kan se dem.')}
         </p>
-        <p className="shrink-0 text-sm font-bold text-sage">
+        <p className="shrink-0 text-sm font-bold text-sage-strong">
           {t('{n} billeder', { n: count })}
         </p>
       </div>
@@ -159,7 +159,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
       </div>
 
       {loading && photos.length === 0 && (
-        <div className="flex items-center justify-center py-16 text-faint">
+        <div className="flex items-center justify-center py-16 text-muted">
           <Loader2 size={20} className="animate-spin" />
         </div>
       )}
@@ -184,7 +184,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
             >
               {f.on && <Heart size={11} fill="currentColor" className={showFavorites ? '' : 'text-terracotta'} />}
               {f.label}
-              <span className={showFavorites === f.on ? 'text-sage-tint' : 'text-faint'}>{f.n}</span>
+              <span className={showFavorites === f.on ? 'text-sage-tint' : 'text-muted'}>{f.n}</span>
             </button>
           ))}
         </div>
@@ -215,7 +215,7 @@ export default function AlbumTab({ onNavigate }: { onNavigate?: (s: 'website') =
                     className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]" />
                 </button>
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-faint">
+                <div className="flex h-full w-full items-center justify-center text-muted">
                   <ImageOff size={18} />
                 </div>
               )}

@@ -95,13 +95,13 @@ export function Marquee() {
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="max-w-lg"
         >
-          <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
+          <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent-ink">
             Jeres dag, på jeres måde
           </p>
           <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.01em] text-[#4A4E3C] sm:text-6xl lg:text-[4rem]">
             Til alle slags bryllupper
           </h2>
-          <p className="mt-5 text-base leading-relaxed text-[#7A8066] sm:text-[17px]">
+          <p className="mt-5 text-base leading-relaxed text-velvet-body sm:text-[17px]">
             Fra det lille bryllup for to til den store fest: Kalas finder stedet,
             skriver til leverandørerne og holder styr på detaljerne, så I kan
             koncentrere jer om hinanden.

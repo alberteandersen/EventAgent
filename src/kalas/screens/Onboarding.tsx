@@ -426,7 +426,7 @@ function OnboardingFooter({
             className={cn(
               'flex h-12 flex-1 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold transition-colors cursor-pointer sm:flex-initial sm:min-w-[200px]',
               nextDisabled
-                ? 'cursor-not-allowed bg-line text-faint'
+                ? 'cursor-not-allowed bg-line text-muted'
                 : 'bg-ink text-paper hover:bg-ink/90',
             )}
           >

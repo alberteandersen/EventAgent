@@ -282,7 +282,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
         >
           <HeroPhoto fallback={HERO_IMG} alt={coupleLabel} />
           <div className="flex flex-1 flex-col justify-center gap-4">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-strong">
               {t('Brylluppet for')}
             </p>
             <h1 className="font-serif text-[clamp(2.5rem,6vw,3.75rem)] font-semibold leading-[1.05] text-ink">
@@ -606,7 +606,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
 
       <PhoneBanner />
 
-      <p className="pb-4 text-center text-[13px] text-faint">
+      <p className="pb-4 text-center text-[13px] text-muted">
         {t('Planlagt med omtanke af {names}, guidet af Ava.', { names: coupleLabel })}
       </p>
     </Page>
@@ -649,7 +649,7 @@ function ChecklistRow({
       {statusLabel && (
         <span
           className={`text-xs font-bold uppercase tracking-[0.12em] ${
-            done ? 'text-sage-strong' : active ? 'text-clay' : 'text-muted'
+            done ? 'text-sage-strong' : active ? 'text-clay-ink' : 'text-muted'
           }`}
         >
           {statusLabel}

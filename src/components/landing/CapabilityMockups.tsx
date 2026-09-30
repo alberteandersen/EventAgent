@@ -10,12 +10,12 @@ import { cn } from "@/lib/utils";
 
 /* Palette lifted from the app itself. */
 const INK = "#314523";
-const MUTED = "#6c7561";
+const MUTED = "#646d5a";
 const LINE = "#e4e0d4";
 const CARD = "#fcfbf7";
 const SHELL = "#f4f0e7";
 const SAGE = "#eef1e6";
-const TERRA = "#b3543e";
+const TERRA = "#a44a35";
 
 function Dot({ className }: { className?: string }) {
   return <span className={cn("h-2 w-2 rounded-full", className)} />;

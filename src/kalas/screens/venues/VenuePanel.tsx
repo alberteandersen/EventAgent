@@ -119,7 +119,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
 
           {v.why_fit && (
             <div className="mt-3.5 rounded-xl bg-sage-wash px-4 py-3">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-sage">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-sage-strong">
                 {t('Avas note')}
               </p>
               <p className="mt-1 font-serif text-[0.95rem] italic leading-snug text-ink">
@@ -184,7 +184,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
 function Fact({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <dt className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">{label}</dt>
+      <dt className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage-strong">{label}</dt>
       <dd className="mt-0.5 inline-flex items-center gap-1.5 text-[0.85rem] font-semibold text-ink">
         {icon}{value}
       </dd>

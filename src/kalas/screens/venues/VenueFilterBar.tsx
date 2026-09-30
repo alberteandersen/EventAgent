@@ -268,7 +268,7 @@ export default function VenueFilterBar({
               />
             </div>
           )}
-          <p className="mt-2.5 text-[0.7rem] text-sage">
+          <p className="mt-2.5 text-[0.7rem] text-sage-strong">
             {t('{n} af stederne har catering i huset, {m} har overnatning.', {
               n: counts.withCatering, m: counts.withStay,
             })}

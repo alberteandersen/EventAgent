@@ -75,7 +75,7 @@ export default function LocationChip({ className }: { className?: string }) {
             className="fixed inset-0 z-40 cursor-default"
           />
           <div className="absolute right-0 top-[calc(100%+6px)] z-50 w-[280px] rounded-2xl border border-line bg-white p-3 shadow-[0_16px_40px_rgba(18,51,43,0.16)]">
-            <p className="px-1 pb-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-sage">
+            <p className="px-1 pb-2 text-[0.62rem] font-bold uppercase tracking-[0.16em] text-sage-strong">
               {t('Jeres lokation')}
             </p>
             <div className="flex items-center gap-2">

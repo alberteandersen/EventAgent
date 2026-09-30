@@ -103,7 +103,7 @@ export default function DelTab({ onNavigate }: { onNavigate?: (s: 'website') => 
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
+        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
           {t('Overskrift')}
         </span>
         <input
@@ -117,7 +117,7 @@ export default function DelTab({ onNavigate }: { onNavigate?: (s: 'website') => 
       </label>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
+        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
           {t('Jeres hilsen')}
         </span>
         <textarea
@@ -160,7 +160,7 @@ export default function DelTab({ onNavigate }: { onNavigate?: (s: 'website') => 
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-[12px] text-faint">
+        <p className="text-[12px] text-muted">
           {t('Opsamlingen viser jeres hilsen og tallene ovenfor. Gæsternes billeder forbliver private.')}
         </p>
         {live && shareUrl && (
@@ -181,9 +181,9 @@ export default function DelTab({ onNavigate }: { onNavigate?: (s: 'website') => 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="bg-paper px-4 py-4 text-center">
-      <div className="flex items-center justify-center gap-1.5 text-sage">{icon}</div>
+      <div className="flex items-center justify-center gap-1.5 text-sage-strong">{icon}</div>
       <div className="mt-1 font-serif text-[1.5rem] text-ink">{value}</div>
-      <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-faint">{label}</div>
+      <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-muted">{label}</div>
     </div>
   );
 }

@@ -2137,6 +2137,7 @@ export const EN: Record<string, string> = {
   'Intet er gået tabt. Tjek forbindelsen, og prøv igen om lidt.': 'Nothing is lost. Check your connection and try again in a moment.',
   'Betalingen kunne ikke startes. Prøv igen om lidt.': 'The payment could not be started. Try again in a moment.',
   'Det blev ikke gemt': 'That was not saved',
+  'Dato for \'{title}\'': "Date for '{title}'",
   'Sådan behandler vi jeres oplysninger': 'How we handle your data',
   'Ava leder efter leverandører…': 'Ava is looking for vendors…',
   'Ava kunne ikke søge lige nu': 'Ava could not search right now',

@@ -447,7 +447,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
             {/* Nothing to estimate from. A split of zero would just be a column
                 of empty rows pretending to be a plan. */}
             {total === 0 && (
-              <span className="mt-1 block text-clay">{t('Sæt et beløb eller et gæsteantal, så regner vi en fordeling ud.')}</span>
+              <span className="mt-1 block text-clay-ink">{t('Sæt et beløb eller et gæsteantal, så regner vi en fordeling ud.')}</span>
             )}
           </>
         }
@@ -909,10 +909,10 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
 }
 
 const STAT_STYLES = {
-  total:     { bg: 'bg-ink',          label: '!text-canvas/50',  value: 'text-canvas' },
-  allocated: { bg: 'bg-sage-tint',    label: '!text-ink/50',     value: 'text-ink' },
-  remaining: { bg: 'bg-terracotta-wash',   label: '!text-clay/70',    value: 'text-clay' },
-  over:      { bg: 'bg-terracotta-wash',   label: '!text-red-700/70', value: 'text-red-700' },
+  total:     { bg: 'bg-ink',          label: '!text-canvas/75',  value: 'text-canvas' },
+  allocated: { bg: 'bg-sage-tint',    label: '!text-ink-soft',   value: 'text-ink' },
+  remaining: { bg: 'bg-terracotta-wash',   label: '!text-clay-ink',   value: 'text-clay-ink' },
+  over:      { bg: 'bg-terracotta-wash',   label: '!text-terracotta', value: 'text-terracotta' },
 } as const;
 
 function StylePicker({

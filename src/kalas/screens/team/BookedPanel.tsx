@@ -143,7 +143,7 @@ export default function BookedPanel({
 
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-[0.16em] text-sage">
+      <p className="text-xs font-bold uppercase tracking-[0.16em] text-sage-strong">
         {t('Jeres team · {n} booket', { n: bookedCount })}
       </p>
       <p className="mt-2 max-w-xl text-sm text-muted">
@@ -265,7 +265,7 @@ export default function BookedPanel({
           ) : (
             <div className="flex min-h-0 flex-1 flex-col gap-3">
               <div className="flex items-center justify-between">
-                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-sage">
+                <p className="text-[0.62rem] font-semibold uppercase tracking-[0.16em] text-sage-strong">
                   {t('Tilføj kategori')}
                 </p>
                 <button

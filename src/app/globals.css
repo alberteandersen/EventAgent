@@ -19,7 +19,8 @@ html {
   --color-blue: #3a4f37;
   --color-blue-light: #4d6349;
   --color-rose-blush: #dce6d4;
-  --color-accent: #aeb080;
+  --color-accent: #8b8d58;          /* large headline words: 3:1 on cream */
+  --color-accent-ink: #696b42;      /* small labels in accent, AA on cream */
   --color-ink: #4a4e3c;
   --color-ink-hover: #575b47;
   --color-ink-muted: #7a8066;
@@ -57,7 +58,7 @@ html {
   --color-faint: #8a9992;           /* labels / captions                  */
 
   --color-sage: #7d938a;            /* sage accent + eyebrow labels       */
-  --color-sage-strong: #5f7d70;     /* sage hover / "done"                */
+  --color-sage-strong: #516b60;     /* sage as text: AA on every tint     */
   --color-sage-tint: #dbe5e0;       /* sage wash                          */
   --color-sage-wash: #e8f0ec;       /* lighter wash: done rows, badges    */
 

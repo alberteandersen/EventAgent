@@ -474,7 +474,7 @@ export default function Seating() {
                       transition={{ duration: 0.14 }}
                       className="absolute left-0 top-11 z-50 grid w-[18rem] grid-cols-2 gap-1 rounded-[18px] border border-line bg-white p-2 shadow-[0_16px_40px_-12px_rgba(20,26,19,0.25)]"
                     >
-                      <p className="col-span-2 px-2 pb-1 pt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">
+                      <p className="col-span-2 px-2 pb-1 pt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage-strong">
                         {t('Læg på planen')}
                       </p>
                       {ELEMENTS.map((el) => {
@@ -651,7 +651,7 @@ export default function Seating() {
                   </button>
                 </div>
 
-                <span className="text-[0.76rem] text-sage">
+                <span className="text-[0.76rem] text-sage-strong">
                   {t('{n} ledige', { n: freeSeats(activeTable) })}
                 </span>
 
@@ -746,7 +746,7 @@ export default function Seating() {
         >
           <div className="border-b border-line-soft p-4">
             <div className="flex items-baseline justify-between gap-2">
-              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-sage">
+              <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-sage-strong">
                 {t('Gæster')}
               </p>
               <p className="text-[0.72rem] font-semibold text-ink">
@@ -818,7 +818,7 @@ export default function Seating() {
 
             {grouped.map(([group, list]) => (
               <div key={group} className="mb-4">
-                <p className="mb-1.5 px-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">
+                <p className="mb-1.5 px-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage-strong">
                   {group} · {list.length}
                 </p>
                 <div className="flex flex-col gap-1">
@@ -846,7 +846,7 @@ export default function Seating() {
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[0.82rem] text-ink">{g.name}</span>
                           {table && (
-                            <span className="block truncate text-[0.68rem] text-sage">{table.name}</span>
+                            <span className="block truncate text-[0.68rem] text-sage-strong">{table.name}</span>
                           )}
                         </span>
                         {g.dietary && (
@@ -910,7 +910,7 @@ export default function Seating() {
             <p className="font-serif text-[1.4rem]">
               {couple.a && couple.b ? `${couple.a} & ${couple.b}` : t('Bordplan')}
             </p>
-            <p className="text-[0.7rem] uppercase tracking-[0.16em] text-sage">
+            <p className="text-[0.7rem] uppercase tracking-[0.16em] text-sage-strong">
               {couple.dateLabel || t('Bordplan')}
             </p>
           </div>
@@ -990,7 +990,7 @@ export default function Seating() {
 function Stat({ label, value, tone }: { label: string; value: number; tone?: 'clay' }) {
   return (
     <div className="bg-white px-4 py-3.5">
-      <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">{label}</p>
+      <p className="text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage-strong">{label}</p>
       <p className={cn(
         'mt-1 font-serif text-[1.6rem] leading-none',
         tone === 'clay' ? 'text-terracotta' : 'text-ink',

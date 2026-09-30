@@ -152,7 +152,7 @@ export default function TakkelisteTab() {
               )}
             >
               {t(FILTER_LABELS[f])}
-              <span className={active ? 'text-sage-tint' : 'text-faint'}>{counts[f]}</span>
+              <span className={active ? 'text-sage-tint' : 'text-muted'}>{counts[f]}</span>
             </button>
           );
         })}
@@ -206,7 +206,7 @@ export default function TakkelisteTab() {
           <React.Fragment key={g.id}>
             {groups.length > 1 && (
               <p className={cn(
-                'text-[11px] font-bold uppercase tracking-[0.14em] text-faint',
+                'text-[11px] font-bold uppercase tracking-[0.14em] text-muted',
                 g.id === 'takket' && 'mt-3',
               )}>
                 {t(g.label)} · {g.rows.length}
@@ -268,13 +268,13 @@ function ThankRow({ entry, open, onOpen, onToggle, onMethod, onNote }: {
                 </span>
               )}
               {!entry.attended && !entry.gift && (
-                <span className="text-faint">{t('Kom ikke')}</span>
+                <span className="text-muted">{t('Kom ikke')}</span>
               )}
             </span>
             {/* What they wrote is what the thank-you answers, so it shows
                 while the card is being written, not only when opened. */}
             {entry.message && !open && (
-              <span className="flex min-w-0 items-center gap-1.5 text-[13px] italic text-sage">
+              <span className="flex min-w-0 items-center gap-1.5 text-[13px] italic text-sage-strong">
                 <Quote size={11} className="shrink-0" aria-hidden />
                 <span className="truncate pr-1">{entry.message}</span>
               </span>
@@ -304,7 +304,7 @@ function ThankRow({ entry, open, onOpen, onToggle, onMethod, onNote }: {
             <div className="mt-4 flex flex-col gap-3 border-t border-line-soft pt-4">
               {entry.message && (
                 <div className="rounded-[14px] bg-white/60 px-4 py-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
                     {t('De skrev')}
                   </p>
                   <p className="mt-1 text-sm italic leading-relaxed text-ink">{entry.message}</p>
@@ -321,7 +321,7 @@ function ThankRow({ entry, open, onOpen, onToggle, onMethod, onNote }: {
               )}
 
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
                   {t('Takket via')}
                 </span>
                 {THANK_METHODS.map((m) => (

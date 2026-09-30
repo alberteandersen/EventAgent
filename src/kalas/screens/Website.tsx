@@ -502,7 +502,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
         </div>
         <div className="mt-4 flex items-center justify-between">
           <Label>{t('Nedtælling til brylluppet')}</Label>
-          <Toggle value={countdown} onChange={setCountdown} />
+          <Toggle value={countdown} onChange={setCountdown} label={t('Nedtælling til brylluppet')} />
         </div>
       </>);
 
@@ -826,7 +826,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                     <span className="pr-4 text-[0.78rem] text-muted">{t('.kalas.dk')}</span>
                   </div>
                   {published && (
-                    <p className="text-[0.72rem] text-sage">{t('● Siden er live')}</p>
+                    <p className="text-[0.72rem] text-sage-strong">{t('● Siden er live')}</p>
                   )}
                 </div>
               </div>
@@ -1016,7 +1016,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                     <Lock size={15} className="text-muted" />
                     <p className="font-serif text-[1.15rem] text-ink">{t('Adgangskode')}</p>
                   </div>
-                  <Toggle value={pwProtected} onChange={setPwProtected} />
+                  <Toggle value={pwProtected} onChange={setPwProtected} label={t('Adgangskode')} />
                 </div>
                 <p className="text-[0.8rem] text-muted mb-4">{t('Gæsterne skal indtaste en kode for at se siden.')}</p>
                 <AnimatePresence>
@@ -1062,7 +1062,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                     </p>
                   </div>
                   {websitePaid
-                    ? <Toggle value={!hideBranding} onChange={(v) => setHideBranding(!v)} />
+                    ? <Toggle value={!hideBranding} onChange={(v) => setHideBranding(!v)} label={t('Kalas-branding')} />
                     : <span className="shrink-0 rounded-full bg-sage-tint px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-ink">{t('Inkluderet i køb')}</span>
                   }
                 </div>
@@ -1177,7 +1177,7 @@ function SectionCard({
                         </p>
                       </div>
                     </div>
-                    <Toggle value={ai.on} onChange={ai.onChange} />
+                    <Toggle value={ai.on} onChange={ai.onChange} label={t('AI-billede')} />
                   </div>
                 </div>
               )}
@@ -1209,7 +1209,7 @@ function ToggleRow({ label, value, onChange }: { label: string; value: boolean; 
   return (
     <div className="flex items-center justify-between">
       <span className="text-[0.85rem] text-ink">{label}</span>
-      <Toggle value={value} onChange={onChange} />
+      <Toggle value={value} onChange={onChange} label={label} />
     </div>
   );
 }

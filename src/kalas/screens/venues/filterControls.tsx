@@ -89,7 +89,7 @@ export function RequireSwitch({ label, hint, active, disabled, onClick }: {
       </span>
       <span className="min-w-0">
         <span className="block text-[0.78rem] font-semibold text-ink">{label}</span>
-        {hint && <span className="mt-0.5 block text-[0.7rem] text-sage">{hint}</span>}
+        {hint && <span className="mt-0.5 block text-[0.7rem] text-sage-strong">{hint}</span>}
       </span>
     </button>
   );
@@ -97,5 +97,5 @@ export function RequireSwitch({ label, hint, active, disabled, onClick }: {
 
 /** The one-line explanation some panels need above their chips. */
 export function PanelHint({ children }: { children: React.ReactNode }) {
-  return <p className="mb-2 text-[0.74rem] text-sage">{children}</p>;
+  return <p className="mb-2 text-[0.74rem] text-sage-strong">{children}</p>;
 }

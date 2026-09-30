@@ -143,7 +143,7 @@ export default function CateringOverview({ guests, plan, title, subtitle, onShow
         </p>
         <div className="flex items-center gap-4">
           <label className="flex items-center gap-2 text-[0.8rem] text-ink-soft">
-            <Toggle value={includePending} onChange={setIncludePending} />
+            <Toggle value={includePending} onChange={setIncludePending} label={t('Medregn dem uden svar ({n})', { n: r.pending })} />
             {t('Medregn dem uden svar ({n})', { n: r.pending })}
           </label>
           <button type="button" onClick={print}

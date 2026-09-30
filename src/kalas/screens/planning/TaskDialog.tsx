@@ -152,7 +152,7 @@ export default function TaskDialog({
               )}
               <div className="flex items-center justify-between rounded-xl bg-shell px-3.5 py-2.5">
                 <span className="text-[0.85rem] text-ink">{t('Markér som fuldført')}</span>
-                <Toggle value={dDone} onChange={setDDone} />
+                <Toggle value={dDone} onChange={setDDone} label={t('Markér som fuldført')} />
               </div>
             </div>
           </Section>

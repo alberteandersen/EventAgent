@@ -64,7 +64,7 @@ function Person({ label, name, tone }: { label: string; name: string; tone: "ivo
       </span>
       <div className="text-center">
         <p className="text-sm font-medium text-white">{name || label}</p>
-        {name && <p className="text-[0.7rem] text-white/50">{label}</p>}
+        {name && <p className="text-[0.7rem] text-white/70">{label}</p>}
       </div>
     </div>
   );

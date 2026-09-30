@@ -41,14 +41,14 @@ export function LandingFooter() {
             >
               kalas
             </Link>
-            <p className="mt-3 max-w-[14rem] text-sm leading-relaxed text-velvet-muted">
+            <p className="mt-3 max-w-[14rem] text-sm leading-relaxed text-velvet-body">
               Ava planlægger jeres bryllup. I træffer beslutningerne.
             </p>
           </div>
 
           {columns.map((col) => (
             <div key={col.title}>
-              <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
+              <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent-ink">
                 {col.title}
               </p>
               <ul className="mt-4 space-y-2.5">
@@ -56,7 +56,7 @@ export function LandingFooter() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-velvet-muted transition hover:text-ink"
+                      className="text-sm text-velvet-body transition hover:text-ink"
                     >
                       {link.label}
                     </Link>
@@ -68,11 +68,11 @@ export function LandingFooter() {
         </div>
 
         <div className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-8">
-          <span className="text-xs text-velvet-soft">
+          <span className="text-xs text-velvet-body">
             © {new Date().getFullYear()} Kalas. Alle rettigheder forbeholdes.
           </span>
           {PRIVACY_POLICY_LIVE && (
-            <Link href="/privatliv" className="text-xs text-velvet-muted transition hover:text-ink">
+            <Link href="/privatliv" className="text-xs text-velvet-body transition hover:text-ink">
               Privatlivspolitik
             </Link>
           )}

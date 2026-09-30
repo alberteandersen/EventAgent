@@ -183,7 +183,7 @@ function VendorShortlist({
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-sage">
+                  <p className="text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-sage-strong">
                     {t(CAT_LABEL[v.category] ?? v.category)}
                   </p>
                   <h3 className="mt-1 font-serif text-[1.05rem] text-ink">{v.name}</h3>

@@ -244,7 +244,7 @@ function VendorCard({
       <div className="flex flex-1 flex-col p-4">
         <h3 className="font-serif text-[1.08rem] leading-tight text-ink">{v.name}</h3>
         {v.address && (
-          <p className="mt-0.5 inline-flex items-center gap-1 truncate text-[0.72rem] text-sage">
+          <p className="mt-0.5 inline-flex items-center gap-1 truncate text-[0.72rem] text-sage-strong">
             <MapPin size={10} className="shrink-0" /> {v.address}
           </p>
         )}

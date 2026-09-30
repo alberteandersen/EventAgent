@@ -63,7 +63,7 @@ function TableNodeInner({
         <span className="pointer-events-none font-serif text-[1.35rem] leading-none text-ink">
           {table.name}
         </span>
-        <span className="pointer-events-none mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage">
+        <span className="pointer-events-none mt-1 text-[0.6rem] font-semibold uppercase tracking-[0.16em] text-sage-strong">
           {taken}/{table.seats}
         </span>
         <span className="pointer-events-none absolute left-2 top-2 text-line-strong opacity-0 transition-opacity group-hover:opacity-100">

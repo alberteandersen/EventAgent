@@ -73,9 +73,14 @@ export function SelectPill({
 /* ── Toggle ──────────────────────────────────────────────────────────────
    Lifted out of Website.tsx, which had it local while two more one-off
    copies sat in Home.tsx and further down Website itself. */
-export function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+export function Toggle({ value, onChange, label }: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+  /** What it switches, for a screen reader: the text shown beside it. */
+  label: string;
+}) {
   return (
-    <button onClick={() => onChange(!value)} role="switch" aria-checked={value} type="button"
+    <button onClick={() => onChange(!value)} role="switch" aria-checked={value} aria-label={label} type="button"
       className={cn('relative h-5 w-9 rounded-full transition-colors duration-200 cursor-pointer shrink-0',
         value ? 'bg-ink' : 'bg-shell')}>
       <span className={cn('absolute left-0 top-0.5 h-4 w-4 rounded-full bg-canvas shadow-sm transition-all duration-200',

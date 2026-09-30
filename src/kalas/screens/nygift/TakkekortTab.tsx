@@ -108,7 +108,7 @@ export default function TakkekortTab() {
           title={t('Forhåndsvisning af takkekortet')}
           thanks={words}
         />
-        <p className="max-w-sm text-center text-[12px] leading-relaxed text-faint">
+        <p className="max-w-sm text-center text-[12px] leading-relaxed text-muted">
           {source === 'invitation'
             ? t('I samme stemning som jeres invitation: {name}.', { name: design.concept.name })
             : source === 'website'
@@ -121,7 +121,7 @@ export default function TakkekortTab() {
         {/* Their own words. The default is a placeholder for the couple with
             nothing particular to add; anything they write replaces it. */}
         <label className="flex flex-col gap-2">
-          <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-faint">
+          <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-muted">
             <PenLine size={12} aria-hidden /> {t('Jeres egen hilsen')}
           </span>
           <textarea
@@ -152,7 +152,7 @@ export default function TakkekortTab() {
                   : t('Alle har fået tak')}
               </p>
               {outstanding.length > 0 && (
-                <p className="mt-0.5 text-[12px] text-faint">
+                <p className="mt-0.5 text-[12px] text-muted">
                   {t('Navnene står som de skal skrives på kortet.')}
                 </p>
               )}
@@ -177,7 +177,7 @@ export default function TakkekortTab() {
                 </span>
               ))}
               {outstanding.length > 8 && (
-                <span className="px-1.5 py-1 text-[0.74rem] text-faint">
+                <span className="px-1.5 py-1 text-[0.74rem] text-muted">
                   {t('+{n} flere', { n: outstanding.length - 8 })}
                 </span>
               )}

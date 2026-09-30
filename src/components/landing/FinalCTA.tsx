@@ -23,9 +23,9 @@ export function FinalCTA() {
         <h2 className="font-[family-name:var(--font-cormorant)] text-5xl font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-7xl">
           Jeres bryllupsdag,
           <br />
-          <span className="text-butter-muted">så godt som planlagt.</span>
+          <span className="text-accent">så godt som planlagt.</span>
         </h2>
-        <p className="mx-auto mt-6 max-w-md text-lg text-velvet-muted">
+        <p className="mx-auto mt-6 max-w-md text-lg text-velvet-body">
           Opret en konto, og fortæl Ava om jeres bryllup. Hun kan skrive til
           de første steder allerede i dag.
         </p>

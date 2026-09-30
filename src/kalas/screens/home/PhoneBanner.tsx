@@ -46,7 +46,7 @@ export default function PhoneBanner() {
     <aside className="relative hidden items-center gap-6 rounded-[28px] border border-line bg-[linear-gradient(110deg,#e8f0ec_0%,#f4f5f3_55%,#eceeeb_100%)] px-7 py-6 lg:flex">
       <QrBlock url={state.url} caption={t('Kalas på telefonen')} size={104} printable={false} />
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-sage">
+        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.22em] text-sage-strong">
           <Smartphone size={13} aria-hidden /> {t('Planlæg videre på telefonen')}
         </p>
         <p className="mt-2 font-serif text-[1.6rem] leading-tight text-ink">
@@ -60,7 +60,7 @@ export default function PhoneBanner() {
         type="button"
         onClick={dismiss}
         aria-label={t('Luk')}
-        className="absolute right-4 top-4 rounded-full p-1.5 text-sage transition-colors hover:bg-white/70 hover:text-ink cursor-pointer"
+        className="absolute right-4 top-4 rounded-full p-1.5 text-sage-strong transition-colors hover:bg-white/70 hover:text-ink cursor-pointer"
       >
         <X size={16} />
       </button>

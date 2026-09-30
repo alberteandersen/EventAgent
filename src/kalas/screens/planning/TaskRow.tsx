@@ -89,9 +89,12 @@ export default function TaskRow({
       type="date"
       value={task.dateISO ?? ''}
       onChange={(e) => e.target.value && onDateChange(e.target.value)}
-      className={quiet ? 'sr-only' : 'absolute inset-0 w-full cursor-pointer opacity-0'}
+      // The button beside it is the control; this only hosts the native picker,
+      // over the same box so the picker opens where the date is.
+      className={quiet ? 'sr-only' : 'pointer-events-none absolute inset-0 w-full opacity-0'}
       tabIndex={-1}
-      aria-hidden={quiet || undefined}
+      aria-hidden
+      aria-label={t("Dato for '{title}'", { title: task.title })}
     />
   );
   const assignee = task.assigneeInitials && (
@@ -125,7 +128,7 @@ export default function TaskRow({
 
       <div className="flex min-w-0 flex-1 flex-col gap-1 sm:gap-0.5">
         <span className={cn('flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.95rem] font-semibold leading-snug sm:text-base', done ? doneLabelClass : 'text-ink')}>
-          {task.Icon && <task.Icon size={14} strokeWidth={2} className="shrink-0 text-sage" aria-hidden />}
+          {task.Icon && <task.Icon size={14} strokeWidth={2} className="shrink-0 text-sage-strong" aria-hidden />}
           {onOpen ? (
             <button
               type="button"
@@ -157,19 +160,21 @@ export default function TaskRow({
             </span>
           )}
           {quiet ? dateInput : (
-            <button
-              type="button"
-              onClick={() => dateInputRef.current?.showPicker?.()}
-              aria-label={t("Ændr dato for '{title}'", { title: task.title })}
-              className={cn(
-                'relative flex w-fit items-center gap-1.5 text-[13px] hover:text-ink cursor-pointer',
-                task.dateISO ? 'text-muted' : 'text-faint',
-              )}
-            >
-              <CalendarDays size={12} />
-              {task.dateISO ? formatDate(task.dateISO) : t('Vælg dato')}
+            <span className="relative flex w-fit">
+              <button
+                type="button"
+                onClick={() => dateInputRef.current?.showPicker?.()}
+                aria-label={t("Ændr dato for '{title}'", { title: task.title })}
+                className={cn(
+                  'flex items-center gap-1.5 text-[13px] hover:text-ink cursor-pointer',
+                  task.dateISO ? 'text-muted' : 'text-faint',
+                )}
+              >
+                <CalendarDays size={12} />
+                {task.dateISO ? formatDate(task.dateISO) : t('Vælg dato')}
+              </button>
               {dateInput}
-            </button>
+            </span>
           )}
           {showStatus && (
             <span className={cn('text-[0.68rem] font-bold uppercase tracking-[0.12em] sm:hidden', statusTone)}>
@@ -216,7 +221,7 @@ export default function TaskRow({
           type="button"
           onClick={onMenu}
           aria-label={t("Handlinger for '{title}'", { title: task.title })}
-          className="flex size-8 items-center justify-center rounded-full text-faint transition-colors hover:bg-white/70 hover:text-ink cursor-pointer"
+          className="flex size-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-white/70 hover:text-ink cursor-pointer"
         >
           <MoreHorizontal size={18} />
         </button>

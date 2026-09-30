@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useLang } from "@/kalas/i18n";
 import { Toggle } from "@/kalas/ui";
 
 /** Whether Ava mails this person when a vendor replies. Saves on flip and
     flips back if the save fails, so the switch never shows a setting the
     server does not have. */
 export function EmailNotificationsSetting({ initial }: { initial: boolean }) {
+  const { t } = useLang();
   const [on, setOn] = useState(initial);
   const [saving, setSaving] = useState(false);
 
@@ -28,5 +30,5 @@ export function EmailNotificationsSetting({ initial }: { initial: boolean }) {
     }
   };
 
-  return <Toggle value={on} onChange={change} />;
+  return <Toggle value={on} onChange={change} label={t("Mails om nye svar")} />;
 }

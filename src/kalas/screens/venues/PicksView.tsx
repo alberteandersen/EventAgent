@@ -281,11 +281,11 @@ function VenueGridCard({
 
         <div className="mt-auto flex items-end gap-5 pt-4">
           <div>
-            <p className="eyebrow !text-sage">{t('Pris')}</p>
+            <p className="eyebrow !text-sage-strong">{t('Pris')}</p>
             <p className="mt-0.5 font-serif text-[0.95rem] leading-none text-ink">{venue.price}</p>
           </div>
           <div>
-            <p className="eyebrow !text-sage">{t('Kapacitet')}</p>
+            <p className="eyebrow !text-sage-strong">{t('Kapacitet')}</p>
             <p className="mt-0.5 font-serif text-[0.95rem] leading-none text-ink">{venue.capacity}</p>
           </div>
         </div>

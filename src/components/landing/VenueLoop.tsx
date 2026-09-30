@@ -43,7 +43,7 @@ const steps: Step[] = [
     ),
     body: "Én godkendt forespørgsel bliver til en personlig mail til hvert sted på jeres liste: dansk til badehotellet, italiensk til villaen, sendt fra Avas egen postkasse. I læser og godkender hver mail, før den går af sted.",
     extra: (
-      <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] text-[#7A8066]">
+      <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] text-velvet-body">
         {["🇩🇰 Dansk", "🇮🇹 Italiano", "🇫🇷 Français", "🇬🇧 English"].map((l) => (
           <span
             key={l}
@@ -77,7 +77,7 @@ export function VenueLoop() {
     <section id="features" className="relative scroll-mt-24 overflow-x-clip border-t border-[#D4D6C0] bg-[#F6F0E8]">
       <div className="mx-auto max-w-6xl px-6 py-24 sm:py-28">
         <BlurFade inView className="mx-auto max-w-2xl text-center">
-          <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
+          <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent-ink">
             Jagten på stedet, klaret
           </p>
           <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-6xl">
@@ -107,7 +107,7 @@ export function VenueLoop() {
                   {/* spine node */}
                   <div
                     aria-hidden
-                    className="absolute left-1/2 top-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#C9CDB4] bg-[#F6F0E8] font-[family-name:var(--font-cormorant)] text-sm font-semibold text-accent lg:flex"
+                    className="absolute left-1/2 top-1/2 z-10 hidden h-9 w-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-[#C9CDB4] bg-[#F6F0E8] font-[family-name:var(--font-cormorant)] text-sm font-semibold text-accent-ink lg:flex"
                   >
                     {step.n}
                   </div>
@@ -117,13 +117,13 @@ export function VenueLoop() {
                     duration={0.6}
                     className={mockupFirst ? "min-w-0 lg:order-2 lg:pl-10" : "min-w-0 lg:pr-10"}
                   >
-                    <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
+                    <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent-ink">
                       {step.n} · {step.eyebrow}
                     </p>
                     <h3 className="mt-3 max-w-md font-[family-name:var(--font-cormorant)] text-4xl font-semibold leading-[1.04] tracking-[-0.3px] text-[#4A4E3C] sm:text-[2.75rem]">
                       {step.title}
                     </h3>
-                    <p className="mt-4 max-w-md text-base leading-relaxed text-[#7A8066]">
+                    <p className="mt-4 max-w-md text-base leading-relaxed text-velvet-body">
                       {step.body}
                     </p>
                     {step.extra}

@@ -225,7 +225,7 @@ export default function Shell({
                 />
               ))}
               {!sidebarRail && (
-                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sage">
+                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sage-strong">
                   {t('Brylluppet')}
                 </p>
               )}
@@ -236,7 +236,7 @@ export default function Shell({
                 />
               ))}
               {!sidebarRail && (
-                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sage">
+                <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sage-strong">
                   {t('Hjælp')}
                 </p>
               )}

@@ -258,7 +258,7 @@ function ArticleView({
 
       <header className="grid gap-6 rounded-[28px] border border-line bg-blush p-6 sm:p-7 lg:grid-cols-[1.3fr_1fr] lg:items-center">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage">{getCategory(article.category).name}</p>
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-strong">{getCategory(article.category).name}</p>
           <h1 className="mt-3 font-serif text-[clamp(2rem,4vw,2.75rem)] font-semibold leading-[1.05] text-ink">{article.title}</h1>
           <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">{article.description}</p>
           <p className="mt-3 text-[13px] text-muted">{t('{n} min. læsning', { n: readingMinutes(article.body) })}</p>
@@ -269,7 +269,7 @@ function ArticleView({
       </header>
 
       <section className="rounded-[28px] border border-line bg-card p-6">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage">{t('Kort svar')}</p>
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-strong">{t('Kort svar')}</p>
         <p className="mt-2.5 text-[1.0625rem] leading-[1.7] text-ink">{article.summary}</p>
         {act && (
           <button
@@ -290,7 +290,7 @@ function ArticleView({
         />
         {article.sources?.length ? (
           <section className="mt-10 rounded-[22px] border border-line bg-card p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage">{t('Kilder')}</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-sage-strong">{t('Kilder')}</p>
             <ul className="mt-2.5 space-y-1.5 text-sm">
               {article.sources.map((s) => (
                 <li key={s.url}>

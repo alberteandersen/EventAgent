@@ -920,7 +920,7 @@ export function DiscoverView({
         {destination && (
           <div className="flex flex-col gap-5">
             <div className="border-b border-line-soft pb-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage">{t('Venues')}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage-strong">{t('Venues')}</p>
               <h2 className="mt-1 font-serif text-[clamp(1.5rem,3vw,2rem)] leading-tight text-ink">
                 {destTitle}
               </h2>
@@ -963,7 +963,7 @@ export function DiscoverView({
               <div className="rounded-2xl border border-line-soft bg-white p-8 text-center">
                 <p className="text-[0.9rem] text-ink-soft">{t('Kunne ikke finde venues her.')}</p>
                 {resultsError && (
-                  <p className="mt-1.5 text-[0.75rem] text-faint">{resultsError}</p>
+                  <p className="mt-1.5 text-[0.75rem] text-muted">{resultsError}</p>
                 )}
                 <button
                   type="button"
@@ -989,7 +989,7 @@ export function DiscoverView({
                             : t('Ingen venues tilbage her, prøv et andet sted.')}
                 </p>
                 {rejected.length > 0 && (
-                  <p className="mt-1.5 text-[0.75rem] text-faint">
+                  <p className="mt-1.5 text-[0.75rem] text-muted">
                     {tn(rejected.length, 'Ét sted blev filtreret fra.', '{n} steder blev filtreret fra.')}
                   </p>
                 )}

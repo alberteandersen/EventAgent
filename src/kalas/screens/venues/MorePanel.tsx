@@ -52,7 +52,7 @@ export default function MorePanel({
           className="mt-2 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-line accent-ink"
         />
         {allocatedBudget != null && filters.budget_max === allocatedBudget && (
-          <p className="mt-1.5 text-[0.7rem] text-sage">
+          <p className="mt-1.5 text-[0.7rem] text-sage-strong">
             {t('Sat efter jeres budget til Venue.')}
           </p>
         )}

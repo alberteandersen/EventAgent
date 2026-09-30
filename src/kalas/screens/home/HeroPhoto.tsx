@@ -118,9 +118,8 @@ export default function HeroPhoto({
           frameClassName ?? 'h-[240px] lg:h-[300px]',
         )}
         style={{ backgroundImage: `url('${shown}')` }}
-        role="img"
-        aria-label={alt}
       >
+        <span role="img" aria-label={alt} className="absolute inset-0" />
         <div className={cn(
           'absolute inset-0 flex items-center justify-center gap-2 rounded-[16px] bg-ink-deep/35 transition-opacity duration-200',
           busy ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 focus-within:opacity-100',
@@ -162,7 +161,7 @@ export default function HeroPhoto({
 
       {error && <p role="alert" className="px-1 text-[0.78rem] text-terracotta">{error}</p>}
       {url && !error && (
-        <p className="px-1 text-[0.72rem] text-sage">{t('Billedet bruges også som forside på jeres bryllupsside.')}</p>
+        <p className="px-1 text-[0.72rem] text-sage-strong">{t('Billedet bruges også som forside på jeres bryllupsside.')}</p>
       )}
     </div>
   );

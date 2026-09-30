@@ -78,7 +78,7 @@ export function OutreachReview({
         className="mb-4 flex items-center gap-2 text-[0.72rem] font-medium uppercase tracking-[0.18em] text-muted hover:text-ink transition-colors cursor-pointer">
         <ArrowLeft size={13} /> {t('Tilbage til listen')}
       </button>
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage">{t('Trin 3 · Godkend')}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage-strong">{t('Trin 3 · Godkend')}</p>
       <h1 className="mt-1 font-serif text-[clamp(1.9rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
         {tn(recipients.length, 'Ava kontakter {n} venue', 'Ava kontakter {n} venues')}
       </h1>
@@ -111,7 +111,7 @@ export function OutreachReview({
       <div className="mt-4 rounded-2xl border border-line bg-card p-5">
         <div className="flex items-center justify-between">
           <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Avas udkast')}</p>
-          <button onClick={onAva} className="text-[0.72rem] font-semibold text-sage hover:underline cursor-pointer">{t('Rediger med Ava')}</button>
+          <button onClick={onAva} className="text-[0.72rem] font-semibold text-sage-strong hover:underline cursor-pointer">{t('Rediger med Ava')}</button>
         </div>
         {preparing ? (
           <div className="flex items-center gap-2.5 py-6 text-ink-soft">

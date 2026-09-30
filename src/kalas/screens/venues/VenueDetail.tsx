@@ -147,7 +147,7 @@ export function VenueDetail({
         </h1>
         <p className="mt-1 text-sm text-muted">{venue.location}</p>
         {directions && (
-          <p className="mt-1 text-[0.8rem] text-sage">{directions}</p>
+          <p className="mt-1 text-[0.8rem] text-sage-strong">{directions}</p>
         )}
 
         {researchError && (
@@ -156,7 +156,7 @@ export function VenueDetail({
 
         {research?.briefing?.length ? (
           <div className="mt-6 rounded-[18px] bg-ink p-6 text-paper">
-            <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-faint">{t('Avas briefing')}</p>
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Avas briefing')}</p>
             <ul className="mt-4 space-y-2.5">
               {research.briefing.map((line) => (
                 <li key={line} className="flex items-start gap-3 text-[0.92rem] leading-snug">
@@ -256,7 +256,7 @@ export function VenueDetail({
                     <span className={cn('font-serif text-[1.15rem]', pkg.featured ? 'text-paper' : 'text-ink')}>
                       {pkg.name}
                     </span>
-                    <span className={cn('mt-1 text-[0.76rem] leading-relaxed', pkg.featured ? 'text-faint' : 'text-muted')}>
+                    <span className={cn('mt-1 text-[0.76rem] leading-relaxed', pkg.featured ? 'text-muted' : 'text-muted')}>
                       {pkg.desc}
                     </span>
                     <span className={cn('mt-4 font-serif text-[1.5rem] leading-none', pkg.featured ? 'text-paper' : 'text-ink')}>

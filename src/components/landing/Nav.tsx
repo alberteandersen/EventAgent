@@ -13,7 +13,7 @@ export function Nav() {
   return (
     <BlurFade delay={0.05} duration={0.6} className="fixed inset-x-0 top-0 z-50">
       <div
-        className={`mx-auto mt-3 flex w-[min(80rem,calc(100%-2rem))] items-center justify-between rounded-full px-6 py-2.5 transition-all duration-300 sm:px-8 ${
+        className={`mx-auto mt-3 flex w-[min(80rem,calc(100%-2rem))] items-center justify-between rounded-full py-2.5 pl-5 pr-2 transition-all duration-300 sm:px-8 ${
           scrolled
             ? "border border-border bg-surface/80 shadow-[0_8px_30px_rgba(74,78,60,0.06)] backdrop-blur-xl"
             : "border border-transparent"
@@ -30,7 +30,7 @@ export function Nav() {
         <nav className="flex items-center gap-1.5">
           <Link
             href="/guide"
-            className={`rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
+            className={`hidden rounded-full px-4 py-2 text-sm transition-colors duration-300 sm:inline-flex ${
               scrolled ? "text-ink-body hover:text-ink" : "text-surface/90 hover:text-surface"
             }`}
           >
@@ -38,17 +38,17 @@ export function Nav() {
           </Link>
           <Link
             href="/login"
-            className={`rounded-full px-4 py-2 text-sm transition-colors duration-300 ${
+            className={`rounded-full px-3 py-2 text-sm transition-colors duration-300 sm:px-4 ${
               scrolled ? "text-ink-body hover:text-ink" : "text-surface/90 hover:text-surface"
             }`}
           >
-            Sign in
+            Log ind
           </Link>
           <Link
             href="/login"
             className="rounded-full bg-blue px-4 py-2 text-sm font-medium text-on-ink transition hover:bg-blue-light"
           >
-            Get started
+            Kom i gang
           </Link>
         </nav>
       </div>

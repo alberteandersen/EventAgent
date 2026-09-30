@@ -18,26 +18,26 @@ type Feature = {
 const features: Feature[] = [
   {
     id: "budget",
-    title: "The budget keeps itself",
-    body: "Quotes and deposits land in the right category, flagged before anything tips over.",
+    title: "Budgettet holder sig selv ajour",
+    body: "Tilbud og depositum lander i den rigtige kategori, og I får besked, før noget løber løbsk.",
     className: "lg:col-span-6",
   },
   {
     id: "guests",
-    title: "Guests & RSVPs",
-    body: "List, meals and plus-ones update themselves as replies arrive.",
+    title: "Gæster og svar",
+    body: "Listen, menuvalg og ledsagere opdaterer sig selv, når gæsterne svarer på hjemmesiden.",
     className: "lg:col-span-6",
   },
   {
     id: "website",
-    title: "A website from your photos",
-    body: "Designed by Ava, live at your own kalas.dk address the moment you publish.",
+    title: "En hjemmeside ud fra jeres billeder",
+    body: "Designet af Ava og live på jeres egen kalas.dk-adresse, så snart I udgiver den.",
     className: "lg:col-span-6",
   },
   {
     id: "timeline",
-    title: "Always knows what's next",
-    body: "The right nudge at the right week, nothing slips through.",
+    title: "Ved altid, hvad der er det næste",
+    body: "Den rette påmindelse i den rette uge, så intet glipper.",
     className: "lg:col-span-6",
   },
 ];
@@ -48,16 +48,16 @@ export function WhatAvaRuns() {
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-28">
         <BlurFade inView className="mx-auto max-w-2xl text-center">
           <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
-            Beyond the venue
+            Mere end stedet
           </p>
           <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-6xl">
-            And she runs <span className="text-accent">the rest.</span>
+            Og hun klarer <span className="text-accent">resten.</span>
           </h2>
         </BlurFade>
 
         <div className="mt-14 grid gap-5 lg:grid-cols-12">
           {features.map((f, i) => (
-            <BlurFade key={f.id} inView delay={Math.min(i, 4) * 0.06} duration={0.5} className={f.className}>
+            <BlurFade key={f.id} inView delay={Math.min(i, 4) * 0.06} duration={0.5} className={`min-w-0 ${f.className}`}>
               <motion.div
                 whileHover={{ y: -4 }}
                 transition={{ type: "spring", stiffness: 320, damping: 26 }}

@@ -7,12 +7,12 @@ import { pageMetadata } from "@/lib/guide/metadata";
 import { graph, organization, softwareApplication, website } from "@/lib/guide/schema";
 
 export const metadata = pageMetadata({
-  title: "Kalas: AI wedding planner that finds venues and gets quotes",
+  title: "Kalas: AI-bryllupsplanlægger, der finder steder og henter tilbud",
   description:
-    "Ava, the AI wedding planner in Kalas, finds real venues, writes to them in their own language and turns the replies into quotes you can compare. Free to start.",
+    "Ava, bryllupsplanlæggeren i Kalas, finder rigtige steder, skriver til dem på deres eget sprog og gør svarene til tilbud, I kan sammenligne. Gratis at komme i gang.",
   path: "/",
   og: "kalas",
-  locale: "en_US",
+  locale: "da_DK",
 });
 
 export default async function HomePage() {

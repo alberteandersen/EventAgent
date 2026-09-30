@@ -22,26 +22,26 @@ const steps: Step[] = [
   {
     id: "meet",
     n: "01",
-    eyebrow: "Tell her once",
+    eyebrow: "Sig det én gang",
     title: (
       <>
-        Brief her like <span className="text-accent">a friend.</span>
+        Fortæl hende det som <span className="text-accent">til en ven.</span>
       </>
     ),
-    body: "“35 guests, by the sea, autumn 2027” is all Ava needs. She researches real venues that fit, verified contacts, ratings, capacity, and puts them on your board to swipe.",
+    body: "“35 gæster, ved havet, efteråret 2027” er alt, Ava behøver. Hun finder rigtige steder, der passer, med kontaktoplysninger, anmeldelser og kapacitet, og lægger dem på jeres liste.",
     tilt: -1.2,
   },
   {
     id: "outreach",
     n: "02",
-    eyebrow: "She reaches out",
+    eyebrow: "Hun skriver til dem",
     title: (
       <>
-        She writes to each venue{" "}
-        <span className="text-accent">in its own language.</span>
+        Hun skriver til hvert sted{" "}
+        <span className="text-accent">på dets eget sprog.</span>
       </>
     ),
-    body: "One approved brief becomes a personal email to every venue you shortlist: Danish to the badehotel, Italian to the villa, sent from Ava's own mailbox. You read and approve each one before it goes.",
+    body: "Én godkendt forespørgsel bliver til en personlig mail til hvert sted på jeres liste: dansk til badehotellet, italiensk til villaen, sendt fra Avas egen postkasse. I læser og godkender hver mail, før den går af sted.",
     extra: (
       <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] text-[#7A8066]">
         {["🇩🇰 Dansk", "🇮🇹 Italiano", "🇫🇷 Français", "🇬🇧 English"].map((l) => (
@@ -52,7 +52,7 @@ const steps: Step[] = [
             {l}
           </span>
         ))}
-        <span className="pl-1">25 languages, detected from the venue&apos;s address</span>
+        <span className="pl-1">25 sprog, ud fra stedets adresse</span>
       </div>
     ),
     tilt: 1.4,
@@ -60,28 +60,28 @@ const steps: Step[] = [
   {
     id: "quotes",
     n: "03",
-    eyebrow: "You choose",
+    eyebrow: "I vælger",
     title: (
       <>
-        Replies come back as{" "}
-        <span className="text-accent">quotes you can compare.</span>
+        Svarene bliver til{" "}
+        <span className="text-accent">tilbud, I kan sammenligne.</span>
       </>
     ),
-    body: "As venues answer, Ava pulls out prices, available dates and what's included, lays them side by side, and drafts every follow-up for your approval, until one of them is yours.",
+    body: "Når stederne svarer, trækker Ava priser, ledige datoer og det, der er inkluderet, ud og stiller dem side om side. Hun skriver et udkast til hvert svar, som I godkender, indtil ét af stederne er jeres.",
     tilt: -1.4,
   },
 ];
 
 export function VenueLoop() {
   return (
-    <section id="features" className="relative scroll-mt-24 border-t border-[#D4D6C0] bg-[#F6F0E8]">
+    <section id="features" className="relative scroll-mt-24 overflow-x-clip border-t border-[#D4D6C0] bg-[#F6F0E8]">
       <div className="mx-auto max-w-6xl px-6 py-24 sm:py-28">
         <BlurFade inView className="mx-auto max-w-2xl text-center">
           <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
-            The venue hunt, handled
+            Jagten på stedet, klaret
           </p>
           <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-6xl">
-            From brief to <span className="text-accent">booked venue.</span>
+            Fra første ønske til <span className="text-accent">booket sted.</span>
           </h2>
         </BlurFade>
 
@@ -115,7 +115,7 @@ export function VenueLoop() {
                   <BlurFade
                     inView
                     duration={0.6}
-                    className={mockupFirst ? "lg:order-2 lg:pl-10" : "lg:pr-10"}
+                    className={mockupFirst ? "min-w-0 lg:order-2 lg:pl-10" : "min-w-0 lg:pr-10"}
                   >
                     <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
                       {step.n} · {step.eyebrow}
@@ -133,7 +133,7 @@ export function VenueLoop() {
                     inView
                     delay={0.12}
                     duration={0.6}
-                    className={mockupFirst ? "lg:order-1 lg:pr-10" : "lg:pl-10"}
+                    className={mockupFirst ? "min-w-0 lg:order-1 lg:pr-10" : "min-w-0 lg:pl-10"}
                   >
                     <motion.div
                       initial={false}

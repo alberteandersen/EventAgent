@@ -21,19 +21,19 @@ export function FinalCTA() {
           💍
         </motion.div>
         <h2 className="font-[family-name:var(--font-cormorant)] text-5xl font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-7xl">
-          Your wedding day,
+          Jeres bryllupsdag,
           <br />
-          <span className="text-butter-muted">basically planned already.</span>
+          <span className="text-butter-muted">så godt som planlagt.</span>
         </h2>
         <p className="mx-auto mt-6 max-w-md text-lg text-velvet-muted">
-          Sign in with Google and tell Kalas about your wedding. The first
-          venue quotes can be in your inbox today.
+          Opret en konto, og fortæl Ava om jeres bryllup. Hun kan skrive til
+          de første steder allerede i dag.
         </p>
         <Link
           href="/login"
           className="mt-10 inline-flex rounded-full bg-blue px-10 py-4 text-sm font-medium text-on-ink shadow-[0px_4px_14px_rgba(58,79,55,0.22)] transition hover:bg-blue-light"
         >
-          Start planning your wedding, it&apos;s free
+          Start planlægningen, det er gratis
         </Link>
       </BlurFade>
     </section>

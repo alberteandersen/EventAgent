@@ -79,20 +79,20 @@ export function IntroducingAva() {
         </BlurFade>
         <BlurFade inView delay={0.15} duration={0.6}>
           <p className="mt-12 text-[11px] font-medium uppercase tracking-[1.5px] text-accent">
-            Introducing Ava
+            Mød Ava
           </p>
           <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-6xl">
-            Not another checklist.
+            Ikke endnu en tjekliste.
             <br />
-            <span className="text-accent">A planner who works.</span>
+            <span className="text-accent">En planlægger, der arbejder.</span>
           </h2>
         </BlurFade>
         <BlurFade inView delay={0.3} duration={0.6}>
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-[#7A8066] sm:text-[17px]">
-            Ava researches real venues, writes the emails, chases the replies,
-            compares the quotes, and keeps budget, guests and the website moving:
-            the work a wedding planner actually does. You set the direction and
-            approve each step. Nothing happens without your yes.
+            Ava finder rigtige steder, skriver mailene, følger op på svarene,
+            sammenligner tilbuddene og holder budget, gæster og hjemmeside i gang:
+            det arbejde, en bryllupsplanlægger faktisk gør. I sætter retningen og
+            godkender hvert skridt. Intet sker uden jeres ja.
           </p>
         </BlurFade>
       </div>

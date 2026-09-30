@@ -79,10 +79,10 @@ function ChatMockup() {
   return (
     <div className="flex h-full flex-col justify-end gap-2.5">
       <div className="self-end rounded-2xl rounded-br-md px-3.5 py-2.5 text-[12px] leading-snug text-[#f7f5ef]" style={{ backgroundColor: INK, maxWidth: "78%" }}>
-        We&apos;re thinking ~35 guests, by the sea on Bornholm, autumn 2027. Intimate, not stiff.
+        Vi tænker ca. 35 gæster, ved havet på Bornholm, efteråret 2027. Intimt, ikke stift.
       </div>
       <div className="rounded-2xl rounded-bl-md border px-3.5 py-2.5 text-[12px] leading-snug" style={{ borderColor: LINE, backgroundColor: "#ffffff", color: MUTED, maxWidth: "85%" }}>
-        Lovely brief. I found seaside venues that fit an intimate autumn party, take a look:
+        Dejligt. Jeg har fundet steder ved havet, der passer til en lille efterårsfest. Tag et kig:
       </div>
       <div className="flex gap-2">
         {SHORTLIST.map((v) => (
@@ -90,19 +90,19 @@ function ChatMockup() {
             <Photo src={v.photo} className="h-12" />
             <div className="px-2 py-1.5">
               <p className="truncate font-[family-name:var(--font-cormorant)] text-[13px] font-semibold leading-tight" style={{ color: INK }}>{v.name}</p>
-              <p className="text-[9px]" style={{ color: MUTED }}>★ {v.rating} · seats {v.seats}</p>
+              <p className="text-[9px]" style={{ color: MUTED }}>★ {v.rating} · {v.seats} pladser</p>
             </div>
           </div>
         ))}
       </div>
-      <Pill className="self-start">5 venues added to your board</Pill>
+      <Pill className="self-start">5 steder lagt på jeres liste</Pill>
     </div>
   );
 }
 
 /* ── 02 · Discovery ───────────────────────────────────────────────────── */
 function VendorsMockup() {
-  const cats = ["All", "Venue", "Photo", "Flowers", "Catering", "Music"];
+  const cats = ["Alle", "Venue", "Foto", "Blomster", "Catering", "Musik"];
   return (
     <div className="flex h-full flex-col gap-3">
       <div className="flex flex-wrap gap-1.5">
@@ -114,9 +114,9 @@ function VendorsMockup() {
       </div>
       <div className="grid flex-1 grid-cols-3 gap-2.5">
         {[
-          ["Kastelhøj Slot", "4.7", "Brick hall on a castle estate", "/landing/city-reception.jpg"],
-          ["Villa Aurelisa", "4.9", "Vineyard terrace, Tuscany", "/landing/destination.jpg"],
-          ["Hollowmere Barn", "4.6", "Restored Cotswolds barn", "/landing/rustic-barn.jpg"],
+          ["Kastelhøj Slot", "4.7", "Murstenssal på et slotsgods", "/landing/city-reception.jpg"],
+          ["Villa Aurelisa", "4.9", "Terrasse ved vinmarken, Toscana", "/landing/destination.jpg"],
+          ["Hollowmere Barn", "4.6", "Restaureret lade i Cotswolds", "/landing/rustic-barn.jpg"],
         ].map(([name, rating, blurb, photo]) => (
           <div key={name} className="flex min-w-0 flex-col overflow-hidden rounded-xl border" style={{ borderColor: LINE, backgroundColor: "#fff" }}>
             <Photo src={photo} className="h-16" />
@@ -125,13 +125,13 @@ function VendorsMockup() {
               <p className="mt-0.5 line-clamp-2 text-[9px] leading-snug" style={{ color: MUTED }}>{blurb}</p>
               <div className="mt-auto flex items-center justify-between pt-1.5">
                 <span className="text-[9px] font-semibold" style={{ color: INK }}>★ {rating}</span>
-                <span className="rounded-full px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-wide" style={{ backgroundColor: SAGE, color: INK }}>Save</span>
+                <span className="rounded-full px-2 py-0.5 text-[8.5px] font-bold uppercase tracking-wide" style={{ backgroundColor: SAGE, color: INK }}>Gem</span>
               </div>
             </div>
           </div>
         ))}
       </div>
-      <p className="text-center text-[10px]" style={{ color: MUTED }}>Real venues, researched live, ratings, capacity and contacts verified</p>
+      <p className="text-center text-[10px]" style={{ color: MUTED }}>Rigtige steder, fundet live, med anmeldelser, kapacitet og kontakt tjekket</p>
     </div>
   );
 }
@@ -142,10 +142,10 @@ function OutreachMockup() {
     <div className="flex h-full flex-col">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[9px] font-semibold uppercase tracking-[1.2px]" style={{ color: MUTED }}>Ava is writing to</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[1.2px]" style={{ color: MUTED }}>Ava skriver til</p>
           <p className="truncate font-[family-name:var(--font-cormorant)] text-[18px] font-semibold leading-tight" style={{ color: INK }}>Villa Aurelisa</p>
         </div>
-        <Pill>🌐 Written in Italian</Pill>
+        <Pill>🌐 Skrevet på italiensk</Pill>
       </div>
       <div className="mt-3 flex-1 space-y-1.5 overflow-hidden rounded-xl border px-3.5 py-3 text-[11px] leading-relaxed" style={{ borderColor: LINE, backgroundColor: "#fff", color: MUTED }}>
         <p style={{ color: INK }}>Gentile staff di Villa Aurelisa,</p>
@@ -154,9 +154,9 @@ function OutreachMockup() {
         <p className="pt-1" style={{ color: INK }}>Cordiali saluti,<br />Ava, per conto della coppia</p>
       </div>
       <div className="mt-3 flex items-center justify-between">
-        <p className="text-[10px]" style={{ color: MUTED }}>Nothing sends without you</p>
+        <p className="text-[10px]" style={{ color: MUTED }}>Intet sendes uden jer</p>
         <span className="rounded-full px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-wide text-[#f7f5ef]" style={{ backgroundColor: INK }}>
-          Approve &amp; send
+          Godkend og send
         </span>
       </div>
     </div>
@@ -166,15 +166,15 @@ function OutreachMockup() {
 /* ── 04 · Quotes ──────────────────────────────────────────────────────── */
 function QuotesMockup() {
   const rows: { price: string; avail: string; terms: string; best?: boolean }[] = [
-    { price: "DKK 53,300", avail: "12 Sep available", terms: "1,295/guest, menu & wine", best: true },
-    { price: "DKK 72,750", avail: "19 Sep available", terms: "exclusive hire + 1,650/guest" },
-    { price: "DKK 40,750", avail: "Waitlist for Sep", terms: "barn hire · own caterer" },
+    { price: "53.300 kr.", avail: "12. sep. ledig", terms: "1.295 kr./gæst, menu og vin", best: true },
+    { price: "72.750 kr.", avail: "19. sep. ledig", terms: "eksklusiv leje + 1.650 kr./gæst" },
+    { price: "40.750 kr.", avail: "Venteliste i sep.", terms: "leje af laden · egen kok" },
   ];
   return (
     <div className="flex h-full flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <p className="font-[family-name:var(--font-cormorant)] text-[17px] font-semibold leading-tight" style={{ color: INK }}>Quotes, side by side</p>
-        <Pill>3 replies in</Pill>
+        <p className="font-[family-name:var(--font-cormorant)] text-[17px] font-semibold leading-tight" style={{ color: INK }}>Tilbud, side om side</p>
+        <Pill>3 svar modtaget</Pill>
       </div>
       {rows.map((row, i) => {
         const venue = SHORTLIST[i];
@@ -187,11 +187,11 @@ function QuotesMockup() {
               <p className="truncate text-[9.5px]" style={{ color: MUTED }}>{row.avail} · {row.terms}</p>
             </div>
             <p className="text-[13px] font-semibold tabular-nums" style={{ color: INK }}>{row.price}</p>
-            {row.best && <Pill dark>Best fit</Pill>}
+            {row.best && <Pill dark>Bedste match</Pill>}
           </div>
         );
       })}
-      <p className="text-[10px]" style={{ color: MUTED }}>Prices, dates and conditions pulled out of every reply, automatically</p>
+      <p className="text-[10px]" style={{ color: MUTED }}>Priser, datoer og vilkår trukket ud af hvert svar, automatisk</p>
     </div>
   );
 }
@@ -199,26 +199,26 @@ function QuotesMockup() {
 /* ── 05 · Budget ──────────────────────────────────────────────────────── */
 function BudgetMockup() {
   const rows: [string, string, number, string][] = [
-    ["Venue & food", "53,300", 72, "#8fa183"],
-    ["Photographer", "18,500", 55, "#c2b280"],
-    ["Flowers", "7,500", 38, "#b8c2ab"],
-    ["Music", "9,000", 20, "#ddd6c0"],
+    ["Sted og mad", "53.300", 72, "#8fa183"],
+    ["Fotograf", "18.500", 55, "#c2b280"],
+    ["Blomster", "7.500", 38, "#b8c2ab"],
+    ["Musik", "9.000", 20, "#ddd6c0"],
   ];
   return (
     <div className="flex h-full flex-col gap-3">
       <div className="flex items-end justify-between">
         <div>
-          <p className="text-[9px] font-semibold uppercase tracking-[1.2px]" style={{ color: MUTED }}>Total budget</p>
-          <p className="font-[family-name:var(--font-cormorant)] text-[24px] font-semibold leading-tight" style={{ color: INK }}>DKK 150,000</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[1.2px]" style={{ color: MUTED }}>Samlet budget</p>
+          <p className="font-[family-name:var(--font-cormorant)] text-[24px] font-semibold leading-tight" style={{ color: INK }}>150.000 kr.</p>
         </div>
-        <Pill>DKK 71,800 committed</Pill>
+        <Pill>71.800 kr. bundet</Pill>
       </div>
       <div className="flex-1 space-y-2.5">
         {rows.map(([label, amount, pct, color]) => (
           <div key={label}>
             <div className="mb-1 flex items-center justify-between text-[10.5px]">
               <span style={{ color: INK }}>{label}</span>
-              <span className="tabular-nums" style={{ color: MUTED }}>DKK {amount}</span>
+              <span className="tabular-nums" style={{ color: MUTED }}>{amount} kr.</span>
             </div>
             <div className="h-2 overflow-hidden rounded-full" style={{ backgroundColor: SAGE }}>
               <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
@@ -226,7 +226,7 @@ function BudgetMockup() {
           </div>
         ))}
       </div>
-      <p className="text-[10px]" style={{ color: MUTED }}>Every deposit and quote lands here on its own, flagged before anything tips over</p>
+      <p className="text-[10px]" style={{ color: MUTED }}>Hvert tilbud og depositum lander her af sig selv, med besked før noget løber løbsk</p>
     </div>
   );
 }
@@ -234,16 +234,16 @@ function BudgetMockup() {
 /* ── 06 · Guests ──────────────────────────────────────────────────────── */
 function GuestsMockup() {
   const rows: [string, string, string][] = [
-    ["Alberte Holm", "Yes", "Fish"],
-    ["Jonas Krag", "Yes", "Veg"],
-    ["Nour El-Sayed", "Pending", "-"],
-    ["Marta Rossi", "Yes", "Meat"],
+    ["Alberte Holm", "Ja", "Fisk"],
+    ["Jonas Krag", "Ja", "Vegetar"],
+    ["Nour El-Sayed", "Afventer", "-"],
+    ["Marta Rossi", "Ja", "Kød"],
   ];
   return (
     <div className="flex h-full flex-col gap-2.5">
       <div className="flex items-center justify-between">
-        <p className="font-[family-name:var(--font-cormorant)] text-[17px] font-semibold leading-tight" style={{ color: INK }}>Guest list</p>
-        <Pill>28 of 35 replied</Pill>
+        <p className="font-[family-name:var(--font-cormorant)] text-[17px] font-semibold leading-tight" style={{ color: INK }}>Gæsteliste</p>
+        <Pill>28 af 35 har svaret</Pill>
       </div>
       <div className="flex-1 divide-y overflow-hidden rounded-xl border" style={{ borderColor: LINE, backgroundColor: "#fff" }}>
         {rows.map(([name, rsvp, meal]) => (
@@ -253,13 +253,13 @@ function GuestsMockup() {
             </span>
             <p className="min-w-0 flex-1 truncate text-[11.5px]" style={{ color: INK }}>{name}</p>
             <span className="text-[9.5px]" style={{ color: MUTED }}>{meal}</span>
-            <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase" style={rsvp === "Yes" ? { backgroundColor: SAGE, color: INK } : { backgroundColor: "#f5ece4", color: TERRA }}>
+            <span className="rounded-full px-2 py-0.5 text-[9px] font-bold uppercase" style={rsvp === "Ja" ? { backgroundColor: SAGE, color: INK } : { backgroundColor: "#f5ece4", color: TERRA }}>
               {rsvp}
             </span>
           </div>
         ))}
       </div>
-      <p className="text-[10px]" style={{ color: MUTED }}>RSVPs, meals and plus-ones update themselves as replies come in</p>
+      <p className="text-[10px]" style={{ color: MUTED }}>Svar, menuvalg og ledsagere opdaterer sig selv, når gæsterne svarer</p>
     </div>
   );
 }
@@ -278,14 +278,14 @@ function WebsiteMockup() {
           <p className="text-[8px] font-semibold uppercase tracking-[2px]" style={{ color: TERRA }}>12 · 09 · 2027</p>
           <p className="font-[family-name:var(--font-cormorant)] text-[22px] font-semibold leading-tight" style={{ color: INK }}>Alberte &amp; Espen</p>
           <p className="text-[9px]" style={{ color: MUTED }}>Sandrevlen Badehotel · Bornholm</p>
-          <span className="mt-1.5 rounded-full px-3 py-1 text-[8.5px] font-bold uppercase tracking-wide text-[#f7f5ef]" style={{ backgroundColor: INK }}>RSVP</span>
+          <span className="mt-1.5 rounded-full px-3 py-1 text-[8.5px] font-bold uppercase tracking-wide text-[#f7f5ef]" style={{ backgroundColor: INK }}>OSA</span>
         </div>
       </div>
       <div className="flex w-[86px] shrink-0 flex-col justify-between">
         <div className="overflow-hidden rounded-[14px] border p-[3px]" style={{ borderColor: LINE, backgroundColor: "#101010" }}>
           <div className="flex aspect-[9/16] flex-col items-center justify-center gap-1 rounded-[11px] px-1.5 text-center" style={{ background: "linear-gradient(180deg, #faf7f0, #eee5d0)" }}>
             <p className="font-[family-name:var(--font-cormorant)] text-[11px] font-semibold leading-tight" style={{ color: INK }}>Alberte<br />&amp; Espen</p>
-            <span className="rounded-full px-2 py-0.5 text-[6.5px] font-bold uppercase text-[#f7f5ef]" style={{ backgroundColor: INK }}>RSVP</span>
+            <span className="rounded-full px-2 py-0.5 text-[6.5px] font-bold uppercase text-[#f7f5ef]" style={{ backgroundColor: INK }}>OSA</span>
           </div>
         </div>
         <Pill className="justify-center">Live ✓</Pill>
@@ -297,10 +297,10 @@ function WebsiteMockup() {
 /* ── 08 · Timeline ────────────────────────────────────────────────────── */
 function TimelineMockup() {
   const items: [string, string, "done" | "now" | "next"][] = [
-    ["Venue booked", "Sandrevlen Badehotel · deposit paid", "done"],
-    ["Book your photographer", "3 quotes in, pick this week", "now"],
-    ["Send save-the-dates", "Opens once the guest list is set", "next"],
-    ["Menu tasting", "Ava proposes dates in March", "next"],
+    ["Sted booket", "Sandrevlen Badehotel · depositum betalt", "done"],
+    ["Book jeres fotograf", "3 tilbud modtaget, vælg i denne uge", "now"],
+    ["Send save the date", "Når gæstelisten er på plads", "next"],
+    ["Smagsprøve på menuen", "Ava foreslår datoer i marts", "next"],
   ];
   return (
     <div className="flex h-full flex-col justify-center gap-1">
@@ -324,7 +324,7 @@ function TimelineMockup() {
           <div className={cn("pb-3", state === "now" && "-mx-2 -mt-1 flex-1 rounded-xl px-2 pt-1")}
             style={state === "now" ? { backgroundColor: SAGE } : undefined}>
             <p className="text-[12px] font-semibold" style={{ color: state === "next" ? MUTED : INK }}>
-              {title} {state === "now" && <span className="ml-1 rounded-full px-1.5 py-0.5 align-middle text-[8px] font-bold uppercase text-[#f7f5ef]" style={{ backgroundColor: TERRA }}>Now</span>}
+              {title} {state === "now" && <span className="ml-1 rounded-full px-1.5 py-0.5 align-middle text-[8px] font-bold uppercase text-[#f7f5ef]" style={{ backgroundColor: TERRA }}>Nu</span>}
             </p>
             <p className="text-[10px]" style={{ color: MUTED }}>{sub}</p>
           </div>
@@ -336,14 +336,14 @@ function TimelineMockup() {
 
 /* ── registry ─────────────────────────────────────────────────────────── */
 const MOCKUPS: Record<string, { label: string; Component: () => React.ReactNode }> = {
-  meet: { label: "Chat · brief to shortlist", Component: ChatMockup },
-  vendors: { label: "Discovery · matched venues", Component: VendorsMockup },
-  outreach: { label: "Outreach · approve before send", Component: OutreachMockup },
-  quotes: { label: "Inbox · quotes compared", Component: QuotesMockup },
-  budget: { label: "Budget · live tracking", Component: BudgetMockup },
-  guests: { label: "Guests · RSVPs live", Component: GuestsMockup },
-  website: { label: "Website · alberte-espen.kalas.dk", Component: WebsiteMockup },
-  timeline: { label: "Timeline · what's next", Component: TimelineMockup },
+  meet: { label: "Ava · fra ønske til liste", Component: ChatMockup },
+  vendors: { label: "Udforsk · steder, der passer", Component: VendorsMockup },
+  outreach: { label: "Henvendelser · godkend før afsendelse", Component: OutreachMockup },
+  quotes: { label: "Henvendelser · tilbud sammenlignet", Component: QuotesMockup },
+  budget: { label: "Budget · live overblik", Component: BudgetMockup },
+  guests: { label: "Gæster · svar live", Component: GuestsMockup },
+  website: { label: "Hjemmeside · alberte-espen.kalas.dk", Component: WebsiteMockup },
+  timeline: { label: "Planlægning · det næste", Component: TimelineMockup },
 };
 
 export function CapabilityMockup({ id }: { id: string }) {

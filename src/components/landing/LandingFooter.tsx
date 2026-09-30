@@ -1,24 +1,25 @@
 import Link from "next/link";
 import { BlurFade } from "@/components/ui/blur-fade";
+import { PRIVACY_POLICY_LIVE } from "@/lib/legal";
 
 const columns = [
   {
-    title: "Product",
+    title: "Produkt",
     links: [
-      { label: "Venues", href: "#features" },
-      { label: "Quotes", href: "#features" },
+      { label: "Steder", href: "#features" },
+      { label: "Tilbud", href: "#features" },
       { label: "Budget", href: "#features" },
-      { label: "Guests", href: "#features" },
-      { label: "Website", href: "#features" },
-      { label: "Timeline", href: "#features" },
+      { label: "Gæster", href: "#features" },
+      { label: "Hjemmeside", href: "#features" },
+      { label: "Tidsplan", href: "#features" },
     ],
   },
   {
-    title: "Resources",
+    title: "Ressourcer",
     links: [
-      { label: "Wedding guides (Danish)", href: "/guide" },
-      { label: "Checklist", href: "/guide/bryllup-tjekliste" },
-      { label: "Wedding budget", href: "/guide/hvad-koster-et-bryllup" },
+      { label: "Bryllupsguides", href: "/guide" },
+      { label: "Tjekliste", href: "/guide/bryllup-tjekliste" },
+      { label: "Hvad koster et bryllup?", href: "/guide/hvad-koster-et-bryllup" },
       { label: "FAQ", href: "/guide/faq" },
     ],
   },
@@ -41,7 +42,7 @@ export function LandingFooter() {
               kalas
             </Link>
             <p className="mt-3 max-w-[14rem] text-sm leading-relaxed text-velvet-muted">
-              Ava plans your wedding. You make the decisions.
+              Ava planlægger jeres bryllup. I træffer beslutningerne.
             </p>
           </div>
 
@@ -66,10 +67,15 @@ export function LandingFooter() {
           ))}
         </div>
 
-        <div className="mt-14 border-t border-border pt-8">
+        <div className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-8">
           <span className="text-xs text-velvet-soft">
-            © {new Date().getFullYear()} Kalas. All rights reserved.
+            © {new Date().getFullYear()} Kalas. Alle rettigheder forbeholdes.
           </span>
+          {PRIVACY_POLICY_LIVE && (
+            <Link href="/privatliv" className="text-xs text-velvet-muted transition hover:text-ink">
+              Privatlivspolitik
+            </Link>
+          )}
         </div>
       </BlurFade>
     </footer>

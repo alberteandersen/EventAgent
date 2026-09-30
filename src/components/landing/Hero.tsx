@@ -7,7 +7,7 @@ import { useRef } from "react";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { AgentPhoneMockup } from "@/components/landing/AgentPhoneMockup";
 
-const headline = ["Plan", "the", "wedding.", "Skip", "the", "stress."];
+const headline = ["Planlæg", "brylluppet.", "Uden", "stress."];
 
 export function Hero() {
   const ref = useRef<HTMLDivElement>(null);
@@ -25,7 +25,7 @@ export function Hero() {
         <motion.div style={{ scale: bgScale }} className="absolute inset-0">
           <Image
             src="/landing/hero.jpg"
-            alt="Long-table wedding dinner on a coastal terrace at dusk, string lights overhead"
+            alt="Langbord til bryllupsmiddag på en terrasse ved kysten i skumringen, med lyskæder over"
             fill
             priority
             className="object-cover object-[center_62%]"
@@ -53,9 +53,10 @@ export function Hero() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-4xl pb-56 text-center sm:pb-64">
+      <div className="relative z-10 mx-auto max-w-4xl pb-80 text-center sm:pb-64">
         <h1 className="font-[family-name:var(--font-cormorant)] text-6xl font-semibold leading-[0.98] tracking-[-0.5px] text-surface drop-shadow-[0_2px_24px_rgba(0,0,0,0.35)] sm:text-7xl xl:text-[5.5rem]">
           {headline.map((word, i) => (
+            // Two lines from sm up: "Planlæg brylluppet." / "Uden stress."
             <BlurFade
               key={i}
               delay={0.15 + i * 0.08}
@@ -64,15 +65,15 @@ export function Hero() {
             >
               {word}{" "}
             </BlurFade>
-          ))}
+          )).flatMap((el, i) => (i === 2 ? [<br key="br" className="hidden sm:block" />, el] : [el]))}
         </h1>
 
         <BlurFade delay={0.65} duration={0.5} className="mx-auto mt-7 max-w-xl">
           <p className="text-lg leading-relaxed text-on-velvet/90 drop-shadow-[0_1px_12px_rgba(0,0,0,0.3)]">
-            Ava researches real venues anywhere in the world, writes to them in
-            their own language, and turns the replies into quotes you can compare,
-            then runs budget, guests, invites and your wedding website.
-            You approve; she does.
+            Ava finder rigtige steder, hvor som helst i verden, skriver til dem
+            på deres eget sprog og gør svarene til tilbud, I kan sammenligne.
+            Bagefter holder hun styr på budget, gæster, invitationer og jeres
+            bryllupshjemmeside. I godkender; hun gør arbejdet.
           </p>
         </BlurFade>
 
@@ -81,13 +82,13 @@ export function Hero() {
             href="/login"
             className="rounded-full bg-blue px-8 py-4 text-sm font-medium text-on-ink shadow-[0px_4px_14px_rgba(58,79,55,0.28)] transition hover:bg-blue-light"
           >
-            Plan my wedding, free
+            Planlæg jeres bryllup gratis
           </Link>
           <Link
             href="#features"
             className="rounded-full border border-white/35 bg-white/15 px-8 py-4 text-sm font-medium text-surface shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] backdrop-blur-xl transition hover:bg-white/25"
           >
-            See how it works
+            Se hvordan det virker
           </Link>
         </BlurFade>
       </div>

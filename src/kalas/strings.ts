@@ -88,7 +88,6 @@ export const EN: Record<string, string> = {
   'Se billede fra {name}': 'View photo from {name}',
 
   // ── Ønskeliste ──────────────────────────────────────────────────────
-  'Vores ønskeliste': 'Our wishlist',
   '{n} ønsker på listen': '{n} wishes on the list',
   'Del listen': 'Share the list',
   'Link kopieret': 'Link copied',
@@ -184,7 +183,6 @@ export const EN: Record<string, string> = {
   'Hjem': 'Home',
   'Ava': 'Ava',
   'Leverandører': 'Vendors',
-  'Explore': 'Explore',
   // ── Location control + vendor discovery ─────────────────────────────
   'Vælg lokation': 'Choose location',
   'Jeres lokation': 'Your location',
@@ -235,8 +233,6 @@ export const EN: Record<string, string> = {
   'Sæt påmindelse': 'Set reminder',
   'Spørg Ava om kontrakten…': 'Ask Ava about the contract…',
   'Spørg': 'Ask',
-  'Inbox': 'Inbox',
-  'Booked': 'Booked',
   'Alle': 'All',
   'Venue': 'Venue',
   'Foto': 'Photo',
@@ -261,8 +257,6 @@ export const EN: Record<string, string> = {
   // Screen subtitles
   'Hold styr på hvad brylluppet koster, og hvad I har tilbage.':
     'Keep track of what the wedding costs, and what you have left.',
-  'Hold styr på jeres gæsteliste og RSVP, og send invitationer, når I er klar.':
-    'Keep your guest list and RSVPs in order, and send invitations when you are ready.',
   'Alle sider': 'All pages',
   'Flere sider': 'More pages',
   'Indstillinger': 'Settings',
@@ -386,7 +380,6 @@ export const EN: Record<string, string> = {
     'Waiting for {name} to reply. Ava will suggest an answer as soon as they write.',
   'Intet svar at godkende lige nu.': 'Nothing to approve right now.',
   'Samtaler': 'Threads',
-  'Samtaler · {n}': 'Threads · {n}',
   'Tilbud': 'Quotes',
   'Filer · {n}': 'Files · {n}',
   'Ingen beskeder': 'No messages',
@@ -398,8 +391,6 @@ export const EN: Record<string, string> = {
   'Svar afvist': 'Reply dismissed',
   'Avas foreslåede svar': "Ava's suggested reply",
   'Til {name} · sendes fra jeres Kalas-postkasse': 'To {name} · sent from your Kalas mailbox',
-  'Ingen leverandører på listen endnu, like nogen, så samler Ava tilbuddene her.':
-    'No vendors on the list yet, like a few, and Ava will gather the quotes here.',
   'Ingen ledig dato': 'No availability',
   'Mangler info': 'Needs info',
   'Svar modtaget': 'Reply received',
@@ -415,8 +406,6 @@ export const EN: Record<string, string> = {
   '(tomt)': '(empty)',
   'Intet svar endnu.': 'No reply yet.',
   'Vælg denne 🎉': 'Choose this one 🎉',
-  'Ingen filer endnu, menuer, tilbud og billeder fra leverandører samles her.':
-    'No files yet, menus, quotes and photos from vendors gather here.',
 
   // ── Booked panel ────────────────────────────────────────────────────
   'Jeres team · {n} booket': 'Your team · {n} booked',
@@ -1100,7 +1089,6 @@ export const EN: Record<string, string> = {
   'Aftal hvem der betaler leverandørerne på dagen': 'Agree who pays the vendors on the day',
   'Sørg for mad til jer selv inden ceremonien': 'Make sure you eat before the ceremony',
   'Lav en playliste til festen': 'Make a playlist for the party',
-  'Tidslinje & tjekliste': 'Timeline & checklist',
   'Ceremoni & vielse': 'Ceremony & vows',
   'Efter brylluppet': 'After the wedding',
   'Aftal hvornår leverandørerne må stille op': 'Agree when vendors can set up',
@@ -2119,4 +2107,14 @@ export const EN: Record<string, string> = {
   'OK': 'OK',
   'Det kunne vi ikke hente': "We couldn't load that",
   'Tjek forbindelsen, og prøv igen.': 'Check your connection and try again.',
+  'Brylluppet': 'The wedding',
+  'Henvendelser': 'Inbox',
+  'Svarene fra steder og leverandører, de tilbud Ava har fundet, og hendes forslag til svar.': 'Replies from venues and vendors, the quotes Ava has found, and her suggested answers.',
+  'Ingen tilbud endnu': 'No quotes yet',
+  'Gem de steder I kan lide, så samler Ava deres tilbud her.': 'Save the places you like, and Ava gathers their quotes here.',
+  'Ingen filer endnu': 'No files yet',
+  'Menuer, tilbud og billeder, som leverandørerne sender, samles her.': 'Menus, quotes and photos the vendors send are gathered here.',
+  'Filer': 'Files',
+  'Udforsk': 'Explore',
+  'Hold styr på gæsterne, deres svar, og hvad hver enkelt har brug for.': 'Keep track of your guests, their replies, and what each of them needs.',
 };

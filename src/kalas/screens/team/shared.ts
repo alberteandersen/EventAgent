@@ -17,12 +17,6 @@ export type HubCat =
 export const HUB_TAB_KEY = 'kalas_hub_tab';
 export const HUB_CAT_KEY = 'kalas_hub_cat';
 
-export const HUB_TABS: { id: HubTab; label: string }[] = [
-  { id: 'explore', label: 'Explore' },
-  { id: 'shortlist', label: 'Favoritter' },
-  { id: 'booked', label: 'Booked' },
-];
-
 export const HUB_CATS: { id: HubCat; label: string }[] = [
   { id: 'venue', label: 'Venue' },
   { id: 'overnatning', label: 'Overnatning' },

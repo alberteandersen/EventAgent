@@ -1,6 +1,5 @@
 import * as React from 'react';
-import { motion } from 'motion/react';
-import { ArrowRight, Check } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useLang } from '../i18n';
 
 import { cn } from './base';
@@ -14,77 +13,9 @@ export { EmptyState, ErrorState, Loader, PageLoader, Skeleton } from './States';
 export { Field, inputClass, textareaClass } from './Field';
 export { Card, Stat } from './Card';
 
-/** Shared action-button size — matches shell primary CTA (h-8 / text-xs). */
-export const btnSize =
-  'inline-flex h-8 items-center justify-center gap-1.5 rounded-full px-3 text-xs font-semibold';
-
 /* ── Eyebrow / tracked label ─────────────────────────────────────────── */
 export function Eyebrow({ children, className }: { children: React.ReactNode; className?: string }) {
   return <p className={cn('eyebrow', className)}>{children}</p>;
-}
-
-/* ── Pill button — matches shell primary CTA size (h-8). ─────────────── */
-export function Pill({
-  children,
-  onClick,
-  variant = 'solid',
-  arrow = false,
-  className,
-  type = 'button',
-  disabled,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  variant?: 'solid' | 'ghost' | 'outline';
-  arrow?: boolean;
-  className?: string;
-  type?: 'button' | 'submit';
-  disabled?: boolean;
-}) {
-  const base = cn(
-    'group cursor-pointer transition-colors duration-200 disabled:opacity-40 disabled:cursor-default',
-    btnSize,
-    'tracking-[0.12em] uppercase',
-  );
-  const styles = {
-    solid: 'bg-sage text-ink hover:bg-sage-strong',
-    outline: 'rule text-ink hover:bg-card',
-    ghost: 'px-2 text-muted hover:text-ink',
-  }[variant];
-  return (
-    <button type={type} onClick={onClick} disabled={disabled} className={cn(base, styles, className)}>
-      {children}
-      {arrow && <ArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />}
-    </button>
-  );
-}
-
-/* ── Hairline divider ────────────────────────────────────────────────── */
-export function Rule({ className }: { className?: string }) {
-  return <div className={cn('rule-t', className)} />;
-}
-
-/* ── Section header — eyebrow + serif display ────────────────────────── */
-export function SectionHead({
-  eyebrow,
-  title,
-  action,
-  className,
-}: {
-  eyebrow?: string;
-  title: React.ReactNode;
-  action?: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={cn('flex items-end justify-between gap-6', className)}>
-      <div className="space-y-3">
-        {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
-        <h2 className="display text-3xl md:text-[2.5rem] text-ink">{title}</h2>
-      </div>
-      {action}
-    </div>
-  );
 }
 
 /* ── Status chip (tiny) ──────────────────────────────────────────────── */
@@ -110,8 +41,8 @@ export function Chip({
 
 /* ── Selectable pill ─────────────────────────────────────────────────────
    A chip you can turn on and off — dietary needs, an owner, a duration.
-   Distinct from `Pill` above, which is an uppercase CTA button, and from
-   `Chip`, which is a read-only status badge. */
+   Distinct from `Button`, which does something, and from `Chip`, which is
+   a read-only status badge. */
 export function SelectPill({
   children,
   active,
@@ -198,19 +129,3 @@ export function taskRowTone(status: 'done' | 'overdue' | 'default') {
 
 /** Label styling for a completed task. */
 export const doneLabelClass = 'text-ink-soft line-through decoration-ink-soft/40';
-
-/* ── Animated screen wrapper ─────────────────────────────────────────── */
-export function Screen({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
-}
-

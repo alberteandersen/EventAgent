@@ -8,12 +8,11 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Gift, Plus, Trash2, Link2, Check, Pencil, ExternalLink, Heart, Share2 } from 'lucide-react';
+import { Gift, Plus, Trash2, Link2, Check, Pencil, ExternalLink, Heart, Share2, ArrowRight } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
-import { Pill, cn } from '../ui';
+import { Button, EmptyState, Page, PageHeader, PageLoader, cn } from '../ui';
 import GiftCard from '../registry/GiftCard';
-import HeroPhoto from './home/HeroPhoto';
 import { sortGifts, PRICE_BANDS, inBand } from '../registry/gifts';
 import type { RegistryItemRow } from '@/lib/db/types';
 
@@ -22,12 +21,10 @@ type Draft = Partial<RegistryItemRow> & { id?: string };
 
 const EMPTY: Draft = { title: '', currency: 'DKK', quantity: 1, favourite: false };
 
-const FALLBACK_PHOTO = '/landing/hero.jpg';
-
 export default function Registry({ onNavigate }: { onNavigate?: (s: import('../Shell').ScreenId) => void }) {
   const { t, tn } = useLang();
   const {
-    couple, weddingSite,
+    loading, weddingSite,
     registryItems, addRegistryItem, updateRegistryItem, deleteRegistryItem,
   } = useWedding();
   const [url, setUrl] = useState('');
@@ -39,8 +36,6 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
 
   const allItems = sortGifts(registryItems);
   const items = allItems.filter((it) => inBand(it.price_cents, band));
-
-  const coupleLabel = couple.b && couple.a ? `${couple.a} & ${couple.b}` : couple.a || t('Vores ønskeliste');
 
   const publicUrl = weddingSite?.domain
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/w/${weddingSite.domain}`
@@ -100,55 +95,29 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
     void updateRegistryItem(it.id, { favourite: !it.favourite });
 
 
+  if (loading) return <PageLoader />;
+
   return (
-    <div className="px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
-      {/* The couple's own list, with their faces on it — this is the page a
-          guest opens, and "Ønskeliste" over a grid of products said nothing
-          about whose wedding it was. */}
-      <div className="flex flex-col gap-6 rounded-[28px] border border-line bg-card p-6 sm:flex-row sm:items-start sm:p-7">
-        <HeroPhoto
-          fallback={FALLBACK_PHOTO}
-          alt={coupleLabel}
-          className="sm:w-[200px]"
-          frameClassName="h-[180px] sm:h-[200px]"
-        />
-
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <p className="eyebrow">{t('Ønskeliste')}</p>
-          <h1 className="font-serif text-[clamp(1.8rem,3.5vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-            {coupleLabel}
-          </h1>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[0.82rem] text-muted">
-              {tn(allItems.length, 'Ét ønske på listen', '{n} ønsker på listen')}
-            </span>
-            {publicUrl ? (
-              <button
-                type="button"
-                onClick={share}
-                className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong px-3 py-1.5 text-[0.78rem] font-semibold text-ink transition-colors hover:border-ink"
-              >
-                {copied ? <Check size={13} /> : <Share2 size={13} />}
-                {copied ? t('Link kopieret') : t('Del listen')}
-              </button>
-            ) : (
-              <span className="text-[0.78rem] text-muted">
-                {t('Udgiv jeres bryllupsside, så kan I dele listen.')}
-              </span>
-            )}
-          </div>
-
-          {allItems.length > 0 && (
-            <p className="text-[0.78rem] text-muted">
-              {t('Gæsterne kan se, hvad der er reserveret, så to ikke køber det samme. I kan ikke — det er hele overraskelsen.')}
-            </p>
-          )}
-        </div>
-      </div>
+    <Page>
+      <PageHeader
+        title={t('Ønskeliste')}
+        subtitle={
+          <>
+            {allItems.length > 0 && <>{tn(allItems.length, 'Ét ønske på listen', '{n} ønsker på listen')}. </>}
+            {publicUrl
+              ? t('Gæsterne kan se, hvad der er reserveret, så to ikke køber det samme. I kan ikke — det er hele overraskelsen.')
+              : t('Udgiv jeres bryllupsside, så kan I dele listen.')}
+          </>
+        }
+        actions={publicUrl && (
+          <Button variant="secondary" icon={copied ? Check : Share2} onClick={share}>
+            {copied ? t('Link kopieret') : t('Del listen')}
+          </Button>
+        )}
+      />
 
       {/* Add */}
-      <div className="mt-8 flex flex-wrap items-center gap-2 rounded-2xl rule bg-card p-2">
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl rule bg-card p-2">
         <div className="flex flex-1 items-center gap-2 px-3">
           <Link2 size={16} className="shrink-0 text-muted" />
           <input value={url} onChange={(e) => setUrl(e.target.value)}
@@ -156,14 +125,10 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
             placeholder={t('Indsæt produktlink (fx fra en webshop)…')}
             className="flex-1 bg-transparent py-2.5 text-[0.92rem] text-ink placeholder:text-muted focus:outline-none" />
         </div>
-        <button onClick={() => setDraft({ ...EMPTY })}
-          className="rounded-full px-3 py-2.5 text-[0.78rem] text-muted hover:text-ink transition-colors cursor-pointer">
-          {t('Tilføj uden link')}
-        </button>
-        <button onClick={lookup} disabled={looking || !url.trim()}
-          className="flex items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[0.8rem] font-medium text-canvas hover:bg-ink/90 transition-colors cursor-pointer disabled:opacity-50">
-          {looking ? t('Henter…') : <><Plus size={14} /> {t('Tilføj')}</>}
-        </button>
+        <Button variant="ghost" onClick={() => setDraft({ ...EMPTY })}>{t('Tilføj uden link')}</Button>
+        <Button icon={looking ? undefined : Plus} onClick={lookup} disabled={looking || !url.trim()}>
+          {looking ? t('Henter…') : t('Tilføj')}
+        </Button>
       </div>
 
       {/* Editor, one panel for a new wish and for editing a saved one */}
@@ -171,7 +136,7 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
         {draft && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden">
-            <div className="mt-3 rounded-2xl rule bg-card p-4">
+            <div className="rounded-2xl rule bg-card p-4">
               <p className="mb-3 text-[0.68rem] font-medium uppercase tracking-[0.16em] text-muted">
                 {draft.id ? t('Rediger ønske') : t('Nyt ønske')}
               </p>
@@ -212,11 +177,10 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
                         draft.favourite ? 'bg-[var(--color-terracotta-tint)] text-[var(--color-terracotta)]' : 'rule text-muted hover:text-ink')}>
                       <Heart size={13} className={draft.favourite ? 'fill-current' : ''} /> {t('Ønskes mest')}
                     </button>
-                    <button onClick={save} disabled={!draft.title?.trim()}
-                      className="flex items-center gap-1.5 rounded-full bg-sage px-4 py-2 text-[0.78rem] font-medium text-ink hover:bg-sage-strong transition-colors cursor-pointer disabled:opacity-50">
-                      <Check size={14} /> {draft.id ? t('Gem ændringer') : t('Gem på listen')}
-                    </button>
-                    <button onClick={() => setDraft(null)} className="rounded-full px-3 py-2 text-[0.78rem] text-muted hover:text-ink cursor-pointer">{t('Annuller')}</button>
+                    <Button size="sm" icon={Check} onClick={save} disabled={!draft.title?.trim()}>
+                      {draft.id ? t('Gem ændringer') : t('Gem på listen')}
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => setDraft(null)}>{t('Annuller')}</Button>
                     {!draft.title?.trim() && (
                       <span className="text-[0.74rem] text-muted">{t('Giv ønsket et navn, så kan I gemme det.')}</span>
                     )}
@@ -231,18 +195,16 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
 
       {/* The grid */}
       {items.length === 0 && !draft ? (
-        <div className="mt-14 flex flex-col items-center justify-center rounded-2xl rule bg-card py-16 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sage-tint"><Gift size={22} className="text-ink" /></div>
-          <p className="mt-4 font-serif text-[1.2rem] text-ink">{t('Ingen ønsker endnu')}</p>
-          <p className="mt-1 max-w-sm text-[0.88rem] text-muted">{t('Indsæt jeres første gavelink ovenfor.')}</p>
-        </div>
+        <EmptyState icon={Gift} title={t('Ingen ønsker endnu')}>
+          {t('Indsæt jeres første gavelink ovenfor.')}
+        </EmptyState>
       ) : (
         <>
         {/* Prisklasser: a guest arrives with an amount in mind, not a product.
             Hidden until there is enough on the list for filtering to mean
             anything. */}
         {allItems.length >= 4 && (
-          <div className="mt-8 flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5">
             {PRICE_BANDS.map((b) => {
               const count = allItems.filter((it) => inBand(it.price_cents, b.id)).length;
               return (
@@ -266,7 +228,7 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
           {items.map((it) => {
             /* Deliberately not computed. Whether a gift is taken, and by whom,
                is the guests' business — the couple's own screen never shows it,
@@ -325,12 +287,12 @@ export default function Registry({ onNavigate }: { onNavigate?: (s: import('../S
       )}
 
       {items.length > 0 && (
-        <div className="mt-8 flex items-center gap-3 rule-t pt-6">
-          <p className="text-[0.85rem] text-muted">{t('Ønskelisten vises automatisk på jeres bryllupsside under “Gaveønsker”.')}</p>
-          {onNavigate && <Pill variant="ghost" arrow onClick={() => onNavigate('website')}>{t('Åbn hjemmeside')}</Pill>}
+        <div className="flex flex-wrap items-center gap-3 rule-t pt-6">
+          <p className="text-meta text-muted">{t('Ønskelisten vises automatisk på jeres bryllupsside under “Gaveønsker”.')}</p>
+          {onNavigate && <Button variant="ghost" iconEnd={ArrowRight} onClick={() => onNavigate('website')}>{t('Åbn hjemmeside')}</Button>}
         </div>
       )}
-    </div>
+    </Page>
   );
 }
 

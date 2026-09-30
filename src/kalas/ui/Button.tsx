@@ -25,7 +25,13 @@ export function buttonClass({ variant = 'primary', size = 'md', className }: { v
   return cn(BASE, SIZES[size], VARIANTS[variant], className);
 }
 
-type Common = { variant?: Variant; size?: Size; icon?: LucideIcon; className?: string; children?: React.ReactNode };
+type Common = {
+  variant?: Variant; size?: Size; className?: string; children?: React.ReactNode;
+  /** Before the label. */
+  icon?: LucideIcon;
+  /** After the label: an arrow that says where it goes. */
+  iconEnd?: LucideIcon;
+};
 
 /** The app's button. Sentence case, a pill, forest for the primary action.
  *  Pass `href` for a link that looks like one. */
@@ -35,12 +41,13 @@ export function Button(
     | ({ href: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>)
   ),
 ) {
-  const { variant, size = 'md', icon: Icon, className, children, ...rest } = props;
+  const { variant, size = 'md', icon: Icon, iconEnd: IconEnd, className, children, ...rest } = props;
   const cls = buttonClass({ variant, size, className });
   const content = (
     <>
       {Icon && <Icon size={size === 'sm' ? 14 : 15} strokeWidth={2} aria-hidden />}
       {children}
+      {IconEnd && <IconEnd size={size === 'sm' ? 13 : 14} strokeWidth={2} aria-hidden />}
     </>
   );
   if (typeof rest.href === 'string') {

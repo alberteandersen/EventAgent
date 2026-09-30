@@ -3,10 +3,10 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useWedding } from '../../useWedding';
 import { useLang } from '../../i18n';
-import { GuideLink } from '../guides/GuideLink';
+import { CalendarCheck, Globe, Heart } from 'lucide-react';
+import { Page, PageHeader, PageLoader, Tabs } from '../../ui';
 import type { NavigateTarget } from '../../lib/hub-nav';
 import type { VenueHubView } from '../Venues';
-import HubTabBar from './HubTabBar';
 import CategoryFilterBar from './CategoryFilterBar';
 import ExplorePanel from './ExplorePanel';
 import ShortlistPanel from './ShortlistPanel';
@@ -60,36 +60,27 @@ export default function VendorHub({ onNavigate }: { onNavigate?: (s: NavigateTar
     onSwitchTab(next, cat);
   }, [cat, onSwitchTab]);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center px-6">
-        <div className="flex gap-1.5">
-          {[0, 1, 2].map((i) => (
-            <span key={i} className="h-1.5 w-1.5 animate-pulse rounded-full bg-muted" style={{ animationDelay: `${i * 0.15}s` }} />
-          ))}
-        </div>
-      </div>
-    );
-  }
+  if (loading) return <PageLoader />;
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-6 px-6 py-8 sm:px-9 lg:px-12">
-      {/* Header: title first, tabs underneath. */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage">{t('Planlægning')}</p>
-          <h1 className="mt-1 font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-            {t('Venue & leverandører')}
-          </h1>
-          <p className="mt-1 max-w-xl text-[13px] text-muted">
-            {t('Find jeres venue og leverandører, gem favoritter, og hold styr på hvem I har booket.')}
-          </p>
-          <GuideLink screen="team" />
-        </div>
-        <LocationChip className="shrink-0" />
-      </div>
-
-      <HubTabBar tab={tab} badges={badges} onChange={onTabChange} />
+    <Page>
+      <PageHeader
+        title={t('Venue & leverandører')}
+        subtitle={t('Find jeres venue og leverandører, gem favoritter, og hold styr på hvem I har booket.')}
+        guide="team"
+        actions={<LocationChip />}
+      >
+        <Tabs
+          label={t('Venue & leverandører')}
+          value={tab}
+          onChange={onTabChange}
+          items={[
+            { id: 'explore', label: t('Udforsk'), icon: Globe, badge: badges.explore },
+            { id: 'shortlist', label: t('Favoritter'), icon: Heart, badge: badges.shortlist },
+            { id: 'booked', label: t('Booket'), icon: CalendarCheck, badge: badges.booked },
+          ]}
+        />
+      </PageHeader>
 
       {/* Category chips live on the page chrome (under tabs), not under panel titles. */}
       {tab !== 'booked' && (
@@ -123,6 +114,6 @@ export default function VendorHub({ onNavigate }: { onNavigate?: (s: NavigateTar
         )}
         {tab === 'booked' && <BookedPanel onSwitchTab={onSwitchTab} />}
       </div>
-    </div>
+    </Page>
   );
 }

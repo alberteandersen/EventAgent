@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil, Utensils, BedDouble, GlassWater, Baby, ShieldAlert } from 'lucide-react';
-import { Pill, cn } from '../ui';
+import { Plus, ChevronDown, Trash2, Search, X, Check, Link2, Mail, Phone, Pencil, Utensils, BedDouble, GlassWater, Baby, ShieldAlert, Users } from 'lucide-react';
+import { Button, Page, PageHeader, PageLoader, Tabs, cn } from '../ui';
 import GuestDialog, { type GuestDraft } from './GuestDialog';
 import { dietarySummary } from './guests/dietary';
 import { ageCountLabel, ageCounts, ageGroupOf, AGE_GROUPS, orderByHousehold } from './guests/household';
@@ -10,7 +10,6 @@ import CateringOverview from './guests/CateringOverview';
 import { hasNeed, type GuestNeed } from './guests/catering';
 import AnimateNumber from '../AnimateNumber';
 import { useLang } from '../i18n';
-import { GuideLink } from './guides/GuideLink';
 import { useWedding } from '../useWedding';
 import { useRemoveWithUndo, useWithoutPending } from '../undo';
 import type { GuestRow as GuestRecord, RsvpStatus } from '@/lib/db/types';
@@ -45,7 +44,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
   initialTab?: Tab;
 } = {}) {
   const { t, tn } = useLang();
-  const { couple, guests: allGuests, weddingSite, seatingPlan, saveSeating, addGuest: addGuestRow, updateGuest, deleteGuest } = useWedding();
+  const { loading, couple, guests: allGuests, weddingSite, seatingPlan, saveSeating, addGuest: addGuestRow, updateGuest, deleteGuest } = useWedding();
   const siteBase = weddingSite?.published && weddingSite.domain
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/w/${weddingSite.domain}`
     : null;
@@ -101,44 +100,36 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
 
   const sides = ['Fælles', couple.a || 'Partner 1', couple.b || 'Partner 2'].filter(Boolean);
 
+  if (loading) return <PageLoader />;
+
   return (
-    <div className="px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-            {t('Gæster')}
-          </h1>
-          <p className="mt-1.5 max-w-xl text-[13px] leading-relaxed text-muted">
-            {t('Hold styr på jeres gæsteliste og RSVP, og send invitationer, når I er klar.')}
-          </p>
-          <GuideLink screen="guests" />
-        </div>
-        <div className="hidden items-center gap-2 sm:flex">
-          <Pill arrow onClick={startAdding}><Plus size={15} /> {t('Tilføj')}</Pill>
-        </div>
-      </div>
+    <Page>
+      <PageHeader
+        title={t('Gæster')}
+        subtitle={t('Hold styr på gæsterne, deres svar, og hvad hver enkelt har brug for.')}
+        guide="guests"
+        actions={<Button icon={Plus} onClick={startAdding}>{t('Tilføj gæst')}</Button>}
+      />
 
       {/* RSVP rings */}
-      <div className="mt-6 grid gap-10 sm:grid-cols-3">
+      <div className="grid gap-10 sm:grid-cols-3">
         <Ring value={rsvpStats.ja}       total={rsvpStats.invited} label={t('Bekræftet')}    color="var(--color-sage)" />
         <Ring value={rsvpStats.afventer} total={rsvpStats.invited} label={t('Mangler svar')} color="var(--color-line-strong)" track />
         <Ring value={rsvpStats.nej}      total={rsvpStats.invited} label={t('Afbud')}        color="var(--color-clay)" />
       </div>
 
-      {/* Section tabs */}
-      <div className="mt-10 flex gap-1 border-b border-[var(--color-line)]">
-        {(['gæsteliste', 'overblik'] as Tab[]).map((tabId) => (
-          <button key={tabId} onClick={() => setTab(tabId)}
-            className={cn('relative px-5 py-3 text-[0.85rem] capitalize transition-colors cursor-pointer',
-              tab === tabId ? 'text-ink' : 'text-muted hover:text-ink')}>
-            {t(TAB_LABELS[tabId])}
-            {tab === tabId && (
-              <motion.span layoutId="guest-section-tab"
-                className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-ink" />
-            )}
-          </button>
-        ))}
-      </div>
+      {/* Tabs and what they show, together, so the content keeps its own
+          spacing under the tab bar. */}
+      <div className="mt-4">
+      <Tabs
+        label={t('Gæster')}
+        value={tab}
+        onChange={setTab}
+        items={[
+          { id: 'gæsteliste', label: t(TAB_LABELS['gæsteliste']), icon: Users },
+          { id: 'overblik', label: t(TAB_LABELS.overblik), icon: Utensils },
+        ]}
+      />
 
       <AnimatePresence mode="wait">
         {tab === 'gæsteliste' ? (
@@ -167,7 +158,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
               </motion.div>
             )}
 
-            {/* Search + mobile add */}
+            {/* Search */}
             <div className="mt-6 flex items-center gap-3">
               <div className="flex flex-1 items-center gap-2 rounded-full rule bg-card px-4 py-2.5">
                 <Search size={14} className="shrink-0 text-muted" />
@@ -179,11 +170,6 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
                     className="shrink-0 text-muted hover:text-ink cursor-pointer"><X size={13} /></button>
                 )}
               </div>
-              <button onClick={startAdding}
-                className="sm:hidden flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-canvas cursor-pointer"
-                style={{ background: 'var(--color-ink)' }} aria-label={t('Tilføj gæst')}>
-                <Plus size={16} />
-              </button>
             </div>
 
             {/* Filter tabs */}
@@ -267,6 +253,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
 
       {dialog && (
         <GuestDialog
@@ -280,7 +267,7 @@ export default function Guests({ initialTab = 'gæsteliste' }: {
           onDelete={dialog === 'new' ? undefined : () => { removeGuest(dialog); setDialog(null); }}
         />
       )}
-    </div>
+    </Page>
   );
 }
 

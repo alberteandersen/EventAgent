@@ -6,13 +6,11 @@
    (outbound_emails · email_replies · email_attachments · reply_proposals). */
 
 import { useMemo, useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { motion } from 'motion/react';
-import { ArrowLeft, FileText, Star, Inbox as InboxIcon, MessagesSquare, Receipt, Paperclip, Send, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, FileText, Star, Inbox as InboxIcon, MessagesSquare, Receipt, Paperclip, Send } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { useLang } from '../i18n';
-import { Chip, Pill, cn } from '../ui';
+import { Button, Chip, EmptyState, Page, PageHeader, PageLoader, Tabs, cn } from '../ui';
 import type { NavigateTarget } from '../lib/hub-nav';
-import { GuideLink } from './guides/GuideLink';
 import { createClient } from '@/lib/supabase/client';
 import type {
   EmailAttachmentRow, EmailReplyRow, OutboundEmailRow, ReplyProposalRow, VenueRow,
@@ -26,7 +24,7 @@ const CAT_DA: Record<string, string> = {
 type Tab = 'threads' | 'quotes' | 'files';
 
 /* ══════════════════════════════════════════════════════════════════════ */
-export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: NavigateTarget) => void; embedded?: boolean }) {
+export default function Inbox({ onNavigate }: { onNavigate?: (s: NavigateTarget) => void }) {
   const { loading, venues, outbound, replies, attachments, proposals, refresh } = useWedding();
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>('threads');
@@ -45,34 +43,23 @@ export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: Navig
 
   const [panesRef, panesHeight] = useFillHeight<HTMLDivElement>(tab, loading, contacted.length);
 
-  if (loading) {
-    return <div className="flex min-h-[60vh] items-center justify-center"><Dots /></div>;
-  }
+  if (loading) return <PageLoader />;
 
-  const header = !embedded && (
-    <div>
-      <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-        {t('Inbox')}
-      </h1>
-      <GuideLink screen="inbox" />
-    </div>
-  );
+  const title = t('Henvendelser');
+  const subtitle = t('Svarene fra steder og leverandører, de tilbud Ava har fundet, og hendes forslag til svar.');
 
   if (contacted.length === 0 && replies.length === 0) {
     return (
-      <div className={embedded ? '' : 'flex min-h-full flex-col gap-6 px-6 py-8 sm:px-9 lg:px-12 lg:py-8'}>
-        {header}
-        <div className={cn('flex flex-col items-center justify-center text-center', embedded ? 'min-h-[40vh]' : 'min-h-[50vh]')}>
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ink">
-            <InboxIcon size={20} className="text-canvas" />
-          </div>
-          <h2 className="display mt-5 text-[1.8rem] text-ink">{t('Ingen henvendelser endnu')}</h2>
-          <p className="mt-2 max-w-sm text-[0.9rem] text-ink-soft">
-            {t('Når Ava skriver til venues og leverandører, samles alle samtaler, tilbud og filer her, så I har ét sted til al koordinering.')}
-          </p>
-          <div className="mt-6"><Pill arrow onClick={() => onNavigate?.('ava')}>{t('Bed Ava tage kontakt')}</Pill></div>
-        </div>
-      </div>
+      <Page>
+        <PageHeader title={title} subtitle={subtitle} guide="inbox" />
+        <EmptyState
+          icon={InboxIcon}
+          title={t('Ingen henvendelser endnu')}
+          action={<Button onClick={() => onNavigate?.('ava')}>{t('Bed Ava tage kontakt')}</Button>}
+        >
+          {t('Når Ava skriver til venues og leverandører, samles alle samtaler, tilbud og filer her, så I har ét sted til al koordinering.')}
+        </EmptyState>
+      </Page>
     );
   }
 
@@ -92,37 +79,26 @@ export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: Navig
     }
   };
 
-  const tabLabels: [Tab, string, LucideIcon][] = [
-    ['threads', totalUnread ? t('Samtaler · {n}', { n: totalUnread }) : t('Samtaler'), MessagesSquare],
-    ['quotes', t('Tilbud'), Receipt],
-    ['files', t('Filer · {n}', { n: attachments.length }), Paperclip],
-  ];
-
   return (
-    <div className={embedded ? 'pt-2' : 'flex min-h-full flex-col px-6 py-8 sm:px-9 lg:px-12 lg:py-8'}>
-      {header}
-
-      {/* Tab bar. Scrolls sideways on a narrow phone rather than wrapping. */}
-      <nav aria-label={t('Inbox')}
-        className={cn('-mx-6 flex gap-1 overflow-x-auto border-b border-line px-6 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden',
-          embedded ? 'mt-2' : 'mt-6')}>
-        {tabLabels.map(([id, label, Icon]) => (
-          <button key={id} type="button" onClick={() => setTab(id)}
-            aria-current={tab === id ? 'true' : undefined}
-            className={cn('relative flex shrink-0 items-center gap-2 px-3 py-2.5 text-[0.85rem] font-semibold transition-colors cursor-pointer',
-              tab === id ? 'text-ink' : 'text-muted hover:text-ink')}>
-            <Icon size={15} strokeWidth={2} className="hidden sm:block" aria-hidden />
-            {label}
-            {tab === id && <motion.span layoutId="inbox-tab" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-ink" />}
-          </button>
-        ))}
-      </nav>
+    <Page>
+      <PageHeader title={title} subtitle={subtitle} guide="inbox">
+        <Tabs
+          label={title}
+          value={tab}
+          onChange={setTab}
+          items={[
+            { id: 'threads', label: t('Samtaler'), icon: MessagesSquare, badge: totalUnread },
+            { id: 'quotes', label: t('Tilbud'), icon: Receipt },
+            { id: 'files', label: attachments.length ? t('Filer · {n}', { n: attachments.length }) : t('Filer'), icon: Paperclip },
+          ]}
+        />
+      </PageHeader>
 
       {tab === 'threads' && (
         // Two panes that fill the screen below the tabs; each scrolls on its own,
         // so the list and the reply box never leave view.
         <div ref={panesRef} style={panesHeight ? { height: panesHeight } : undefined}
-          className="mt-6 grid min-h-0 gap-4 lg:grid-cols-[320px_1fr] lg:gap-5">
+          className="grid min-h-0 gap-4 lg:grid-cols-[320px_1fr] lg:gap-5">
           {/* Vendor list */}
           <section aria-label={t('Leverandører')}
             className={cn('flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl rule bg-card', selected && 'hidden lg:flex')}>
@@ -200,7 +176,7 @@ export default function Inbox({ onNavigate, embedded }: { onNavigate?: (s: Navig
       {tab === 'files' && (
         <FilesTab venues={venues} attachments={attachments} />
       )}
-    </div>
+    </Page>
   );
 }
 
@@ -422,12 +398,14 @@ function QuotesTab({ venues, outbound, replies, onChanged }: {
   const { t } = useLang();
   const shortlist = venues.filter((v) => v.swipe_status === 'liked' || outbound.some((o) => o.venue_id === v.id));
   if (shortlist.length === 0) {
-    return <p className="mt-10 text-center font-serif text-[1.1rem] italic text-muted">
-      {t('Ingen leverandører på listen endnu, like nogen, så samler Ava tilbuddene her.')}
-    </p>;
+    return (
+      <EmptyState icon={Receipt} title={t('Ingen tilbud endnu')}>
+        {t('Gem de steder I kan lide, så samler Ava deres tilbud her.')}
+      </EmptyState>
+    );
   }
   return (
-    <div className="mt-6 space-y-3">
+    <div className="space-y-3">
       {shortlist.map((v) => (
         <QuoteCard key={v.id} venue={v} outbound={outbound.find((o) => o.venue_id === v.id)}
           replies={replies.filter((r) => r.venue_id === v.id)} onChanged={onChanged} />
@@ -541,12 +519,14 @@ function FilesTab({ venues, attachments }: { venues: VenueRow[]; attachments: Em
   }, [attachments]);
 
   if (attachments.length === 0) {
-    return <p className="mt-10 text-center font-serif text-[1.1rem] italic text-muted">
-      {t('Ingen filer endnu, menuer, tilbud og billeder fra leverandører samles her.')}
-    </p>;
+    return (
+      <EmptyState icon={Paperclip} title={t('Ingen filer endnu')}>
+        {t('Menuer, tilbud og billeder, som leverandørerne sender, samles her.')}
+      </EmptyState>
+    );
   }
   return (
-    <div className="mt-6 space-y-6">
+    <div className="space-y-6">
       {[...byVenue.entries()].map(([venueId, files]) => {
         const v = venues.find((x) => x.id === venueId);
         return (
@@ -620,16 +600,5 @@ function FilterChip({ label, active, onClick }: { label: string; active: boolean
         active ? 'border-ink bg-sage-tint text-ink font-medium' : 'border-[var(--color-line-strong)] text-ink-soft hover:bg-shell')}>
       {label}
     </button>
-  );
-}
-
-function Dots() {
-  return (
-    <div className="flex gap-1.5">
-      {[0, 1, 2].map((i) => (
-        <motion.span key={i} className="h-1.5 w-1.5 rounded-full bg-muted"
-          animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: i * 0.18 }} />
-      ))}
-    </div>
   );
 }

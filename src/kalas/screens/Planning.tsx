@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { AnimatePresence } from 'motion/react';
 import { ListChecks, PartyPopper } from 'lucide-react';
 import { useWedding } from '../useWedding';
 import { showNotice } from '../notice';
-import { cn } from '../ui';
+import { Page, PageHeader, PageLoader, Tabs } from '../ui';
 import type { ScreenId } from '../Shell';
 import { useLang } from '../i18n';
-import { GuideLink } from './guides/GuideLink';
 import PlanView from './planning/PlanTab';
 import { defaultMilestones } from './planning/milestones';
 import DayProgramTab from './planning/DayProgramTab';
@@ -59,47 +58,23 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
     showNotice(t(title), t(AVA_CELEBRATION));
   }
 
-  return (
-    <div className="flex min-h-full flex-col gap-6 bg-canvas px-6 py-8 sm:px-9 lg:px-12 lg:py-8">
-      {/* Header: the page's name and its guide. */}
-      <div>
-        <h1 className="font-serif text-[clamp(2rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-          {t('Tidslinje & tjekliste')}
-        </h1>
-        <GuideLink screen="planning" />
-      </div>
+  if (loading) return <PageLoader />;
 
-      {/* Tab bar. Scrolls sideways on a narrow phone rather than wrapping. */}
-      <nav aria-label={t('Planlægning')}
-        className="-mx-6 flex gap-1 overflow-x-auto border-b border-line px-6 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-        {TABS.map(({ id, label, Icon }) => {
-          const active = tab === id;
-          return (
-            <button
-              key={id}
-              type="button"
-              aria-current={active ? 'true' : undefined}
-              onClick={() => selectTab(id)}
-              className={cn(
-                'relative flex shrink-0 items-center gap-2 px-3 py-2.5 text-[0.85rem] font-semibold transition-colors cursor-pointer',
-                active ? 'text-ink' : 'text-muted hover:text-ink',
-              )}
-            >
-              <Icon size={15} strokeWidth={2} className="hidden sm:block" aria-hidden />
-              {t(label)}
-              {id === 'planen' && anyLate && (
-                <>
-                  <span aria-hidden className="size-1.5 rounded-full bg-terracotta" />
-                  <span className="sr-only">{t('Noget er forsinket')}</span>
-                </>
-              )}
-              {active && (
-                <motion.span layoutId="planning-tab" className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-ink" />
-              )}
-            </button>
-          );
-        })}
-      </nav>
+  return (
+    <Page>
+      <PageHeader title={t('Planlægning')} guide="planning">
+        <Tabs
+          label={t('Planlægning')}
+          value={tab}
+          onChange={selectTab}
+          items={TABS.map(({ id, label, Icon }) => ({
+            id,
+            label: t(label),
+            icon: Icon,
+            alert: id === 'planen' && anyLate ? t('Noget er forsinket') : undefined,
+          }))}
+        />
+      </PageHeader>
 
       <AnimatePresence mode="wait">
         {tab === 'planen' ? (
@@ -108,6 +83,6 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
           <DayProgramTab key="bryllupsdagen" />
         )}
       </AnimatePresence>
-    </div>
+    </Page>
   );
 }

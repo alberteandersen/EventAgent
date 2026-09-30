@@ -25,8 +25,8 @@ export type NavItem = { id: ScreenId; label: string; icon: LucideIcon; group: 'm
 
 export const NAV: NavItem[] = [
   { id: 'home',        label: 'Hjem',          icon: Home,          group: 'main' },
-  { id: 'planning',    label: 'Tidslinje & tjekliste', icon: ListChecks, group: 'main' },
-  { id: 'inbox',       label: 'Inbox',         icon: Inbox,         group: 'main' },
+  { id: 'planning',    label: 'Planlægning',   icon: ListChecks,    group: 'main' },
+  { id: 'inbox',       label: 'Henvendelser',  icon: Inbox,         group: 'main' },
   { id: 'team',        label: 'Venue & leverandører', icon: UsersRound,  group: 'plan' },
   { id: 'budget',      label: 'Budget',        icon: Wallet,        group: 'plan' },
   { id: 'guests',      label: 'Gæster',        icon: Users,         group: 'plan' },
@@ -182,7 +182,7 @@ export default function Shell({
               ))}
               {!sidebarRail && (
                 <p className="mt-6 pb-2 pl-3 text-[10px] font-bold uppercase tracking-[0.16em] text-sage">
-                  {t('Planlægning')}
+                  {t('Brylluppet')}
                 </p>
               )}
               {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-line" />}
@@ -328,7 +328,7 @@ export default function Shell({
               role="dialog" aria-label={t('Alle sider')}
             >
               <div className="flex items-center justify-between mb-4">
-                <p className="eyebrow">{t('Planlægning')}</p>
+                <p className="eyebrow">{t('Alle sider')}</p>
                 <button onClick={() => setMoreOpen(false)} aria-label={t('Luk')}
                   className="flex h-8 w-8 items-center justify-center rounded-full bg-shell text-muted hover:text-ink cursor-pointer">
                   <X size={15} />

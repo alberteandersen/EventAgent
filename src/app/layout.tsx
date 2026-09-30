@@ -39,12 +39,12 @@ export const metadata: Metadata = {
       ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } }
       : {}),
   },
-  title: "Kalas, plan the wedding, skip the stress",
+  title: "Kalas: bryllupsplanlægning med Ava",
   // Opened from a phone's home screen, Kalas runs full screen like an app.
   appleWebApp: { capable: true, title: "Kalas", statusBarStyle: "default" },
   icons: { apple: "/pwa-icon/180" },
   description:
-    "Kalas is your wedding-planning agent: it finds venues, writes to them for quotes, designs invites and tracks RSVPs, and nothing is sent until you approve it.",
+    "Kalas er jeres bryllupsplanlægger: Ava finder steder og leverandører, skriver til dem for tilbud og holder styr på gæster og budget. Intet sendes, før I har godkendt det.",
 };
 
 export default function RootLayout({
@@ -52,8 +52,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Danish first. LanguageProvider switches it on the client to the language
+  // the couple chose (the app) or the couple's own (a wedding site).
   return (
-    <html lang="en" className={`${inter.variable} ${cormorant.variable} ${hanken.variable} ${ebGaramond.variable} h-full antialiased`}>
+    <html lang="da" className={`${inter.variable} ${cormorant.variable} ${hanken.variable} ${ebGaramond.variable} h-full antialiased`}>
       <body className="flex min-h-screen flex-col bg-cream font-[family-name:var(--font-inter)] text-ink">
         {children}
       </body>

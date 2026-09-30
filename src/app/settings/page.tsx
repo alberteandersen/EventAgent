@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getOrCreateProfile } from "@/lib/db/profile";
 import { getPlatformConnection, isPlatformAdmin } from "@/lib/gmail/platform";
 
-export const metadata: Metadata = { title: "Indstillinger · Kalas" };
+export const metadata: Metadata = { title: "Indstillinger · Kalas", robots: { index: false } };
 
 export default async function SettingsPage({
   searchParams,

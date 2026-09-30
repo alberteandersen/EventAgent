@@ -265,7 +265,7 @@ function OnboardingHeader({
         </div>
         <div className="h-1.5 overflow-hidden rounded-full bg-line">
           <motion.div
-            className="h-full rounded-full bg-terracotta"
+            className="h-full rounded-full bg-ink"
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
           />
@@ -341,7 +341,7 @@ function ContextPanel({ step, form }: { step: StepId; form: FormState }) {
   return (
     <aside className="hidden w-full max-w-[430px] shrink-0 flex-col justify-between rounded-3xl bg-ink p-[38px] shadow-[0px_18px_50px_rgba(36,65,58,0.16)] lg:flex lg:h-full lg:overflow-hidden">
       <div className="flex flex-col gap-6">
-        <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-terracotta">
+        <div className="flex h-[52px] w-[52px] items-center justify-center rounded-full bg-sage-strong">
           <WeddingRings size={22} className="text-card" />
         </div>
         <div className="flex flex-col gap-3.5">
@@ -413,7 +413,7 @@ function OnboardingFooter({
           <button
             type="button"
             onClick={onBack}
-            className="flex h-[50px] items-center gap-2 rounded-xl px-[18px] text-sm font-semibold text-muted transition-colors hover:text-ink cursor-pointer"
+            className="flex h-12 items-center gap-2 rounded-full px-[18px] text-sm font-semibold text-muted transition-colors hover:bg-ink/5 hover:text-ink cursor-pointer"
           >
             <ArrowLeft size={16} /> {t('Tilbage')}
           </button>
@@ -424,10 +424,10 @@ function OnboardingFooter({
             onClick={onNext}
             disabled={nextDisabled}
             className={cn(
-              'flex h-[52px] flex-1 items-center justify-center gap-2.5 rounded-[14px] px-6 text-[15px] font-bold transition-opacity cursor-pointer sm:flex-initial sm:min-w-[200px]',
+              'flex h-12 flex-1 items-center justify-center gap-2 rounded-full px-6 text-[15px] font-semibold transition-colors cursor-pointer sm:flex-initial sm:min-w-[200px]',
               nextDisabled
                 ? 'cursor-not-allowed bg-line text-faint'
-                : 'bg-terracotta text-card shadow-[0px_8px_22px_rgba(179,78,55,0.24)] hover:opacity-95',
+                : 'bg-ink text-paper hover:bg-ink/90',
             )}
           >
             {nextLabel} {!nextDisabled && <ArrowRight size={17} />}

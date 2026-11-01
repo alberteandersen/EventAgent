@@ -73,7 +73,7 @@ describe('needsRebuild', () => {
     expect(needsRebuild(HTML, stamp, { ...base(), faq: [...base().faq, { id: 'f2', q: 'Børn?', a: 'Ja' }] })).toBe(true);
   });
 
-  it('asks for Ava when a text that shows has no slot to go in', () => {
+  it('asks for Juno when a text that shows has no slot to go in', () => {
     const noStory = HTML.replace(/<p data-kalas="text:storyText"[^<]*<\/p>/, '<p>Vi mødtes i Aarhus.</p>');
     const stamp = buildStamp(base());
     expect(needsRebuild(noStory, stamp, { ...base(), storyText: 'Nyt' })).toBe(true);

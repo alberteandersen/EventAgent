@@ -1,7 +1,7 @@
-/* Building the card: Ava designs it (typefaces, sizes, spacing, palette,
+/* Building the card: Juno designs it (typefaces, sizes, spacing, palette,
    where the words sit, the few lines of wording), the image model paints its
    artwork, and the result is saved as the active version. A change request
-   runs the same way against the current design; Ava says whether it needs a
+   runs the same way against the current design; Juno says whether it needs a
    new painting or only new type. Runs as a background job in production
    (src/lib/jobs/run.ts). */
 
@@ -23,7 +23,7 @@ export const ART_BUCKET = "invite-designs";
 
 const PLACEMENTS: ArtPlacement[] = ["corners", "frame", "top", "bottom", "scattered", "texture"];
 
-/* ── What Ava returns ─────────────────────────────────────────────────── */
+/* ── What Juno returns ─────────────────────────────────────────────────── */
 
 const n = (description: string): Schema => ({ type: Type.NUMBER, description });
 const style = (extra: Record<string, Schema> = {}): Schema => ({
@@ -81,7 +81,7 @@ const SCHEMA: Schema = {
   required: ["conceptName", "palette", "placement", "artBrief", "repaint", "textArea", "blocks"],
 };
 
-/** A photo block is the couple's to add, so Ava keeps one if the design has
+/** A photo block is the couple's to add, so Juno keeps one if the design has
     it (in its place in her order) and never adds one. */
 function keepPhoto(raw: Record<string, unknown>, current: CardSpec): Record<string, unknown> {
   const photo = current.blocks.find((b) => b.role === "photo");
@@ -110,7 +110,7 @@ function designPrompt(args: {
     ? `The couple asked for this change to their card:\n"""${args.instruction}"""\nChange what it asks and keep the rest. Set "repaint" true only if the painting itself has to change (other flowers, colours, composition); a change to words, type or spacing keeps the painting.`
     : `Design their card, starting from the vibe. Their own words about how it should feel: ${args.styleDirection || "none, take it from the vibe"}. Set "repaint" true.`;
 
-  return `You are Ava, a wedding stationery designer. You design the typography of a printed invitation card; an illustrator paints its artwork from your brief, and the words are typeset over the painting.
+  return `You are Juno, a wedding stationery designer. You design the typography of a printed invitation card; an illustrator paints its artwork from your brief, and the words are typeset over the painting.
 
 Vibe: ${args.vibeLabel}, painted as: ${args.vibeArt}.
 
@@ -134,7 +134,7 @@ How blocks work:
 - placement and artBrief: where the painting sits and what it shows (motifs, colours, mood), consistent with the textArea.`;
 }
 
-/* ── Ava's design ─────────────────────────────────────────────────────── */
+/* ── Juno's design ─────────────────────────────────────────────────────── */
 
 export interface CardDesign {
   spec: CardSpec;
@@ -150,7 +150,7 @@ export interface CardDesign {
 const MAX_DESIGN_TOKENS = 8192;
 const DESIGN_ATTEMPTS = 2;
 
-/** Ava's reply as JSON, or null when it is not JSON after a retry. */
+/** Juno's reply as JSON, or null when it is not JSON after a retry. */
 async function askForDesign(prompt: string): Promise<Record<string, unknown> | null> {
   for (let attempt = 1; attempt <= DESIGN_ATTEMPTS; attempt++) {
     let text = "";
@@ -170,7 +170,7 @@ async function askForDesign(prompt: string): Promise<Record<string, unknown> | n
   return null;
 }
 
-/** Ava's typesetting and painting brief for a card, validated over `current`.
+/** Juno's typesetting and painting brief for a card, validated over `current`.
     No storage, so a script can try it without a wedding. */
 export async function designCard(args: {
   vibe: CardVibe;
@@ -188,7 +188,7 @@ export async function designCard(args: {
   return {
     spec: parseCardSpec({ ...raw, vibe: vibe.id, format: current.format, art: current.art }, current),
     // A drawn or playful vibe is its composition (the poppy up the side, the
-    // doodles down the left); only the painted ones let Ava move the painting.
+    // doodles down the left); only the painted ones let Juno move the painting.
     placement: vibe.group === "painted" ? PLACEMENTS.find((p) => p === raw.placement) ?? vibe.placement : vibe.placement,
     artBrief: typeof raw.artBrief === "string" ? raw.artBrief.slice(0, 600) : "",
     repaint: raw.repaint === true,
@@ -242,7 +242,7 @@ export async function buildCard(args: BuildCardArgs): Promise<InvitationDesignRo
   if (newFormat) {
     current = { ...current, format: format.id, textArea: textAreaFor(vibe, format), art: { path: null, sample: sampleArt(vibe.id, format.id) } };
   }
-  // A change asked of a card Ava never built is a first build with it in the brief.
+  // A change asked of a card Juno never built is a first build with it in the brief.
   const instruction = current.art.path && !newFormat ? args.instruction : undefined;
   const styleDirection = args.styleDirection
     ?? [brief.styleDirection, instruction ? undefined : args.instruction].filter(Boolean).join(". ");
@@ -250,7 +250,7 @@ export async function buildCard(args: BuildCardArgs): Promise<InvitationDesignRo
   const design = await designCard({ vibe, current, content, styleDirection, instruction });
   let spec = design.spec;
 
-  // Paint when Ava asks to, and always for a first build or a new size;
+  // Paint when Juno asks to, and always for a first build or a new size;
   // never on bare paper, which keeps the paper the vibe ships.
   const repaint = !vibe.paper && (!current.art.path || newFormat || design.repaint);
   if (repaint) {

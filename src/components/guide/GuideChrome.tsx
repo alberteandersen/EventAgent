@@ -38,7 +38,7 @@ export function GuideFooter() {
             <Wordmark />
           </Link>
           <p className="max-w-[16rem] text-sm leading-relaxed text-ink-soft">
-            Ava planlægger jeres bryllup. I træffer beslutningerne.
+            Juno planlægger jeres bryllup. I træffer beslutningerne.
           </p>
           <CtaLink className="mt-1">Prøv Kalas gratis</CtaLink>
         </div>

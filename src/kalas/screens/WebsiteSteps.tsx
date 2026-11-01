@@ -1,14 +1,14 @@
 "use client";
 
 /* The Design tab's panel, one step at a time: pick a vibe, add photos, then
-   tell Ava in a few words how the site should be, with ideas above the box so
+   tell Juno in a few words how the site should be, with ideas above the box so
    nobody starts from a blank field. Nothing is built until the button at the
-   end of step 3. After that the panel is the finished site, where Ava takes
+   end of step 3. After that the panel is the finished site, where Juno takes
    change requests, and the row at the top reopens any step.
 
    The open step and the text belong to the parent: this panel unmounts on
    every tab switch, and a trip to Indhold should cost the couple neither.
-   Ava builds from what is written under Indhold, so the last step says how
+   Juno builds from what is written under Indhold, so the last step says how
    far that has come, and the finished site says when its words are old. */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -55,7 +55,7 @@ export interface WebsiteStepsProps {
   /** The step the couple opened; null lets the panel pick from the data. */
   step: DesignStep | null;
   onStep: (step: DesignStep | null) => void;
-  /** Their words to Ava, sent with the build. */
+  /** Their words to Juno, sent with the build. */
   brief: string;
   onBrief: (brief: string) => void;
   hasDesign: boolean;
@@ -149,15 +149,15 @@ export default function WebsiteSteps({
         <p className="rule rounded-xl bg-terracotta-tint px-4 py-3 text-[0.82rem] text-terracotta">{t(genError)}</p>
       )}
 
-      {/* Paywall notice, templates stay usable; Ava's edits unlock on purchase. */}
+      {/* Paywall notice, templates stay usable; Juno's edits unlock on purchase. */}
       {needsPayment && !websitePaid && (
         <div className="rule rounded-2xl bg-card p-6 text-center">
           <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-ink">
             <Palette size={18} className="text-canvas" />
           </div>
-          <p className="font-serif text-[1.25rem] text-ink leading-tight">{t('Lås Ava-designeren op')}</p>
+          <p className="font-serif text-[1.25rem] text-ink leading-tight">{t('Lås Juno-designeren op')}</p>
           <p className="mx-auto mt-2 max-w-xs text-[0.82rem] text-muted leading-relaxed">
-            {t('Skabelonerne er jeres, men Avas personalisering og ændringer via chat er en betalt funktion. Inkl. fjernelse af Kalas-branding.')}
+            {t('Skabelonerne er jeres, men Junos personalisering og ændringer via chat er en betalt funktion. Inkl. fjernelse af Kalas-branding.')}
           </p>
           <button type="button" onClick={onCheckout}
             className="mt-5 rounded-full bg-ink px-6 py-2.5 text-meta font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
@@ -203,7 +203,7 @@ export default function WebsiteSteps({
           {current === 'photos' && (
             <>
               <StepHead title={t('Upload jeres billeder')}
-                intro={t('Træk billeder herind eller tryk upload: forlovelsesbilleder, stedet, jer to. Ava designer ud fra dem. Markér ét som forsidebillede.')} />
+                intro={t('Træk billeder herind eller tryk upload: forlovelsesbilleder, stedet, jer to. Juno designer ud fra dem. Markér ét som forsidebillede.')} />
               <div className="mt-5">
                 <PhotoManager photos={photos} photoUrls={photoUrls}
                   onUpload={onUpload} onDelete={onDeletePhoto} onSetHero={onSetHero} />
@@ -219,7 +219,7 @@ export default function WebsiteSteps({
 
           {current === 'brief' && (
             <>
-              <StepHead title={t('Fortæl Ava med få ord, hvordan den skal være')}
+              <StepHead title={t('Fortæl Juno med få ord, hvordan den skal være')}
                 intro={t('Tryk på en idé for at tilføje den, eller skriv selv.')} />
               <div className="mt-5 flex flex-wrap gap-1.5">
                 {BRIEF_IDEAS.map((idea) => {
@@ -235,18 +235,18 @@ export default function WebsiteSteps({
                 value={brief}
                 onChange={(e) => onBrief(e.target.value)}
                 rows={4}
-                aria-label={t('Fortæl Ava med få ord, hvordan den skal være')}
+                aria-label={t('Fortæl Juno med få ord, hvordan den skal være')}
                 placeholder={t('f.eks. Vi drømmer om noget let og botanisk med varme toner, ikke for stift…')}
                 className="mt-3 w-full resize-none rule rounded-xl bg-shell px-4 py-3 text-[0.85rem] leading-relaxed text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-ink/20"
               />
-              {/* What Ava will build from, and a way back to it. */}
+              {/* What Juno will build from, and a way back to it. */}
               <div className="mt-4 flex items-center justify-between gap-3 rule rounded-xl bg-shell px-4 py-3">
                 <p className="min-w-0 text-[0.78rem] leading-relaxed text-muted">
                   {content.todo === 0
-                    ? t('Ava bygger med jeres {n} sektioner.', { n: content.on })
+                    ? t('Juno bygger med jeres {n} sektioner.', { n: content.on })
                     : tn(content.todo,
-                        'Ava bygger med jeres {on} sektioner. Én mangler stadig noget.',
-                        'Ava bygger med jeres {on} sektioner. {n} mangler stadig noget.',
+                        'Juno bygger med jeres {on} sektioner. Én mangler stadig noget.',
+                        'Juno bygger med jeres {on} sektioner. {n} mangler stadig noget.',
                         { on: content.on, n: content.todo })}
                 </p>
                 <button type="button" onClick={onOpenContent}
@@ -256,12 +256,12 @@ export default function WebsiteSteps({
               </div>
               <StepNav onBack={() => onStep('photos')}>
                 <button type="button" onClick={() => void build()} className={primaryBtn}>
-                  <Palette size={12} /> {hasHtml ? t('Byg siden igen') : t('Byg jeres side med Ava')}
+                  <Palette size={12} /> {hasHtml ? t('Byg siden igen') : t('Byg jeres side med Juno')}
                 </button>
               </StepNav>
               {!hasHtml && (
                 <p className="mt-3 text-[0.7rem] leading-relaxed text-muted">
-                  {t('Ava genererer billeder til sektionerne, henter jeres venue-fotos og bygger hele siden ud fra skabelonen.')}
+                  {t('Juno genererer billeder til sektionerne, henter jeres venue-fotos og bygger hele siden ud fra skabelonen.')}
                 </p>
               )}
             </>
@@ -296,8 +296,8 @@ export default function WebsiteSteps({
               <div className="mt-5 rule-t pt-5">
                 <p className="mb-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted">
                   {refineTarget != null
-                    ? t('Fortæl Ava hvad der skal ændres i version {n}', { n: refineTarget })
-                    : t('Fortæl Ava hvad der skal ændres')}
+                    ? t('Fortæl Juno hvad der skal ændres i version {n}', { n: refineTarget })
+                    : t('Fortæl Juno hvad der skal ændres')}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {REFINE_IDEAS.map((idea) => (
@@ -320,7 +320,7 @@ export default function WebsiteSteps({
                   </button>
                 </div>
                 <p className="mt-2.5 text-[0.72rem] leading-relaxed text-muted">
-                  {t('Hver ændring gemmes som en ny version under forhåndsvisningen. I kan også spørge Ava i chatten, fx “skriv programmet om” eller “gå tilbage til version 2”.')}
+                  {t('Hver ændring gemmes som en ny version under forhåndsvisningen. I kan også spørge Juno i chatten, fx “skriv programmet om” eller “gå tilbage til version 2”.')}
                 </p>
 
                 {/* A whole new design from the steps as they stand. */}
@@ -414,7 +414,7 @@ function StepNav({ onBack, children }: { onBack?: () => void; children: React.Re
 const BUILD_STEPS = [
   'Genererer billeder til sektionerne…',
   'Henter billeder fra jeres venue…',
-  'Ava komponerer layout og typografi…',
+  'Juno komponerer layout og typografi…',
   'Bygger jeres side…',
 ] as const;
 
@@ -432,7 +432,7 @@ function BuildProgress({ mode }: { mode: 'generate' | 'refine' | 'sync' }) {
     <div className="rule rounded-2xl bg-card p-8 text-center">
       <Loader2 size={26} className="mx-auto animate-spin text-ink" />
       <p className="mt-4 font-serif text-[1.25rem] text-ink">
-        {mode === 'sync' ? t('Ava sætter jeres nye ord ind…') : mode === 'refine' ? t('Ava bygger siden om…') : t(BUILD_STEPS[step])}
+        {mode === 'sync' ? t('Juno sætter jeres nye ord ind…') : mode === 'refine' ? t('Juno bygger siden om…') : t(BUILD_STEPS[step])}
       </p>
       <p className="mx-auto mt-2 max-w-xs text-[0.82rem] text-muted leading-relaxed">
         {mode === 'sync'

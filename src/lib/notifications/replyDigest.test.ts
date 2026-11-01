@@ -15,7 +15,7 @@ const reply = (over: Partial<DigestReply> = {}): DigestReply => ({
 });
 
 describe("buildReplyDigest", () => {
-  it("names the vendor and quotes Ava's summary for a single reply", () => {
+  it("names the vendor and quotes Juno's summary for a single reply", () => {
     const msg = buildReplyDigest({ name: "Alberte", replies: [reply()], lang: "da", ...urls });
     expect(msg.subject).toBe("Skovsgaard Gods har svaret");
     expect(msg.body).toContain("Hej Alberte,");
@@ -57,7 +57,7 @@ describe("buildReplyDigest", () => {
     expect(withDraft.body).toContain("et svar til Skovsgaard Gods. Intet bliver sendt, før I har godkendt det.");
   });
 
-  it("falls back to the decoded snippet, clipped, when Ava made no summary", () => {
+  it("falls back to the decoded snippet, clipped, when Juno made no summary", () => {
     const long = "We don&#39;t have June free &amp; " + "more words ".repeat(40);
     const msg = buildReplyDigest({ name: "", replies: [reply({ summary: null, snippet: long })], lang: "en", ...urls });
     expect(msg.body).toContain("We don't have June free & more");

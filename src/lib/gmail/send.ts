@@ -13,7 +13,7 @@ export interface OutgoingMessage {
   to: string;
   subject: string;
   body: string;
-  /** Display name for the From header, e.g. "Ava at Kalas". */
+  /** Display name for the From header, e.g. "Juno at Kalas". */
   fromName?: string;
   /** Address of the authenticated account; required for fromName to be honored. */
   fromEmail?: string;
@@ -24,7 +24,7 @@ export interface OutgoingMessage {
   /** RFC 822 Message-ID of the message being replied to. */
   inReplyTo?: string;
   references?: string;
-  /** Opt out of Ava's signature block (default: appended). */
+  /** Opt out of Juno's signature block (default: appended). */
   omitSignature?: boolean;
 }
 
@@ -37,7 +37,7 @@ export function escapeHtml(value: string): string {
 }
 
 /**
- * Ava writes plain text; this renders it as HTML without inventing any
+ * Juno writes plain text; this renders it as HTML without inventing any
  * structure — blank-line-separated blocks become paragraphs, single breaks
  * stay breaks, so the greeting and sign-off keep their shape.
  */

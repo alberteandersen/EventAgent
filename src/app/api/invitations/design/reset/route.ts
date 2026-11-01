@@ -5,7 +5,7 @@ import { ART_BUCKET } from "@/lib/invitations/buildCard";
 
 /**
  * POST /api/invitations/design/reset — drop every version of the card, and
- * Ava's paintings with them, so the couple can start again from the vibes.
+ * Juno's paintings with them, so the couple can start again from the vibes.
  * The card's words stay. Body: { eventId }.
  */
 export async function POST(request: NextRequest) {

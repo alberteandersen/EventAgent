@@ -78,7 +78,7 @@ export function FixtureWedding({
   websiteDesigns?: WebsiteDesignRow[];
   /** Invitationer: versions of the card, one active. */
   invitationDesigns?: InvitationDesignRow[];
-  /** Inbox: what Ava sent, what came back, and her proposed answers. */
+  /** Inbox: what Juno sent, what came back, and her proposed answers. */
   outbound?: OutboundEmailRow[];
   replies?: EmailReplyRow[];
   proposals?: ReplyProposalRow[];

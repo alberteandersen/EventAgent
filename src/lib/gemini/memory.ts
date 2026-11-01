@@ -2,14 +2,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { Type, type FunctionDeclaration } from "@google/genai";
 import {
   MEMORY_CATEGORIES,
-  type AvaMemoryRow,
+  type JunoMemoryRow,
   type ChatThreadRow,
   type EventRow,
   type MemoryCategory,
 } from "@/lib/db/types";
 
 /*
- * Ava's memory across conversations. A new chat starts with no messages, so
+ * Juno's memory across conversations. A new chat starts with no messages, so
  * everything she should still know has to come from somewhere else: the
  * memories she saved herself (preferences, decisions, follow-ups), and the
  * live planning data, which the chat route puts in front of her every turn.
@@ -110,14 +110,14 @@ export async function execMemoryTool(
 export async function loadMemories(
   supabase: SupabaseClient,
   eventId: string
-): Promise<AvaMemoryRow[]> {
+): Promise<JunoMemoryRow[]> {
   const { data } = await supabase
     .from("ava_memories")
     .select("*")
     .eq("event_id", eventId)
     .order("created_at", { ascending: true })
     .limit(MAX_MEMORIES);
-  return (data ?? []) as AvaMemoryRow[];
+  return (data ?? []) as JunoMemoryRow[];
 }
 
 const CATEGORY_HEADINGS: Record<MemoryCategory, string> = {
@@ -128,7 +128,7 @@ const CATEGORY_HEADINGS: Record<MemoryCategory, string> = {
 };
 
 /**
- * The system-prompt block for everything Ava carries between conversations:
+ * The system-prompt block for everything Juno carries between conversations:
  * her memories (with ids, so she can correct or forget them), the live
  * planning snapshot, and the titles of other recent conversations.
  */
@@ -138,7 +138,7 @@ export function memoryContext({
   otherThreads,
   today,
 }: {
-  memories: Pick<AvaMemoryRow, "id" | "category" | "content">[];
+  memories: Pick<JunoMemoryRow, "id" | "category" | "content">[];
   snapshot: Record<string, unknown> | null;
   otherThreads: Pick<ChatThreadRow, "title" | "updated_at">[];
   today: string;

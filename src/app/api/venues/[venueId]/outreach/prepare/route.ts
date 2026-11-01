@@ -31,7 +31,7 @@ export async function POST(
     return Response.json(
       {
         error: "no_contact_email",
-        message: `Ava kunne ikke finde en mailadresse til ${ctx.venue.name}. Tilføj den manuelt og prøv igen.`,
+        message: `Juno kunne ikke finde en mailadresse til ${ctx.venue.name}. Tilføj den manuelt og prøv igen.`,
       },
       { status: 422 }
     );

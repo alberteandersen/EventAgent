@@ -2,12 +2,12 @@
 
 /* Wedding-interview onboarding. Mounted at /onboarding (ssr:false). On
    completion we persist the couple's answers as a real wedding (creating the
-   event, seeding Ava's chat, marking the profile onboarded) and do a full
+   event, seeding Juno's chat, marking the profile onboarded) and do a full
    navigation to /home so the server gate re-reads profiles.onboarded. */
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Onboarding, { type FormState, type PhotoDraft, toOnboardingPayload } from './screens/Onboarding';
 import { LanguageProvider, useLang, type Lang } from './i18n';
-import { AVA_OPEN_KEY, tourHandoff, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY } from './walkthrough';
+import { JUNO_OPEN_KEY, tourHandoff, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY } from './walkthrough';
 
 export default function KalasOnboardingRoot({ initialLang = 'da' }: { initialLang?: Lang }) {
   return (
@@ -45,14 +45,14 @@ function OnboardingShell() {
         // /home's server gate will bounce back here if nothing stuck.
       }
     }
-    // Hand off to Hjem with Ava's panel open and her guided tour armed at step 0 — she
+    // Hand off to Hjem with Juno's panel open and her guided tour armed at step 0 — she
     // takes it from here. localStorage (not session) so a reload resumes it,
     // and the done marker is cleared because finishing the interview means
     // starting over: without that, a couple who had seen the tour once got
     // nothing on their second run through onboarding.
     try {
       const handoff = tourHandoff();
-      localStorage.setItem(AVA_OPEN_KEY, '1');
+      localStorage.setItem(JUNO_OPEN_KEY, '1');
       localStorage.setItem(WALKTHROUGH_KEY, handoff.setProgress);
       if (handoff.clearDone) localStorage.removeItem(WALKTHROUGH_DONE_KEY);
     } catch {

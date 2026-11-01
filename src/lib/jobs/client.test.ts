@@ -35,9 +35,9 @@ describe('settleJob', () => {
 
   it("passes on the job's own failure for the couple", async () => {
     vi.useFakeTimers();
-    vi.stubGlobal('fetch', vi.fn(async () => json({ status: 'failed', error: 'Ava kunne ikke' })));
+    vi.stubGlobal('fetch', vi.fn(async () => json({ status: 'failed', error: 'Juno kunne ikke' })));
     const pending = settleJob(json({ jobId: 'j2' }, 202));
     await vi.runAllTimersAsync();
-    expect(await pending).toEqual({ ok: false, error: 'Ava kunne ikke' });
+    expect(await pending).toEqual({ ok: false, error: 'Juno kunne ikke' });
   });
 });

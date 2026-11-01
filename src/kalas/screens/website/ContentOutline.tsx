@@ -104,7 +104,7 @@ export function ContentStepNav({ onBack, onNext, nextLabel }: {
   );
 }
 
-/* ── The built site lacks something only Ava can add ───────────────────── */
+/* ── The built site lacks something only Juno can add ───────────────────── */
 export function StaleContentNotice({ syncing, onSync }: { syncing: boolean; onSync: () => void }) {
   const { t } = useLang();
   return (
@@ -112,7 +112,7 @@ export function StaleContentNotice({ syncing, onSync }: { syncing: boolean; onSy
       <div className="min-w-0 flex-1 basis-56">
         <p className="text-[0.88rem] font-medium text-ink">{t('Gæsterne ser ikke det nye endnu')}</p>
         <p className="mt-0.5 text-[0.76rem] leading-relaxed text-muted">
-          {t('Ava skal sætte det ind, I har ændret siden sidst. Designet bliver, som det er.')}
+          {t('Juno skal sætte det ind, I har ændret siden sidst. Designet bliver, som det er.')}
         </p>
       </div>
       <button type="button" onClick={onSync} disabled={syncing}

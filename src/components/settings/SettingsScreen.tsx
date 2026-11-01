@@ -84,11 +84,11 @@ function Settings({ lang, email, notifications, wedding, members, pendingEmail, 
       <Card className="flex flex-col gap-5">
         <SectionTitle
           title={t("Henvendelser til leverandører")}
-          subtitle={t("Ava skriver til steder og leverandører fra sin egen Kalas-postkasse; intet sendes fra jeres egen mail. Hver samtale lander under Henvendelser, og I godkender hvert svar, før det går af sted.")}
+          subtitle={t("Juno skriver til steder og leverandører fra sin egen Kalas-postkasse; intet sendes fra jeres egen mail. Hver samtale lander under Henvendelser, og I godkender hvert svar, før det går af sted.")}
         />
         <div className="border-t border-line pt-5">
           <Row title={t("Mails om nye svar")} action={<EmailNotificationsSetting initial={notifications} />}>
-            {t("Ava skriver til dig, når en leverandør har svaret, så du ikke skal holde øje med indbakken.")}
+            {t("Juno skriver til dig, når en leverandør har svaret, så du ikke skal holde øje med indbakken.")}
           </Row>
         </div>
       </Card>
@@ -97,7 +97,7 @@ function Settings({ lang, email, notifications, wedding, members, pendingEmail, 
         <Card className="flex flex-col gap-4">
           <SectionTitle
             title={t("Kalas-postkassen")}
-            subtitle={t("Kun for administratorer: den Gmail-konto, Ava sender fra og læser svar i.")}
+            subtitle={t("Kun for administratorer: den Gmail-konto, Juno sender fra og læser svar i.")}
           />
           <div className="flex items-center justify-between gap-4 rounded-xl border border-line px-4 py-3">
             <span className="flex items-center gap-2 text-sm text-ink">
@@ -115,7 +115,7 @@ function Settings({ lang, email, notifications, wedding, members, pendingEmail, 
 
       <Card>
         <Row title={t("Sprog")} action={<LanguageSetting initial={lang} />}>
-          {t("Sproget i appen og i Avas svar.")}
+          {t("Sproget i appen og i Junos svar.")}
         </Row>
       </Card>
 
@@ -125,7 +125,7 @@ function Settings({ lang, email, notifications, wedding, members, pendingEmail, 
         </Row>
         <div className="border-t border-line pt-5">
           <Row title={t("Rundvisning")} action={<Button variant="secondary" href="/home?walkthrough=1">{t("Vis mig rundt igen")}</Button>}>
-            {t("Ava viser jer rundt på siderne igen. Intet bliver nulstillet.")}
+            {t("Juno viser jer rundt på siderne igen. Intet bliver nulstillet.")}
           </Row>
         </div>
       </Card>

@@ -47,7 +47,7 @@ function seedFrom(params: { get: (name: string) => string | null }) {
       designs.push(designRow({
         id: 'd-built', html: '<p>bygget</p>',
         brief: { preset: preset.id, styleDirection: 'Varme farver, store billeder af os' },
-        design: { ...tokens, concept: { ...tokens.concept, name: `${tokens.concept.name} · Ava` } } as unknown as Record<string, unknown>,
+        design: { ...tokens, concept: { ...tokens.concept, name: `${tokens.concept.name} · Juno` } } as unknown as Record<string, unknown>,
       }));
     }
     designs.push(designRow({
@@ -82,7 +82,7 @@ function Harness() {
   const [photos, setPhotos] = useState<SitePhotoRow[]>(seed.photos);
   const [photoUrls, setPhotoUrls] = useState<Record<string, string>>(seed.photoUrls);
   const [step, setStep] = useState<DesignStep | null>(seed.step);
-  // As in Website.tsx: the box holds the last words given to Ava until
+  // As in Website.tsx: the box holds the last words given to Juno until
   // something is typed.
   const [briefDraft, setBriefDraft] = useState<string | null>(null);
   const savedBrief = useMemo(
@@ -124,12 +124,12 @@ function Harness() {
     await wait(1500);
     setWorking(null);
     if (failNext) {
-      setGenError('Ava kunne ikke designe siden lige nu, prøv igen.');
+      setGenError('Juno kunne ikke designe siden lige nu, prøv igen.');
       return false;
     }
     addVersion({
       brief: { ...(active?.brief ?? {}), styleDirection: text },
-      design: { ...design, concept: { ...design.concept, name: `${design.concept.name} · Ava` } } as unknown as Record<string, unknown>,
+      design: { ...design, concept: { ...design.concept, name: `${design.concept.name} · Juno` } } as unknown as Record<string, unknown>,
       html: '<p>bygget</p>',
     });
     return true;

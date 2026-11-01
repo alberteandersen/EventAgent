@@ -5,7 +5,7 @@ import { generateReplyProposal } from "@/lib/gemini/agent";
 import type { EmailReplyRow } from "@/lib/db/types";
 
 /**
- * POST /api/replies/[replyId]/propose — (re)generate Ava's proposed reply for
+ * POST /api/replies/[replyId]/propose — (re)generate Juno's proposed reply for
  * a vendor reply. RLS-scoped ownership check, then admin write via the shared
  * generator.
  */

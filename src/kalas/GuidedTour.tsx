@@ -1,6 +1,6 @@
 "use client";
 
-/* Ava's guided tour — the only one.
+/* Juno's guided tour — the only one.
  *
  * There used to be a second walkthrough that narrated by dropping bubbles into
  * the chat, and since onboarding opened on the chat, that was the
@@ -10,7 +10,7 @@
  * it. "Videre" is the escape hatch, not the intended path; that is the
  * difference between a tour you read and one you do.
  *
- * It ends on Hjem with Ava's panel open beside it.
+ * It ends on Hjem with Juno's panel open beside it.
  */
 
 import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
@@ -25,7 +25,7 @@ import {
 
 type Box = { top: number; left: number; width: number; height: number };
 
-/** The visible button for a target: some render twice (the header's Ava
+/** The visible button for a target: some render twice (the header's Juno
  *  button and the phone's bottom bar), and the hidden copy has no width. */
 function findNavButton(page: string): HTMLElement | null {
   const all = Array.from(document.querySelectorAll<HTMLElement>(`[data-tour="${page}"]`));

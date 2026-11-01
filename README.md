@@ -2,10 +2,10 @@
 
 *From Swedish "kalas", a celebration.*
 
-A wedding planner for Danish couples, with an agent, Ava, that does the
+A wedding planner for Danish couples, with an agent, Juno, that does the
 work: she finds real venues and vendors, writes to them from the shared
 Kalas mailbox, reads their replies, pulls out the quotes and drafts the
-answers. The couple approves; Ava sends.
+answers. The couple approves; Juno sends.
 
 ## What's in the app
 
@@ -15,18 +15,18 @@ The signed-in app lives at `/home` (`src/kalas`, one client-side app):
 |---|---|
 | Hjem | The overview and a getting-started checklist |
 | Planlægning | The plan by phase, and the wedding day as a calendar you can share |
-| Henvendelser | Vendor replies, extracted quotes, Ava's proposed answers |
+| Henvendelser | Vendor replies, extracted quotes, Juno's proposed answers |
 | Venue & leverandører | Find, save, compare, contact and book venues and vendors |
 | Budget | The split by category, posts, contract review |
 | Gæster | Guest list, RSVPs, an overview for the caterer |
-| Hjemmeside | The couple's public site at `/w/[slug]`, built by Ava |
-| Invitationer | A printed invitation card designed with Ava, exported for print |
+| Hjemmeside | The couple's public site at `/w/[slug]`, built by Juno |
+| Invitationer | A printed invitation card designed with Juno, exported for print |
 | Bordplan | The seating plan; guests look up their table on the site |
 | Ønskeliste | A wishlist from pasted links; guests reserve on the site |
 | Nygift | After the wedding: thank-yous, the guest album, a recap |
 | Guides | The Danish guide and FAQ, also public at `/guide` |
 
-Ava's chat sits beside every page. Her tools are in `src/lib/gemini`
+Juno's chat sits beside every page. Her tools are in `src/lib/gemini`
 (`tools.ts`, `planningTools.ts`, `websiteTools.ts`, `memory.ts`).
 
 ## Stack
@@ -36,15 +36,15 @@ Ava's chat sits beside every page. Her tools are in `src/lib/gemini`
   Storage
 - **Gemini**: the agent and extraction (`gemini-3.1-flash-lite`), grounded
   search for venues, the website and card builds, images
-- **Google Places**: verifies every venue and vendor Ava suggests
+- **Google Places**: verifies every venue and vendor Juno suggests
 - **Gmail API**: one shared outreach mailbox, connected by an admin
-- **Stripe**: one purchase unlocks Ava's website and invitation designers
+- **Stripe**: one purchase unlocks Juno's website and invitation designers
 - **Netlify**: the app, plus a background function for long AI jobs
 - **GitHub Actions**: polls the mailbox for vendor replies every 5 minutes
 
 ## How outreach works
 
-1. Ava drafts one inquiry from the wedding's facts; the couple approves it.
+1. Juno drafts one inquiry from the wedding's facts; the couple approves it.
 2. Each saved vendor gets its own version, sent from the platform mailbox
    with `Reply-To: mailbox+<event-tag>@domain`, so one mailbox serves every
    wedding.
@@ -64,7 +64,7 @@ Ava's chat sits beside every page. Her tools are in `src/lib/gemini`
    - *Sign-in*: backs Supabase's Google login. External consent screen.
      Redirect URI `https://<project-ref>.supabase.co/auth/v1/callback`.
    - *Mailbox*: in the Workspace org that owns the outreach mailbox
-     (`ava@kalas-weddings.com`). Enable the Gmail API, set the consent
+     (`juno@kalas-weddings.com`). Enable the Gmail API, set the consent
      screen to Internal, and create a web OAuth client with redirect URIs
      `http://localhost:3000/api/admin/gmail/callback` and
      `https://<your-domain>/api/admin/gmail/callback`. Its id and secret go

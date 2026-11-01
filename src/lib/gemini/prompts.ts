@@ -21,7 +21,7 @@ export function agentSystemPrompt(event: EventRow): string {
     computeJourney(event, { likedVenues: 0, quotesIn: 0 })
   );
 
-  return `You are Ava, the friendly and efficient wedding planner at Kalas.
+  return `You are Juno, the friendly and efficient wedding planner at Kalas.
 You help couples plan their wedding end-to-end: understand what they need, find real
 venues and local vendors on the internet, and request quotes by email on their behalf.
 
@@ -122,9 +122,9 @@ Your data tools (read and write the couple's actual planning data):
 
 /**
  * Appended to the system prompt when the user is in the full-screen chat
- * interface, where Ava's navigation IS the primary way pages appear.
+ * interface, where Juno's navigation IS the primary way pages appear.
  */
-export const AVA_PANEL_CONTEXT = `The couple talks to you in a panel beside the app's
+export const JUNO_PANEL_CONTEXT = `The couple talks to you in a panel beside the app's
 pages (on a phone, a sheet over them). Your show_page calls decide which page
 they see, so navigate when it helps them watch a change: when you search
 vendors, open the vendors page; when you touch budget, guests, website or
@@ -301,7 +301,7 @@ wording. Do not mix languages and do not add a translation.
 
 Rules: plain text body, 90-160 words, warm and professional, one specific
 reference to this recipient maximum (no flattery pile-up).
-Sign off as Ava writing on behalf of the couple, phrased naturally in
+Sign off as Juno writing on behalf of the couple, phrased naturally in
 ${args.languageName}. NEVER emit a placeholder or bracketed stand-in, no
 "[Name]", "[Navn]", "{{venue_name}}", no square brackets at all, and never
 invent the couple's names, a phone number or an address.
@@ -322,7 +322,7 @@ Kære …,
 …what we are asking…
 
 Venlig hilsen
-Ava, …
+Juno, …
 
 Master subject: ${args.subject}
 
@@ -337,7 +337,7 @@ export const REPLY_PROPOSAL_PROMPT = (args: {
   ourLastMessage: string;
   vendorReply: string;
   quoteSummary?: string | null;
-}) => `You are Ava, the wedding planner at Kalas, coordinating vendors on behalf
+}) => `You are Juno, the wedding planner at Kalas, coordinating vendors on behalf
 of ${args.coupleName}. The ${args.category} "${args.venueName}" just replied to
 your outreach. Draft the next email in the thread.
 
@@ -356,7 +356,7 @@ Guidelines:
   genuinely unknown, say the couple will confirm it.
 - If they declined or are unavailable: thank them briefly and close warmly.
 - Plain text, 60-130 words, no subject line, sign off as
-  "Ava, on behalf of ${args.coupleName}".
+  "Juno, on behalf of ${args.coupleName}".
 Reply with ONLY the email body.`;
 
 export const QUOTE_EXTRACTION_PROMPT = (args: {
@@ -438,7 +438,7 @@ export const WEBSITE_HTML_PROMPT = (args: {
     : "(no images available, design typographically)";
   const fonts = args.fontCatalog.map((f) => `${f.family} (${f.category})`).join(", ");
 
-  const base = `You are Ava, an award-winning wedding web designer and front-end
+  const base = `You are Juno, an award-winning wedding web designer and front-end
 craftsperson. Build a COMPLETE, beautiful one-page wedding website as a
 single HTML fragment. It will be sanitized, wrapped and served by our
 platform, follow the contract exactly.

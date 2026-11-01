@@ -1,6 +1,6 @@
 /* The chat agent's edits to the site's content, as a pure step: the saved
-   config in, a change from Ava's tool call, the new config out. Lists are
-   replaced whole (Ava sends the programme as it should read), but a row
+   config in, a change from Juno's tool call, the new config out. Lists are
+   replaced whole (Juno sends the programme as it should read), but a row
    keeps the id of the row it replaces, so rewording a programme is a text
    change the built site shows at once (see slots.ts), not a new shape that
    needs a rebuild. */

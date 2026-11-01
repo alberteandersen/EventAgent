@@ -8,7 +8,7 @@
  * invitation design it borrows the website's vibe, so it still matches
  * something they chose.
  *
- * Ava's built invitation is not reused: its HTML carries the invitation's
+ * Juno's built invitation is not reused: its HTML carries the invitation's
  * own words (the reply button, the venue). The vibe tokens it was built from
  * are the same, and those are what the thank-you is drawn with.
  *

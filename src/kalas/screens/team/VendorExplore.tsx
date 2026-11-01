@@ -13,7 +13,7 @@ import type { HubCat } from './shared';
 import type { PlaceSuggestion } from '@/lib/venue/search';
 
 /**
- * Location-driven vendor discovery for a non-venue category. Ava researches
+ * Location-driven vendor discovery for a non-venue category. Juno researches
  * real local vendors near the couple's location (from their venue, or the
  * top-right chip on the venue page) and shows them as save-able cards — the
  * vendor twin of the venue globe discovery.
@@ -121,7 +121,7 @@ export default function VendorExplore({
         title={t('Vælg jeres lokation først')}
         action={<Button size="sm" onClick={onGoToVenue}>{t('Til venues')}</Button>}
       >
-        {t('Sæt jeres lokation øverst på venue-siden, eller vælg et venue, så finder Ava leverandører i nærheden.')}
+        {t('Sæt jeres lokation øverst på venue-siden, eller vælg et venue, så finder Juno leverandører i nærheden.')}
       </EmptyState>
     );
   }
@@ -142,7 +142,7 @@ export default function VendorExplore({
       </div>
 
       {loading ? (
-        <div role="status" aria-label={t('Ava leder efter leverandører…')} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div role="status" aria-label={t('Juno leder efter leverandører…')} className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[0, 1, 2, 3, 4, 5].map((i) => (
             <div key={i} className="overflow-hidden rounded-2xl border border-line-soft bg-card">
               <Skeleton className="h-40 rounded-none" />
@@ -155,7 +155,7 @@ export default function VendorExplore({
           ))}
         </div>
       ) : failed ? (
-        <ErrorState title={t('Ava kunne ikke søge lige nu')} onRetry={retry}>
+        <ErrorState title={t('Juno kunne ikke søge lige nu')} onRetry={retry}>
           {t('Søgningen gik ikke igennem. Prøv igen om lidt.')}
         </ErrorState>
       ) : visible.length === 0 ? (
@@ -164,7 +164,7 @@ export default function VendorExplore({
           title={t('Ingen leverandører fundet her endnu.')}
           action={<Button variant="secondary" size="sm" icon={RotateCw} onClick={retry}>{t('Søg igen')}</Button>}
         >
-          {t('Ava fandt ingen i nærheden af {area}. Prøv igen, eller bed hende lede bredere.', { area: location })}
+          {t('Juno fandt ingen i nærheden af {area}. Prøv igen, eller bed hende lede bredere.', { area: location })}
         </EmptyState>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -181,9 +181,9 @@ export default function VendorExplore({
         </div>
       )}
 
-      {/* Ask Ava */}
-      <Button variant="secondary" icon={MessageCircle} className="w-full" onClick={() => onNavigate?.('ava')}>
-        {t('Spørg Ava om at finde flere')}
+      {/* Ask Juno */}
+      <Button variant="secondary" icon={MessageCircle} className="w-full" onClick={() => onNavigate?.('juno')}>
+        {t('Spørg Juno om at finde flere')}
       </Button>
     </div>
   );

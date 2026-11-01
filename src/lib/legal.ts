@@ -9,7 +9,7 @@ export const PRIVACY = {
   company: null as string | null,
   cvr: null as string | null,
   address: null as string | null,
-  /** Where people write about their data. Not Ava's outgoing mailbox. */
+  /** Where people write about their data. Not Juno's outgoing mailbox. */
   email: null as string | null,
   /** The Supabase project's region, e.g. "EU (Frankfurt)". */
   databaseRegion: null as string | null,

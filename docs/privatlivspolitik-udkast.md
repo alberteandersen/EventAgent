@@ -9,7 +9,7 @@
 ## 1. Hvem er dataansvarlig?
 
 Kalas, `[UDFYLD: virksomhedsnavn]`, CVR `[UDFYLD]`, `[UDFYLD: adresse]`.
-Kontakt om persondata: `[UDFYLD: e-mail, ikke Avas udgående postkasse]`.
+Kontakt om persondata: `[UDFYLD: e-mail, ikke Junos udgående postkasse]`.
 
 ## 2. Hvilke oplysninger behandler vi?
 
@@ -17,7 +17,7 @@ Kontakt om persondata: `[UDFYLD: e-mail, ikke Avas udgående postkasse]`.
 |---|---|---|
 | Brugeren (parret) | Navn, e-mail, login via Google eller e-mail, sprog | Konto og login |
 | Brugeren | Bryllupsdato, sted, gæstetal, budget, udgifter og betalinger | At planlægge brylluppet |
-| Brugeren | Beskeder til Ava (chat) | At Ava kan svare og udføre opgaver |
+| Brugeren | Beskeder til Juno (chat) | At Juno kan svare og udføre opgaver |
 | Brugeren | Billeder til bryllupshjemmeside og album | At bygge hjemmesiden |
 | Gæster | Navn, e-mail, telefon, relation, husstand, aldersgruppe, bord, svar (RSVP), overnatning | Gæsteliste, invitationer og bordplan |
 | Gæster | **Allergier, diæter og alkoholfri** | Oversigt til køkkenet. **Tjek:** helbredsoplysninger er følsomme data (GDPR art. 9). Hvilket behandlingsgrundlag, og hvem er dataansvarlig for gæstens data: parret, Kalas eller begge? |
@@ -40,8 +40,8 @@ Vi opbevarer ikke kortoplysninger. Betaling sker hos Stripe.
 | Leverandør | Hvad de gør | Hvor | Tjek |
 |---|---|---|---|
 | Supabase | Database, login og filer | `[UDFYLD: projektets region]` | Databehandleraftale |
-| Google (Gemini API) | AI: Ava, tekster, hjemmeside og invitationsdesign | USA/EU | Bruges indhold til træning? Databehandleraftale og overførselsgrundlag |
-| Google (Gmail API) | Kalas' egen postkasse, som Ava skriver fra og læser svar i | USA/EU | Overførselsgrundlag |
+| Google (Gemini API) | AI: Juno, tekster, hjemmeside og invitationsdesign | USA/EU | Bruges indhold til træning? Databehandleraftale og overførselsgrundlag |
+| Google (Gmail API) | Kalas' egen postkasse, som Juno skriver fra og læser svar i | USA/EU | Overførselsgrundlag |
 | Google (Places API) | Opslag af lokaler og leverandører | USA/EU | |
 | Google (login) | Log ind med Google | USA/EU | |
 | Stripe | Betaling for tilvalg (hjemmeside, trykte invitationer) | USA/EU | Selvstændig dataansvarlig for betalingen? |
@@ -70,4 +70,4 @@ Den offentlige hjemmeside og guiden bruger i dag ingen analyse- eller marketingc
 1. Rollefordeling for gæstedata: er parret dataansvarlig og Kalas databehandler, eller er begge dataansvarlige?
 2. Grundlag for allergioplysninger om tredjepersoner, som parret selv indtaster.
 3. Overførsel til USA (Google, Stripe, Netlify, Render): EU-US Data Privacy Framework eller standardkontraktbestemmelser.
-4. Behøver vi vilkår for leverandører, som Ava skriver til, fx en linje i signaturen om behandlingen af deres svar?
+4. Behøver vi vilkår for leverandører, som Juno skriver til, fx en linje i signaturen om behandlingen af deres svar?

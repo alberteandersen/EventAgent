@@ -149,7 +149,7 @@ insert into public.email_replies (
   '2026-07-09T14:00:00+00:00'
 );
 
--- Ava proposal for Brunów reply (awaiting user approval)
+-- Juno proposal for Brunów reply (awaiting user approval)
 insert into public.reply_proposals (
   id, email_reply_id, outbound_email_id, venue_id, event_id, user_id, body, status
 ) values (
@@ -159,7 +159,7 @@ insert into public.reply_proposals (
   '7abc6027-8e40-4432-89be-f10223279307',
   '469f0a20-94e2-49af-8034-525e7ac59e03',
   '1d65b9a8-6f30-404a-83fc-1d47332fad8a',
-  E'Dzień dobry pani Anno,\n\nBardzo dziękujemy za szybką odpowiedź i propozycję terminów. 21 sierpnia 2027 brzmi idealnie dla nas.\n\nCzy moglibyśmy umówić wizytę na 19 lipca? Chcielibyśmy też doprecyzować, co dokładnie obejmuje pakiet weekendowy (catering, bar, koordynator).\n\nZ poważaniem,\nAva, w imieniu f & f',
+  E'Dzień dobry pani Anno,\n\nBardzo dziękujemy za szybką odpowiedź i propozycję terminów. 21 sierpnia 2027 brzmi idealnie dla nas.\n\nCzy moglibyśmy umówić wizytę na 19 lipca? Chcielibyśmy też doprecyzować, co dokładnie obejmuje pakiet weekendowy (catering, bar, koordynator).\n\nZ poważaniem,\nJuno, w imieniu f & f',
   'proposed'
 );
 

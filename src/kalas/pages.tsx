@@ -2,7 +2,7 @@
 
 import { lazy, useEffect } from 'react';
 
-/* Hjem and Ava's panel come with the app; every other page is its own chunk
+/* Hjem and Juno's panel come with the app; every other page is its own chunk
    (the venue hub alone brings the world map, Guides every article). They are
    all fetched while the couple reads Hjem, and a page change is a transition,
    so the page on screen stays until the next one is ready: no loader between

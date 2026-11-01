@@ -42,7 +42,7 @@ export function LandingFooter() {
               kalas
             </Link>
             <p className="mt-3 max-w-[14rem] text-sm leading-relaxed text-velvet-body">
-              Ava planlægger jeres bryllup. I træffer beslutningerne.
+              Juno planlægger jeres bryllup. I træffer beslutningerne.
             </p>
           </div>
 

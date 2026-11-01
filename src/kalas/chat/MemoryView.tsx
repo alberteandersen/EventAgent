@@ -1,13 +1,13 @@
 "use client";
 
-/* What Ava keeps about the couple between conversations, where they can see
+/* What Juno keeps about the couple between conversations, where they can see
    it and take things out. She writes these herself with her remember tool;
    this view only reads and deletes. */
 
 import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { MEMORY_CATEGORIES, type AvaMemoryRow, type MemoryCategory } from '@/lib/db/types';
+import { MEMORY_CATEGORIES, type JunoMemoryRow, type MemoryCategory } from '@/lib/db/types';
 import { useLang } from '../i18n';
 
 const HEADINGS: Record<MemoryCategory, string> = {
@@ -20,7 +20,7 @@ const HEADINGS: Record<MemoryCategory, string> = {
 export default function MemoryView({ eventId }: { eventId: string }) {
   const { t } = useLang();
   const supabase = useMemo(() => createClient(), []);
-  const [memories, setMemories] = useState<AvaMemoryRow[] | null>(null);
+  const [memories, setMemories] = useState<JunoMemoryRow[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,7 +29,7 @@ export default function MemoryView({ eventId }: { eventId: string }) {
       .select('*')
       .eq('event_id', eventId)
       .order('created_at', { ascending: true })
-      .then(({ data }) => { if (!cancelled) setMemories((data ?? []) as AvaMemoryRow[]); });
+      .then(({ data }) => { if (!cancelled) setMemories((data ?? []) as JunoMemoryRow[]); });
     return () => { cancelled = true; };
   }, [supabase, eventId]);
 
@@ -45,7 +45,7 @@ export default function MemoryView({ eventId }: { eventId: string }) {
   if (memories.length === 0) {
     return (
       <p className="px-2 py-10 text-center text-[0.85rem] leading-relaxed text-muted">
-        {t('Ava har ikke gemt noget endnu. Når I fortæller om jeres ønsker og beslutninger, husker hun dem her, også i nye samtaler.')}
+        {t('Juno har ikke gemt noget endnu. Når I fortæller om jeres ønsker og beslutninger, husker hun dem her, også i nye samtaler.')}
       </p>
     );
   }
@@ -53,7 +53,7 @@ export default function MemoryView({ eventId }: { eventId: string }) {
   return (
     <div className="space-y-5 py-3">
       <p className="px-1 text-[0.8rem] leading-relaxed text-muted">
-        {t('Det her ved Ava om jer i alle samtaler. Fjern det, der ikke passer længere.')}
+        {t('Det her ved Juno om jer i alle samtaler. Fjern det, der ikke passer længere.')}
       </p>
       {MEMORY_CATEGORIES.map((c) => {
         const rows = memories.filter((m) => m.category === c);

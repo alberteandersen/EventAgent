@@ -132,7 +132,7 @@ export const functionDeclarations: FunctionDeclaration[] = [
   {
     name: "propose_email_draft",
     description:
-      "Propose the master outreach email for one category of liked vendors. Ava composes an individual email per recipient from this brief and sends them from the Kalas mailbox after the user approves. The body MUST contain the {{venue_name}} placeholder. Set category to match which liked vendors this goes to (venue, florist, photographer, musician, caterer).",
+      "Propose the master outreach email for one category of liked vendors. Juno composes an individual email per recipient from this brief and sends them from the Kalas mailbox after the user approves. The body MUST contain the {{venue_name}} placeholder. Set category to match which liked vendors this goes to (venue, florist, photographer, musician, caterer).",
     parameters: {
       type: Type.OBJECT,
       properties: {

@@ -2,7 +2,7 @@
 
 /* The real Invitationer screen against a fixture wedding. ?vibe=akvarel starts
    with that vibe picked (its sample painting), and &format=7x5 on the
-   landscape card; without a vibe it opens on the vibe gallery. Ava's build and the saves need a signed-in wedding, so
+   landscape card; without a vibe it opens on the vibe gallery. Juno's build and the saves need a signed-in wedding, so
    this is for the look of the builder, not its round trips. */
 
 import { Suspense } from 'react';

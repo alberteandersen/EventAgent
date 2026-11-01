@@ -7,7 +7,7 @@
      ?empty=1            a wedding with nothing in it yet
      ?error=1            the wedding could not be loaded
      ?apifail=1          every call to /api fails (a 500), for the error states
-     ?ava=1              Ava's panel open (a stand-in; /dev/ava-chat has the real chat)
+     ?juno=1              Juno's panel open (a stand-in; /dev/juno-chat has the real chat)
    Calls to /api are answered empty, so screens that fetch show their empty
    state rather than an auth error. */
 
@@ -76,7 +76,7 @@ function Harness() {
   const empty = params.get('empty') === '1';
   const [screen, setScreen] = useState<ScreenId>(() => (params.get('screen') as ScreenId) || 'home');
   useState(() => { patchFetch(); return null; });
-  const [avaOpen, setAvaOpen] = useState(params.get('ava') === '1');
+  const [junoOpen, setJunoOpen] = useState(params.get('juno') === '1');
 
   const fixture = useMemo(() => ({
     guests: empty ? [] : [
@@ -97,7 +97,7 @@ function Harness() {
 
   usePrefetchPages();
   const navigate = (s: NavigateTarget) => {
-    if (s === 'ava') return;
+    if (s === 'juno') return;
     startTransition(() => setScreen(resolveScreenNavigation(s)));
   };
 
@@ -116,13 +116,13 @@ function Harness() {
           <Shell
             current={screen}
             onNavigate={navigate}
-            avaOpen={avaOpen}
-            onAvaOpenChange={setAvaOpen}
-            ava={
-              <div data-testid="ava-standin" className="flex flex-1 flex-col gap-3 p-6">
-                <p className="font-serif text-title text-ink">Ava</p>
+            junoOpen={junoOpen}
+            onJunoOpenChange={setJunoOpen}
+            juno={
+              <div data-testid="juno-standin" className="flex flex-1 flex-col gap-3 p-6">
+                <p className="font-serif text-title text-ink">Juno</p>
                 <p className="text-meta text-muted">Stand-in for the chat.</p>
-                <button type="button" onClick={() => setAvaOpen(false)} className="self-start text-meta text-terracotta">Luk</button>
+                <button type="button" onClick={() => setJunoOpen(false)} className="self-start text-meta text-terracotta">Luk</button>
               </div>
             }
           >

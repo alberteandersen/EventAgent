@@ -1,14 +1,14 @@
 "use client";
 
-/* Harness for Ava's chat panel — the real component, without a session or a
+/* Harness for Juno's chat panel — the real component, without a session or a
    model. Supabase's REST calls for threads, messages and memories are answered
    from the fixtures below, and POST /api/chat streams a scripted turn: two
    tools, one of them slow, then a reply. `?view=new` opens on an empty chat. */
 
 import Shell from '@/kalas/Shell';
-import Ava from '@/kalas/screens/Ava';
+import JunoPanel from '@/kalas/screens/JunoPanel';
 import { LanguageProvider } from '@/kalas/i18n';
-import type { AvaMemoryRow, ChatMessageRow, ChatThreadRow } from '@/lib/db/types';
+import type { JunoMemoryRow, ChatMessageRow, ChatThreadRow } from '@/lib/db/types';
 import { FixtureWedding } from '../_fixture/wedding';
 
 const ago = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
@@ -34,7 +34,7 @@ const MESSAGES: ChatMessageRow[] = [
   },
 ];
 
-const MEMORIES: AvaMemoryRow[] = [
+const MEMORIES: JunoMemoryRow[] = [
   { ...base, id: 'a1', category: 'preference', content: 'Ønsker mange pæoner i buketter og borddekoration', created_at: ago(1), updated_at: ago(1) },
   { ...base, id: 'a2', category: 'preference', content: 'Vil ikke have DJ, kun liveband', created_at: ago(40), updated_at: ago(40) },
   { ...base, id: 'a3', category: 'decision', content: 'Vielsen er i Svendborg Kirke kl. 13', created_at: ago(90), updated_at: ago(90) },
@@ -94,12 +94,12 @@ if (typeof window !== 'undefined' && !(window as { __avaMock?: boolean }).__avaM
   };
 }
 
-export default function DevAvaChatPage() {
+export default function DevJunoChatPage() {
   return (
     <LanguageProvider initialLang="da">
       <FixtureWedding>
         <div className="theme-kalas min-h-screen bg-canvas font-sans text-ink">
-          <Shell current="budget" onNavigate={() => {}} ava={<Ava onClose={() => {}} />} avaOpen>
+          <Shell current="budget" onNavigate={() => {}} juno={<JunoPanel onClose={() => {}} />} junoOpen>
             <div className="p-8"><div className="h-[900px] rounded-[20px] border border-line bg-shell" /></div>
           </Shell>
         </div>

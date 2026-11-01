@@ -6,14 +6,14 @@
 import { Suspense, startTransition, useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
-import { armTour, AVA_OPEN_KEY, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS } from './walkthrough';
+import { armTour, JUNO_OPEN_KEY, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS } from './walkthrough';
 import GuidedTour from './GuidedTour';
 import { WeddingProvider, useWedding } from './useWedding';
 import { LanguageProvider, type Lang } from './i18n';
 import { UndoProvider } from './undo';
 import { ConfirmProvider, PageLoader } from './ui';
 import Home from './screens/Home';
-import Ava from './screens/Ava';
+import JunoPanel from './screens/JunoPanel';
 import type { AgentUiAction } from '@/lib/db/types';
 import { agentActionToScreen, migrateSavedScreen, resolveScreenNavigation, type NavigateTarget } from './lib/hub-nav';
 import { isLegacyHubScreen } from './screens/team/shared';
@@ -44,14 +44,14 @@ function AppInner() {
   const { replies } = useWedding();
   const inboxBadge = replies.filter((r) => !r.read_at).length;
   const [hubTick, setHubTick] = useState(0);
-  // Ava's panel, open or put away, remembered on this device. A couple who
+  // Juno's panel, open or put away, remembered on this device. A couple who
   // used chat mode, as the panel was once a whole mode, keeps it open.
-  const [avaOpen, setAvaOpen] = useState(() => {
-    try { return (localStorage.getItem(AVA_OPEN_KEY) ?? localStorage.getItem('kalas_chat_mode')) === '1'; }
+  const [junoOpen, setJunoOpen] = useState(() => {
+    try { return (localStorage.getItem(JUNO_OPEN_KEY) ?? localStorage.getItem('kalas_chat_mode')) === '1'; }
     catch { return false; }
   });
-  // Bumped on every page Ava opens; on a phone the panel steps aside for it.
-  const [avaSignal, setAvaSignal] = useState(0);
+  // Bumped on every page Juno opens; on a phone the panel steps aside for it.
+  const [junoSignal, setJunoSignal] = useState(0);
   const [screen, setScreen] = useState<ScreenId>(() => {
     // Returning from the website Stripe checkout → land on the builder,
     // which reads and strips the query param itself.
@@ -68,7 +68,7 @@ function AppInner() {
     } catch { /* ignore */ }
     return migrateSavedScreen(sessionStorage.getItem('kalas_screen')) || 'home';
   });
-  // Ava's one-time guided tour, armed by onboarding completion (or
+  // Juno's one-time guided tour, armed by onboarding completion (or
   // `?walkthrough=1` so it can be replayed on demand).
   const [walkthroughActive, setWalkthroughActive] = useState(() => {
     try {
@@ -102,18 +102,18 @@ function AppInner() {
     try { localStorage.setItem(WALKTHROUGH_KEY, String(tourStep)); } catch { /* ignore */ }
   }, [walkthroughActive, tourStep]);
 
-  const setAva = useCallback((open: boolean) => {
-    setAvaOpen(open);
+  const setJuno = useCallback((open: boolean) => {
+    setJunoOpen(open);
     try {
-      localStorage.setItem(AVA_OPEN_KEY, open ? '1' : '0');
+      localStorage.setItem(JUNO_OPEN_KEY, open ? '1' : '0');
       localStorage.removeItem('kalas_chat_mode');
     } catch { /* ignore */ }
   }, []);
 
   const navigate = (s: NavigateTarget) => {
-    if (s === 'ava') {
-      // In-page “talk to Ava” CTAs open her panel.
-      setAva(true);
+    if (s === 'juno') {
+      // In-page “talk to Juno” CTAs open her panel.
+      setJuno(true);
       return;
     }
     const hadDeepLink = isLegacyHubScreen(s)
@@ -138,8 +138,8 @@ function AppInner() {
     window.addEventListener(OPEN_GUIDE_EVENT, onOpenGuide);
     return () => window.removeEventListener(OPEN_GUIDE_EVENT, onOpenGuide);
   }, []);
-  const setAvaRef = useRef(setAva);
-  useEffect(() => { setAvaRef.current = setAva; });
+  const setJunoRef = useRef(setJuno);
+  useEffect(() => { setJunoRef.current = setJuno; });
   const navigatedForStep = useRef<number | null>(null);
   useEffect(() => {
     if (!walkthroughActive) return;
@@ -147,9 +147,9 @@ function AppInner() {
     navigatedForStep.current = tourStep;
     const step = WALKTHROUGH_STEPS[tourStep];
     if (step?.page) navigateRef.current(step.page);
-    /* A step can open or put away Ava's panel: the first one puts it away, so
+    /* A step can open or put away Juno's panel: the first one puts it away, so
        the tour is not explaining a page from behind her. */
-    if (step?.chat !== undefined) setAvaRef.current(step.chat);
+    if (step?.chat !== undefined) setJunoRef.current(step.chat);
   }, [walkthroughActive, tourStep]);
 
   // Agent-fired navigation (streamed `ui` frames).
@@ -159,22 +159,22 @@ function AppInner() {
     if (target === 'team') setHubTick((t) => t + 1);
     sessionStorage.setItem('kalas_screen', target);
     startTransition(() => setScreen(target));
-    setAvaSignal((t) => t + 1);
+    setJunoSignal((t) => t + 1);
   }, []);
 
-  // End of the walkthrough: back to Hjem, with Ava open beside it.
+  // End of the walkthrough: back to Hjem, with Juno open beside it.
   const finishWalkthrough = useCallback(() => {
     try {
       localStorage.removeItem(WALKTHROUGH_KEY);
       localStorage.setItem(WALKTHROUGH_DONE_KEY, '1');
     } catch { /* ignore */ }
     setWalkthroughActive(false);
-    setAva(true);
+    setJuno(true);
     sessionStorage.setItem('kalas_screen', 'home');
     startTransition(() => setScreen('home'));
-  }, [setAva]);
+  }, [setJuno]);
 
-  type AppScreen = Exclude<ScreenId, 'ava'>;
+  type AppScreen = Exclude<ScreenId, 'juno'>;
   const screens: Record<AppScreen, React.ReactNode> = {
     home:        <Home onNavigate={navigate} />,
     team:        <VendorHub key={hubTick} onNavigate={navigate} />,
@@ -190,7 +190,7 @@ function AppInner() {
     guides:      <Guides onNavigate={navigate} />,
   };
 
-  const activeScreen = screen === 'ava' ? 'home' : screen;
+  const activeScreen = screen === 'juno' ? 'home' : screen;
 
   const tour = walkthroughActive ? (
     <GuidedTour
@@ -206,10 +206,10 @@ function AppInner() {
       current={activeScreen}
       onNavigate={navigate}
       inboxBadge={inboxBadge}
-      ava={<Ava onNavigate={navigate} onUiAction={applyUiAction} onClose={() => setAva(false)} />}
-      avaOpen={avaOpen}
-      onAvaOpenChange={setAva}
-      avaSignal={avaSignal}
+      juno={<JunoPanel onNavigate={navigate} onUiAction={applyUiAction} onClose={() => setJuno(false)} />}
+      junoOpen={junoOpen}
+      onJunoOpenChange={setJuno}
+      junoSignal={junoSignal}
     >
       {/* Outside the keyed page, so a page change (a transition) keeps the
           current page up rather than falling back to the loader. */}

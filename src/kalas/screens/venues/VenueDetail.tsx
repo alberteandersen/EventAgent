@@ -8,7 +8,7 @@ import { useLang } from '../../i18n';
 import { type DisplayVenue, imgSrc } from './shared';
 
 /* ══════════════════════════════════════════════════════════════════════
-   VENUE DETAIL PAGE, real data only; Ava research fills the gaps
+   VENUE DETAIL PAGE, real data only; Juno research fills the gaps
 ═══════════════════════════════════════════════════════════════════════ */
 export function VenueDetail({
   venue, allVenues, saved, sent, isBooked, onBack, onSave, onContact, onBook, onSelectOther, onRefresh,
@@ -89,7 +89,7 @@ export function VenueDetail({
                 : 'border border-line-soft bg-white text-ink hover:bg-paper',
             )}>
             {researching ? <Loader2 size={13} className="animate-spin" /> : <BookOpen size={13} />}
-            {researching ? t('Ava researcher…') : research ? t('Opdater research') : t('Research venue')}
+            {researching ? t('Juno researcher…') : research ? t('Opdater research') : t('Research venue')}
           </button>
           <motion.button type="button" whileTap={{ scale: 0.88 }} onClick={onSave}
             className={cn(
@@ -132,7 +132,7 @@ export function VenueDetail({
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center rounded-full bg-sage-wash px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.18em] text-ink">
-            {t('Ava pick')}
+            {t('Juno pick')}
           </span>
           {venue.rating != null && (
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line-soft bg-paper px-3 py-1 text-[0.72rem] font-medium text-ink">
@@ -156,7 +156,7 @@ export function VenueDetail({
 
         {research?.briefing?.length ? (
           <div className="mt-6 rounded-[18px] bg-ink p-6 text-paper">
-            <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Avas briefing')}</p>
+            <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Junos briefing')}</p>
             <ul className="mt-4 space-y-2.5">
               {research.briefing.map((line) => (
                 <li key={line} className="flex items-start gap-3 text-[0.92rem] leading-snug">
@@ -170,13 +170,13 @@ export function VenueDetail({
           <div className="mt-6 flex items-center gap-3 rounded-[18px] border border-line-soft bg-white px-5 py-4">
             <Loader2 size={16} className="shrink-0 animate-spin text-ink" />
             <p className="text-sm leading-relaxed text-muted">
-              {t('Ava researcher venueet, søger på nettet og udfylder kapacitet, priser og praktisk info fra stedets egne sider…')}
+              {t('Juno researcher venueet, søger på nettet og udfylder kapacitet, priser og praktisk info fra stedets egne sider…')}
             </p>
           </div>
         ) : !research ? (
           <div className="mt-6 rounded-[18px] border border-dashed border-line bg-white px-5 py-4">
             <p className="text-sm leading-relaxed text-muted">
-              {t('Ava kunne ikke hente info automatisk. Tryk')}{' '}
+              {t('Juno kunne ikke hente info automatisk. Tryk')}{' '}
               <span className="font-medium text-ink">{t('Research venue')}</span>{' '}
               {t('for at prøve igen.')}
             </p>
@@ -332,7 +332,7 @@ export function VenueDetail({
 
         <div className="mt-8 border-t border-line-soft pt-8">
           <p className="mb-4 text-[0.8rem] text-muted">
-            {t('Ava forbereder en personlig henvendelse og sender den på jeres vegne.')}
+            {t('Juno forbereder en personlig henvendelse og sender den på jeres vegne.')}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             {isBooked ? (
@@ -347,7 +347,7 @@ export function VenueDetail({
                 </button>
                 <button type="button" onClick={onContact} disabled={sent}
                   className="flex h-8 cursor-pointer items-center gap-1.5 rounded-full border border-line-soft bg-white px-3 text-xs font-semibold text-ink hover:bg-paper transition-colors disabled:cursor-default disabled:opacity-60 disabled:hover:bg-white">
-                  {sent ? <><Check size={13} /> {t('Ava har kontaktet stedet')}</> : <><Send size={12} /> {t('Kontakt via Ava')}</>}
+                  {sent ? <><Check size={13} /> {t('Juno har kontaktet stedet')}</> : <><Send size={12} /> {t('Kontakt via Juno')}</>}
                 </button>
               </>
             )}

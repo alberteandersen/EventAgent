@@ -5,7 +5,7 @@ import type { EventRow, InvitationRow, ProfileRow } from "@/lib/db/types";
 
 /**
  * POST /api/invitations — save what the couple's card says (InviteContent,
- * plus their own wording over Ava's). The look is its own record,
+ * plus their own wording over Juno's). The look is its own record,
  * invitation_designs. Body: { id?, data, publish? }. `publish` marks the card
  * as out of their hands: exported for print, which is what the journey's
  * "Send the invites" step and the planning signals read as done.

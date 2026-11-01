@@ -23,7 +23,7 @@ export function ratingScore(rating?: number, reviewCount?: number): number {
 
 export interface RankOptions {
   /** Structured facts, when the caller has them. Scores capacity and budget
-   *  on the same curves the explore page's filter uses, so Ava and the
+   *  on the same curves the explore page's filter uses, so Juno and the
    *  couple rank a venue the same way. */
   facts?: VenueFacts | null;
   /** The couple's venue budget, in local currency. */

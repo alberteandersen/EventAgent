@@ -1,11 +1,11 @@
 /* Text slots: the couple's words in a built site, kept live.
 
-   Ava marks every piece of the couple's own text in the HTML she builds
+   Juno marks every piece of the couple's own text in the HTML she builds
    with data-kalas="text:<key>", holding nothing but that text. The builder
    preview and the public page pour the content as it stands now into those
    elements, so a reworded answer or a moved time shows at once, with no
    rebuild. What text cannot do (a section switched on, a programme row
-   added) still needs Ava; structureKey() is the part of the content that
+   added) still needs Juno; structureKey() is the part of the content that
    decides that.
 
    The values are escaped here: they are the couple's plain text, going into
@@ -43,7 +43,7 @@ const escapeText = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
 /* A slot element with nothing but text inside. Anything with child tags is
-   not a slot we can pour into safely, and is left exactly as Ava wrote it. */
+   not a slot we can pour into safely, and is left exactly as Juno wrote it. */
 const SLOT_RE = /<([a-z][a-z0-9]*)(\s[^>]*?\bdata-kalas="text:([^"]{1,120})"[^>]*)>([^<]*)<\/\1>/gi;
 
 /** The built HTML with every known slot holding the current text. */
@@ -51,7 +51,7 @@ export function fillSlots(html: string, config: SiteConfig): string {
   const values = slotValues(config);
   return html.replace(SLOT_RE, (whole, tag: string, attrs: string, key: string) => {
     const value = values[key];
-    // A slot for a row that is gone keeps its old words until Ava rebuilds.
+    // A slot for a row that is gone keeps its old words until Juno rebuilds.
     if (value === undefined) return whole;
     return `<${tag}${attrs}>${escapeText(value)}</${tag}>`;
   });
@@ -64,7 +64,7 @@ export function slotKeysIn(html: string): Set<string> {
   return keys;
 }
 
-/** What only Ava can change: which sections, which rows, and the few
+/** What only Juno can change: which sections, which rows, and the few
     values she formats herself (a date, a link, the countdown). */
 export function structureKey(config: SiteConfig): string {
   const c = siteContent(config);
@@ -86,9 +86,9 @@ export function buildStamp(config: SiteConfig) {
 type Stamp = { contentKey?: string; structureKey?: string; slots?: boolean };
 
 /**
- * Whether the built site needs Ava to catch up with the content. A build
+ * Whether the built site needs Juno to catch up with the content. A build
  * with slots only does when the shape changed, or when a text it should
- * show has nowhere to go because Ava wrote it without a slot. Older builds
+ * show has nowhere to go because Juno wrote it without a slot. Older builds
  * know only the whole content, so any change counts. A build that recorded
  * nothing cannot tell, and says no rather than guess.
  */

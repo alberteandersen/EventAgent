@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Welcome so Ava's chat opens mid-conversation, matching the app language.
+  // Welcome so Juno's chat opens mid-conversation, matching the app language.
   const firstName = name.split(" ")[0];
   const partnerFirst = partner ? partner.split(" ")[0] : null;
   const names = `${firstName}${partnerFirst ? ` & ${partnerFirst}` : ""}`;
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       ? `your style: "${description.slice(0, 80)}"`
       : `jeres stil: "${description.slice(0, 80)}"`
     : null;
-  /* The first thing the couple ever reads from Ava. It used to be one long
+  /* The first thing the couple ever reads from Juno. It used to be one long
      run-on sentence with their answers comma-joined into the middle of it —
      written out as a short greeting, a bulleted read-back they can check at a
      glance, and one question. RichText in the chat renders the bullets. */
@@ -137,14 +137,14 @@ Skal jeg foreslå et par steder, der passer til jeres dato og antal gæster?`;
 
   const welcome =
     language === "en"
-      ? `Hi ${names}! I'm Ava, your wedding planner.
+      ? `Hi ${names}! I'm Juno, your wedding planner.
 
 Here's what I have so far:
 
 ${bullets}
 
 ${closing}`
-      : `Hej ${names}! Jeg er Ava, jeres bryllupsplanlægger.
+      : `Hej ${names}! Jeg er Juno, jeres bryllupsplanlægger.
 
 Her er hvad jeg har indtil videre:
 

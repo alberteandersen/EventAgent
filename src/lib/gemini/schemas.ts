@@ -24,7 +24,7 @@ export const venueListSchema: Schema = {
             nullable: true,
             description: "One sentence on why this option fits the couple",
           },
-          // Structured facts, so a venue Ava finds is filterable on capacity,
+          // Structured facts, so a venue Juno finds is filterable on capacity,
           // price, catering and accommodation exactly like one the couple
           // found on the explore page.
           ...factsSchemaProps,

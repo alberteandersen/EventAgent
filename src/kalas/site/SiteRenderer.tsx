@@ -2,7 +2,7 @@
 
 /* The real, full-size public wedding site — token-driven. Rendered at
    /w/[slug] (and scaled down as the builder preview) from two inputs:
-   SiteConfig (the couple's content) and SiteDesign (Ava's generated design:
+   SiteConfig (the couple's content) and SiteDesign (Juno's generated design:
    validated palette/typography/layout tokens, see design.ts). Every visual
    decision reads from the design; every interactive piece (RSVP, registry
    claims, countdown) is a coded component with injected handlers. All

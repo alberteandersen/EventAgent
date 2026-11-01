@@ -19,7 +19,7 @@ describe('DEFAULT_CHECKLIST', () => {
   it('covers every area with a meaningful block', () => {
     for (const { id } of CHECKLIST_AREAS) {
       const n = DEFAULT_CHECKLIST.filter((c) => c.area === id).length;
-      // 'ovrigt' is the catch-all for user/Ava additions — seeded empty.
+      // 'ovrigt' is the catch-all for user/Juno additions — seeded empty.
       if (id === 'ovrigt') expect(n).toBe(0);
       else expect(n, `area "${id}" has only ${n} items`).toBeGreaterThanOrEqual(7);
     }
@@ -107,7 +107,7 @@ describe('hasArea', () => {
   it('keeps the wedding day and uncategorised rows off the checklist', () => {
     expect(hasArea({ category: null })).toBe(false);
     expect(hasArea({ category: 'wedding_day' })).toBe(false);
-    // Ava writes free-text categories; those must not pile up under Øvrigt.
+    // Juno writes free-text categories; those must not pile up under Øvrigt.
     expect(hasArea({ category: 'catering' })).toBe(false);
   });
 });

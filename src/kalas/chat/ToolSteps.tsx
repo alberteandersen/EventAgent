@@ -1,6 +1,6 @@
 "use client";
 
-/* What Ava did to produce a reply. While a turn runs, every tool shows up as
+/* What Juno did to produce a reply. While a turn runs, every tool shows up as
    it starts and ticks off when it lands. Once the reply is in, the steps fold
    into one line above it, "3 handlinger", which opens to the list, and each
    step opens to the arguments it got and what it returned. */

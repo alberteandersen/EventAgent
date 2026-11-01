@@ -1,7 +1,7 @@
 "use client";
 
-/* Ava's chat panel. Conversations are threads: the panel opens on the latest
-   one, "Ny" starts another, and the clock lists them all. What Ava does to
+/* Juno's chat panel. Conversations are threads: the panel opens on the latest
+   one, "Ny" starts another, and the clock lists them all. What Juno does to
    answer shows as steps above her reply, live while she works. What she
    remembers across conversations has its own view, so the couple can see it
    and take things out. */
@@ -32,7 +32,7 @@ const SUGGESTIONS = [
   'Hvad husker du om os?',
 ];
 
-export default function Ava({
+export default function JunoPanel({
   onNavigate,
   onUiAction,
   onClose,
@@ -63,7 +63,7 @@ export default function Ava({
   }
 
   return (
-    <AvaChat
+    <JunoChat
       key={event.id}
       eventId={event.id}
       coupleA={couple.a}
@@ -74,7 +74,7 @@ export default function Ava({
   );
 }
 
-function AvaChat({
+function JunoChat({
   eventId,
   coupleA,
   onNavigate,
@@ -168,7 +168,7 @@ function AvaChat({
   // Live messages from elsewhere: the partner, the reply poller, outreach reports.
   useEffect(() => {
     const channel = supabase
-      .channel(`ava-${eventId}`)
+      .channel(`juno-${eventId}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `event_id=eq.${eventId}` },
@@ -222,7 +222,7 @@ function AvaChat({
   const activeThread = threads.find((x) => x.id === activeId);
   const visible = messages.filter((m) => m.role === 'user' || m.role === 'assistant');
   const title = view === 'history' ? t('Samtaler')
-    : view === 'memory' ? t('Ava husker')
+    : view === 'memory' ? t('Juno husker')
     : activeThread?.title || t('Ny samtale');
 
   return (
@@ -238,12 +238,12 @@ function AvaChat({
         )}
         <div className="min-w-0 flex-1">
           <div className="truncate text-[0.9rem] font-semibold leading-tight text-ink">{title}</div>
-          {view === 'chat' && <div className="text-[0.7rem] leading-tight text-muted">Ava</div>}
+          {view === 'chat' && <div className="text-[0.7rem] leading-tight text-muted">Juno</div>}
         </div>
         <IconButton label={t('Tidligere samtaler')} onClick={() => openView('history')} active={view === 'history'} disabled={busy}>
           <History size={17} strokeWidth={1.7} />
         </IconButton>
-        <IconButton label={t('Hvad Ava husker')} onClick={() => openView('memory')} active={view === 'memory'}>
+        <IconButton label={t('Hvad Juno husker')} onClick={() => openView('memory')} active={view === 'memory'}>
           <Brain size={17} strokeWidth={1.7} />
         </IconButton>
         <button
@@ -255,7 +255,7 @@ function AvaChat({
           <Plus size={15} strokeWidth={2.2} /> {t('Ny')}
         </button>
         {onClose && (
-          <IconButton label={t('Luk Ava')} onClick={onClose}>
+          <IconButton label={t('Luk Juno')} onClick={onClose}>
             <X size={17} className="hidden lg:block" />
             <ChevronDown size={19} className="lg:hidden" />
           </IconButton>
@@ -289,7 +289,7 @@ function AvaChat({
           <Composer
             ref={composer}
             busy={busy}
-            placeholder={t('Skriv til Ava, {name}…', { name: coupleA || t('du') })}
+            placeholder={t('Skriv til Juno, {name}…', { name: coupleA || t('du') })}
             onSend={(text) => void sendMessage(text)}
           />
         </div>
@@ -374,7 +374,7 @@ function Messages({
             <ToolSteps calls={liveTools} live />
             <div className="flex items-center gap-2 px-1.5 text-[0.76rem] text-muted">
               <Dots />
-              {liveTools.length === 0 && <span>{t('Ava tænker')}</span>}
+              {liveTools.length === 0 && <span>{t('Juno tænker')}</span>}
             </div>
           </motion.div>
         )}

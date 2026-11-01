@@ -1,4 +1,4 @@
-// Which language Ava writes a vendor in. A venue reads its own language
+// Which language Juno writes a vendor in. A venue reads its own language
 // first, so the local one wins wherever it is unambiguous; English is the
 // fallback for unknown countries and for multilingual ones (Belgium,
 // Switzerland, Luxembourg) where guessing wrong is worse than writing in
@@ -127,7 +127,7 @@ function languageForWebsite(website: string | null | undefined): string | null {
 }
 
 /**
- * The language Ava should write this vendor in: the country on their address
+ * The language Juno should write this vendor in: the country on their address
  * first, then their website's ccTLD, then the couple's event location, and
  * English when nothing points anywhere.
  */

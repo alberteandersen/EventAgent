@@ -1,7 +1,7 @@
 /* The card vibes: stationery styles, not website themes. Each is a palette,
    a set of typefaces and a way of painting, plus a starter design that
    looks finished on its own with the vibe's sample painting. Picking a vibe
-   is free and instant; Ava then paints one of their own from it and sets
+   is free and instant; Juno then paints one of their own from it and sets
    their words for it. */
 
 import type { CardFormat, CardFormatId } from './formats';
@@ -35,7 +35,7 @@ export interface CardVibe {
   art: string;
   /** Bare paper, never painted: the image model will not leave paper
       alone (it adds stains, dots, stray marks), so these ship a paper made
-      by scripts/invite-vibe-art.mts and Ava sets only their type. */
+      by scripts/invite-vibe-art.mts and Juno sets only their type. */
   paper?: boolean;
   /** Flush left, for the vibes drawn that way; centred otherwise. */
   align?: 'center' | 'left';
@@ -63,7 +63,7 @@ function block(role: CardBlock['role'], text: string, gap: number, st: TextStyle
   return { ...st, role, text, gap, ...extra };
 }
 
-/** The type set of a vibe that brings its own blocks; only Ava's defaults read it. */
+/** The type set of a vibe that brings its own blocks; only Juno's defaults read it. */
 const CLASSIC_TYPE: CardVibe['type'] = {
   names: { font: 'cormorant', weight: 400, italic: false, caps: false, tracking: 0, size: 96, stack: false },
   small: { font: 'cormorant', weight: 400, italic: false, caps: true, tracking: 0.16 },
@@ -395,7 +395,7 @@ const WORDING: Record<Language, Record<'eyebrow' | 'invite' | 'closing', string>
   en: { eyebrow: 'Together with their families', invite: 'invite you to join their\nwedding celebration', closing: 'We can’t wait to celebrate with you' },
 };
 
-/** The vibe's own design, before Ava: a sample painting and set wording. */
+/** The vibe's own design, before Juno: a sample painting and set wording. */
 export function starterSpec(vibe: CardVibe, format: CardFormat, language: Language): CardSpec {
   const { type, palette } = vibe;
   const small = (size: number, color: TextStyle['color'] = 'ink'): TextStyle => ({ ...type.small, size, color, lineHeight: 1.45 });

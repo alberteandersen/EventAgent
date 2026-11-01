@@ -1,4 +1,4 @@
-/* The mail Ava sends the couple when vendors write back.
+/* The mail Juno sends the couple when vendors write back.
  *
  * Composition lives here rather than in the notifier so the wording is
  * testable without a Gmail token or a database, and so the two languages stay
@@ -7,11 +7,11 @@
 
 export interface DigestReply {
   vendor: string;
-  /** Ava's one-line reading of the reply (quote.summary), when she made one. */
+  /** Juno's one-line reading of the reply (quote.summary), when she made one. */
   summary: string | null;
   /** Gmail's snippet of the message, the fallback when there is no summary. */
   snippet: string | null;
-  /** Ava has drafted a response that waits for the couple's approval. */
+  /** Juno has drafted a response that waits for the couple's approval. */
   hasProposal: boolean;
 }
 
@@ -46,7 +46,7 @@ function clip(text: string): string {
   return `${flat.slice(0, MAX_LINE - 1).replace(/\s+\S*$/, "")}…`;
 }
 
-/** What to say about one reply: Ava's summary, else the start of the mail. */
+/** What to say about one reply: Juno's summary, else the start of the mail. */
 function gist(reply: DigestReply): string | null {
   const text = reply.summary?.trim() || (reply.snippet ? decodeEntities(reply.snippet) : "");
   return text ? clip(text) : null;
@@ -124,7 +124,7 @@ export function buildReplyDigest({
         inboxUrl,
         "",
         "Warmly,",
-        "Ava",
+        "Juno",
         "",
         `You get these emails when a vendor writes back. Turn them off in Settings: ${settingsUrl}`,
       ].join("\n"),
@@ -152,7 +152,7 @@ export function buildReplyDigest({
       inboxUrl,
       "",
       "Kærlig hilsen",
-      "Ava",
+      "Juno",
       "",
       `Du får disse mails, når en leverandør svarer. Du kan slå dem fra under Indstillinger: ${settingsUrl}`,
     ].join("\n"),

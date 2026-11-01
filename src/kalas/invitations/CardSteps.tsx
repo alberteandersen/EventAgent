@@ -1,12 +1,12 @@
 'use client';
 
 /* The card builder's panel: pick a vibe (the card changes at once, with the
-   vibe's own painting), write what it says, pick the paper, tell Ava how it
+   vibe's own painting), write what it says, pick the paper, tell Juno how it
    should feel, and she paints and sets a card of their own. After that the
    panel is the finished card: change it by asking, step through versions,
    start over, and take it to Canva.
 
-   The open step and the words to Ava belong to the parent screen, so moving
+   The open step and the words to Juno belong to the parent screen, so moving
    around the panel costs the couple nothing. */
 
 import { useEffect, useRef, useState } from 'react';
@@ -68,7 +68,7 @@ export interface CardStepsProps {
   needsPayment: boolean;
   websitePaid: boolean;
   onVibe: (vibe: string, format: CardFormatId) => void;
-  /** Ava paints and sets the card, in `format` when given. */
+  /** Juno paints and sets the card, in `format` when given. */
   onBuild: (brief: string, format?: CardFormatId) => Promise<boolean>;
   onRefine: (instruction: string) => void;
   onActivate: (designId: string) => void;
@@ -94,7 +94,7 @@ export default function CardSteps(props: CardStepsProps) {
   const [showVersions, setShowVersions] = useState(false);
 
   const painted = Boolean(spec?.art.path);
-  // Nothing opened yet: a card Ava made shows as finished, a picked vibe
+  // Nothing opened yet: a card Juno made shows as finished, a picked vibe
   // resumes at the words, and a blank slate starts at the vibes.
   const current: CardStep | null = step ?? (painted ? null : spec ? 'content' : 'vibe');
   const reached = current ? STEPS.findIndex((s) => s.id === current) : STEPS.length;
@@ -124,9 +124,9 @@ export default function CardSteps(props: CardStepsProps) {
           <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-ink">
             <Palette size={18} className="text-canvas" />
           </div>
-          <p className="font-serif text-[1.25rem] text-ink leading-tight">{t('Lås Ava-designeren op')}</p>
+          <p className="font-serif text-[1.25rem] text-ink leading-tight">{t('Lås Juno-designeren op')}</p>
           <p className="mx-auto mt-2 max-w-xs text-[0.82rem] text-muted leading-relaxed">
-            {t('Stemningerne og deres kort er jeres. Når Ava maler et kort kun til jer og ændrer det, er det samme køb som jeres hjemmeside: ét køb låser op for begge.')}
+            {t('Stemningerne og deres kort er jeres. Når Juno maler et kort kun til jer og ændrer det, er det samme køb som jeres hjemmeside: ét køb låser op for begge.')}
           </p>
           <button type="button" onClick={onCheckout}
             className="mt-5 rounded-full bg-ink px-6 py-2.5 text-meta font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
@@ -149,7 +149,7 @@ export default function CardSteps(props: CardStepsProps) {
                 intro={t('Hver stemning har sit eget maleri og sin egen typografi. Kortet til venstre skifter med det samme.')} />
               {painted && (
                 <p className="mt-2 text-[0.75rem] leading-relaxed text-muted">
-                  {t('Kortet Ava malede til jer ligger under Versioner, hvis I skifter.')}
+                  {t('Kortet Juno malede til jer ligger under Versioner, hvis I skifter.')}
                 </p>
               )}
               {VIBE_GROUPS.map((g) => (
@@ -226,7 +226,7 @@ export default function CardSteps(props: CardStepsProps) {
               {painted && (
                 <div className="mt-4 rounded-xl bg-shell px-4 py-3">
                   <p className="text-[0.8rem] leading-relaxed text-ink">
-                    {t('Ava malede kortet til dette format. I et andet format maler hun det om.')}
+                    {t('Juno malede kortet til dette format. I et andet format maler hun det om.')}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {CARD_FORMATS.filter((f) => f.id !== spec.format).map((f) => (
@@ -248,7 +248,7 @@ export default function CardSteps(props: CardStepsProps) {
 
           {current === 'brief' && (
             <>
-              <StepHead title={t('Fortæl Ava, hvordan kortet skal føles')}
+              <StepHead title={t('Fortæl Juno, hvordan kortet skal føles')}
                 intro={t('Hun maler et kort kun til jer i stemningens stil og sætter jeres ord på det. Tryk på en idé, eller skriv selv.')} />
               <div className="mt-5 flex flex-wrap gap-1.5">
                 {IDEAS.map((idea) => {
@@ -264,13 +264,13 @@ export default function CardSteps(props: CardStepsProps) {
                 value={brief}
                 onChange={(e) => onBrief(e.target.value)}
                 rows={4}
-                aria-label={t('Fortæl Ava, hvordan kortet skal føles')}
+                aria-label={t('Fortæl Juno, hvordan kortet skal føles')}
                 placeholder={t('f.eks. Hvide blomster og eukalyptus, lyst og luftigt, navnene i en smuk håndskrift…')}
                 className="mt-3 w-full resize-none rule rounded-xl bg-shell px-4 py-3 text-[0.85rem] leading-relaxed text-ink placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-ink/20"
               />
               <StepNav onBack={() => onStep('format')}>
                 <button type="button" onClick={() => void build()} className={primaryBtn}>
-                  <Palette size={12} /> {painted ? t('Mal kortet igen') : t('Lav kortet med Ava')}
+                  <Palette size={12} /> {painted ? t('Mal kortet igen') : t('Lav kortet med Juno')}
                 </button>
               </StepNav>
             </>
@@ -289,7 +289,7 @@ export default function CardSteps(props: CardStepsProps) {
               </div>
 
               <div className="mt-5 rule-t pt-5">
-                <p className="mb-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted">{t('Fortæl Ava hvad der skal ændres')}</p>
+                <p className="mb-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-muted">{t('Fortæl Juno hvad der skal ændres')}</p>
                 <div className="mt-2 flex gap-2">
                   <input
                     value={instruction}
@@ -460,7 +460,7 @@ function PhotoPicker({ photos, content, onContent, uploading, onUpload }: CardSt
         </button>
       </div>
       <p className="mt-2 text-[0.72rem] leading-relaxed text-muted">
-        {t('Billedet sættes ind som det er: Ava ændrer aldrig jeres billeder. Billederne deles med jeres hjemmeside.')}
+        {t('Billedet sættes ind som det er: Juno ændrer aldrig jeres billeder. Billederne deles med jeres hjemmeside.')}
       </p>
       <input ref={input} type="file" accept="image/*,.heic,.heif" className="hidden"
         onChange={(e) => { if (e.target.files) void onUpload(e.target.files); e.target.value = ''; }} />
@@ -562,9 +562,9 @@ function Waiting({ title }: { title: string }) {
 }
 
 const BUILD_STEPS = [
-  'Ava vælger typografi og farver…',
-  'Ava maler kortet…',
-  'Ava sætter jeres ord…',
+  'Juno vælger typografi og farver…',
+  'Juno maler kortet…',
+  'Juno sætter jeres ord…',
 ] as const;
 
 function BuildProgress({ refine }: { refine: boolean }) {
@@ -578,7 +578,7 @@ function BuildProgress({ refine }: { refine: boolean }) {
     <div className="rule rounded-2xl bg-card p-8 text-center">
       <Loader2 size={26} className="mx-auto animate-spin text-ink" />
       <p className="mt-4 font-serif text-[1.25rem] text-ink">
-        {refine ? t('Ava retter kortet…') : t(BUILD_STEPS[i])}
+        {refine ? t('Juno retter kortet…') : t(BUILD_STEPS[i])}
       </p>
       <p className="mx-auto mt-2 max-w-xs text-[0.82rem] text-muted leading-relaxed">
         {t('Det tager typisk under et minut.')}

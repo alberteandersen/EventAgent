@@ -194,7 +194,7 @@ function SearchResults({
     return (
       <div className="rounded-[28px] border border-line bg-card p-7 text-center">
         <p className="font-semibold text-ink">{t('Ingen resultater for "{q}"', { q: query.trim() })}</p>
-        <p className="mt-1 text-sm text-ink-soft">{t('Prøv et andet ord, eller spørg Ava i chatten.')}</p>
+        <p className="mt-1 text-sm text-ink-soft">{t('Prøv et andet ord, eller spørg Juno i chatten.')}</p>
       </div>
     );
   }

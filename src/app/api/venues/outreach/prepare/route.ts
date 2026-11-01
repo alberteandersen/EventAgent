@@ -7,7 +7,7 @@ import type { EventRow, ProfileRow, VenueRow, EmailDraftRow } from "@/lib/db/typ
  *
  * Prepares (without the chat agent) a single master outreach draft for the
  * couple's listed venues, so the Venues "review & approve" page can show what
- * Ava will send and to whom. Idempotent: if a proposed venue draft already
+ * Juno will send and to whom. Idempotent: if a proposed venue draft already
  * exists it is returned as-is. Approving is the existing
  * POST /api/drafts/[draftId]/approve flow.
  */

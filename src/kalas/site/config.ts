@@ -2,7 +2,7 @@
    (src/kalas/screens/Website.tsx) and the public renderer (SiteRenderer.tsx +
    /w/[slug]). The couple's content persists in wedding_sites.config (JSONB);
    parseConfig() reads that blob into a typed, defaulted SiteConfig. The site's
-   LOOK lives separately in website_designs (see design.ts), Ava generates it.
+   LOOK lives separately in website_designs (see design.ts), Juno generates it.
    `sitePassword` is deliberately NOT part of SiteConfig, it never reaches the
    client. */
 
@@ -93,7 +93,7 @@ export const GALLERY_KEYS: ImageKey[] = ['florals', 'olive', 'candles', 'arch', 
 /** Public-safe, fully-defaulted view of wedding_sites.config (no password). */
 export interface SiteConfig {
   sections: SectionMeta[];
-  /** Sections that get an Ava-generated illustration in the build. */
+  /** Sections that get an Juno-generated illustration in the build. */
   aiImages: SectionId[];
   heroTagline: string; storyText: string; countdown: boolean;
   program: ProgramEvent[];
@@ -150,7 +150,7 @@ export function hasContact(c: GuestContact): boolean {
   return Boolean(c.name.trim() && (c.phone.trim() || c.email.trim()));
 }
 
-/** What Ava builds the site from: the enabled sections she lays out and
+/** What Juno builds the site from: the enabled sections she lays out and
     their texts. The hero and the guest-hub blocks are drawn by Kalas, not
     by her, so they are not hers to render. */
 export function siteContent(config: SiteConfig) {

@@ -4,7 +4,7 @@ import { findPreset } from "@/kalas/site/presets";
 
 /**
  * POST /api/website/design/preset — apply a hand-crafted template as the
- * active design. Instant and free (no AI call); Ava's refinements then
+ * active design. Instant and free (no AI call); Juno's refinements then
  * build on it. Body: { eventId, presetId }.
  */
 export async function POST(request: NextRequest) {

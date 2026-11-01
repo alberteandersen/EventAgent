@@ -1,5 +1,5 @@
 // Email the couple when vendors write back. Runs at the end of every mailbox
-// poll (src/lib/gmail/poll.ts), from the same Kalas mailbox Ava writes to
+// poll (src/lib/gmail/poll.ts), from the same Kalas mailbox Juno writes to
 // vendors from, so it needs no mail provider or secrets of its own.
 //
 // One digest per wedding member per poll. A reply is claimed by setting
@@ -139,9 +139,9 @@ export async function notifyNewReplies(
           to: to.email,
           subject: message.subject,
           body: message.body,
-          fromName: "Ava at Kalas",
+          fromName: "Juno at Kalas",
           fromEmail: mailbox.fromEmail ?? undefined,
-          // Ava's signature is for vendors; the couple already knows her.
+          // Juno's signature is for vendors; the couple already knows her.
           omitSignature: true,
         });
         sent++;

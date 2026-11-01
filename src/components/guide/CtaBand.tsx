@@ -11,10 +11,10 @@ export function CtaBand() {
         />
         <Eyebrow light className="relative">Kalas</Eyebrow>
         <h2 className="relative mx-auto mt-3 max-w-2xl text-[2.4rem] font-semibold leading-[1.05] sm:text-5xl">
-          Lad Ava tage det tunge arbejde
+          Lad Juno tage det tunge arbejde
         </h2>
         <p className="relative mx-auto mt-4 max-w-xl text-[1.0625rem] leading-relaxed text-[#dbe5e0]">
-          Ava finder lokaler, skriver til dem og samler svarene som tilbud, I kan sammenligne. Budget, gæsteliste og
+          Juno finder lokaler, skriver til dem og samler svarene som tilbud, I kan sammenligne. Budget, gæsteliste og
           tjekliste har I samlet ét sted.
         </p>
         <CtaLink light className="relative mt-8">Prøv Kalas gratis</CtaLink>

@@ -15,7 +15,7 @@ import type {
 } from "@/lib/db/types";
 
 /**
- * POST /api/proposals/[proposalId]/send — approve Ava's proposed reply (with
+ * POST /api/proposals/[proposalId]/send — approve Juno's proposed reply (with
  * optional edits) and send it into the vendor's Gmail thread from the Kalas
  * mailbox. Body: { body?: string }.
  */
@@ -65,7 +65,7 @@ export async function POST(
   } catch (err) {
     if (err instanceof GmailNotConnectedError) {
       return Response.json(
-        { error: "outreach_unavailable", message: "Ava's mailbox is unavailable, try again shortly." },
+        { error: "outreach_unavailable", message: "Juno's mailbox is unavailable, try again shortly." },
         { status: 503 }
       );
     }
@@ -82,7 +82,7 @@ export async function POST(
       to: anchor.to_email,
       subject,
       body,
-      fromName: "Ava at Kalas",
+      fromName: "Juno at Kalas",
       fromEmail: platformEmail ?? undefined,
       replyTo,
       threadId: anchor.gmail_thread_id ?? undefined,

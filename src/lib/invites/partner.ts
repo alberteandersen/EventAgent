@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 
 export { isPlausibleEmail } from "./email";
 
-/* The partner invitation Ava sends from the Kalas mailbox.
+/* The partner invitation Juno sends from the Kalas mailbox.
  *
  * Composition lives here rather than in the route so the wording is testable
  * without a Gmail token, and so the two languages stay side by side where a
@@ -58,7 +58,7 @@ export function buildPartnerInvite({
         "You will see the same wedding: the same checklist, budget and guest list, and whatever either of you changes, the other sees straight away.",
         "",
         "Warmly,",
-        "Ava",
+        "Juno",
       ].join("\n"),
     };
   }
@@ -76,7 +76,7 @@ export function buildPartnerInvite({
       "I ser det samme bryllup: den samme tjekliste, det samme budget og den samme gæsteliste, og det én af jer ændrer, ser den anden med det samme.",
       "",
       "Kærlig hilsen",
-      "Ava",
+      "Juno",
     ].join("\n"),
   };
 }

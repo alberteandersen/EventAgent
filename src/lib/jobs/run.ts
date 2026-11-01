@@ -35,7 +35,7 @@ async function loadEvent(supabase: SupabaseClient, eventId: string): Promise<Eve
 
 export const JOB_KINDS = {
   "website.build": {
-    failure: "Ava kunne ikke designe siden lige nu, prøv igen.",
+    failure: "Juno kunne ikke designe siden lige nu, prøv igen.",
     run: async (supabase, { eventId, userId, payload }) => {
       const { row } = await buildSiteHtml({
         supabase, event: await loadEvent(supabase, eventId), userId,
@@ -45,7 +45,7 @@ export const JOB_KINDS = {
     },
   },
   "website.refine": {
-    failure: "Ava kunne ikke justere designet lige nu, prøv igen.",
+    failure: "Juno kunne ikke justere designet lige nu, prøv igen.",
     run: async (supabase, { eventId, userId, payload }) => {
       const { row } = await buildSiteHtml({
         supabase, event: await loadEvent(supabase, eventId), userId,
@@ -56,7 +56,7 @@ export const JOB_KINDS = {
     },
   },
   "invitation.build": {
-    failure: "Ava kunne ikke lave kortet lige nu, prøv igen.",
+    failure: "Juno kunne ikke lave kortet lige nu, prøv igen.",
     run: async (supabase, { eventId, userId, payload }) => {
       const row = await buildCard({
         supabase, event: await loadEvent(supabase, eventId), userId,
@@ -67,7 +67,7 @@ export const JOB_KINDS = {
     },
   },
   "invitation.refine": {
-    failure: "Ava kunne ikke ændre kortet lige nu, prøv igen.",
+    failure: "Juno kunne ikke ændre kortet lige nu, prøv igen.",
     run: async (supabase, { eventId, userId, payload }) => {
       const row = await buildCard({
         supabase, event: await loadEvent(supabase, eventId), userId,

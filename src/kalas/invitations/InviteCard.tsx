@@ -1,6 +1,6 @@
 'use client';
 
-/* The invitation as a vibe draws it, before Ava has built one: the same
+/* The invitation as a vibe draws it, before Juno has built one: the same
    SiteDesign tokens the website's vibes carry, set as a single card. It is
    what the couple sees the moment they tap a vibe, and what a shared link
    shows if they publish without building.

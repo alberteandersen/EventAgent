@@ -15,10 +15,10 @@ export const article: GuideArticle = {
   related: ["hvad-koster-et-bryllup", "find-bryllupslokale", "saadan-bliver-i-gift"],
   kalas: {
     title: "En tjekliste, der ved, hvad der er det næste",
-    body: "Kalas lægger tjeklisten ud fra jeres dato og viser den opgave, der er aktuel nu. Ava tager de tidskrævende dele, fx at skrive til lokaler og samle tilbuddene, mens I træffer beslutningerne.",
+    body: "Kalas lægger tjeklisten ud fra jeres dato og viser den opgave, der er aktuel nu. Juno tager de tidskrævende dele, fx at skrive til lokaler og samle tilbuddene, mens I træffer beslutningerne.",
     points: [
       "Tjekliste og tidslinje lagt ud fra jeres dato",
-      "Ava skriver til lokaler og leverandører for jer",
+      "Juno skriver til lokaler og leverandører for jer",
       "Planlæg sammen med jeres partner",
     ],
     cta: "Start jeres tjekliste",

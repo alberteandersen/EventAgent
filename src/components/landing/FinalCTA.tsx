@@ -26,7 +26,7 @@ export function FinalCTA() {
           <span className="text-accent">så godt som planlagt.</span>
         </h2>
         <p className="mx-auto mt-6 max-w-md text-lg text-velvet-body">
-          Opret en konto, og fortæl Ava om jeres bryllup. Hun kan skrive til
+          Opret en konto, og fortæl Juno om jeres bryllup. Hun kan skrive til
           de første steder allerede i dag.
         </p>
         <Link

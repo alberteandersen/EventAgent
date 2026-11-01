@@ -1,6 +1,6 @@
 "use client";
 
-/* The emotional beat: meet Ava before her feature set. A slow-breathing
+/* The emotional beat: meet Juno before her feature set. A slow-breathing
    orb, layered radial glows + a drifting conic shimmer, above a short
    manifesto. Pure CSS/motion, no assets. */
 
@@ -70,7 +70,7 @@ function Orb() {
   );
 }
 
-export function IntroducingAva() {
+export function IntroducingJuno() {
   return (
     <section className="relative overflow-hidden bg-cream">
       <div className="mx-auto max-w-3xl px-6 py-28 text-center sm:py-36">
@@ -79,7 +79,7 @@ export function IntroducingAva() {
         </BlurFade>
         <BlurFade inView delay={0.15} duration={0.6}>
           <p className="mt-12 text-[11px] font-medium uppercase tracking-[1.5px] text-accent-ink">
-            Mød Ava
+            Mød Juno
           </p>
           <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-6xl">
             Ikke endnu en tjekliste.
@@ -89,7 +89,7 @@ export function IntroducingAva() {
         </BlurFade>
         <BlurFade inView delay={0.3} duration={0.6}>
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-velvet-body sm:text-[17px]">
-            Ava finder rigtige steder, skriver mailene, følger op på svarene,
+            Juno finder rigtige steder, skriver mailene, følger op på svarene,
             sammenligner tilbuddene og holder budget, gæster og hjemmeside i gang:
             det arbejde, en bryllupsplanlægger faktisk gør. I sætter retningen og
             godkender hvert skridt. Intet sker uden jeres ja.

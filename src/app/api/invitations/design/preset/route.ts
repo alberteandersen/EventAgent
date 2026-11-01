@@ -8,7 +8,7 @@ import type { InvitationRow } from "@/lib/db/types";
 /**
  * POST /api/invitations/design/preset — make a vibe, at a paper size, the
  * card's active design: its sample painting and its own typesetting. Free
- * and instant, no AI; Ava's build then starts from it.
+ * and instant, no AI; Juno's build then starts from it.
  * Body: { eventId, vibe, format? }.
  */
 export async function POST(request: NextRequest) {

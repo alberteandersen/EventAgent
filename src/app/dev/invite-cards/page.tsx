@@ -6,7 +6,7 @@
    well on each painting, with long names, in English and landscape, and that
    the exports come out as the screen shows. The query string sets the boxes:
    ?format=7x5&long=1&en=1. ?try=1 shows the card scripts/try-card-design.mts
-   last made with Ava, instead of the vibes. */
+   last made with Juno, instead of the vibes. */
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -52,9 +52,9 @@ function Cards() {
   if (tried) {
     return (
       <div className="theme-kalas min-h-screen bg-canvas px-8 py-12 text-ink">
-        <p className="mb-6 font-serif text-2xl">{tried.conceptName} · Ava</p>
+        <p className="mb-6 font-serif text-2xl">{tried.conceptName} · Juno</p>
         <div className={tried.format === '7x5' ? 'max-w-[760px]' : 'max-w-[520px]'}>
-          <CardView spec={tried} content={content} artUrl={`/invitations/dev-try.png?${tried.conceptName.length}`} title="Ava" />
+          <CardView spec={tried} content={content} artUrl={`/invitations/dev-try.png?${tried.conceptName.length}`} title="Juno" />
         </div>
       </div>
     );

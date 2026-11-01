@@ -1,4 +1,4 @@
-/* The arithmetic behind Ava's budget suggestion — pulled out of the API
+/* The arithmetic behind Juno's budget suggestion — pulled out of the API
  * route so it can be tested without a live Gemini call or a signed-in
  * session. Never trust a model's percentages at face value: this is what
  * turns whatever it returned into something that actually sums to 100 and

@@ -24,7 +24,7 @@ function Gallery() {
     <Page>
       <PageHeader
         title="Venue & leverandører"
-        subtitle="Find, gem og book stederne. Ava skriver til dem for jer."
+        subtitle="Find, gem og book stederne. Juno skriver til dem for jer."
         guide="team"
         actions={<><Button variant="secondary" icon={Users}>Invitér</Button><Button icon={Plus}>Tilføj</Button></>}
       >
@@ -80,7 +80,7 @@ function Gallery() {
       </section>
 
       <EmptyState icon={Inbox} title="Ingen svar endnu" action={<Button variant="secondary">Find steder</Button>}>
-        Når Ava har skrevet til et sted, lander svaret her.
+        Når Juno har skrevet til et sted, lander svaret her.
       </EmptyState>
       <ErrorState onRetry={() => setAnswer('retry')} />
 

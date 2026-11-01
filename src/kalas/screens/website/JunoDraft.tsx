@@ -1,6 +1,6 @@
 "use client";
 
-/* "Skriv med Ava" under a section's text: she drafts, the couple decides.
+/* "Skriv med Juno" under a section's text: she drafts, the couple decides.
    A draft is a suggestion beside their text, never a replacement of it:
    they take it, ask again or close it. The story needs their own answers
    first, since it is the one text only they can know. The FAQ draft only
@@ -21,25 +21,25 @@ async function requestDraft(eventId: string, field: DraftField, extra: { story?:
     body: JSON.stringify({ eventId, field, ...extra }),
   });
   const data = (await res.json().catch(() => ({}))) as Result & { error?: string };
-  if (!res.ok) throw new Error(data.error ?? 'Ava kunne ikke skrive lige nu. Prøv igen.');
+  if (!res.ok) throw new Error(data.error ?? 'Juno kunne ikke skrive lige nu. Prøv igen.');
   return data;
 }
 
-export function AvaWriteButton({ onClick, busy, label }: { onClick: () => void; busy?: boolean; label?: string }) {
+export function JunoWriteButton({ onClick, busy, label }: { onClick: () => void; busy?: boolean; label?: string }) {
   const { t } = useLang();
   return (
     <button type="button" onClick={onClick} disabled={busy}
       className="mb-1.5 flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[0.72rem] text-muted transition-colors hover:bg-shell hover:text-ink disabled:opacity-50 cursor-pointer">
-      {busy ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} {label ?? t('Skriv med Ava')}
+      {busy ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />} {label ?? t('Skriv med Juno')}
     </button>
   );
 }
 
 /* ── One text: welcome line, story, dresscode ─────────────────────────── */
-export function useAvaText({ eventId, field, beforeCall }: {
+export function useJunoText({ eventId, field, beforeCall }: {
   eventId: string | null;
   field: Exclude<DraftField, 'faq'>;
-  /** Save first, so Ava reads the content as it stands. */
+  /** Save first, so Juno reads the content as it stands. */
   beforeCall: () => Promise<unknown>;
 }) {
   const [open, setOpen] = useState(false);
@@ -68,15 +68,15 @@ export function useAvaText({ eventId, field, beforeCall }: {
   return { field, open, busy, draft, error, answers, setAnswers, run, start, close };
 }
 
-export function AvaTextPanel({ state, onUse, hasText }: {
-  state: ReturnType<typeof useAvaText>;
+export function JunoTextPanel({ state, onUse, hasText }: {
+  state: ReturnType<typeof useJunoText>;
   onUse: (text: string) => void;
   /** Whether taking the draft would replace something they wrote. */
   hasText: boolean;
 }) {
   const { t } = useLang();
   const { open, busy, draft, error, answers, setAnswers, run, close } = state;
-  // Only the story stops to ask before Ava writes.
+  // Only the story stops to ask before Juno writes.
   const asking = state.field === 'story' && open && !draft && !busy;
 
   return (
@@ -87,7 +87,7 @@ export function AvaTextPanel({ state, onUse, hasText }: {
           <div className="mt-3 rounded-xl bg-sage-tint/60 px-4 py-3.5">
             <div className="mb-2 flex items-center justify-between gap-2">
               <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ink">
-                <Sparkles size={11} /> {t('Avas forslag')}
+                <Sparkles size={11} /> {t('Junos forslag')}
               </p>
               <button type="button" onClick={close} aria-label={t('Luk')}
                 className="text-muted hover:text-ink transition-colors cursor-pointer"><X size={13} /></button>
@@ -96,7 +96,7 @@ export function AvaTextPanel({ state, onUse, hasText }: {
             {asking && (
               <div className="space-y-2.5">
                 <p className="text-[0.78rem] leading-relaxed text-muted">
-                  {t('Ava skriver kun det, I fortæller hende. Et par ord er nok, spring over hvad I vil.')}
+                  {t('Juno skriver kun det, I fortæller hende. Et par ord er nok, spring over hvad I vil.')}
                 </p>
                 {([
                   ['met', 'Hvordan mødtes I?'],
@@ -118,7 +118,7 @@ export function AvaTextPanel({ state, onUse, hasText }: {
             )}
 
             {busy && (
-              <p className="flex items-center gap-2 text-[0.8rem] text-muted"><Loader2 size={13} className="animate-spin" /> {t('Ava skriver…')}</p>
+              <p className="flex items-center gap-2 text-[0.8rem] text-muted"><Loader2 size={13} className="animate-spin" /> {t('Juno skriver…')}</p>
             )}
             {error && !busy && <p className="text-[0.78rem] text-terracotta">{t(error)}</p>}
 
@@ -145,7 +145,7 @@ export function AvaTextPanel({ state, onUse, hasText }: {
 }
 
 /* ── The FAQ: answers where theirs are blank, and a few new questions ──── */
-export function AvaFaqPanel({ eventId, beforeCall, faq, onUse }: {
+export function JunoFaqPanel({ eventId, beforeCall, faq, onUse }: {
   eventId: string | null;
   beforeCall: () => Promise<unknown>;
   faq: DraftFaqItem[];
@@ -175,7 +175,7 @@ export function AvaFaqPanel({ eventId, beforeCall, faq, onUse }: {
 
   return (
     <>
-      <AvaWriteButton onClick={() => void run()} busy={busy} label={t('Svar med Ava')} />
+      <JunoWriteButton onClick={() => void run()} busy={busy} label={t('Svar med Juno')} />
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
@@ -184,17 +184,17 @@ export function AvaFaqPanel({ eventId, beforeCall, faq, onUse }: {
             <div className="mb-3 rounded-xl bg-sage-tint/60 px-4 py-3.5">
               <div className="mb-2 flex items-center justify-between gap-2">
                 <p className="flex items-center gap-1.5 text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ink">
-                  <Sparkles size={11} /> {t('Avas forslag')}
+                  <Sparkles size={11} /> {t('Junos forslag')}
                 </p>
                 <button type="button" onClick={close} aria-label={t('Luk')}
                   className="text-muted hover:text-ink transition-colors cursor-pointer"><X size={13} /></button>
               </div>
-              {busy && <p className="flex items-center gap-2 text-[0.8rem] text-muted"><Loader2 size={13} className="animate-spin" /> {t('Ava skriver…')}</p>}
+              {busy && <p className="flex items-center gap-2 text-[0.8rem] text-muted"><Loader2 size={13} className="animate-spin" /> {t('Juno skriver…')}</p>}
               {error && !busy && <p className="text-[0.78rem] text-terracotta">{t(error)}</p>}
               {draft && !busy && (
                 <>
                   <p className="mb-2 text-[0.74rem] leading-relaxed text-muted">
-                    {t('Kun svar, Ava kan give ud fra det, I har fortalt Kalas. Jeres egne svar bliver stående.')}
+                    {t('Kun svar, Juno kan give ud fra det, I har fortalt Kalas. Jeres egne svar bliver stående.')}
                   </p>
                   <ul className="space-y-2">
                     {draft.map((d, i) => (

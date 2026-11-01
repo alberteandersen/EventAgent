@@ -2,7 +2,7 @@
    painted artwork, where the words may go, and how each block of words is
    set. It says nothing about what the facts are. Names, date, venue and the
    rest come from the invitation's content at render time, so the card can
-   never disagree with the details, and Ava only decides how they look (and
+   never disagree with the details, and Juno only decides how they look (and
    writes the few lines of wording the couple has not written themselves).
 
    parseCardSpec is the trust boundary for model output and stored JSON:
@@ -40,7 +40,7 @@ export interface PhotoStyle {
 }
 export type BlockRole = (typeof BLOCK_ROLES)[number];
 
-/** Roles whose words Ava (or the vibe) writes; the rest are the couple's facts. */
+/** Roles whose words Juno (or the vibe) writes; the rest are the couple's facts. */
 export const WORDING_ROLES = ['eyebrow', 'invite', 'closing'] as const;
 export type WordingRole = (typeof WORDING_ROLES)[number];
 
@@ -92,9 +92,9 @@ export interface CardSpec {
   conceptName: string;
   palette: { ink: string; accent: string; paper: string };
   art: {
-    /** Storage path (invite-designs bucket) of Ava's painting, or null. */
+    /** Storage path (invite-designs bucket) of Juno's painting, or null. */
     path: string | null;
-    /** The vibe's sample painting (a public URL) until Ava paints one. */
+    /** The vibe's sample painting (a public URL) until Juno paints one. */
     sample: string | null;
   };
   textArea: TextArea;
@@ -139,7 +139,7 @@ function parsePhoto(raw: unknown, d?: PhotoStyle): PhotoStyle {
   };
 }
 
-/** The storage path shape Ava's paintings are saved under; nothing else. */
+/** The storage path shape Juno's paintings are saved under; nothing else. */
 const ART_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\/[0-9a-f-]{36}\.(png|jpg|webp)$/i;
 /** Sample paintings ship with the app. */
 const SAMPLE_URL = /^\/invitations\/vibes\/[a-z0-9-]+\.(png|jpg|webp)$/;

@@ -1,5 +1,5 @@
 // The platform "Kalas" mailbox: one Gmail account all outreach flows through.
-// Ava sends from here, vendors reply here, the poll cron reads here.
+// Juno sends from here, vendors reply here, the poll cron reads here.
 // Tokens live in the single-row platform_gmail_tokens table (service-role only).
 
 import { randomBytes } from "crypto";

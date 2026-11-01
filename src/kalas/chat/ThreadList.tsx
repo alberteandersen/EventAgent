@@ -37,7 +37,7 @@ export default function ThreadList({
   if (!loading && threads.length === 0) {
     return (
       <p className="px-2 py-10 text-center text-[0.85rem] text-muted">
-        {t('Ingen samtaler endnu. Skriv til Ava, så dukker de op her.')}
+        {t('Ingen samtaler endnu. Skriv til Juno, så dukker de op her.')}
       </p>
     );
   }

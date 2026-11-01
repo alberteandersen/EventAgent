@@ -1,6 +1,6 @@
 /* What an invitation says, as opposed to how it looks. The look is a version
-   in invitation_designs (a vibe's tokens, then Ava's HTML); the words live in
-   invitations.data and are the only facts Ava may put on the card. Pure and
+   in invitation_designs (a vibe's tokens, then Juno's HTML); the words live in
+   invitations.data and are the only facts Juno may put on the card. Pure and
    server-safe: the build pipeline and the public page read it too.
 
    Rows saved by the old template editor carry `isoDate` and a free-text

@@ -105,7 +105,7 @@ function Login() {
             {mode === "sign-in" ? t("Log ind") : t("Opret en konto")}
           </h1>
           <p className="mt-3 text-center text-meta text-muted">
-            {t("Planlæg brylluppet med Ava: find steder, hold styr på gæsterne, og få tilbud fra leverandørerne.")}
+            {t("Planlæg brylluppet med Juno: find steder, hold styr på gæsterne, og få tilbud fra leverandørerne.")}
           </p>
 
           <div role="group" className="mt-6 flex rounded-full border border-line p-0.5">

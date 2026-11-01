@@ -120,7 +120,7 @@ export default function VenuePanel({ v, badges, saved, saving, onSave, onClose, 
           {v.why_fit && (
             <div className="mt-3.5 rounded-xl bg-sage-wash px-4 py-3">
               <p className="text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-sage-strong">
-                {t('Avas note')}
+                {t('Junos note')}
               </p>
               <p className="mt-1 font-serif text-[0.95rem] italic leading-snug text-ink">
                 {v.why_fit}

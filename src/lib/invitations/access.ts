@@ -1,4 +1,4 @@
-/* Who may have Ava build an invitation, and how often. The website's
+/* Who may have Juno build an invitation, and how often. The website's
    purchase unlocks both designers; the cap is the website's cost guard. */
 
 import type { SupabaseClient } from "@supabase/supabase-js";

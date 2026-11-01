@@ -12,14 +12,14 @@ describe("buildRawMessage", () => {
         to: "venue@example.com",
         subject: "Re: your wedding",
         body: "hello",
-        fromName: "Ava at Kalas",
+        fromName: "Juno at Kalas",
         fromEmail: "kalas@example.com",
         replyTo: "kalas+abcд1234@example.com".replace("д", "d"),
         inReplyTo: "<msg-1@example.com>",
         references: "<msg-1@example.com>",
       })
     );
-    expect(msg).toContain("From: Ava at Kalas <kalas@example.com>");
+    expect(msg).toContain("From: Juno at Kalas <kalas@example.com>");
     expect(msg).toContain("Reply-To: kalas+abcd1234@example.com");
     expect(msg).toContain("In-Reply-To: <msg-1@example.com>");
     expect(msg).toContain("References: <msg-1@example.com>");
@@ -28,7 +28,7 @@ describe("buildRawMessage", () => {
 
   it("omits the From header when fromEmail is missing", () => {
     const msg = decode(
-      buildRawMessage({ to: "a@b.com", subject: "hi", body: "x", fromName: "Ava" })
+      buildRawMessage({ to: "a@b.com", subject: "hi", body: "x", fromName: "Juno" })
     );
     expect(msg).not.toContain("From:");
   });
@@ -54,7 +54,7 @@ describe("buildRawMessage", () => {
     });
     const [text, html] = parts;
     expect(text).toContain("Har I ledigt?");
-    expect(text).toContain("-- \nAva · Wedding Orchestrator");
+    expect(text).toContain("-- \nJuno · Wedding Orchestrator");
     expect(html).toContain("<p style=\"margin:0 0 12px\">Har I ledigt?</p>");
     expect(html).toContain("Kalas ApS");
   });
@@ -69,9 +69,9 @@ describe("buildRawMessage", () => {
 
 describe("textToHtml", () => {
   it("turns blank-line blocks into paragraphs and single breaks into <br>", () => {
-    expect(textToHtml("Kære kro,\n\nVenlig hilsen\nAva")).toBe(
+    expect(textToHtml("Kære kro,\n\nVenlig hilsen\nJuno")).toBe(
       '<p style="margin:0 0 12px">Kære kro,</p>\n' +
-        '<p style="margin:0 0 12px">Venlig hilsen<br>Ava</p>'
+        '<p style="margin:0 0 12px">Venlig hilsen<br>Juno</p>'
     );
   });
 

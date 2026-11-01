@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
           unit_amount: amountCents,
           product_data: {
             name: "Kalas, AI-designet bryllupshjemmeside",
-            description: "Ava designer jeres personlige hjemmeside, inkl. fjernelse af Kalas-branding.",
+            description: "Juno designer jeres personlige hjemmeside, inkl. fjernelse af Kalas-branding.",
           },
         },
       },

@@ -31,7 +31,7 @@ const features: Feature[] = [
   {
     id: "website",
     title: "En hjemmeside ud fra jeres billeder",
-    body: "Designet af Ava og live på jeres egen kalas.dk-adresse, så snart I udgiver den.",
+    body: "Designet af Juno og live på jeres egen kalas.dk-adresse, så snart I udgiver den.",
     className: "lg:col-span-6",
   },
   {
@@ -42,7 +42,7 @@ const features: Feature[] = [
   },
 ];
 
-export function WhatAvaRuns() {
+export function WhatJunoRuns() {
   return (
     <section className="border-t border-[#D4D6C0] bg-cream">
       <div className="mx-auto max-w-7xl px-6 py-24 sm:py-28">

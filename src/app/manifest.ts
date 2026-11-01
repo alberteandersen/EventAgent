@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Kalas",
     short_name: "Kalas",
-    description: "Jeres bryllup: tjekliste, budget, gæsteliste og Ava.",
+    description: "Jeres bryllup: tjekliste, budget, gæsteliste og Juno.",
     start_url: "/home",
     scope: "/",
     display: "standalone",

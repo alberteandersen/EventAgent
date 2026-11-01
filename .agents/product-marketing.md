@@ -6,21 +6,21 @@
 
 ## Produktet i én sætning
 
-Kalas er en dansk bryllupsplanlægger, hvor man skriver til en assistent — **Ava** — i stedet for
-at udfylde skemaer. Ava søger på nettet efter rigtige lokationer og leverandører, skriver
+Kalas er en dansk bryllupsplanlægger, hvor man skriver til en assistent — **Juno** — i stedet for
+at udfylde skemaer. Juno søger på nettet efter rigtige lokationer og leverandører, skriver
 forespørgsler ud til dem alle på én gang, henter svarene ind fra mailen, trækker priserne ud og
 holder styr på budget, gæsteliste, tidslinje, bryllupsside og bordplan undervejs.
 
 **Kernemekanikken der adskiller den fra alt andet på dansk:** parret godkender én mail, og
-Ava sender en personlig version til hvert sted, overvåger indbakken og lægger et svarforslag klar.
+Juno sender en personlig version til hvert sted, overvåger indbakken og lægger et svarforslag klar.
 Konkurrenterne på det danske marked er kataloger og statiske checklister — de *viser* dig arbejdet.
 Kalas *gør* arbejdet.
 
 ## Navngivning og sprog
 
 - **Kalas** — fra svensk "kalas", en fest. Domæne: `kalas-weddings.com`.
-- **Ava** — assistenten. Omtales som en hun i produktets danske tekster ("Ava gennemgår kontrakten
-  for jer"). Brug altid navnet Ava, aldrig "AI'en", "botten" eller "agenten" i brugervendt tekst.
+- **Juno** — assistenten. Omtales som en hun i produktets danske tekster ("Juno gennemgår kontrakten
+  for jer"). Brug altid navnet Juno, aldrig "AI'en", "botten" eller "agenten" i brugervendt tekst.
 - **Dansk er kildesproget.** Engelsk findes som oversættelse (`src/kalas/strings.ts`). Alt
   marketingmateriale skrives på dansk først.
 - Produktet tiltaler parret som **I/jer**, aldrig "du" — det er to mennesker der planlægger sammen.
@@ -36,7 +36,7 @@ Produktets faktiske stemme, som marketing skal matche:
 Kendetegn:
 - **Rolig og konkret.** Beskriver hvad der sker, ikke hvor fantastisk det er.
 - **Hverdagsdansk.** "siger til før I rammer loftet", ikke "notificerer ved budgetoverskridelse".
-- **Første person, aktiv.** Ava siger "jeg" og "laver arbejdet".
+- **Første person, aktiv.** Juno siger "jeg" og "laver arbejdet".
 - **Ingen udråbstegn, ingen emoji-spam, ingen bryllupsklichéer.** Ikke "jeres store dag ✨",
   ikke "drømmebryllup", ikke "magisk".
 - **Aldrig AI-hype.** Ordene "revolutionerende", "kraftfuld", "problemfri", "game-changer",
@@ -125,7 +125,7 @@ Det er de tre. Resten er grunde til at blive, ikke grunde til at komme.
 ## Regler for alt marketingmateriale
 
 1. **Dansk, og "I/jer" om parret.** Aldrig "du" til et par.
-2. **Ava er navnet.** Ikke "AI-assistenten".
+2. **Juno er navnet.** Ikke "AI-assistenten".
 3. **Ingen internationale tal fremstillet som danske.** Skriv "undersøgelser fra USA og UK peger på"
    eller lad tallet være.
 4. **Ingen bryllupsklichéer og ingen AI-hype.** Se tone of voice.

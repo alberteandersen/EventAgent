@@ -1,8 +1,8 @@
 'use client';
 
-/* Invitationer — a printed card, designed with Ava. Pick a vibe (its own
+/* Invitationer — a printed card, designed with Juno. Pick a vibe (its own
    painting and typography, instantly), write what the card says, pick the
-   paper, tell Ava how it should feel, and she paints and sets a card of
+   paper, tell Juno how it should feel, and she paints and sets a card of
    their own. Change it by asking, step back through versions, and take it
    to Canva as an editable file, or as a print-ready PNG.
 
@@ -88,7 +88,7 @@ export default function Invites() {
     [invitationDesigns],
   );
 
-  // Ava's painting lives in private storage; a member can sign it.
+  // Juno's painting lives in private storage; a member can sign it.
   const supabase = useMemo(() => createClient(), []);
   const [signed, setSigned] = useState<{ path: string; url: string } | null>(null);
   const artPath = spec?.art.path ?? null;
@@ -159,13 +159,13 @@ export default function Invites() {
   const [genError, setGenError] = useState<string | null>(null);
   const [needsPayment, setNeedsPayment] = useState(false);
 
-  /** Resolves true when Ava's card landed and the wedding reloaded. */
-  const callAva = async (path: string, body: Record<string, unknown>, kind: 'generate' | 'refine') => {
+  /** Resolves true when Juno's card landed and the wedding reloaded. */
+  const callJuno = async (path: string, body: Record<string, unknown>, kind: 'generate' | 'refine') => {
     if (!event) return false;
     setWorking(kind);
     setGenError(null);
     try {
-      // Ava reads the saved words, so an edit still waiting to save goes first.
+      // Juno reads the saved words, so an edit still waiting to save goes first.
       if (edits) await saveContent(edits);
       const res = await fetch(path, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -222,7 +222,7 @@ export default function Invites() {
     if (!event || restarting) return;
     if (!(await confirm({
       title: t('Start forfra?'),
-      body: t('Alle versioner af kortet og Avas malerier slettes. Kortets ord beholdes.'),
+      body: t('Alle versioner af kortet og Junos malerier slettes. Kortets ord beholdes.'),
       confirmLabel: t('Start forfra'),
       danger: true,
     }))) return;
@@ -284,7 +284,7 @@ export default function Invites() {
       <div className="px-6 pt-8 sm:px-9 lg:px-12">
         <PageHeader
           title={t('Invitationer')}
-          subtitle={t('Vælg en stemning, skriv jeres ord, og lad Ava male et kort kun til jer. Hent det til Canva, hvor alt kan rettes.')}
+          subtitle={t('Vælg en stemning, skriv jeres ord, og lad Juno male et kort kun til jer. Hent det til Canva, hvor alt kan rettes.')}
           guide="invites"
         />
       </div>
@@ -308,7 +308,7 @@ export default function Invites() {
         </div>
       </div>
 
-      {/* Ava, one step at a time */}
+      {/* Juno, one step at a time */}
       <div className="border-t-[0.5px] border-line px-6 py-10 sm:px-9 lg:border-t-0 lg:py-12">
         <CardSteps
           step={step}
@@ -328,8 +328,8 @@ export default function Invites() {
           needsPayment={needsPayment}
           websitePaid={websitePaid}
           onVibe={(vibe, format) => void applyVibe(vibe, format)}
-          onBuild={(brief, format) => callAva('/api/invitations/design', { styleDirection: brief, format: format ?? spec?.format }, 'generate')}
-          onRefine={(instruction) => void callAva('/api/invitations/design/refine', { instruction }, 'refine')}
+          onBuild={(brief, format) => callJuno('/api/invitations/design', { styleDirection: brief, format: format ?? spec?.format }, 'generate')}
+          onRefine={(instruction) => void callJuno('/api/invitations/design/refine', { instruction }, 'refine')}
           onActivate={(id) => void activate(id)}
           onRestart={() => void restart()}
           onCheckout={() => void checkout()}

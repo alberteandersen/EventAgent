@@ -11,8 +11,8 @@ type Contract = BudgetContractRow & { url?: string | null };
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
 
 /**
- * Contract upload + Ava (Gemini) review for a single budget line, keyed by
- * (eventId, category). Lets the couple upload a PDF/image, shows Ava's
+ * Contract upload + Juno (Gemini) review for a single budget line, keyed by
+ * (eventId, category). Lets the couple upload a PDF/image, shows Juno's
  * structured review, applies suggested actual cost / reminder, and answers
  * follow-up questions about the contract.
  */
@@ -59,7 +59,7 @@ export default function BudgetContractPanel({
       if (!res.ok) throw new Error(d.error);
       setContract((c) => (c ? { ...c, review: d.review } : c));
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('Ava kunne ikke gennemgå kontrakten lige nu'));
+      setError(e instanceof Error ? e.message : t('Juno kunne ikke gennemgå kontrakten lige nu'));
     } finally {
       setBusy('idle');
     }
@@ -108,7 +108,7 @@ export default function BudgetContractPanel({
       if (!res.ok) throw new Error(d.error);
       setAnswer(d.answer ?? '');
     } catch (e) {
-      setError(e instanceof Error ? e.message : t('Ava kunne ikke svare lige nu'));
+      setError(e instanceof Error ? e.message : t('Juno kunne ikke svare lige nu'));
     } finally {
       setBusy('idle');
     }
@@ -121,7 +121,7 @@ export default function BudgetContractPanel({
         <div className="flex items-center justify-between gap-3">
           <span className="flex items-center gap-2 text-[0.8rem] text-muted">
             <ScanText size={14} className="text-sage-strong" />
-            {t('Upload en kontrakt, så gennemgår Ava den for jer')}
+            {t('Upload en kontrakt, så gennemgår Juno den for jer')}
           </span>
           <button
             onClick={() => fileRef.current?.click()}
@@ -150,12 +150,12 @@ export default function BudgetContractPanel({
 
       {busy === 'reviewing' && (
         <p className="mt-3 flex items-center gap-2 text-[0.8rem] text-muted">
-          <Loader2 size={14} className="animate-spin" /> {t('Ava gennemgår kontrakten…')}
+          <Loader2 size={14} className="animate-spin" /> {t('Juno gennemgår kontrakten…')}
         </p>
       )}
       {error && <p className="mt-3 text-[0.8rem] text-terracotta">{error}</p>}
 
-      {/* Ava's review */}
+      {/* Juno's review */}
       {review && (
         <div className="mt-3 space-y-3 rule-t pt-3">
           <p className="text-[0.85rem] leading-relaxed text-ink">{review.summary}</p>
@@ -214,12 +214,12 @@ export default function BudgetContractPanel({
             </div>
           )}
 
-          {/* Ask Ava */}
+          {/* Ask Juno */}
           <div className="rule-t pt-3">
             <div className="flex items-center gap-2">
               <input value={question} onChange={(e) => setQuestion(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') ask(); }}
-                placeholder={t('Spørg Ava om kontrakten…')}
+                placeholder={t('Spørg Juno om kontrakten…')}
                 className="flex-1 rule rounded-lg bg-shell px-3 py-1.5 text-[0.8rem] text-ink placeholder:text-muted/60 focus:outline-none" />
               <button onClick={ask} disabled={busy === 'asking' || !question.trim()} aria-label={t('Spørg')}
                 className="shrink-0 rounded-full bg-ink p-2 text-canvas hover:bg-ink/80 transition-colors cursor-pointer disabled:opacity-50">

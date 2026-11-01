@@ -30,7 +30,7 @@ import { ContentStepNav, ContentStepRow, SectionStatusLine, StaleContentNotice }
 import { BookHeart, Armchair, UserRound } from 'lucide-react';
 import WebsiteSteps, { type DesignStep } from './WebsiteSteps';
 import { builderStart, programFromDay, stableJson, venueLine as lineFor } from '../site/builderStart';
-import { AvaFaqPanel, AvaTextPanel, AvaWriteButton, useAvaText } from './website/AvaDraft';
+import { JunoFaqPanel, JunoTextPanel, JunoWriteButton, useJunoText } from './website/JunoDraft';
 import { mergeFaqDraft } from '@/lib/website/draft';
 import { describeVersions } from '../site/versions';
 import { DesignVersions, versionWhat } from './website/DesignVersions';
@@ -42,14 +42,14 @@ type WTab = 'design' | 'indhold' | 'indstillinger';
 ══════════════════════════════════════════════════════════════════════ */
 export default function Website() {
   const { loading, weddingSite } = useWedding();
-  // Content first: Ava builds from it. Until the couple picks a tab, a site
+  // Content first: Juno builds from it. Until the couple picks a tab, a site
   // that is already built opens on its design instead. Kept out here so a
   // reload of the builder (below) leaves them where they were.
   const [pickedTab, setTab] = useState<WTab | null>(null);
   const [contentStep, setContentStep] = useState(0);
 
   // The builder holds its own copy of the content and saves it as a whole,
-  // so a change made elsewhere (Ava in the chat) would be overwritten by the
+  // so a change made elsewhere (Juno in the chat) would be overwritten by the
   // next keystroke. When the saved content turns into something the builder
   // did not save itself, it starts over from it instead.
   const [ownSave, setOwnSave] = useState<string | null>(null);
@@ -94,7 +94,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
 
   /* Sections */
   const [sections, setSections] = useState<SectionMeta[]>(start.sections);
-  /* Sections that get an Ava-generated illustration in the build. */
+  /* Sections that get an Juno-generated illustration in the build. */
   const [aiImages, setAiImages] = useState<SectionId[]>(start.aiImages);
 
   /* Content */
@@ -127,7 +127,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   // ── Persistence ──────────────────────────────────────────────────────
   // Autosave the config (debounced) as the couple edits. The first save
   // also stores what a new site started from (venue, Bryllupsdagen), so
-  // Ava reads the same content the builder shows.
+  // Juno reads the same content the builder shows.
   const config = useMemo(
     () => ({
       sections, aiImages, heroTagline, storyText, countdown,
@@ -146,13 +146,13 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, domain, published, saveSite]);
 
-  // Ava's drafts read the saved content, so an edit waiting on the
+  // Juno's drafts read the saved content, so an edit waiting on the
   // autosave goes first.
   const flushSave = save;
   const eventId = event?.id ?? null;
-  const avaTagline = useAvaText({ eventId, field: 'heroTagline', beforeCall: flushSave });
-  const avaStory = useAvaText({ eventId, field: 'story', beforeCall: flushSave });
-  const avaDresscode = useAvaText({ eventId, field: 'dresscode', beforeCall: flushSave });
+  const junoTagline = useJunoText({ eventId, field: 'heroTagline', beforeCall: flushSave });
+  const junoStory = useJunoText({ eventId, field: 'story', beforeCall: flushSave });
+  const junoDresscode = useJunoText({ eventId, field: 'dresscode', beforeCall: flushSave });
 
   const toggleSection = (id: SectionId) =>
     setSections((prev) => prev.map((s) => s.id === id && !s.locked ? { ...s, enabled: !s.enabled } : s));
@@ -193,11 +193,11 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   const [genError, setGenError] = useState<string | null>(null);
   const [needsPayment, setNeedsPayment] = useState(false);
 
-  // Where the couple is in the design steps, and what they are telling Ava.
+  // Where the couple is in the design steps, and what they are telling Juno.
   // Kept here because the panel itself unmounts on every tab switch.
   const [designStep, setDesignStep] = useState<DesignStep | null>(null);
   const [briefDraft, setBriefDraft] = useState<string | null>(null);
-  // Until they type, the box holds what they last told Ava: the newest
+  // Until they type, the box holds what they last told Juno: the newest
   // version that carries it (picking a vibe saves a version without).
   const savedBrief = useMemo(
     () => websiteDesigns
@@ -206,13 +206,13 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
     [websiteDesigns]
   );
 
-  /** Resolves true when Ava's change went through and the wedding reloaded. */
+  /** Resolves true when Juno's change went through and the wedding reloaded. */
   const callDesignApi = async (path: string, body: Record<string, unknown>, kind: 'generate' | 'refine' | 'sync') => {
     if (!event) return false;
     setWorking(kind);
     setGenError(null);
     try {
-      // Ava reads the saved content, so an edit still waiting on the
+      // Juno reads the saved content, so an edit still waiting on the
       // autosave must land first.
       await save();
       const res = await fetch(path, {
@@ -244,7 +244,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   const generateDesign = (styleDirection: string) =>
     callDesignApi('/api/website/design', { styleDirection }, 'generate');
   // A change asked for while looking at an earlier version is a change to
-  // that version: it goes live first, and Ava works from it.
+  // that version: it goes live first, and Juno works from it.
   const refineDesign = async (instruction: string) => {
     if (viewing) {
       await activateDesign(viewing.id);
@@ -285,7 +285,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
     if (!event || restarting) return;
     const ok = await confirm({
       title: t('Start forfra?'),
-      body: t('Jeres designs og de billeder, Ava har lavet, slettes. Jeres egne billeder beholdes.'),
+      body: t('Jeres designs og de billeder, Juno har lavet, slettes. Jeres egne billeder beholdes.'),
       confirmLabel: t('Start forfra'),
       danger: true,
     });
@@ -388,7 +388,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
   const statusOf = (id: SectionId) => sectionStatus(id, previewConfig, outlineExtras);
 
   // Rewording flows into a built site through its text slots; a new
-  // section or row needs Ava. Older builds without slots need her for any
+  // section or row needs Juno. Older builds without slots need her for any
   // change, and builds that recorded nothing say nothing (see slots.ts).
   const contentStale = Boolean(
     websiteDesign?.html
@@ -495,10 +495,10 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
         <div className="mt-4">
           <div className="flex items-center justify-between gap-3">
             <Label>{t('Velkomstbesked')}</Label>
-            <AvaWriteButton onClick={avaTagline.start} busy={avaTagline.busy} />
+            <JunoWriteButton onClick={junoTagline.start} busy={junoTagline.busy} />
           </div>
           <Textarea value={heroTagline} onChange={setHeroTagline} rows={2} placeholder={t('Kom og fejr dagen med os')} />
-          <AvaTextPanel state={avaTagline} hasText={Boolean(heroTagline.trim())} onUse={setHeroTagline} />
+          <JunoTextPanel state={junoTagline} hasText={Boolean(heroTagline.trim())} onUse={setHeroTagline} />
         </div>
         <div className="mt-4 flex items-center justify-between">
           <Label>{t('Nedtælling til brylluppet')}</Label>
@@ -509,12 +509,12 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
       case 'story': return card('story', <BookOpen size={15} />, <>
         <div className="flex items-center justify-between gap-3">
           <Label>{t('Jeres historie')}</Label>
-          <AvaWriteButton onClick={avaStory.start} busy={avaStory.busy} />
+          <JunoWriteButton onClick={junoStory.start} busy={junoStory.busy} />
         </div>
         <Textarea value={storyText} onChange={setStoryText} rows={5}
           placeholder={t('Hvordan I mødtes, hvornår I vidste det, og hvad I glæder jer til…')} />
-        <AvaTextPanel state={avaStory} hasText={Boolean(storyText.trim())} onUse={setStoryText} />
-        <p className="mt-2 text-[0.7rem] text-muted">{t('Et par linjer er nok. Ava skriver den ind, som den står.')}</p>
+        <JunoTextPanel state={junoStory} hasText={Boolean(storyText.trim())} onUse={setStoryText} />
+        <p className="mt-2 text-[0.7rem] text-muted">{t('Et par linjer er nok. Juno skriver den ind, som den står.')}</p>
       </>, true);
 
       case 'program': return card('program', <Clock size={15} />, <>
@@ -605,17 +605,17 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
             {t('Brug {venue}', { venue: venueLine })}
           </button>
         )}
-        <p className="mt-2 text-[0.7rem] text-muted">{t('Ava tilføjer automatisk et kort-link til gæsterne.')}</p>
+        <p className="mt-2 text-[0.7rem] text-muted">{t('Juno tilføjer automatisk et kort-link til gæsterne.')}</p>
       </>, true);
 
       case 'dresscode': return card('dresscode', <Eye size={15} />, <>
         <div className="flex items-center justify-between gap-3">
           <Label>{t('Dresscode-tekst')}</Label>
-          <AvaWriteButton onClick={avaDresscode.start} busy={avaDresscode.busy} label={t('Foreslå med Ava')} />
+          <JunoWriteButton onClick={junoDresscode.start} busy={junoDresscode.busy} label={t('Foreslå med Juno')} />
         </div>
         <Textarea value={dresscode} onChange={setDresscode} rows={3}
           placeholder={t('f.eks. Festligt og elegant. Tag gerne flade sko med til plænen.')} />
-        <AvaTextPanel state={avaDresscode} hasText={Boolean(dresscode.trim())} onUse={setDresscode} />
+        <JunoTextPanel state={junoDresscode} hasText={Boolean(dresscode.trim())} onUse={setDresscode} />
       </>, true);
 
       case 'gifts': return card('gifts', <Gift size={15} />, <>
@@ -677,7 +677,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
       case 'faq': return card('faq', <HelpCircle size={15} />, <>
         <div className="flex flex-wrap items-center justify-between gap-x-3">
           <Label>{t('Spørgsmål & svar')}</Label>
-          <AvaFaqPanel eventId={eventId} beforeCall={flushSave} faq={faq}
+          <JunoFaqPanel eventId={eventId} beforeCall={flushSave} faq={faq}
             onUse={(draft) => setFaq((prev) => mergeFaqDraft(prev, draft, (i) => `f${Date.now()}-${i}`))} />
         </div>
         <div className="mt-1 space-y-3">
@@ -758,7 +758,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
       <div className="px-6 pt-8 sm:px-9 lg:px-12">
         <PageHeader
           title={t('Hjemmeside')}
-          subtitle={t('Jeres side til gæsterne, med programmet, svar og ønskelisten. Ava bygger den ud fra det, I skriver her.')}
+          subtitle={t('Jeres side til gæsterne, med programmet, svar og ønskelisten. Juno bygger den ud fra det, I skriver her.')}
           guide="website"
           actions={
             <Button variant={published ? 'secondary' : 'primary'} onClick={() => setPublished((v) => !v)}>
@@ -834,7 +834,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                 published={published} onView={setViewingId} />
             </div>
 
-            {/* Right: Ava, one step at a time */}
+            {/* Right: Juno, one step at a time */}
             <div className="border-t-[0.5px] border-line lg:border-t-0 px-6 py-10 sm:px-9 lg:py-12 overflow-y-auto">
               <WebsiteSteps
                 step={designStep}
@@ -938,7 +938,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                   <p className="mt-3 text-[0.72rem] leading-relaxed text-muted">
                     {contentStale
                       ? t('Jeres tekst vises med det samme. Nye sektioner og punkter kommer med, når I opdaterer.')
-                      : t('Siden, som Ava byggede den, med jeres tekst, som den står nu.')}
+                      : t('Siden, som Juno byggede den, med jeres tekst, som den står nu.')}
                   </p>
                 )}
               </div>
@@ -1069,7 +1069,7 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
                 {!websitePaid && (
                   <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
                     className="mt-4 rule rounded-xl bg-shell px-4 py-3 flex items-center justify-between gap-4">
-                    <p className="text-[0.78rem] text-muted">{t('Branding fjernes når I låser Ava-designeren op')}</p>
+                    <p className="text-[0.78rem] text-muted">{t('Branding fjernes når I låser Juno-designeren op')}</p>
                     <button onClick={() => void startCheckout()}
                       className="shrink-0 rounded-full bg-ink px-4 py-1.5 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
                       {t('Lås op · {price} kr', { price: websitePriceDkk() })}
@@ -1173,7 +1173,7 @@ function SectionCard({
                       <div className="min-w-0">
                         <p className="text-[0.82rem] text-ink">{t('AI-billede')}</p>
                         <p className="text-[0.68rem] text-muted truncate">
-                          {ai.thumb ? t('Genereret, genbruges i næste byg') : t('Ava genererer en illustration til sektionen')}
+                          {ai.thumb ? t('Genereret, genbruges i næste byg') : t('Juno genererer en illustration til sektionen')}
                         </p>
                       </div>
                     </div>

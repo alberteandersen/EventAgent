@@ -12,7 +12,7 @@ import { defaultMilestones } from './planning/milestones';
 import DayProgramTab from './planning/DayProgramTab';
 import { isMilestone, readPlanTab, todayISO, writePlanTab, type PlanTab } from './planning/shared';
 
-const AVA_CELEBRATION = 'Godt klaret. Ava har opdateret jeres fremdrift.';
+const JUNO_CELEBRATION = 'Godt klaret. Juno har opdateret jeres fremdrift.';
 
 const TABS: { id: PlanTab; label: string; Icon: typeof ListChecks }[] = [
   { id: 'planen', label: 'Planen', Icon: ListChecks },
@@ -55,7 +55,7 @@ export default function Planning({ onNavigate }: { onNavigate?: (s: ScreenId) =>
   // Through the shared toaster, so it stacks with a Fortryd toast instead of
   // landing on it, and clears the phone's bottom bar.
   function celebrate(title: string) {
-    showNotice(t(title), t(AVA_CELEBRATION));
+    showNotice(t(title), t(JUNO_CELEBRATION));
   }
 
   if (loading) return <PageLoader />;

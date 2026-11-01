@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-/** POST /api/proposals/[proposalId]/dismiss — drop Ava's proposed reply. */
+/** POST /api/proposals/[proposalId]/dismiss — drop Juno's proposed reply. */
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ proposalId: string }> }

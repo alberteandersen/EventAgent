@@ -47,7 +47,7 @@ export default function FaqPage() {
             Det, par spørger os om
           </h1>
           <p className="mt-4 max-w-2xl text-[1.0625rem] leading-relaxed text-ink-soft">
-            Om Kalas og Ava, og om de ting, næsten alle spørger om, når de planlægger bryllup. Opdateret{" "}
+            Om Kalas og Juno, og om de ting, næsten alle spørger om, når de planlægger bryllup. Opdateret{" "}
             <time dateTime={FAQ_UPDATED}>{formatDate(FAQ_UPDATED)}</time>.
           </p>
           <nav aria-label="Emner" className="mt-6 flex flex-wrap gap-2">

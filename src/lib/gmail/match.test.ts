@@ -11,7 +11,7 @@ const PLATFORM = "events@venli.ai";
 describe("extractReplyTags", () => {
   it("finds a tag in a To header with a display name", () => {
     expect(
-      extractReplyTags(['"Kalas (Ava)" <events+abcd2345@venli.ai>'], PLATFORM)
+      extractReplyTags(['"Kalas (Juno)" <events+abcd2345@venli.ai>'], PLATFORM)
     ).toEqual(["abcd2345"]);
   });
 

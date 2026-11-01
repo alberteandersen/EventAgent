@@ -10,7 +10,7 @@ import { formatDate, statusOf, statusLabel, daysDiff } from './shared';
 export type DisplayTask = {
   id: string;
   title: string;
-  /** Null for check items, and for milestones Ava added without a date. */
+  /** Null for check items, and for milestones Juno added without a date. */
   dateISO: string | null;
   done: boolean;
   weddingDay: boolean;

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { runAgentTurn } from "@/lib/gemini/agent";
-import { AVA_PANEL_CONTEXT, ONBOARDING_KICKOFF_CONTEXT } from "@/lib/gemini/prompts";
+import { JUNO_PANEL_CONTEXT, ONBOARDING_KICKOFF_CONTEXT } from "@/lib/gemini/prompts";
 import { logAgentError } from "@/lib/gemini/log";
 import { loadMemories, memoryContext, threadTitle } from "@/lib/gemini/memory";
 import { planningSnapshot } from "@/lib/gemini/planningTools";
@@ -58,7 +58,7 @@ async function buildReplyContext(
   ].join("\n");
 }
 
-/** Messages of the conversation Ava reads back each turn. */
+/** Messages of the conversation Juno reads back each turn. */
 const HISTORY_LIMIT = 50;
 
 /**
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
     .limit(HISTORY_LIMIT);
   const history = ((historyData ?? []) as ChatMessageRow[]).reverse();
 
-  // What Ava carries between conversations: her memories, the live planning
+  // What Juno carries between conversations: her memories, the live planning
   // numbers and what the couple talked about elsewhere.
   const [memories, snapshot, { data: otherThreadsData }] = await Promise.all([
     loadMemories(supabase, event.id),
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest) {
       otherThreads: (otherThreadsData ?? []) as Pick<ChatThreadRow, "title" | "updated_at">[],
       today: new Date().toISOString().slice(0, 10),
     }),
-    AVA_PANEL_CONTEXT,
+    JUNO_PANEL_CONTEXT,
     kickoff ? ONBOARDING_KICKOFF_CONTEXT : undefined,
     replyContext,
   ]

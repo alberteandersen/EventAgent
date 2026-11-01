@@ -9,7 +9,7 @@ import { graph, organization, softwareApplication, website } from "@/lib/guide/s
 export const metadata = pageMetadata({
   title: "Kalas: AI-bryllupsplanlægger, der finder steder og henter tilbud",
   description:
-    "Ava, bryllupsplanlæggeren i Kalas, finder rigtige steder, skriver til dem på deres eget sprog og gør svarene til tilbud, I kan sammenligne. Gratis at komme i gang.",
+    "Juno, bryllupsplanlæggeren i Kalas, finder rigtige steder, skriver til dem på deres eget sprog og gør svarene til tilbud, I kan sammenligne. Gratis at komme i gang.",
   path: "/",
   og: "kalas",
   locale: "da_DK",

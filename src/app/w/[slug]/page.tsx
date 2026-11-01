@@ -111,7 +111,7 @@ export default async function PublicWeddingSite({
     claimedByItem[c.item_id] = (claimedByItem[c.item_id] ?? 0) + (c.quantity ?? 1);
   }
 
-  // Ava's design + per-request signed URLs. The page is force-dynamic, so
+  // Juno's design + per-request signed URLs. The page is force-dynamic, so
   // 1-hour URLs are always fresh for guests while the bucket stays private.
   const activeDesign = designRow as WebsiteDesignRow | null;
   const design: SiteDesign = activeDesign ? parseSiteDesign(activeDesign.design) : DEFAULT_DESIGN;
@@ -127,7 +127,7 @@ export default async function PublicWeddingSite({
       venue = v as VenueRow | null;
     }
     const urlMap = await urlMapForDesign(activeDesign, photos, venue);
-    // Today's words into Ava's slots, then fresh image URLs.
+    // Today's words into Juno's slots, then fresh image URLs.
     siteHtml = resolveHtml(fillSlots(activeDesign.html, config), urlMap);
     htmlFamilies = familiesInHtml(activeDesign.html, SITE_FONTS.map((f) => f.family));
   }

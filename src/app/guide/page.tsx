@@ -20,8 +20,8 @@ export const metadata = pageMetadata({
   og: "guide",
 });
 
-const AVA_DOES = [
-  { icon: Inbox, title: "Skriver til lokalerne", body: "Ava finder rigtige lokaler og sender jeres forespørgsel til dem, på deres eget sprog." },
+const JUNO_DOES = [
+  { icon: Inbox, title: "Skriver til lokalerne", body: "Juno finder rigtige lokaler og sender jeres forespørgsel til dem, på deres eget sprog." },
   { icon: Wallet, title: "Samler tilbuddene", body: "Svarene bliver til tilbud side om side, og budgettet viser, hvad I har forpligtet jer til." },
   { icon: ListChecks, title: "Holder styr på resten", body: "Tjekliste, gæsteliste, invitationer og bordplan ét sted, delt med jeres partner." },
 ];
@@ -124,19 +124,19 @@ export default function GuideHubPage() {
         <FaqTile />
       </div>
 
-      <section aria-labelledby="ava-titel" className="mx-auto mt-14 w-full max-w-6xl px-4 sm:px-6">
+      <section aria-labelledby="juno-titel" className="mx-auto mt-14 w-full max-w-6xl px-4 sm:px-6">
         <div className="rounded-[28px] border border-line bg-card p-7 sm:p-10">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-xl">
               <Eyebrow>Kalas</Eyebrow>
-              <h2 id="ava-titel" className="mt-3 text-[2.2rem] font-semibold leading-[1.05] text-ink">
-                Guiderne siger, hvad der skal gøres. Ava gør det.
+              <h2 id="juno-titel" className="mt-3 text-[2.2rem] font-semibold leading-[1.05] text-ink">
+                Guiderne siger, hvad der skal gøres. Juno gør det.
               </h2>
             </div>
             <CtaLink className="self-start lg:self-auto">Prøv Kalas gratis</CtaLink>
           </div>
           <ul className="mt-8 grid gap-4 md:grid-cols-3">
-            {AVA_DOES.map(({ icon: Icon, title, body }) => (
+            {JUNO_DOES.map(({ icon: Icon, title, body }) => (
               <li key={title} className="rounded-[22px] bg-shell p-5">
                 <span className="flex size-10 items-center justify-center rounded-full bg-ink text-[#f8f9f8]">
                   <Icon size={18} aria-hidden />

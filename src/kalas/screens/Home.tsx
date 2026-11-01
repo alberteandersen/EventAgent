@@ -28,7 +28,7 @@ const VENUE_FALLBACK_IMG = IMAGES.orangeri;
 
 type CheckStatus = 'completed' | 'in_progress' | 'todo';
 
-/* The two the product is built on: the read-back of what they told Ava, and
+/* The two the product is built on: the read-back of what they told Juno, and
    the date-and-budget that everything else is derived from. */
 const LOCKED_TASKS = ['welcome', 'basics'];
 
@@ -98,19 +98,19 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
   /* The opening list. Research on activation checklists is consistent on four
      points: keep it to about four items, show progress, tie every row to a
      real action, and have the first one already ticked. The couple just told
-     Ava everything about their wedding — starting them at "0 af 5 klaret" is
+     Juno everything about their wedding — starting them at "0 af 5 klaret" is
      throwing that away. */
   const allTasks = useMemo((): ChecklistItem[] => {
     const items: ChecklistItem[] = [
       {
         id: 'welcome',
-        label: t('Fortæl Ava om jeres bryllup'),
+        label: t('Fortæl Juno om jeres bryllup'),
         status: 'completed',
-        screen: 'ava',
+        screen: 'juno',
       },
       /* One row, but the two halves are edited in different places: the total
          is a field on the budget page, the date opens the picker in the hero.
-         Sending both to Ava (as this used to) meant pressing "Vi foreslår kr
+         Sending both to Juno (as this used to) meant pressing "Vi foreslår kr
          200.000" landed you in the chat instead of the budget. */
       !hasBudget
         ? {
@@ -118,7 +118,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
             label: t('Sæt jeres budget'),
             hint: budgetSuggestion > 0
               ? t('Vi foreslår kr {amount}', { amount: kr(budgetSuggestion) })
-              : t('Ava fordeler det på kategorier bagefter'),
+              : t('Juno fordeler det på kategorier bagefter'),
             status: 'in_progress' as CheckStatus,
             screen: 'budget' as NavigateTarget,
           }
@@ -134,7 +134,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
         label: t('Shortlist jeres venues'),
         hint: likedVenues.length > 0
           ? t('{n} af 3 på shortlisten', { n: likedVenues.length })
-          : t('Ava søger på nettet og lægger dem på tavlen'),
+          : t('Juno søger på nettet og lægger dem på tavlen'),
         status: hasChosenVenue || likedVenues.length >= 3
           ? 'completed'
           : likedVenues.length > 0 || venueStage?.status === 'active'
@@ -289,7 +289,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
               {coupleLabel}
             </h1>
             {/* The date is the product's pulse, and it changes — it should be
-                editable where it is shown, not only by asking Ava. */}
+                editable where it is shown, not only by asking Juno. */}
             <div className="relative flex flex-col items-start">
               <button
                 type="button"
@@ -547,7 +547,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
                 ? t('kr {spent} af kr {total} fordelt', { spent: kr(budgetCommitted), total: kr(budgetTotal) })
                 : budgetSuggestion > 0
                   ? t('Brancheestimat for et dansk bryllup. Ret det hele.')
-                  : t('Fortæl Ava jeres gæsteantal, så regner jeg et forslag')
+                  : t('Fortæl Juno jeres gæsteantal, så regner jeg et forslag')
             }
             suggestion={
               /* An empty budget page is wasted space. Open on a real Danish
@@ -584,8 +584,8 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
               likedVenues.length > 0
                 ? t('på shortlisten til gennemgang')
                 : couple.region
-                  ? t('Ava søger steder i {region} på det åbne web', { region: couple.region })
-                  : t('Ava søger steder på det åbne web og verificerer dem')
+                  ? t('Juno søger steder i {region} på det åbne web', { region: couple.region })
+                  : t('Juno søger steder på det åbne web og verificerer dem')
             }
             link={t('Åbn venues →')}
             onClick={() => goHub(likedVenues.length > 0 ? 'shortlist' : 'explore', 'venue')}
@@ -607,7 +607,7 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
       <PhoneBanner />
 
       <p className="pb-4 text-center text-[13px] text-muted">
-        {t('Planlagt med omtanke af {names}, guidet af Ava.', { names: coupleLabel })}
+        {t('Planlagt med omtanke af {names}, guidet af Juno.', { names: coupleLabel })}
       </p>
     </Page>
   );

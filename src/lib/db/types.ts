@@ -68,7 +68,7 @@ export function isAgentPage(value: unknown): value is AgentPage {
 /**
  * A client-side action the agent fires mid-turn. Streamed to the app as an
  * SSE `ui` frame from /api/chat; the client applies it (opens the page beside
- * Ava's panel, and on a phone puts the panel away so the page shows).
+ * Juno's panel, and on a phone puts the panel away so the page shows).
  */
 export interface AgentUiAction {
   kind: "navigate";
@@ -95,12 +95,12 @@ export interface ChatMessageRow {
   role: MessageRole;
   content: string;
   payload: MessagePayload | null;
-  /** The tools Ava ran to produce this reply (assistant rows only). */
+  /** The tools Juno ran to produce this reply (assistant rows only). */
   tool_calls?: ChatToolCall[] | null;
   created_at: string;
 }
 
-/** One tool Ava ran during a turn, as the couple gets to see it. */
+/** One tool Juno ran during a turn, as the couple gets to see it. */
 export interface ChatToolCall {
   /** Stable within the turn, so a live step and its result can be matched. */
   id: string;
@@ -118,7 +118,7 @@ export type ChatToolEvent =
   | { phase: "start"; id: string; name: string; args: Record<string, unknown> }
   | ({ phase: "end" } & ChatToolCall);
 
-/** One conversation with Ava. */
+/** One conversation with Juno. */
 export interface ChatThreadRow {
   id: string;
   event_id: string;
@@ -131,8 +131,8 @@ export interface ChatThreadRow {
 export const MEMORY_CATEGORIES = ["preference", "decision", "fact", "followup"] as const;
 export type MemoryCategory = (typeof MEMORY_CATEGORIES)[number];
 
-/** Something Ava keeps about the couple across conversations. */
-export interface AvaMemoryRow {
+/** Something Juno keeps about the couple across conversations. */
+export interface JunoMemoryRow {
   id: string;
   event_id: string;
   user_id: string;
@@ -336,7 +336,7 @@ export interface ProfileRow {
   onboarded: boolean;
   active_event_id: string | null;
   language: AppLanguage;
-  /** Ava mails this person when a vendor replies (0041). */
+  /** Juno mails this person when a vendor replies (0041). */
   email_notifications: boolean;
   created_at: string;
   updated_at: string;
@@ -370,7 +370,7 @@ export interface InvitationRow {
 }
 
 /** A version of the invitation's design, built the way the website is: a
-    vibe's tokens, then Ava's HTML. One active per wedding (see 0039). */
+    vibe's tokens, then Juno's HTML. One active per wedding (see 0039). */
 export interface InvitationDesignRow {
   id: string;
   event_id: string;
@@ -441,7 +441,7 @@ export interface DayProgramItemRow {
   created_at: string;
 }
 
-/** Ava's structured contract review (Gemini output), stored on budget_contracts.review. */
+/** Juno's structured contract review (Gemini output), stored on budget_contracts.review. */
 export interface ContractReview {
   vendorName?: string;
   totalPrice?: number;

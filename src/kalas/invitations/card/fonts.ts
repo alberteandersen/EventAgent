@@ -1,5 +1,5 @@
 /* The typefaces a card may use. All are Google Fonts that Canva also has, so
-   a card opened in Canva keeps its type instead of falling back. Ava picks
+   a card opened in Canva keeps its type instead of falling back. Juno picks
    from these ids only (the spec parser drops anything else). */
 
 export type CardFontCategory = 'script' | 'serif' | 'sans';

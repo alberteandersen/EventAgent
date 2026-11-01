@@ -8,7 +8,7 @@ import type { EventRow } from "@/lib/db/types";
 export const maxDuration = 120;
 
 /**
- * POST /api/invitations/design — Ava makes the card from the chosen vibe and
+ * POST /api/invitations/design — Juno makes the card from the chosen vibe and
  * their words: designs the type and paints the artwork. Body: { eventId,
  * styleDirection?, format? }; a format other than the card's repaints it.
  * Unlocked by the same purchase as the website designer (402 without it).

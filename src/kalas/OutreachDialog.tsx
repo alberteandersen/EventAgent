@@ -1,6 +1,6 @@
 "use client";
 
-/* Contact ONE vendor. Ava composes the email in the vendor's own language,
+/* Contact ONE vendor. Juno composes the email in the vendor's own language,
    the couple reads and edits it, and only then does it go out, the same
    approve-before-send contract as the bulk flow, minus the batch. */
 
@@ -17,7 +17,7 @@ interface Prepared {
   language: { code: string; name: string; source: string };
 }
 
-/** Danish names for the languages Ava writes in; the English name rides along
+/** Danish names for the languages Juno writes in; the English name rides along
  *  on prepared.language.name, so the badge is localized without a second map. */
 const LANG_DA: Record<string, string> = {
   en: 'engelsk', da: 'dansk', sv: 'svensk', nb: 'norsk', fi: 'finsk',
@@ -32,9 +32,9 @@ const LANG_DA: Record<string, string> = {
  *  API language-agnostic: it returns a stable code, the client translates. */
 const ERROR_BY_CODE: Record<string, string> = {
   no_contact_email:
-    'Ava kunne ikke finde en mailadresse til leverandøren. Tilføj den manuelt og prøv igen.',
-  already_contacted: 'Ava har allerede skrevet til denne leverandør.',
-  outreach_unavailable: 'Avas postkasse er ved at blive sat op, prøv igen om lidt.',
+    'Juno kunne ikke finde en mailadresse til leverandøren. Tilføj den manuelt og prøv igen.',
+  already_contacted: 'Juno har allerede skrevet til denne leverandør.',
+  outreach_unavailable: 'Junos postkasse er ved at blive sat op, prøv igen om lidt.',
 };
 
 export default function OutreachDialog({
@@ -72,7 +72,7 @@ export default function OutreachDialog({
         const data = await res.json();
         if (cancelled) return;
         if (!res.ok) {
-          setError(messageForError(data, 'Ava kunne ikke skrive henvendelsen.'));
+          setError(messageForError(data, 'Juno kunne ikke skrive henvendelsen.'));
           return;
         }
         setPrepared(data as Prepared);
@@ -128,7 +128,7 @@ export default function OutreachDialog({
       // Nothing closes it while the email is on its way.
       onClose={() => { if (!sending) onClose(); }}
       size="lg"
-      eyebrow={t('Ava skriver til')}
+      eyebrow={t('Juno skriver til')}
       title={venueName}
       description={prepared && (
         <span className="mt-1 flex flex-wrap items-center gap-2 text-xs">
@@ -158,7 +158,7 @@ export default function OutreachDialog({
       {!prepared && !error && (
         <div className="space-y-3 py-8 text-center">
           <div className="mx-auto h-1.5 w-24 animate-pulse rounded-full bg-line-soft" />
-          <p className="text-sm text-muted">{t('Ava skriver henvendelsen…')}</p>
+          <p className="text-sm text-muted">{t('Juno skriver henvendelsen…')}</p>
         </div>
       )}
 

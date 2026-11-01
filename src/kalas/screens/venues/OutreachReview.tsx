@@ -8,13 +8,13 @@ import type { EmailDraftRow } from '@/lib/db/types';
 import { type DisplayVenue, imgSrc } from './shared';
 
 /* ══════════════════════════════════════════════════════════════════════
-   OUTREACH REVIEW, "here's what Ava will do & who she'll contact" → approve
+   OUTREACH REVIEW, "here's what Juno will do & who she'll contact" → approve
 ═══════════════════════════════════════════════════════════════════════ */
 export function OutreachReview({
-  recipients, onBack, onApproved, onAva,
+  recipients, onBack, onApproved, onJuno,
 }: {
   recipients: DisplayVenue[];
-  onBack: () => void; onApproved: () => void; onAva: () => void;
+  onBack: () => void; onApproved: () => void; onJuno: () => void;
 }) {
   const { t, tn } = useLang();
   const [draft, setDraft] = useState<EmailDraftRow | null>(null);
@@ -80,10 +80,10 @@ export function OutreachReview({
       </button>
       <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-sage-strong">{t('Trin 3 · Godkend')}</p>
       <h1 className="mt-1 font-serif text-[clamp(1.9rem,4vw,2.4rem)] leading-[1.1] tracking-[-0.02em] text-ink">
-        {tn(recipients.length, 'Ava kontakter {n} venue', 'Ava kontakter {n} venues')}
+        {tn(recipients.length, 'Juno kontakter {n} venue', 'Juno kontakter {n} venues')}
       </h1>
       <p className="mt-2 text-[13px] text-muted">
-        {t('Ava sender en personlig mail til hvert sted fra jeres Kalas-postkasse og samler alle svar under Henvendelser. I godkender her, intet sendes uden.')}
+        {t('Juno sender en personlig mail til hvert sted fra jeres Kalas-postkasse og samler alle svar under Henvendelser. I godkender her, intet sendes uden.')}
       </p>
 
       {/* Recipients */}
@@ -110,12 +110,12 @@ export function OutreachReview({
       {/* Draft preview */}
       <div className="mt-4 rounded-2xl border border-line bg-card p-5">
         <div className="flex items-center justify-between">
-          <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Avas udkast')}</p>
-          <button onClick={onAva} className="text-[0.72rem] font-semibold text-sage-strong hover:underline cursor-pointer">{t('Rediger med Ava')}</button>
+          <p className="text-[0.62rem] font-bold uppercase tracking-[0.18em] text-muted">{t('Junos udkast')}</p>
+          <button onClick={onJuno} className="text-[0.72rem] font-semibold text-sage-strong hover:underline cursor-pointer">{t('Rediger med Juno')}</button>
         </div>
         {preparing ? (
           <div className="flex items-center gap-2.5 py-6 text-ink-soft">
-            <Loader2 size={16} className="animate-spin" /> {t('Ava skriver udkastet…')}
+            <Loader2 size={16} className="animate-spin" /> {t('Juno skriver udkastet…')}
           </div>
         ) : prepError ? (
           <p className="mt-3 rounded-xl bg-shell px-4 py-3 text-[0.85rem] text-ink-soft">{prepError}</p>
@@ -125,7 +125,7 @@ export function OutreachReview({
             <p className="mt-1 text-[0.95rem] font-semibold text-ink">{draft.subject}</p>
             <p className="mt-4 text-[0.68rem] font-bold uppercase tracking-[0.14em] text-muted">{t('Besked')}</p>
             <p className="mt-1 whitespace-pre-wrap text-[0.88rem] leading-relaxed text-ink-soft">{draft.body_template}</p>
-            <p className="mt-3 text-[0.72rem] text-muted">{t('Ava tilpasser hver mail til det enkelte venue før afsendelse.')}</p>
+            <p className="mt-3 text-[0.72rem] text-muted">{t('Juno tilpasser hver mail til det enkelte venue før afsendelse.')}</p>
           </>
         ) : null}
       </div>
@@ -142,7 +142,7 @@ export function OutreachReview({
           className="flex items-center gap-2 rounded-full bg-ink px-7 py-3.5 text-[0.85rem] font-bold text-canvas transition-opacity hover:opacity-90 cursor-pointer disabled:opacity-50"
         >
           {approving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
-          {t('Godkend & lad Ava sende')}
+          {t('Godkend & lad Juno sende')}
         </button>
         <button onClick={onBack}
           className="rounded-full rule bg-canvas px-5 py-3.5 text-[0.85rem] font-medium text-ink hover:bg-card transition-colors cursor-pointer">

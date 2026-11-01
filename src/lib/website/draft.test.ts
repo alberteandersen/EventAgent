@@ -10,7 +10,7 @@ const facts: DraftFacts = {
 };
 
 describe('factsText', () => {
-  it('marks what Kalas does not know, so Ava leaves it alone', () => {
+  it('marks what Kalas does not know, so Juno leaves it alone', () => {
     const text = factsText(facts);
     expect(text).toContain('- Sted: Hindsgavl Slot, Middelfart');
     expect(text).toContain('  15:00 Vielse, Slotskapellet');

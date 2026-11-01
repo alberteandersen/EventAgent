@@ -1,8 +1,8 @@
-/* The couple's site versions, as they would describe them: Ava's first
+/* The couple's site versions, as they would describe them: Juno's first
    build, a change they asked for, new words poured in, or just a template
    they tried. Every build or change is a row in website_designs, newest
    first; this reads what each one was from its brief. Shared by the
-   builder's versions view and Ava's chat tools. */
+   builder's versions view and Juno's chat tools. */
 
 import type { WebsiteDesignRow } from '@/lib/db/types';
 

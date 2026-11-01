@@ -10,7 +10,7 @@ describe('migrateSavedScreen', () => {
   it('opens Hjem for anything that is not a page any more', () => {
     // A tab left on a removed screen would otherwise render nothing at all.
     expect(migrateSavedScreen('inspiration')).toBeNull();
-    expect(migrateSavedScreen('ava')).toBeNull();
+    expect(migrateSavedScreen('juno')).toBeNull();
     expect(migrateSavedScreen('no-such-screen')).toBeNull();
     expect(migrateSavedScreen(null)).toBeNull();
   });

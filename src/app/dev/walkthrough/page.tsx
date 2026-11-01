@@ -40,10 +40,10 @@ export default function DevWalkthroughPage() {
           </div>
 
           <div className="min-w-0 flex-1">
-            {/* Stand-in for the Ava button the Ava step rings. */}
+            {/* Stand-in for the Juno button the Juno step rings. */}
             <button
-              data-tour="ava-chat"
-              onClick={() => note('klik: ava-chat')}
+              data-tour="juno-chat"
+              onClick={() => note('klik: juno-chat')}
               className="mb-4 rounded-full border border-line bg-card px-3 py-1.5 text-xs font-semibold"
             >
               Chat

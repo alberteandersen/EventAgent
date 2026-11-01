@@ -13,27 +13,27 @@ export const FAQ: FaqGroup[] = [
     items: [
       {
         q: "Hvad er Kalas?",
-        a: "Kalas er en bryllupsplanlægger på nettet med en AI-assistent, Ava, der gør arbejdet for jer. Ava finder bryllupslokaler, skriver til dem og samler svarene som tilbud, I kan sammenligne. I samme app har I tjekliste, budget, gæsteliste, invitationer, bordplan, program for dagen og bryllupshjemmeside.",
+        a: "Kalas er en bryllupsplanlægger på nettet med en AI-assistent, Juno, der gør arbejdet for jer. Juno finder bryllupslokaler, skriver til dem og samler svarene som tilbud, I kan sammenligne. I samme app har I tjekliste, budget, gæsteliste, invitationer, bordplan, program for dagen og bryllupshjemmeside.",
       },
       {
-        q: "Hvem er Ava?",
-        a: "Ava er Kalas' AI-assistent. I fortæller hende om jeres bryllup, som I ville fortælle en ven, og hun finder lokaler, skriver forespørgsler, læser svarene og holder styr på, hvad der er det næste. Ava foreslår, og I bestemmer.",
+        q: "Hvem er Juno?",
+        a: "Juno er Kalas' AI-assistent. I fortæller hende om jeres bryllup, som I ville fortælle en ven, og hun finder lokaler, skriver forespørgsler, læser svarene og holder styr på, hvad der er det næste. Juno foreslår, og I bestemmer.",
       },
       {
         q: "Hvad koster Kalas?",
-        a: "Det er gratis at komme i gang, og I skal ikke oplyse et kreditkort. Enkelte tilvalg koster et engangsbeløb, fx at få Ava til at designe jeres bryllupshjemmeside eller at få invitationer trykt. Prisen står tydeligt, før I betaler.",
+        a: "Det er gratis at komme i gang, og I skal ikke oplyse et kreditkort. Enkelte tilvalg koster et engangsbeløb, fx at få Juno til at designe jeres bryllupshjemmeside eller at få invitationer trykt. Prisen står tydeligt, før I betaler.",
       },
       {
-        q: "Sender Ava mails, uden at vi har godkendt dem?",
-        a: "Nej. Ava skriver udkast til forespørgsler og opfølgninger, men intet bliver sendt til et lokale eller en leverandør, før I har godkendt det.",
+        q: "Sender Juno mails, uden at vi har godkendt dem?",
+        a: "Nej. Juno skriver udkast til forespørgsler og opfølgninger, men intet bliver sendt til et lokale eller en leverandør, før I har godkendt det.",
       },
       {
-        q: "Hvem skriver Ava fra, og hvor lander svarene?",
-        a: "Ava skriver fra Kalas' egen mailadresse på jeres vegne, så jeres private indbakke ikke bliver fyldt med tilbud. Svarene lander i indbakken i Kalas, hvor Ava trækker pris, ledige datoer og vilkår ud.",
+        q: "Hvem skriver Juno fra, og hvor lander svarene?",
+        a: "Juno skriver fra Kalas' egen mailadresse på jeres vegne, så jeres private indbakke ikke bliver fyldt med tilbud. Svarene lander i indbakken i Kalas, hvor Juno trækker pris, ledige datoer og vilkår ud.",
       },
       {
         q: "Kan Kalas finde bryllupslokaler i udlandet?",
-        a: "Ja. Ava finder lokaler både i Danmark og i udlandet og skriver til hvert sted på dets eget sprog. Svarene samles som tilbud, så I kan sammenligne et gods på Fyn med en vingård i Toscana. Læs [sådan finder I bryllupslokalet](/guide/find-bryllupslokale).",
+        a: "Ja. Juno finder lokaler både i Danmark og i udlandet og skriver til hvert sted på dets eget sprog. Svarene samles som tilbud, så I kan sammenligne et gods på Fyn med en vingård i Toscana. Læs [sådan finder I bryllupslokalet](/guide/find-bryllupslokale).",
       },
       {
         q: "Kan vi planlægge brylluppet sammen?",
@@ -49,7 +49,7 @@ export const FAQ: FaqGroup[] = [
       },
       {
         q: "Hvilke sprog findes Kalas på?",
-        a: "Kalas findes på dansk og engelsk. Når Ava skriver til lokaler og leverandører i udlandet, skriver hun på deres sprog.",
+        a: "Kalas findes på dansk og engelsk. Når Juno skriver til lokaler og leverandører i udlandet, skriver hun på deres sprog.",
       },
     ],
   },

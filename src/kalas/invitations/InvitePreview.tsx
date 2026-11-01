@@ -1,7 +1,7 @@
 'use client';
 
 /* The card as a guest's phone shows it: a 390×800 screen, scaled into a
-   plain phone frame. Ava's build renders in a sandboxed iframe (no script
+   plain phone frame. Juno's build renders in a sandboxed iframe (no script
    can run in it, as with the website preview); before a build, the vibe's
    token card renders directly. */
 
@@ -15,7 +15,7 @@ const VIEW_W = 390;
 const VIEW_H = 800;
 
 export function InvitePreview({ html, htmlFontsHref, design, content, photoUrl, width = 300, title, thanks }: {
-  /** Ava's build, aliases already resolved; null shows the token card. */
+  /** Juno's build, aliases already resolved; null shows the token card. */
   html: string | null;
   htmlFontsHref: string | null;
   design: SiteDesign;

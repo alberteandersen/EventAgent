@@ -19,7 +19,7 @@ import { buildThankList, thankProgress } from './nygift/thanks';
    took, and looks back.
 
    The menu shows it from a week before an exact date (nygiftInMenu); before
-   that it is only reachable when Ava or a link opens it. Each tab carries its
+   that it is only reachable when Juno or a link opens it. Each tab carries its
    own empty state. */
 export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => void }) {
   const { t, tn } = useLang();
@@ -30,7 +30,7 @@ export default function Nygift({ onNavigate }: { onNavigate?: (s: ScreenId) => v
     buildThankList(guests, registryClaims, registryItems, thankYous)
   );
 
-  /* Ava or a link can open it before the day, so it cannot assume the day
+  /* Juno or a link can open it before the day, so it cannot assume the day
      has been. Once it has, say how long ago: it is the one number here that is only
      theirs, and it quietly dates the to-do list underneath it. */
   const days = daysMarried(event?.event_date ?? couple.dateISO);

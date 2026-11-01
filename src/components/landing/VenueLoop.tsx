@@ -28,7 +28,7 @@ const steps: Step[] = [
         Fortæl hende det som <span className="text-accent">til en ven.</span>
       </>
     ),
-    body: "“35 gæster, ved havet, efteråret 2027” er alt, Ava behøver. Hun finder rigtige steder, der passer, med kontaktoplysninger, anmeldelser og kapacitet, og lægger dem på jeres liste.",
+    body: "“35 gæster, ved havet, efteråret 2027” er alt, Juno behøver. Hun finder rigtige steder, der passer, med kontaktoplysninger, anmeldelser og kapacitet, og lægger dem på jeres liste.",
     tilt: -1.2,
   },
   {
@@ -41,7 +41,7 @@ const steps: Step[] = [
         <span className="text-accent">på dets eget sprog.</span>
       </>
     ),
-    body: "Én godkendt forespørgsel bliver til en personlig mail til hvert sted på jeres liste: dansk til badehotellet, italiensk til villaen, sendt fra Avas egen postkasse. I læser og godkender hver mail, før den går af sted.",
+    body: "Én godkendt forespørgsel bliver til en personlig mail til hvert sted på jeres liste: dansk til badehotellet, italiensk til villaen, sendt fra Junos egen postkasse. I læser og godkender hver mail, før den går af sted.",
     extra: (
       <div className="mt-5 flex flex-wrap items-center gap-2 text-[12px] text-velvet-body">
         {["🇩🇰 Dansk", "🇮🇹 Italiano", "🇫🇷 Français", "🇬🇧 English"].map((l) => (
@@ -67,7 +67,7 @@ const steps: Step[] = [
         <span className="text-accent">tilbud, I kan sammenligne.</span>
       </>
     ),
-    body: "Når stederne svarer, trækker Ava priser, ledige datoer og det, der er inkluderet, ud og stiller dem side om side. Hun skriver et udkast til hvert svar, som I godkender, indtil ét af stederne er jeres.",
+    body: "Når stederne svarer, trækker Juno priser, ledige datoer og det, der er inkluderet, ud og stiller dem side om side. Hun skriver et udkast til hvert svar, som I godkender, indtil ét af stederne er jeres.",
     tilt: -1.4,
   },
 ];

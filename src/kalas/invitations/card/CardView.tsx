@@ -16,7 +16,7 @@ export function CardView({ spec, content, wording, artUrl, photoUrl, photoHint, 
   spec: CardSpec;
   content: InviteContent;
   wording?: CardWording;
-  /** The painting to show: Ava's (signed) or the vibe's sample. */
+  /** The painting to show: Juno's (signed) or the vibe's sample. */
   artUrl: string | null;
   /** The couple's photo, for a card with a photo block. */
   photoUrl?: string | null;

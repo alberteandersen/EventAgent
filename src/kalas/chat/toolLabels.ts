@@ -3,7 +3,7 @@ import {
   PenLine, Search, Store, Users, Wallet, Wrench, type LucideIcon,
 } from 'lucide-react';
 
-/* What each of Ava's tools is called in the chat. The label is Danish source
+/* What each of Juno's tools is called in the chat. The label is Danish source
    text for t(); `detail` picks the one argument worth showing next to it, so
    "Søgte efter leverandører · fotograf" says more than the tool name alone. */
 

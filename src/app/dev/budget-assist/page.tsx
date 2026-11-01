@@ -1,6 +1,6 @@
 "use client";
 
-/* Harness for BudgetAvaAssistant — the modal Ava opens with a real
+/* Harness for BudgetJunoAssistant — the modal Juno opens with a real
    recommendation. Fetch is stubbed so the loading/ready/error states and the
    apply action can all be checked without a live Gemini call or a signed-in
    session; the API route's own arithmetic is covered separately by
@@ -8,7 +8,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { LanguageProvider } from '@/kalas/i18n';
-import BudgetAvaAssistant from '@/kalas/screens/BudgetAvaAssistant';
+import BudgetJunoAssistant from '@/kalas/screens/BudgetJunoAssistant';
 
 const SAMPLE = {
   headline: 'Med 225.000 kr og 80 gæster på Fyn er der plads til et rigtigt godt sted uden at gå på kompromis med maden.',
@@ -56,7 +56,7 @@ export default function DevBudgetAssistPage() {
         const current = modeRef.current;
         if (current === 'slow') await new Promise((r) => setTimeout(r, 60000));
         if (current === 'error') {
-          return new Response(JSON.stringify({ error: 'Ava kunne ikke regne på budgettet lige nu.' }), { status: 500 });
+          return new Response(JSON.stringify({ error: 'Juno kunne ikke regne på budgettet lige nu.' }), { status: 500 });
         }
         return new Response(JSON.stringify(SAMPLE), { status: 200 });
       }
@@ -71,7 +71,7 @@ export default function DevBudgetAssistPage() {
   return (
     <LanguageProvider initialLang="da">
       <div className="theme-kalas min-h-screen bg-canvas p-8 text-ink">
-        <p className="eyebrow mb-4">Dev · BudgetAvaAssistant</p>
+        <p className="eyebrow mb-4">Dev · BudgetJunoAssistant</p>
         <div className="flex gap-2">
           {(['ready', 'error', 'slow'] as Mode[]).map((m) => (
             <button
@@ -87,7 +87,7 @@ export default function DevBudgetAssistPage() {
         <pre className="mt-6 text-[12px] text-ink-soft">{log.join('\n') || 'ingen handling endnu'}</pre>
 
         {stubbed && open && (
-          <BudgetAvaAssistant
+          <BudgetJunoAssistant
             eventId="dev-event"
             guests={80}
             region="Fyn"

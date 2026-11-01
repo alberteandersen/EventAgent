@@ -61,7 +61,7 @@ Har I ledigt på datoen, og kan I fortælle lidt om jeres muligheder, pakker og 
 Mange tak på forhånd.
 
 Kærlig hilsen
-Ava, på vegne af parret`,
+Juno, på vegne af parret`,
     draftId: null,
   };
 }
@@ -77,7 +77,7 @@ export async function generateBrief(
   const guests = event.guest_count ?? undefined;
   const noun = CATEGORY_DA[category] ?? CATEGORY_DA.other;
   const prompt = `
-You are Ava, a warm, professional wedding planning assistant writing on behalf of a couple.
+You are Juno, a warm, professional wedding planning assistant writing on behalf of a couple.
 Write ONE reusable outreach email (Danish) to a ${noun} asking about availability and pricing.
 
 Couple / event context:
@@ -90,7 +90,7 @@ Couple / event context:
 Requirements:
 - The body MUST address the recipient with the literal placeholder {{venue_name}} (it is substituted per recipient).
 - Warm but concise; introduce the couple briefly, state date + guest count, and ask about availability, what they offer, pricing, and next steps.
-- Sign off as "Ava, på vegne af parret" (do not invent names/emails).
+- Sign off as "Juno, på vegne af parret" (do not invent names/emails).
 - subject: a short, clear subject line (may reference the date/guest count).
 - body_template: the full email body in Danish, plain text, including the {{venue_name}} placeholder near the greeting.
 `.trim();

@@ -15,7 +15,7 @@ export const article: GuideArticle = {
   related: ["find-bryllupslokale", "gaesteliste-til-bryllup", "bryllup-tjekliste"],
   kalas: {
     title: "Et budget, der fører sig selv",
-    body: "I Kalas lander tilbud og depositummer under den rigtige post, og I krydser af, når noget er betalt. Når Ava henter tilbud fra lokaler, står priserne side om side på samme vilkår, så I kan se, hvad I reelt får for pengene.",
+    body: "I Kalas lander tilbud og depositummer under den rigtige post, og I krydser af, når noget er betalt. Når Juno henter tilbud fra lokaler, står priserne side om side på samme vilkår, så I kan se, hvad I reelt får for pengene.",
     points: [
       "Tilbud og depositum lander under den rigtige post",
       "Kryds af, når noget er betalt",

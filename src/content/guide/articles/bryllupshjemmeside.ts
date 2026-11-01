@@ -17,7 +17,7 @@ export const article: GuideArticle = {
     title: "En hjemmeside ud fra jeres egne billeder",
     body: "Kalas bygger jeres bryllupshjemmeside ud fra jeres billeder og oplysninger. Gæsterne kan svare, finde deres plads ved bordet og skrive i gæstebogen, og siden er skjult for søgemaskiner fra start.",
     points: [
-      "Ava designer siden ud fra jeres billeder",
+      "Juno designer siden ud fra jeres billeder",
       "Svar, bordplan og gæstebog til gæsterne",
       "Skjult for søgemaskiner fra start",
     ],

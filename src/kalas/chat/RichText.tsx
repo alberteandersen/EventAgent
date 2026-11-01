@@ -1,12 +1,12 @@
 "use client";
 
-/* Ava's messages, rendered as something you can skim.
+/* Juno's messages, rendered as something you can skim.
  *
  * The bubble used to be `whitespace-pre-line` and nothing else, so a reply
  * listing four things arrived as one unbroken block of text. This turns the
  * plain text Gemini already writes into structure: blank line = paragraph,
  * lines starting with "-" or "•" = a list, **…** = bold. Deliberately not a
- * markdown library — Ava writes prose, not documents, and a full parser would
+ * markdown library — Juno writes prose, not documents, and a full parser would
  * bring headings, tables and code blocks that have no place in a chat bubble.
  */
 

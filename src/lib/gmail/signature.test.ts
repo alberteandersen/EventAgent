@@ -3,14 +3,14 @@ import { appendSignature, kalasSignatureHtml, KALAS_SIGNATURE } from "./signatur
 
 describe("appendSignature", () => {
   it("appends the block after a blank line", () => {
-    const out = appendSignature("Kære kro,\n\nHar I ledigt?\n\nVenlig hilsen\nAva");
+    const out = appendSignature("Kære kro,\n\nHar I ledigt?\n\nVenlig hilsen\nJuno");
     expect(out).toBe(
-      "Kære kro,\n\nHar I ledigt?\n\nVenlig hilsen\nAva\n\n" + KALAS_SIGNATURE
+      "Kære kro,\n\nHar I ledigt?\n\nVenlig hilsen\nJuno\n\n" + KALAS_SIGNATURE
     );
   });
 
   it("uses the RFC 3676 delimiter so clients fold it away", () => {
-    expect(appendSignature("hi")).toContain("\n-- \nAva · Wedding Orchestrator");
+    expect(appendSignature("hi")).toContain("\n-- \nJuno · Wedding Orchestrator");
   });
 
   it("is idempotent, a re-sent draft never stacks two copies", () => {
@@ -26,7 +26,7 @@ describe("appendSignature", () => {
 describe("kalasSignatureHtml", () => {
   it("renders the identity block", () => {
     const html = kalasSignatureHtml("https://cdn.example.com/k.png");
-    expect(html).toContain("Ava");
+    expect(html).toContain("Juno");
     expect(html).toContain("Wedding Orchestrator<br>Kalas ApS");
     expect(html).toContain('href="https://kalas-weddings.com"');
   });

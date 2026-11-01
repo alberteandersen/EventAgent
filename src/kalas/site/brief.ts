@@ -1,4 +1,4 @@
-/* The couple's words to Ava in step 3 of the website builder, and the ideas
+/* The couple's words to Juno in step 3 of the website builder, and the ideas
    shown above the box so they have somewhere to start. Tapping an idea adds
    it to the text as its own item; tapping it again takes that item back out.
    Whatever they typed themselves is left as it was. */

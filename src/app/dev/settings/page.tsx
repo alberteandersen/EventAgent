@@ -21,7 +21,7 @@ function Harness() {
       }}
       members={[{ name: 'Emma', you: true }]}
       pendingEmail="frederik@eksempel.dk"
-      platform={params.get('admin') === '1' ? { connected: true, email: 'ava@kalas-weddings.com' } : null}
+      platform={params.get('admin') === '1' ? { connected: true, email: 'juno@kalas-weddings.com' } : null}
       flash={{}}
     />
   );

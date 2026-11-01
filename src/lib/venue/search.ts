@@ -6,7 +6,7 @@
 // `search_venues` tool — with different prompts, different result counts and
 // only one of them ranking anything. The brief, the facts schema and the
 // enrichment step are now shared; whatever the couple sees on the explore
-// page is what Ava sees too.
+// page is what Juno sees too.
 
 import { Type, type Schema } from "@google/genai";
 import { getGemini, GEMINI_MODEL } from "@/lib/gemini/client";

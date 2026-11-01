@@ -85,7 +85,7 @@ export async function POST(
       to: toEmail,
       subject: subject.trim(),
       body: body.trim(),
-      fromName: "Ava at Kalas",
+      fromName: "Juno at Kalas",
       fromEmail: ctx.platformEmail ?? undefined,
       replyTo,
     });
@@ -115,7 +115,7 @@ export async function POST(
       .eq("id", ctx.event.id);
   }
 
-  // Keep Ava's transcript a complete record of what went out in the couple's name.
+  // Keep Juno's transcript a complete record of what went out in the couple's name.
   await supabase.from("chat_messages").insert({
     event_id: ctx.event.id,
     user_id: user.id,

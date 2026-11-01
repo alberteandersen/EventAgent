@@ -142,7 +142,7 @@ function OutreachMockup() {
     <div className="flex h-full flex-col">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-[9px] font-semibold uppercase tracking-[1.2px]" style={{ color: MUTED }}>Ava skriver til</p>
+          <p className="text-[9px] font-semibold uppercase tracking-[1.2px]" style={{ color: MUTED }}>Juno skriver til</p>
           <p className="truncate font-[family-name:var(--font-cormorant)] text-[18px] font-semibold leading-tight" style={{ color: INK }}>Villa Aurelisa</p>
         </div>
         <Pill>🌐 Skrevet på italiensk</Pill>
@@ -151,7 +151,7 @@ function OutreachMockup() {
         <p style={{ color: INK }}>Gentile staff di Villa Aurelisa,</p>
         <p>ci siamo innamorati della vostra terrazza sui vigneti, sarebbe lo sfondo perfetto per il nostro matrimonio…</p>
         <p className="truncate">Prevediamo circa 35 invitati per l&apos;autunno 2027. Avreste disponibilità…</p>
-        <p className="pt-1" style={{ color: INK }}>Cordiali saluti,<br />Ava, per conto della coppia</p>
+        <p className="pt-1" style={{ color: INK }}>Cordiali saluti,<br />Juno, per conto della coppia</p>
       </div>
       <div className="mt-3 flex items-center justify-between">
         <p className="text-[10px]" style={{ color: MUTED }}>Intet sendes uden jer</p>
@@ -300,7 +300,7 @@ function TimelineMockup() {
     ["Sted booket", "Sandrevlen Badehotel · depositum betalt", "done"],
     ["Book jeres fotograf", "3 tilbud modtaget, vælg i denne uge", "now"],
     ["Send save the date", "Når gæstelisten er på plads", "next"],
-    ["Smagsprøve på menuen", "Ava foreslår datoer i marts", "next"],
+    ["Smagsprøve på menuen", "Juno foreslår datoer i marts", "next"],
   ];
   return (
     <div className="flex h-full flex-col justify-center gap-1">
@@ -336,7 +336,7 @@ function TimelineMockup() {
 
 /* ── registry ─────────────────────────────────────────────────────────── */
 const MOCKUPS: Record<string, { label: string; Component: () => React.ReactNode }> = {
-  meet: { label: "Ava · fra ønske til liste", Component: ChatMockup },
+  meet: { label: "Juno · fra ønske til liste", Component: ChatMockup },
   vendors: { label: "Udforsk · steder, der passer", Component: VendorsMockup },
   outreach: { label: "Henvendelser · godkend før afsendelse", Component: OutreachMockup },
   quotes: { label: "Henvendelser · tilbud sammenlignet", Component: QuotesMockup },

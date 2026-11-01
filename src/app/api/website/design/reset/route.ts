@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import type { SitePhotoRow } from "@/lib/db/types";
 
 /**
- * POST /api/website/design/reset — wipe all designs (and Ava-generated
+ * POST /api/website/design/reset — wipe all designs (and Juno-generated
  * section/artwork photos) for an event so the couple can start over from
  * template pick. Couple-uploaded photos are kept.
  * Body: { eventId }.
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const { data: event } = await supabase.from("events").select("id").eq("id", eventId).maybeSingle();
   if (!event) return Response.json({ error: "Event not found" }, { status: 404 });
 
-  // Ava-made images only — uploads stay for the next build.
+  // Juno-made images only — uploads stay for the next build.
   const { data: generated } = await supabase
     .from("site_photos")
     .select("*")

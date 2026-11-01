@@ -21,7 +21,7 @@
 
 # Our own functions, next to the ones the Next.js plugin generates. The one
 # that matters is run-job-background: Netlify ends a request at 60 seconds,
-# so Ava's builds and vendor outreach run there (up to 15 minutes) once the
+# so Juno's builds and vendor outreach run there (up to 15 minutes) once the
 # site's environment has JOBS_BACKGROUND=netlify. See src/lib/jobs.
 [functions]
   directory = "netlify/functions"

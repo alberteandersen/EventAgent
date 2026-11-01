@@ -117,7 +117,7 @@ export async function sendApprovedDraft(args: {
         to: toEmail,
         subject,
         body,
-        fromName: "Ava at Kalas",
+        fromName: "Juno at Kalas",
         fromEmail: platformEmail ?? undefined,
         replyTo,
       });

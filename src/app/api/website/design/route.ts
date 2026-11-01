@@ -9,7 +9,7 @@ export const maxDuration = 120; // structured design gen + optional hero artwork
 const MAX_GENERATIONS_PER_DAY = 20; // cost guard
 
 /**
- * POST /api/website/design — Ava designs (or redesigns) the couple's wedding
+ * POST /api/website/design — Juno designs (or redesigns) the couple's wedding
  * website. Body: { eventId, styleDirection?, vibes? }. Paid feature: 402
  * when Stripe is configured and no paid website order exists.
  */

@@ -33,7 +33,7 @@ function GlobeLoading() {
 export type PhotoDraft = { id: string; file: File; url: string };
 
 /* Structured onboarding state — chips + bands instead of loose text, so the
-   journey logic and Ava's briefs get clean, bounded inputs. */
+   journey logic and Juno's briefs get clean, bounded inputs. */
 export type FormState = {
   nameA: string; nameB: string;
   location: string;     // the globe's country name, or a place they typed
@@ -304,17 +304,17 @@ const CONTEXT_PANEL_COPY: Partial<Record<StepId, { eyebrow: string; title: strin
   names: {
     eyebrow: 'En omtænksom start',
     title: 'Lad os gøre det til jeres.',
-    sub: 'Et par korte trin hjælper Ava med at skræddersy opgaver og anbefalinger til jeres bryllup.',
+    sub: 'Et par korte trin hjælper Juno med at skræddersy opgaver og anbefalinger til jeres bryllup.',
   },
   date: {
     eyebrow: 'Datoen',
     title: 'Hvornår siger I ja?',
-    sub: 'En sæson, en dato eller “vi ved det ikke endnu”, Ava tilpasser sig.',
+    sub: 'En sæson, en dato eller “vi ved det ikke endnu”, Juno tilpasser sig.',
   },
   scope: {
     eyebrow: 'Omfang',
     title: 'Hvor mange gæster?',
-    sub: 'Et pejlemærke er nok, Ava bruger det til venues, budget og tidslinje.',
+    sub: 'Et pejlemærke er nok, Juno bruger det til venues, budget og tidslinje.',
   },
   photos: {
     eyebrow: 'Jeres rum',
@@ -499,7 +499,7 @@ function NamesStep({ form, set, onNext }: { form: FormState; set: SetText; onNex
           <span className="italic">{t('giftes?')}</span>
         </h1>
         <p className="max-w-[560px] text-[17px] leading-[1.6] text-muted">
-          {t('Fortæl os hvad vi skal kalde jer begge. Ava bruger fornavne, så planlægningen føles personlig fra første skridt.')}
+          {t('Fortæl os hvad vi skal kalde jer begge. Juno bruger fornavne, så planlægningen føles personlig fra første skridt.')}
         </p>
       </div>
 
@@ -612,7 +612,7 @@ function WhereStep({ form, setField, onSkip }: {
             {t('Hvor i verden vil I')} <span className="italic">{t('giftes?')}</span>
           </h1>
           <p className="max-w-[420px] text-base leading-[1.6] text-muted">
-            {t('Hjemme eller langt væk. Et land er nok for nu, Ava hjælper jer med at finde stedet bagefter.')}
+            {t('Hjemme eller langt væk. Et land er nok for nu, Juno hjælper jer med at finde stedet bagefter.')}
           </p>
         </div>
 
@@ -782,7 +782,7 @@ function PhotosStep({ form, setField }: {
       <StepHead
         eyebrow="Jeres billeder"
         title={<>{t('Et par billeder')} <span className="italic">{t('af jer')}</span></>}
-        sub="De pynter jeres forside, og Ava kan bruge dem på hjemmesiden og invitationerne. Det første bliver forsidebillede."
+        sub="De pynter jeres forside, og Juno kan bruge dem på hjemmesiden og invitationerne. Det første bliver forsidebillede."
       />
 
       <input
@@ -954,7 +954,7 @@ function ScopeStep({ form, setField }: {
   return (
     <div>
       <StepHead eyebrow="Rammen" title={<>{t('Hvor stort')} <span className="italic">{t('tænker I?')}</span></>}
-        sub="Bare et pejlemærke, Ava bruger det til at forme venues, budget og tidslinje." />
+        sub="Bare et pejlemærke, Juno bruger det til at forme venues, budget og tidslinje." />
       <div className="space-y-7">
         <Field label="Antal gæster">
           <div className="flex flex-wrap gap-2">
@@ -965,7 +965,7 @@ function ScopeStep({ form, setField }: {
             ))}
           </div>
         </Field>
-        <Field label="Budget" hint="Valgfrit, hjælper Ava med at fordele pengene fornuftigt.">
+        <Field label="Budget" hint="Valgfrit, hjælper Juno med at fordele pengene fornuftigt.">
           <div className={cn('space-y-5 transition-opacity', form.budgetPrivate && 'opacity-45')}>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
               <span className="min-w-[140px] font-serif text-[clamp(1.75rem,4vw,2.25rem)] tabular-nums text-ink">
@@ -1030,7 +1030,7 @@ function PartnerStep({ form, set }: { form: FormState; set: SetText }) {
   const nameB = form.nameB || t('din partner');
   const valid = isPlausibleEmail(form.partnerEmail);
 
-  /* Ava really sends this one — from her own mailbox, before the event row
+  /* Juno really sends this one — from her own mailbox, before the event row
      exists, so the invite is minted against the user and adopted later. */
   async function send() {
     if (!valid || state === 'sending') return;
@@ -1069,7 +1069,7 @@ function PartnerStep({ form, set }: { form: FormState; set: SetText }) {
   return (
     <div>
       <StepHead eyebrow="Sammen om det" title={t('Giv {name} besked', { name: nameB })}
-        sub="Ava sender invitationen, så din partner kan oprette sin egen konto. Fælles adgang til planen er på vej. Valgfrit." />
+        sub="Juno sender invitationen, så din partner kan oprette sin egen konto. Fælles adgang til planen er på vej. Valgfrit." />
       <Field label={t('{name}s e-mail', { name: nameB })}>
         <div className="flex gap-2">
           <input type="email" value={form.partnerEmail} onChange={set('partnerEmail')}
@@ -1092,7 +1092,7 @@ function PartnerStep({ form, set }: { form: FormState; set: SetText }) {
         {sent && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-2xl bg-sage-tint p-4">
             <p className="text-[0.88rem] text-ink leading-relaxed">
-              {t('Ava har sendt invitationen til {email}. {name} kan oprette sin egen konto, fælles adgang til planen er på vej.', { email: form.partnerEmail, name: nameB })}
+              {t('Juno har sendt invitationen til {email}. {name} kan oprette sin egen konto, fælles adgang til planen er på vej.', { email: form.partnerEmail, name: nameB })}
             </p>
           </motion.div>
         )}

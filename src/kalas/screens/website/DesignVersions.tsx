@@ -1,10 +1,10 @@
 "use client";
 
-/* Every site Ava has built for the couple, side by side under the preview:
+/* Every site Juno has built for the couple, side by side under the preview:
    a live thumbnail of each, what it was (the first build, a change they
    asked for, new words), and which one guests see. Picking one shows it in
    the big preview without changing anything; from there they can make it
-   the live one, or ask Ava to change it further. */
+   the live one, or ask Juno to change it further. */
 
 import { Check, Eye } from 'lucide-react';
 import { cn } from '../../ui';
@@ -26,7 +26,7 @@ export function versionWhat(info: VersionInfo, t: (s: string, p?: Record<string,
   switch (info.kind) {
     case 'adjust': return info.words ? `“${info.words}”` : t('En justering');
     case 'text': return t('Ny tekst sat ind');
-    case 'build': return info.words ? t('Bygget ud fra “{words}”', { words: info.words }) : t('Bygget af Ava');
+    case 'build': return info.words ? t('Bygget ud fra “{words}”', { words: info.words }) : t('Bygget af Juno');
     default: return t('Skabelon');
   }
 }

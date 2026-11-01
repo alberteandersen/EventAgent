@@ -32,7 +32,7 @@ type DateMode = "exact" | "rough" | "undecided";
 const COPY = {
   da: {
     title: "Bryllupet",
-    sub: "Det Ava og resten af Kalas regner med. Ret det her, når noget ændrer sig.",
+    sub: "Det Juno og resten af Kalas regner med. Ret det her, når noget ændrer sig.",
     names: "Jeres navne",
     name: "Dit navn",
     partner: "Din partners navn",
@@ -55,7 +55,7 @@ const COPY = {
   },
   en: {
     title: "Your wedding",
-    sub: "What Ava and the rest of Kalas plan around. Change it here when something changes.",
+    sub: "What Juno and the rest of Kalas plan around. Change it here when something changes.",
     names: "Your names",
     name: "Your name",
     partner: "Your partner's name",

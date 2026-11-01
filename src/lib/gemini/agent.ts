@@ -598,7 +598,7 @@ async function execSearchVenues(
       phone: place?.nationalPhoneNumber ?? v.phone ?? null,
       capacity: v.capacity ?? null,
       price_hint: v.price_hint ?? null,
-      // Same structured facts the explore page writes, so a venue Ava adds
+      // Same structured facts the explore page writes, so a venue Juno adds
       // is filterable on capacity and budget like any other.
       capacity_seated: facts.capacity_seated,
       capacity_standing: facts.capacity_standing,
@@ -1029,7 +1029,7 @@ export async function composeOutreachEmail(args: {
 }
 
 /**
- * Draft Ava's proposed response to a vendor reply and persist it as a
+ * Draft Juno's proposed response to a vendor reply and persist it as a
  * reply_proposals row (superseding earlier proposals for the same reply).
  * Best-effort: returns null on any failure, never throws.
  */

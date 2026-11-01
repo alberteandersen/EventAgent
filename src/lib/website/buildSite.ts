@@ -269,13 +269,13 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
     imageManifest: manifest.map(({ alias, kind, note }) => ({ alias, kind, note })),
     fontCatalog: SITE_FONTS.map((f) => ({ family: f.family, category: f.category })),
     hasRegistry: (registryCount ?? 0) > 0,
-    // With today's words in its slots, so Ava works from what guests see.
+    // With today's words in its slots, so Juno works from what guests see.
     currentHtml: keepDesign && active?.html ? fillSlots(active.html, config) : undefined,
     instruction,
     syncContent,
   });
 
-  args.onStatus?.("Ava bygger jeres side…");
+  args.onStatus?.("Juno bygger jeres side…");
   const ai = getGemini();
   const response = await ai.models.generateContent({
     model: GEMINI_HTML_MODEL,
@@ -297,7 +297,7 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
   const designMeta = {
     ...(baseDesign as unknown as Record<string, unknown>),
     concept: {
-      name: keepDesign ? baseDesign.concept.name : preset ? `${preset.design.concept.name} · Ava` : baseDesign.concept.name,
+      name: keepDesign ? baseDesign.concept.name : preset ? `${preset.design.concept.name} · Juno` : baseDesign.concept.name,
       rationale: baseDesign.concept.rationale,
     },
   };
@@ -317,7 +317,7 @@ export async function buildSiteHtml(args: BuildArgs): Promise<BuildResult> {
         imageAliases,
         // What this HTML was built from, and that its texts sit in slots;
         // the builder compares it with the content as it stands to tell
-        // whether the site needs Ava to catch up (see slots.ts).
+        // whether the site needs Juno to catch up (see slots.ts).
         ...buildStamp(config),
       },
       design: designMeta,

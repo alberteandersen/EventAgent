@@ -4,7 +4,7 @@ import { EN } from '../strings';
 import { TOOL_LABELS, toolLabel } from './toolLabels';
 
 describe('tool labels', () => {
-  it('names every tool Ava can call', () => {
+  it('names every tool Juno can call', () => {
     const missing = functionDeclarations.map((d) => d.name!).filter((n) => !TOOL_LABELS[n]);
     expect(missing).toEqual([]);
   });

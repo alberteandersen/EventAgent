@@ -60,7 +60,7 @@ export function ProductNudge({ kalas }: { kalas: GuideArticle["kalas"] }) {
 export function SidebarProductCard({ kalas }: { kalas: GuideArticle["kalas"] }) {
   return (
     <div className="rounded-[28px] border border-line bg-[#e6e9e6] p-6">
-      <Eyebrow>Planlæg med Ava</Eyebrow>
+      <Eyebrow>Planlæg med Juno</Eyebrow>
       <p className="mt-3 font-serif text-[1.5rem] font-semibold leading-[1.1] text-ink">{kalas.title}</p>
       <ul className="mt-4 space-y-2.5">
         {kalas.points.map((p) => (
@@ -79,7 +79,7 @@ export function SidebarProductCard({ kalas }: { kalas: GuideArticle["kalas"] }) 
 /** At the end of the article: how little it takes to start. */
 export function StartSteps({ cta }: { cta: string }) {
   const steps = [
-    { title: "Fortæl Ava om jeres bryllup", body: "Dato, gæstetal, budget og hvor I drømmer om at holde det." },
+    { title: "Fortæl Juno om jeres bryllup", body: "Dato, gæstetal, budget og hvor I drømmer om at holde det." },
     { title: "Godkend det, hun foreslår", body: "Forespørgsler, tjekliste og budget. Intet bliver sendt uden jer." },
     { title: "Sammenlign og beslut", body: "Svarene samles som tilbud, så I kan vælge med ro i maven." },
   ];
@@ -112,7 +112,7 @@ export function MobileCtaBar({ cta }: { cta: string }) {
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-canvas/95 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden">
       <div className="mx-auto flex max-w-xl items-center justify-between gap-3">
         <p className="text-sm leading-tight text-ink-soft">
-          <span className="block font-semibold text-ink">Lad Ava gøre arbejdet</span>
+          <span className="block font-semibold text-ink">Lad Juno gøre arbejdet</span>
           Gratis at starte
         </p>
         <Link href={SIGNUP_HREF} className="shrink-0 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-[#f8f9f8]">

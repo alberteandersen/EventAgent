@@ -1,5 +1,5 @@
 /* The default split of a Danish wedding budget: the share each category
-   usually takes. Budget proposes it, the estimate and Ava's budget assistant
+   usually takes. Budget proposes it, the estimate and Juno's budget assistant
    start from it, and the couple edits it. */
 
 export type BudgetLine = {

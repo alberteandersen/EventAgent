@@ -1,4 +1,4 @@
-/* The AI site-design contract. Ava (Gemini, structured output) emits a raw
+/* The AI site-design contract. Juno (Gemini, structured output) emits a raw
    blob shaped like SiteDesign; parseSiteDesign() is the trust boundary that
    turns it into a safe, fully-defaulted value. Only validated hex colors and
    enum tokens ever reach CSS, every free-text field is rendered strictly as
@@ -45,7 +45,7 @@ export interface DesignSection {
   id: SectionId;
   variant: string;
   bg: SectionBg;
-  /** Optional Ava-written section heading / intro line (plain text). */
+  /** Optional Juno-written section heading / intro line (plain text). */
   heading?: string;
   intro?: string;
 }
@@ -120,13 +120,13 @@ const DEFAULT_SECTIONS: DesignSection[] = [
   { id: 'rsvp', variant: 'band', bg: 'inverse' },
 ];
 
-/** Hand-written editorial design — what a site shows before Ava has designed
+/** Hand-written editorial design — what a site shows before Juno has designed
     it (and what legacy published sites fall back to). */
 export const DEFAULT_DESIGN: SiteDesign = {
   version: 1,
   concept: {
     name: 'Editorial',
-    rationale: 'Rolig, klassisk udgangsside indtil Ava har designet jeres egen.',
+    rationale: 'Rolig, klassisk udgangsside indtil Juno har designet jeres egen.',
   },
   palette: {
     bg: '#f2ede4',

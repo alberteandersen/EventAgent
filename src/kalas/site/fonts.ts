@@ -1,4 +1,4 @@
-/* Curated Google-font catalog for AI-designed wedding sites. Ava picks a
+/* Curated Google-font catalog for AI-designed wedding sites. Juno picks a
    display + body pairing from this allowlist (the generation schema enums
    over the ids), so arbitrary model output can never reach a font-face
    declaration. Fonts load per-site via a fonts.googleapis.com <link> —

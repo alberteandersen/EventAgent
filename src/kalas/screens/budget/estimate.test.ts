@@ -41,7 +41,7 @@ describe('estimatedLines', () => {
     expect(Math.abs(sum - total)).toBeLessThanOrEqual(budgetLines.length);
   });
 
-  it('carries the styling, so a seeded line does not look like Ava added it', () => {
+  it('carries the styling, so a seeded line does not look like Juno added it', () => {
     // Rows saved without icon/color fall back to a generic sparkle in Budget.tsx.
     for (const line of estimatedLines(100000)) {
       expect(line.icon).toBeTruthy();

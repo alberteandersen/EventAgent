@@ -39,7 +39,7 @@ const REVIEW_SCHEMA: Schema = {
   required: ["summary"],
 };
 
-const REVIEW_PROMPT = `You are Ava, a wedding-planning assistant reviewing a supplier CONTRACT for a couple.
+const REVIEW_PROMPT = `You are Juno, a wedding-planning assistant reviewing a supplier CONTRACT for a couple.
 Read the document and extract the key facts. Rules:
 - Amounts: return numbers only (no currency symbols). Report the currency in "currency" (e.g. "DKK").
 - totalPrice = the full agreed price. depositAmount = any upfront deposit. suggestedActualCost = the total the couple should record as the actual cost (usually totalPrice).
@@ -61,7 +61,7 @@ async function loadContractBytes(path: string): Promise<{ base64: string } | nul
 
 /**
  * POST /api/budget/contracts/review — { contractId, question? }.
- * Without a question: run Ava's structured review and persist it.
+ * Without a question: run Juno's structured review and persist it.
  * With a question: answer it using the contract as context (not persisted).
  */
 export async function POST(request: NextRequest) {
@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
         contents: [{ role: "user", parts: [filePart, { text: question }] }],
         config: {
           systemInstruction:
-            "You are Ava. Answer the couple's question about THIS contract only, concisely and in their language. If the contract doesn't cover it, say so plainly.",
+            "You are Juno. Answer the couple's question about THIS contract only, concisely and in their language. If the contract doesn't cover it, say so plainly.",
           temperature: 0.2,
         },
       });
@@ -128,6 +128,6 @@ export async function POST(request: NextRequest) {
     return Response.json({ review });
   } catch (err) {
     logAgentError("budget-contract-review", err, { contractId });
-    return Response.json({ error: "Ava kunne ikke gennemgå kontrakten lige nu" }, { status: 500 });
+    return Response.json({ error: "Juno kunne ikke gennemgå kontrakten lige nu" }, { status: 500 });
   }
 }

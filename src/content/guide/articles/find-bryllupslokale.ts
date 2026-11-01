@@ -14,14 +14,14 @@ export const article: GuideArticle = {
   image: { src: "/landing/rustic-barn.jpg", alt: "Levende lys og langborde i en lade pyntet til bryllup" },
   related: ["hvad-koster-et-bryllup", "bryllup-tjekliste", "program-for-bryllupsdagen"],
   kalas: {
-    title: "Ava skriver til lokalerne for jer",
-    body: "Fortæl Ava om jeres bryllup, og hun finder rigtige lokaler, skriver til hvert af dem, også på deres eget sprog i udlandet, og samler svarene som tilbud, I kan sammenligne. Intet bliver sendt, før I har godkendt det.",
+    title: "Juno skriver til lokalerne for jer",
+    body: "Fortæl Juno om jeres bryllup, og hun finder rigtige lokaler, skriver til hvert af dem, også på deres eget sprog i udlandet, og samler svarene som tilbud, I kan sammenligne. Intet bliver sendt, før I har godkendt det.",
     points: [
       "Finder rigtige lokaler i Danmark og udlandet",
       "Skriver til hvert sted på dets eget sprog",
       "Samler svarene som tilbud, I kan sammenligne",
     ],
-    cta: "Find lokaler med Ava",
+    cta: "Find lokaler med Juno",
   },
   sources: [
     { label: "Danmarks Statistik: Vielser og skilsmisser 2025", url: "https://www.dst.dk/nyt/53145" },

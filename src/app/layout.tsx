@@ -39,12 +39,12 @@ export const metadata: Metadata = {
       ? { other: { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION } }
       : {}),
   },
-  title: "Kalas: bryllupsplanlægning med Ava",
+  title: "Kalas: bryllupsplanlægning med Juno",
   // Opened from a phone's home screen, Kalas runs full screen like an app.
   appleWebApp: { capable: true, title: "Kalas", statusBarStyle: "default" },
   icons: { apple: "/pwa-icon/180" },
   description:
-    "Kalas er jeres bryllupsplanlægger: Ava finder steder og leverandører, skriver til dem for tilbud og holder styr på gæster og budget. Intet sendes, før I har godkendt det.",
+    "Kalas er jeres bryllupsplanlægger: Juno finder steder og leverandører, skriver til dem for tilbud og holder styr på gæster og budget. Intet sendes, før I har godkendt det.",
 };
 
 export default function RootLayout({

@@ -103,7 +103,7 @@ export function areaOf(row: Pick<TimelineTaskRow, 'category'>): ChecklistArea {
  * True when the row's category actually names an area. Stricter than `areaOf`,
  * which falls back to 'ovrigt' — that fallback is right for a check (it has to
  * land somewhere) and wrong for a milestone: one with no area, with the
- * 'wedding_day' sentinel, or with Ava's free-text category must stay off the
+ * 'wedding_day' sentinel, or with Juno's free-text category must stay off the
  * checklist rather than pile up under Øvrigt.
  */
 export function hasArea(row: Pick<TimelineTaskRow, 'category'>): boolean {

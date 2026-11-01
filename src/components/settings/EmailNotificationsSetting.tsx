@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useLang } from "@/kalas/i18n";
 import { Toggle } from "@/kalas/ui";
 
-/** Whether Ava mails this person when a vendor replies. Saves on flip and
+/** Whether Juno mails this person when a vendor replies. Saves on flip and
     flips back if the save fails, so the switch never shows a setting the
     server does not have. */
 export function EmailNotificationsSetting({ initial }: { initial: boolean }) {

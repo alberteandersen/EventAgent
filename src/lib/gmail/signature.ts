@@ -1,4 +1,4 @@
-// Ava's signature block, appended to every outgoing message at the transport
+// Juno's signature block, appended to every outgoing message at the transport
 // layer, in both the plain-text and HTML parts.
 //
 // Two reasons it lives in code rather than in Gmail's settings:
@@ -7,17 +7,17 @@
 //     which is how Kalas sends everything.
 //   · The model must never write it. Brand name and contact details are not
 //     things to translate, paraphrase or hallucinate; the per-language
-//     sign-off ("Venlig hilsen, Ava …") is the model's job, this is not.
+//     sign-off ("Venlig hilsen, Juno …") is the model's job, this is not.
 //
 // Deliberately language-neutral (a name, a role, a company, a domain) so it
 // reads correctly under a Danish, Italian or English email alike.
 
 /** Address vendors see. Replies route via the Reply-To header instead, so
  *  the per-event plus tag is never exposed here. */
-export const KALAS_FROM_ADDRESS = "ava@kalas-weddings.com";
+export const KALAS_FROM_ADDRESS = "juno@kalas-weddings.com";
 export const KALAS_DOMAIN = "kalas-weddings.com";
 
-const NAME = "Ava";
+const NAME = "Juno";
 const ROLE = "Wedding Orchestrator";
 const COMPANY = "Kalas ApS";
 

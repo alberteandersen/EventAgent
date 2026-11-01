@@ -21,7 +21,7 @@ function Field({ value, name }: { value: string | null; name: string }) {
 const DATA: [who: string, what: string, why: string][] = [
   ["Parret", "Navn, e-mail, login via Google eller e-mail, sprog", "Konto og login"],
   ["Parret", "Bryllupsdato, sted, gæstetal, budget, udgifter og betalinger", "At planlægge brylluppet"],
-  ["Parret", "Beskeder til Ava", "At Ava kan svare og udføre opgaver"],
+  ["Parret", "Beskeder til Juno", "At Juno kan svare og udføre opgaver"],
   ["Parret", "Billeder til bryllupshjemmesiden og albummet", "At bygge hjemmesiden"],
   ["Gæster", "Navn, e-mail, telefon, relation, husstand, aldersgruppe, bord, svar, overnatning", "Gæsteliste, invitationer og bordplan"],
   ["Gæster", "Allergier, kostbehov og alkoholfri", "Et overblik til køkkenet"],
@@ -32,8 +32,8 @@ const DATA: [who: string, what: string, why: string][] = [
 
 const PROCESSORS: [who: string, what: string][] = [
   ["Supabase", "Database, login og filer"],
-  ["Google (Gemini API)", "Ava, tekster og design af hjemmeside og invitationer"],
-  ["Google (Gmail API)", "Kalas' egen postkasse, som Ava skriver fra og læser svar i"],
+  ["Google (Gemini API)", "Juno, tekster og design af hjemmeside og invitationer"],
+  ["Google (Gmail API)", "Kalas' egen postkasse, som Juno skriver fra og læser svar i"],
   ["Google (Places API)", "Opslag af steder og leverandører"],
   ["Google (login)", "Log ind med Google"],
   ["Google Fonts", "Skrifttyper på parrets offentlige hjemmeside og invitationer"],

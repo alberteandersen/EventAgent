@@ -14,7 +14,7 @@ import { type DisplayVenue, RatingBadge, StageChip, type VenueStage, imgSrc, ven
    PICKS VIEW, venue management
 ═══════════════════════════════════════════════════════════════════════ */
 export function PicksView({
-  venues, couple, saved, sent, booked, stageOf, initialSelectedId, onToggleSave, onOutreach, onBook, onDiscover, onBack, onReview, onAva, onRefresh, embedded = false, categoryBar,
+  venues, couple, saved, sent, booked, stageOf, initialSelectedId, onToggleSave, onOutreach, onBook, onDiscover, onBack, onReview, onJuno, onRefresh, embedded = false, categoryBar,
 }: {
   venues: DisplayVenue[];
   couple: Couple;
@@ -22,7 +22,7 @@ export function PicksView({
   stageOf: (id: string) => VenueStage;
   initialSelectedId?: string | null;
   onToggleSave: (id: string) => void; onOutreach: (id: string) => void;
-  onBook: (id: string) => void; onDiscover: () => void; onAva: () => void;
+  onBook: (id: string) => void; onDiscover: () => void; onJuno: () => void;
   onBack?: () => void;
   onReview: () => void;
   onRefresh: () => Promise<void>;
@@ -88,12 +88,12 @@ export function PicksView({
         <h2 className="display mt-5 text-[1.8rem] text-ink">{t('Ingen venues på listen endnu')}</h2>
         <p className="mt-2 max-w-sm text-[0.9rem] text-ink-soft">
           {venueCity
-            ? t('Udforsk verdenskortet eller fortæl Ava mere om jeres drøm nær {area}, så researcher hun rigtige venues.', { area: venueCity })
-            : t('Udforsk verdenskortet eller fortæl Ava mere om jeres drøm, så researcher hun rigtige venues.')}
+            ? t('Udforsk verdenskortet eller fortæl Juno mere om jeres drøm nær {area}, så researcher hun rigtige venues.', { area: venueCity })
+            : t('Udforsk verdenskortet eller fortæl Juno mere om jeres drøm, så researcher hun rigtige venues.')}
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           <Button icon={GlobeIcon} onClick={onDiscover}>{t('Udforsk venues')}</Button>
-          <Button variant="secondary" icon={MessageCircle} onClick={onAva}>{t('Tal med Ava')}</Button>
+          <Button variant="secondary" icon={MessageCircle} onClick={onJuno}>{t('Tal med Juno')}</Button>
         </div>
       </motion.div>
     );
@@ -164,25 +164,25 @@ export function PicksView({
             <div>
               <p className="font-serif text-[1.15rem] text-ink">{t('Udforsk flere venues')}</p>
               <p className="mt-1 text-[0.8rem] text-muted">
-                {t('Vælg land og by på kloden, Ava researcher rigtige venues.')}
+                {t('Vælg land og by på kloden, Juno researcher rigtige venues.')}
               </p>
             </div>
           </button>
         </div>
       </div>
 
-      {/* ── Ask Ava ──────────────────────────────────────────────────── */}
+      {/* ── Ask Juno ──────────────────────────────────────────────────── */}
       <div className={cn(padX, 'pt-12')}>
         <motion.div
           initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-50px' }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="rule rounded-2xl bg-card p-8 text-center">
-          <Eyebrow className="text-center">{t('Spørg Ava')}</Eyebrow>
+          <Eyebrow className="text-center">{t('Spørg Juno')}</Eyebrow>
           <p className="mt-3 text-[0.95rem] text-ink-soft max-w-md mx-auto">
-            {t('Ava kender jeres profil og kan sammenligne venues, tjekke datoer og skrive henvendelser for jer.')}
+            {t('Juno kender jeres profil og kan sammenligne venues, tjekke datoer og skrive henvendelser for jer.')}
           </p>
           <div className="mt-6 flex justify-center">
-            <Button variant="secondary" icon={MessageCircle} onClick={onAva}>{t('Tal med Ava')}</Button>
+            <Button variant="secondary" icon={MessageCircle} onClick={onJuno}>{t('Tal med Juno')}</Button>
           </div>
         </motion.div>
       </div>
@@ -207,11 +207,11 @@ function OutreachBanner({
           <p className="font-serif text-[1.1rem] leading-snug">
             {notContacted > 0
               ? t('{n} på listen mangler kontakt', { n: notContacted })
-              : t('Ava har kontaktet hele listen')}
+              : t('Juno har kontaktet hele listen')}
           </p>
           <p className="mt-0.5 text-[0.78rem] text-canvas/70">
             {contacted > 0 ? t('{n} kontaktet · ', { n: contacted }) : ''}
-            {notContacted > 0 ? t('Se hvad Ava vil sende, og godkend.') : t('Følg svarene under Henvendelser.')}
+            {notContacted > 0 ? t('Se hvad Juno vil sende, og godkend.') : t('Følg svarene under Henvendelser.')}
           </p>
         </div>
       </div>
@@ -220,7 +220,7 @@ function OutreachBanner({
           onClick={onReview}
           className="flex h-8 shrink-0 items-center gap-1.5 rounded-full bg-ink px-3 text-xs font-semibold text-paper hover:opacity-90 transition-opacity cursor-pointer"
         >
-          {t('Lad Ava kontakte ({n})', { n: notContacted })} <ArrowRight size={14} />
+          {t('Lad Juno kontakte ({n})', { n: notContacted })} <ArrowRight size={14} />
         </button>
       )}
     </div>
@@ -310,13 +310,13 @@ function VenueGridCard({
         {sent ? (
           !isBooked && (
             <p className="mt-2.5 flex items-center gap-1.5 text-[0.7rem] text-muted">
-              <Check size={10} className="text-sage" /> {t('Ava har kontaktet venuet')}
+              <Check size={10} className="text-sage" /> {t('Juno har kontaktet venuet')}
             </p>
           )
         ) : (
           <button onClick={onContact}
             className="mt-2.5 flex h-8 w-full items-center justify-center gap-1.5 rounded-full border border-line-soft bg-white px-3 text-xs font-semibold text-ink hover:bg-paper transition-colors cursor-pointer">
-            <Send size={12} /> {t('Kontakt via Ava')}
+            <Send size={12} /> {t('Kontakt via Juno')}
           </button>
         )}
       </div>

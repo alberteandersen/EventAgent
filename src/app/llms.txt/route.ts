@@ -19,7 +19,7 @@ export function GET() {
     "",
     "## Produkt",
     "",
-    `- [Kalas](${absoluteUrl("/")}): AI-bryllupsplanlæggeren Ava, der finder lokaler, skriver til dem og samler tilbud`,
+    `- [Kalas](${absoluteUrl("/")}): AI-bryllupsplanlæggeren Juno, der finder lokaler, skriver til dem og samler tilbud`,
     `- [Spørgsmål og svar](${absoluteUrl("/guide/faq")}): pris, godkendelse, sprog, mobil og bryllupshjemmesider`,
     "",
     "## Bryllupsguide",

@@ -10,7 +10,7 @@ export const maxDuration = 300;
  * export above is a Vercel-ism Netlify ignores), so a large backlog can time
  * out here — harmless, the worker's next tick finishes it.
  * Polls the platform Kalas mailbox for vendor replies across all users:
- * quotes are extracted, attachments stored, and Ava reply proposals queued.
+ * quotes are extracted, attachments stored, and Juno reply proposals queued.
  * Protected by CRON_SECRET bearer auth.
  */
 export async function GET(request: NextRequest) {

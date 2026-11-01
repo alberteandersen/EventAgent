@@ -13,7 +13,7 @@ import {
 import type { ProfileRow } from "@/lib/db/types";
 
 /**
- * POST /api/partner/invite — email the other half of the couple from Ava's
+ * POST /api/partner/invite — email the other half of the couple from Juno's
  * mailbox. Body: { email, inviter_name?, partner_name?, language? }.
  *
  * Called from the last onboarding step, which runs before the event exists, so
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
   const inviterName = (body.inviter_name ?? profile?.display_name ?? "").trim();
   const partnerName = (body.partner_name ?? profile?.partner_name ?? "").trim();
 
-  // Ava's mailbox first: no point writing a row for a mail that cannot go out.
+  // Juno's mailbox first: no point writing a row for a mail that cannot go out.
   let accessToken: string;
   let platformEmail: string | null;
   try {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     if (err instanceof GmailNotConnectedError) {
       return Response.json(
-        { error: "mailbox_unavailable", message: "Ava's mailbox is unavailable, try again shortly." },
+        { error: "mailbox_unavailable", message: "Juno's mailbox is unavailable, try again shortly." },
         { status: 503 },
       );
     }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       to: email,
       subject: message.subject,
       body: message.body,
-      fromName: "Ava at Kalas",
+      fromName: "Juno at Kalas",
       fromEmail: platformEmail ?? undefined,
     });
   } catch (err) {

@@ -12,7 +12,7 @@ export const ORG_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 
 export const KALAS_DESCRIPTION =
-  "Kalas er en bryllupsplanlægger med AI-assistenten Ava, der finder bryllupslokaler, skriver til dem og samler svarene som tilbud, og holder styr på tjekliste, budget, gæsteliste, invitationer og bordplan.";
+  "Kalas er en bryllupsplanlægger med AI-assistenten Juno, der finder bryllupslokaler, skriver til dem og samler svarene som tilbud, og holder styr på tjekliste, budget, gæsteliste, invitationer og bordplan.";
 
 export const graph = (...nodes: Node[]) => ({ "@context": "https://schema.org", "@graph": nodes });
 

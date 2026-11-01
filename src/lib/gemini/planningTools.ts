@@ -397,7 +397,7 @@ async function findRow<T extends { id: string }>(
 // ── Overview ────────────────────────────────────────────────────────────
 
 /** The same live numbers get_planning_overview returns, for the chat route to
- *  put in front of Ava every turn, whichever conversation she is in. */
+ *  put in front of Juno every turn, whichever conversation she is in. */
 export function planningSnapshot(supabase: SupabaseClient, event: EventRow) {
   return execPlanningOverview(supabase, event);
 }
@@ -437,13 +437,13 @@ async function execPlanningOverview(
   const guests = (guestsQ.data ?? []) as Pick<GuestRow, "rsvp" | "plus_one">[];
   const allTasks = (tasksQ.data ?? []) as Pick<TimelineTaskRow, "title" | "due_date" | "done" | "category" | "kind">[];
   // Two levels of detail live in this table — report them apart, or the ~205
-  // seeded checklist items swamp the milestone numbers Ava reasons about.
+  // seeded checklist items swamp the milestone numbers Juno reasons about.
   const tasks = allTasks.filter((t) => t.kind !== "check");
   const checks = allTasks.filter((t) => t.kind === "check");
   const today = new Date().toISOString().slice(0, 10);
   // What is next, and what is late, is asked of everything with a date — a
   // dated checklist item sits on the Tidslinje tab too, so leaving it out here
-  // would have Ava contradict the screen the couple is looking at.
+  // would have Juno contradict the screen the couple is looking at.
   const dated = allTasks.filter((t) => t.due_date);
   const upcoming = dated
     .filter((t) => !t.done)

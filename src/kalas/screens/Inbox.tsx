@@ -1,6 +1,6 @@
 "use client";
 
-/* Henvendelser — the visual outreach inbox. Shows every vendor Ava has
+/* Henvendelser — the visual outreach inbox. Shows every vendor Juno has
    emailed, the full thread of replies, the quotes she extracted, and any
    files vendors sent back. All wired to the real coordination backend
    (outbound_emails · email_replies · email_attachments · reply_proposals). */
@@ -47,7 +47,7 @@ export default function Inbox({ onNavigate }: { onNavigate?: (s: NavigateTarget)
   if (loading) return <PageLoader />;
 
   const title = t('Henvendelser');
-  const subtitle = t('Svarene fra steder og leverandører, de tilbud Ava har fundet, og hendes forslag til svar.');
+  const subtitle = t('Svarene fra steder og leverandører, de tilbud Juno har fundet, og hendes forslag til svar.');
 
   if (contacted.length === 0 && replies.length === 0) {
     return (
@@ -56,9 +56,9 @@ export default function Inbox({ onNavigate }: { onNavigate?: (s: NavigateTarget)
         <EmptyState
           icon={InboxIcon}
           title={t('Ingen henvendelser endnu')}
-          action={<Button onClick={() => onNavigate?.('ava')}>{t('Bed Ava tage kontakt')}</Button>}
+          action={<Button onClick={() => onNavigate?.('juno')}>{t('Bed Juno tage kontakt')}</Button>}
         >
-          {t('Når Ava skriver til venues og leverandører, samles alle samtaler, tilbud og filer her, så I har ét sted til al koordinering.')}
+          {t('Når Juno skriver til venues og leverandører, samles alle samtaler, tilbud og filer her, så I har ét sted til al koordinering.')}
         </EmptyState>
       </Page>
     );
@@ -135,7 +135,7 @@ export default function Inbox({ onNavigate }: { onNavigate?: (s: NavigateTarget)
                       <div className="mt-1 flex items-center gap-2">
                         <p className={cn('min-w-0 flex-1 truncate text-[0.76rem]', unread > 0 ? 'text-ink' : 'text-muted')}>
                           {last
-                            ? `${last.direction === 'out' ? `${t('Ava')}: ` : ''}${last.body.slice(0, 80)}`
+                            ? `${last.direction === 'out' ? `${t('Juno')}: ` : ''}${last.body.slice(0, 80)}`
                             : t('Ingen beskeder')}
                         </p>
                         {unread > 0 && <span aria-label={t('Ulæst')} className="h-2 w-2 shrink-0 rounded-full bg-terracotta" />}
@@ -161,7 +161,7 @@ export default function Inbox({ onNavigate }: { onNavigate?: (s: NavigateTarget)
                 <div>
                   <MessagesSquare size={22} strokeWidth={1.6} className="mx-auto text-muted" aria-hidden />
                   <p className="mt-3 max-w-xs text-[0.85rem] text-muted">
-                    {t('Vælg en leverandør for at se samtalen, deres svar og filer. Ava forbereder et svar til hvert svar, som I godkender.')}
+                    {t('Vælg en leverandør for at se samtalen, deres svar og filer. Juno forbereder et svar til hvert svar, som I godkender.')}
                   </p>
                 </div>
               </div>
@@ -297,7 +297,7 @@ function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged
               {m.attachments && m.attachments.length > 0 && <Attachments attachments={m.attachments} />}
             </div>
             <span className="mt-1 px-1 text-[0.66rem] text-muted">
-              {m.direction === 'out' ? t('Ava') : venue.name} · {shortDate(m.at)}
+              {m.direction === 'out' ? t('Juno') : venue.name} · {shortDate(m.at)}
             </span>
           </div>
         ))}
@@ -310,12 +310,12 @@ function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged
           <div className="flex items-center justify-between gap-3 px-5 py-3.5">
             <p className="min-w-0 text-[0.8rem] text-muted">
               {last?.direction === 'out'
-                ? t('Venter på svar fra {name}. Ava foreslår et svar, så snart de skriver.', { name: venue.name })
+                ? t('Venter på svar fra {name}. Juno foreslår et svar, så snart de skriver.', { name: venue.name })
                 : t('Intet svar at godkende lige nu.')}
             </p>
-            <button type="button" onClick={() => onNavigate?.('ava')}
+            <button type="button" onClick={() => onNavigate?.('juno')}
               className="shrink-0 rounded-full rule px-4 py-2 text-[0.78rem] text-ink-soft hover:bg-shell transition-colors cursor-pointer">
-              {t('Tal med Ava')}
+              {t('Tal med Juno')}
             </button>
           </div>
         )}
@@ -324,7 +324,7 @@ function ThreadDetail({ venue, messages, proposal, onBack, onNavigate, onChanged
   );
 }
 
-/* ── Ava's suggested reply, the thread's composer ────────────────────── */
+/* ── Juno's suggested reply, the thread's composer ────────────────────── */
 function ProposalReply({ proposal, venueName, onNavigate, onChanged }: {
   proposal: ReplyProposalRow; venueName: string; onNavigate?: (s: NavigateTarget) => void; onChanged: () => Promise<void>;
 }) {
@@ -352,7 +352,7 @@ function ProposalReply({ proposal, venueName, onNavigate, onChanged }: {
   const regenerate = async () => {
     setBusy(true);
     try {
-      const res = await apiWrite(`/api/replies/${proposal.email_reply_id}/propose`, { method: 'POST' }, t, 'Ava kunne ikke skrive et nyt forslag');
+      const res = await apiWrite(`/api/replies/${proposal.email_reply_id}/propose`, { method: 'POST' }, t, 'Juno kunne ikke skrive et nyt forslag');
       if (res) { const fresh = (await res.json()) as ReplyProposalRow; setBody(fresh.body); }
     } finally { setBusy(false); }
   };
@@ -366,18 +366,18 @@ function ProposalReply({ proposal, venueName, onNavigate, onChanged }: {
   return (
     <div className="px-4 pb-3 pt-3 sm:px-5">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ink">{t('Avas foreslåede svar')}</span>
+        <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-ink">{t('Junos foreslåede svar')}</span>
         <button type="button" disabled={busy} onClick={regenerate} className="text-[0.72rem] text-muted underline-offset-2 hover:underline disabled:opacity-50 cursor-pointer">{t('Generér igen')}</button>
       </div>
       <div className="rounded-2xl rule bg-canvas focus-within:border-ink">
         <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={3}
-          aria-label={t('Avas foreslåede svar')}
+          aria-label={t('Junos foreslåede svar')}
           className="block max-h-[24vh] min-h-[4.5rem] w-full resize-none overflow-y-auto bg-transparent px-4 pt-3 text-[0.9rem] leading-relaxed text-ink focus:outline-none" />
         <div className="flex items-center justify-between gap-1 px-1.5 pb-2 pt-1 sm:gap-2 sm:px-2.5 sm:pb-2.5">
           <div className="flex min-w-0 items-center">
-            <button type="button" onClick={() => onNavigate?.('ava')}
+            <button type="button" onClick={() => onNavigate?.('juno')}
               className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-[0.76rem] text-ink-soft hover:bg-shell transition-colors cursor-pointer sm:px-3">
-              {t('Tal med Ava')}
+              {t('Tal med Juno')}
             </button>
             <button type="button" disabled={busy} onClick={dismiss}
               className="whitespace-nowrap rounded-full px-2.5 py-1.5 text-[0.76rem] text-muted hover:text-ink transition-colors cursor-pointer disabled:opacity-50 sm:px-3">
@@ -405,7 +405,7 @@ function QuotesTab({ venues, outbound, replies, onChanged }: {
   if (shortlist.length === 0) {
     return (
       <EmptyState icon={Receipt} title={t('Ingen tilbud endnu')}>
-        {t('Gem de steder I kan lide, så samler Ava deres tilbud her.')}
+        {t('Gem de steder I kan lide, så samler Juno deres tilbud her.')}
       </EmptyState>
     );
   }

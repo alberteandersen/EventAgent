@@ -6,8 +6,8 @@
    with text slots and opens on Design: rewording under Indhold shows in its
    preview at once, and three versions sit under it to look at and switch
    between. `&stale=1` makes the live build's shape older than the content,
-   which puts the "Ava needs to add this" notice up. The button in the
-   corner writes to the saved site the way Ava in the chat does. */
+   which puts the "Juno needs to add this" notice up. The button in the
+   corner writes to the saved site the way Juno in the chat does. */
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -68,15 +68,15 @@ function built(stale: boolean): WebsiteDesignRow[] {
   ];
 }
 
-/* Stands in for Ava in the chat: writes new words to the saved site, the
+/* Stands in for Juno in the chat: writes new words to the saved site, the
    way update_website_content does, while the builder is open. */
 function ChatStandIn() {
   const { weddingSite, saveSite } = useWedding();
   return (
     <button type="button"
-      onClick={() => void saveSite({ config: { ...(weddingSite?.config ?? {}), storyText: 'Skrevet af Ava i chatten.' } })}
+      onClick={() => void saveSite({ config: { ...(weddingSite?.config ?? {}), storyText: 'Skrevet af Juno i chatten.' } })}
       className="fixed bottom-4 right-4 z-50 rounded-full border border-line bg-card px-4 py-2 text-[0.75rem] shadow cursor-pointer">
-      Simulér Ava i chatten
+      Simulér Juno i chatten
     </button>
   );
 }

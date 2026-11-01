@@ -55,7 +55,7 @@ export async function POST(
       return Response.json(
         {
           error: "outreach_unavailable",
-          message: "Ava's outreach mailbox is being set up, try again shortly.",
+          message: "Juno's outreach mailbox is being set up, try again shortly.",
         },
         { status: 503 }
       );

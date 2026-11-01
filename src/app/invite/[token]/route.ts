@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { INVITE_COOKIE, acceptPartnerInvite } from "@/lib/invites/accept";
 
 /**
- * GET /invite/<token> — where the link in Ava's partner invitation lands.
+ * GET /invite/<token> — where the link in Juno's partner invitation lands.
  *
  * Signed in: join the wedding and go to it. Not signed in: remember the token
  * in a short-lived cookie and go to login; once they are in, the proxy sends

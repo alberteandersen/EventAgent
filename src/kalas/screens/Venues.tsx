@@ -79,7 +79,7 @@ export default function VenueDiscovery({
     }, t);
     await refresh();
   };
-  // Contacting one venue: Ava composes, the couple approves in the dialog.
+  // Contacting one venue: Juno composes, the couple approves in the dialog.
   const [contacting, setContacting] = useState<{ id: string; name: string } | null>(null);
   const openOutreach = (id: string) => {
     const name = displayVenues.find((v) => v.id === id)?.name ?? 'venue';
@@ -147,7 +147,7 @@ export default function VenueDiscovery({
             onBook={bookVenue}
             onDiscover={() => goDiscover(false)}
             onReview={() => setView('review')}
-            onAva={() => onNavigate?.('ava')}
+            onJuno={() => onNavigate?.('juno')}
             onRefresh={refresh}
             embedded
             categoryBar={hub.categoryBar} />
@@ -157,7 +157,7 @@ export default function VenueDiscovery({
             recipients={likedNotContacted}
             onBack={() => setView('list')}
             onApproved={() => { void refresh(); goInbox(); }}
-            onAva={() => onNavigate?.('ava')}
+            onJuno={() => onNavigate?.('juno')}
           />
         )}
       </AnimatePresence>

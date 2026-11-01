@@ -8,7 +8,7 @@ import { needsRebuild } from "@/lib/website/slots";
 import type { EventRow, WebsiteDesignRow, WeddingSiteRow } from "@/lib/db/types";
 
 /*
- * Ava's hands on the wedding website from the chat: read what is on it,
+ * Juno's hands on the wedding website from the chat: read what is on it,
  * change its words and sections, and move between the versions she has
  * built. update_website_design (tools.ts) stays the way to change the look.
  * Writes go through the caller's RLS-scoped client; the builder picks them
@@ -26,13 +26,13 @@ export const websiteFunctionDeclarations: FunctionDeclaration[] = [
   {
     name: "get_website",
     description:
-      "Read the couple's wedding website: every section (on/off, and what is missing), its texts, programme, FAQ, hotels and contact, whether it is published, and the versions Ava has built (newest first, with which one is live). Call this before changing or talking about the site's content or versions.",
+      "Read the couple's wedding website: every section (on/off, and what is missing), its texts, programme, FAQ, hotels and contact, whether it is published, and the versions Juno has built (newest first, with which one is live). Call this before changing or talking about the site's content or versions.",
     parameters: { type: Type.OBJECT, properties: {} },
   },
   {
     name: "update_website_content",
     description:
-      `Change what the wedding website says, not how it looks: its texts, which sections are shown, the programme, the FAQ, hotels and the contact person. Send only what changes. Lists (program, faq, hotels) replace the whole list, so send every row as it should read, in order. Never invent facts the couple did not give you (a story, an address, a date, a price, an answer); ask them instead. Sections: ${SECTION_LIST}. A built site shows new wording at once; new sections or rows are added by Ava automatically when the designer is unlocked.`,
+      `Change what the wedding website says, not how it looks: its texts, which sections are shown, the programme, the FAQ, hotels and the contact person. Send only what changes. Lists (program, faq, hotels) replace the whole list, so send every row as it should read, in order. Never invent facts the couple did not give you (a story, an address, a date, a price, an answer); ask them instead. Sections: ${SECTION_LIST}. A built site shows new wording at once; new sections or rows are added by Juno automatically when the designer is unlocked.`,
     parameters: {
       type: Type.OBJECT,
       properties: {
@@ -152,7 +152,7 @@ async function updateContent(supabase: SupabaseClient, event: EventRow, args: Re
   if (error) return { error: error.message };
 
   // Wording shows in a built site on its own. A new section or row needs
-  // Ava to place it, with the design kept, when the designer is unlocked.
+  // Juno to place it, with the design kept, when the designer is unlocked.
   const active = designs.find((d) => d.active) ?? null;
   let siteUpdated: "live" | "rebuilt" | "needs_unlock" | "not_built" = active?.html ? "live" : "not_built";
   if (active?.html && needsRebuild(active.html, active.brief as never, parseConfig(config))) {
@@ -171,9 +171,9 @@ async function updateContent(supabase: SupabaseClient, event: EventRow, args: Re
     unknown_sections: unknownSections.length ? unknownSections : undefined,
     site: siteUpdated,
     note: siteUpdated === "needs_unlock"
-      ? "Saved. The built site needs Ava to add the new sections or rows, which is part of the paid designer; tell them to unlock it under Hjemmeside."
+      ? "Saved. The built site needs Juno to add the new sections or rows, which is part of the paid designer; tell them to unlock it under Hjemmeside."
       : siteUpdated === "not_built"
-        ? "Saved. They can see it under Hjemmeside → Indhold; Ava builds the site from it under Design."
+        ? "Saved. They can see it under Hjemmeside → Indhold; Juno builds the site from it under Design."
         : "Saved, and the site shows it now.",
   };
 }

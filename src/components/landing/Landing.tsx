@@ -1,9 +1,9 @@
 import { Nav } from "./Nav";
 import { Hero } from "./Hero";
 import { Marquee } from "./Marquee";
-import { IntroducingAva } from "./IntroducingAva";
+import { IntroducingJuno } from "./IntroducingAva";
 import { VenueLoop } from "./VenueLoop";
-import { WhatAvaRuns } from "./WhatAvaRuns";
+import { WhatJunoRuns } from "./WhatAvaRuns";
 import { FinalCTA } from "./FinalCTA";
 import { LandingFooter } from "./LandingFooter";
 
@@ -16,9 +16,9 @@ export function Landing() {
       <Nav />
       <Hero />
       <Marquee />
-      <IntroducingAva />
+      <IntroducingJuno />
       <VenueLoop />
-      <WhatAvaRuns />
+      <WhatJunoRuns />
       <FinalCTA />
       <LandingFooter />
     </main>

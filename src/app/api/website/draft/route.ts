@@ -31,7 +31,7 @@ const SCHEMA: Schema = {
 const SEASONS_DA = ["vinter", "vinter", "forår", "forår", "forår", "sommer", "sommer", "sommer", "efterår", "efterår", "efterår", "vinter"];
 
 /**
- * POST /api/website/draft — Ava drafts one of the site's texts from what
+ * POST /api/website/draft — Juno drafts one of the site's texts from what
  * Kalas knows about the wedding (see lib/website/draft.ts for what she may
  * and may not write). Body: { eventId, field, story?, faq? }. Returns
  * { text } or { faq }; nothing is saved, the couple decides in the builder.
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     ahead: String(body.story?.ahead ?? "").slice(0, 600),
   };
   if (field === "story" && !Object.values(story).some((v) => v?.trim())) {
-    return Response.json({ error: "Fortæl Ava lidt om jer først." }, { status: 400 });
+    return Response.json({ error: "Fortæl Juno lidt om jer først." }, { status: 400 });
   }
   const faq = (Array.isArray(body.faq) ? body.faq : []).slice(0, 30).map((f) => ({
     id: String(f?.id ?? "").slice(0, 80), q: String(f?.q ?? "").slice(0, 200), a: String(f?.a ?? "").slice(0, 600),
@@ -130,13 +130,13 @@ export async function POST(request: NextRequest) {
     const draft = readDraft(field, raw, faq.map((f) => f.id));
     if (!draft.text && !draft.faq?.length) {
       return Response.json(
-        { error: field === "faq" ? "Ava fandt ikke noget, hun kan svare på ud fra det, I har fortalt." : "Ava kunne ikke skrive et udkast. Prøv igen." },
+        { error: field === "faq" ? "Juno fandt ikke noget, hun kan svare på ud fra det, I har fortalt." : "Juno kunne ikke skrive et udkast. Prøv igen." },
         { status: 422 },
       );
     }
     return Response.json(draft);
   } catch (err) {
     logAgentError("api/website/draft", err, { eventId, field });
-    return Response.json({ error: "Ava kunne ikke skrive lige nu. Prøv igen." }, { status: 502 });
+    return Response.json({ error: "Juno kunne ikke skrive lige nu. Prøv igen." }, { status: 502 });
   }
 }

@@ -1,5 +1,5 @@
 // Poll the platform Kalas mailbox for vendor replies across ALL users,
-// extract quotes, pull attachments into Storage, and queue an Ava reply
+// extract quotes, pull attachments into Storage, and queue an Juno reply
 // proposal for each new reply.
 //
 // Matching priority per inbox message:
@@ -212,7 +212,7 @@ async function ingestReply(
     full.payload
   );
 
-  // Ava's proposed response needs our last outbound message for context.
+  // Juno's proposed response needs our last outbound message for context.
   if (ctx.anchor) {
     const proposal = await generateReplyProposal(admin, reply);
     if (proposal) summary.proposalsCreated++;
@@ -222,7 +222,7 @@ async function ingestReply(
 /**
  * One pass over the platform inbox: match new messages to outreach threads,
  * reply tags, or known senders (any user), persist replies + attachments,
- * queue Ava's reply proposals, and label unattributable Kalas mail.
+ * queue Juno's reply proposals, and label unattributable Kalas mail.
  */
 export async function pollPlatformReplies(): Promise<PollSummary> {
   const admin = createAdminClient();

@@ -1,6 +1,6 @@
 "use client";
 
-/* Ava's budget assistant — a real, per-couple recommendation instead of a
+/* Juno's budget assistant — a real, per-couple recommendation instead of a
    locked-behind-premium percentage table. Same categories the budget
    screen already uses, redistributed by Gemini against the couple's own
    total, guest count, region and style, with one rule the server enforces
@@ -30,7 +30,7 @@ interface Advice {
   tips: string[];
 }
 
-export default function BudgetAvaAssistant({
+export default function BudgetJunoAssistant({
   eventId,
   guests,
   region,
@@ -38,7 +38,7 @@ export default function BudgetAvaAssistant({
   onApply,
 }: {
   eventId: string;
-  /** Shown in the summary strip while Ava works; purely descriptive. */
+  /** Shown in the summary strip while Juno works; purely descriptive. */
   guests: number;
   region: string;
   onClose: () => void;
@@ -70,7 +70,7 @@ export default function BudgetAvaAssistant({
       });
   };
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- the panel asks Ava as it opens
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- the panel asks Juno as it opens
   useEffect(ask, [eventId]);
 
   const apply = () => {
@@ -85,7 +85,7 @@ export default function BudgetAvaAssistant({
       open
       onClose={onClose}
       size="lg"
-      eyebrow={t('Avas budgetforslag')}
+      eyebrow={t('Junos budgetforslag')}
       title={state === 'ready' && advice?.headline ? advice.headline : t('Sådan ville jeg fordele jeres budget')}
       footer={state === 'ready' && advice ? (
         <>
@@ -101,7 +101,7 @@ export default function BudgetAvaAssistant({
             <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
               <Loader2 size={22} className="animate-spin text-sage-strong" />
               <p className="text-[0.88rem] text-ink-soft">
-                {t('Ava kigger på jeres tal og regner en fordeling ud…')}
+                {t('Juno kigger på jeres tal og regner en fordeling ud…')}
               </p>
             </div>
           )}
@@ -110,7 +110,7 @@ export default function BudgetAvaAssistant({
             <div className="flex flex-col items-center gap-3 rounded-2xl bg-shell px-6 py-10 text-center">
               <AlertTriangle size={20} className="text-terracotta" />
               <p className="text-[0.88rem] text-ink-soft">
-                {errorMsg || t('Ava kunne ikke regne på budgettet lige nu.')}
+                {errorMsg || t('Juno kunne ikke regne på budgettet lige nu.')}
               </p>
               <button
                 type="button"

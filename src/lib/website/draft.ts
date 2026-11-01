@@ -1,4 +1,4 @@
-/* Ava's drafts for the site's texts: a welcome line, the couple's story,
+/* Juno's drafts for the site's texts: a welcome line, the couple's story,
    a dresscode and answers to guests' questions. The line she may not cross
    is the one the builder draws everywhere else: nothing about their wedding
    that they did not tell Kalas. So she writes from a list of known facts,
@@ -44,7 +44,7 @@ export interface DraftFaqItem {
 const line = (label: string, value: string | number | null | undefined) =>
   value === null || value === undefined || String(value).trim() === "" ? `- ${label}: (ikke oplyst)` : `- ${label}: ${value}`;
 
-/** Only what Kalas knows. "(ikke oplyst)" marks what Ava must not fill in. */
+/** Only what Kalas knows. "(ikke oplyst)" marks what Juno must not fill in. */
 export function factsText(f: DraftFacts): string {
   return [
     line("Parret", f.names),
@@ -80,7 +80,7 @@ export function draftPrompt(
   extra: { story?: StoryAnswers; faq?: DraftFaqItem[] } = {},
 ): { system: string; user: string } {
   const lang = facts.language === "en" ? "engelsk" : "dansk";
-  const system = `Du er Ava og hjælper et brudepar med teksterne til deres bryllupsside. Skriv på ${lang}.\n\n${RULES}`;
+  const system = `Du er Juno og hjælper et brudepar med teksterne til deres bryllupsside. Skriv på ${lang}.\n\n${RULES}`;
   const known = `Det ved Kalas om brylluppet:\n${factsText(facts)}`;
 
   switch (field) {
@@ -144,7 +144,7 @@ export function readDraft(field: DraftField, raw: unknown, knownIds: string[] = 
 }
 
 /**
- * Ava's answers folded into the couple's list: an answer lands only where
+ * Juno's answers folded into the couple's list: an answer lands only where
  * theirs is blank, and a new question only if they do not already ask it.
  * Nothing they wrote is ever replaced.
  */

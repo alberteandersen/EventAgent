@@ -1,6 +1,6 @@
 "use client";
 
-/* The cards Ava attaches to a reply: a batch of vendors to open on the board,
+/* The cards Juno attaches to a reply: a batch of vendors to open on the board,
    an outreach draft to approve, a proposed answer to a vendor, invitation
    wording. Each reads its own row, so a card stays current after a reload. */
 
@@ -208,7 +208,7 @@ function DraftCard({ draftId }: { draftId: string }) {
         {draft.body_template}
       </p>
       <p className="mt-2 text-[0.74rem] text-muted">
-        {tn(recipients.length, 'Ava skriver til den valgte leverandør', 'Ava skriver individuelt til {n} valgte leverandører')}
+        {tn(recipients.length, 'Juno skriver til den valgte leverandør', 'Juno skriver individuelt til {n} valgte leverandører')}
         {recipients.length > 0 && `: ${recipients.map((v) => v.name).join(', ')}`}.
       </p>
       {draft.status !== 'proposed' || sent ? (

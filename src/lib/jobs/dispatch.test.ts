@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 
 const runJobInline = vi.fn();
 vi.mock('./run', () => ({
-  JOB_KINDS: { 'website.build': { failure: 'Ava kunne ikke designe siden.' } },
+  JOB_KINDS: { 'website.build': { failure: 'Juno kunne ikke designe siden.' } },
   runJobInline: (...args: unknown[]) => runJobInline(...args),
 }));
 vi.mock('@/lib/gemini/log', () => ({ logAgentError: vi.fn() }));
@@ -53,7 +53,7 @@ describe('dispatchJob, locally', () => {
     runJobInline.mockRejectedValue(new Error('gemini 500 stack…'));
     const res = await dispatchJob(request, 'website.build', job);
     expect(res.status).toBe(502);
-    expect(await res.json()).toEqual({ error: 'Ava kunne ikke designe siden.' });
+    expect(await res.json()).toEqual({ error: 'Juno kunne ikke designe siden.' });
   });
 });
 
@@ -79,6 +79,6 @@ describe('dispatchJob, on Netlify', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 404 })));
     const res = await dispatchJob(request, 'website.build', job);
     expect(res.status).toBe(502);
-    expect(updates[0]).toMatchObject({ status: 'failed', error: 'Ava kunne ikke designe siden.' });
+    expect(updates[0]).toMatchObject({ status: 'failed', error: 'Juno kunne ikke designe siden.' });
   });
 });

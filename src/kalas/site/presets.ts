@@ -1,6 +1,6 @@
 /* Hand-crafted template designs — the couple's starting points. Each is a
    complete, opinionated SiteDesign (every section included so content
-   toggles always work) that applies instantly with no AI call; Ava then
+   toggles always work) that applies instantly with no AI call; Juno then
    personalizes and edits FROM the chosen template. Curated with real
    contrast care: text/bg and onAccent/accent pairs aim for WCAG AA. */
 

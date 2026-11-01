@@ -75,7 +75,7 @@ export default function ShortlistPanel({
           <Lock size={14} className="mt-0.5 shrink-0 text-muted" />
           <p className="text-[0.82rem] text-ink">
             Lås jeres lokation ved at vælge et venue herunder, så åbner vi de øvrige
-            leverandører, og Ava kan begynde at finde og kontakte dem.
+            leverandører, og Juno kan begynde at finde og kontakte dem.
           </p>
         </div>
       )}

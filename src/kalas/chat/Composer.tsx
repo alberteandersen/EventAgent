@@ -8,7 +8,7 @@ import { useLang } from '../i18n';
 export interface ComposerHandle { focus: () => void }
 
 /* The message box: grows with what is typed up to a few lines, Enter sends,
-   Shift+Enter breaks the line. Typing is allowed while Ava works, sending
+   Shift+Enter breaks the line. Typing is allowed while Juno works, sending
    waits until she is done. */
 const Composer = forwardRef<ComposerHandle, {
   busy: boolean;
@@ -51,7 +51,7 @@ const Composer = forwardRef<ComposerHandle, {
           }
         }}
         placeholder={placeholder}
-        aria-label={t('Besked til Ava')}
+        aria-label={t('Besked til Juno')}
         className="max-h-40 min-h-[36px] flex-1 resize-none bg-transparent py-[7px] text-[0.93rem] leading-[1.45] text-ink placeholder:text-faint focus:outline-none"
       />
       <button

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Plus, X, Pencil, Bell, StickyNote, ChevronRight, ChevronDown, MessageCircle } from 'lucide-react';
 import BudgetLineDetail from './BudgetLineDetail';
-import BudgetAvaAssistant from './BudgetAvaAssistant';
+import BudgetJunoAssistant from './BudgetJunoAssistant';
 import { budgetLines, type BudgetLine } from '@/lib/budget/benchmarks';
 import {
   BUDGET_COLORS,
@@ -372,13 +372,13 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
     });
   };
 
-  /** Applies Ava's whole suggested split at once. A dedicated bulk write
+  /** Applies Juno's whole suggested split at once. A dedicated bulk write
    *  rather than one call to `persist` per line: those each read `amounts` from
    *  closure, so looping them would race — each call seeding or saving
    *  against a version of the total that only reflects the one line before
-   *  it. One computed object, one write. Only touches lines Ava actually
+   *  it. One computed object, one write. Only touches lines Juno actually
    *  advised on — a standard category the couple deleted does not come
-   *  back just because Ava has an opinion about it. */
+   *  back just because Juno has an opinion about it. */
   const applyAdvice = (advice: { category: string; amount: number }[]) => {
     const nextAmounts = { ...amounts };
     for (const l of advice) nextAmounts[l.category] = l.amount;
@@ -453,10 +453,10 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
         }
         guide="budget"
         actions={
-          /* Ava needs a total or a headcount to reason from — the same guard
+          /* Juno needs a total or a headcount to reason from — the same guard
              the API itself enforces, so the button never opens onto an error. */
           total > 0 && event?.id ? (
-            <Button icon={MessageCircle} onClick={() => setAssistOpen(true)}>{t('Spørg Ava om fordelingen')}</Button>
+            <Button icon={MessageCircle} onClick={() => setAssistOpen(true)}>{t('Spørg Juno om fordelingen')}</Button>
           ) : undefined
         }
       />
@@ -475,7 +475,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
       </div>
 
       <p className="mt-4 text-[0.82rem] text-muted">
-        {t('Betalt indtil videre:')} <span className="text-ink">{kr(spent)} kr</span> · {t('Ava advarer, hvis I rammer loftet.')}
+        {t('Betalt indtil videre:')} <span className="text-ink">{kr(spent)} kr</span> · {t('Juno advarer, hvis I rammer loftet.')}
       </p>
 
       {/* Stacked allocation bar */}
@@ -881,7 +881,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
       })()}
 
       {assistOpen && event?.id && (
-        <BudgetAvaAssistant
+        <BudgetJunoAssistant
           eventId={event.id}
           guests={couple.guests}
           region={couple.region}
@@ -980,7 +980,7 @@ function StylePicker({
 }
 
 /* The totals. `onCommit` makes one of them the couple's own figure rather
-   than a read-out: the budget was settable only by asking Ava, while this tile
+   than a read-out: the budget was settable only by asking Juno, while this tile
    sat here showing the number it would not let them change. */
 function Stat({ label, value, tone, onCommit }: {
   label: string; value: number; tone: keyof typeof STAT_STYLES;

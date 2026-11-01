@@ -48,7 +48,7 @@ interface RawAdvice {
   tips: string[];
 }
 
-const ADVICE_PROMPT = `Du er Ava, brylluppets planlægger, og skal foreslå en budgetfordeling for et par.
+const ADVICE_PROMPT = `Du er Juno, brylluppets planlægger, og skal foreslå en budgetfordeling for et par.
 
 Brug PRÆCIS disse ${budgetLines.length} kategorier, ingen andre, og medtag hver af dem én gang i "lines":
 ${budgetLines.map((l) => `- ${l.id} = ${l.label}`).join("\n")}
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
   const total = parseBudget(event.budget) || estimatedTotal(0, guests);
   if (total <= 0) {
     return Response.json(
-      { error: "Ava skal kende jeres budget eller gæsteantal, før hun kan foreslå en fordeling." },
+      { error: "Juno skal kende jeres budget eller gæsteantal, før hun kan foreslå en fordeling." },
       { status: 422 },
     );
   }
@@ -147,7 +147,7 @@ ${lineContext}`;
     try {
       raw = JSON.parse(res.text ?? "{}") as RawAdvice;
     } catch {
-      return Response.json({ error: "Ava kunne ikke sætte forslaget sammen. Prøv igen." }, { status: 502 });
+      return Response.json({ error: "Juno kunne ikke sætte forslaget sammen. Prøv igen." }, { status: 502 });
     }
 
     // Never trust the model's arithmetic — normaliseAdvice (tested on its
@@ -163,6 +163,6 @@ ${lineContext}`;
     });
   } catch (err) {
     logAgentError("budget-assist", err, { eventId });
-    return Response.json({ error: "Ava kunne ikke regne på budgettet lige nu." }, { status: 500 });
+    return Response.json({ error: "Juno kunne ikke regne på budgettet lige nu." }, { status: 500 });
   }
 }

@@ -70,7 +70,7 @@ export function Hero() {
 
         <BlurFade delay={0.65} duration={0.5} className="mx-auto mt-7 max-w-xl">
           <p className="text-lg leading-relaxed text-on-velvet/90 drop-shadow-[0_1px_12px_rgba(0,0,0,0.3)]">
-            Ava finder rigtige steder, hvor som helst i verden, skriver til dem
+            Juno finder rigtige steder, hvor som helst i verden, skriver til dem
             på deres eget sprog og gør svarene til tilbud, I kan sammenligne.
             Bagefter holder hun styr på budget, gæster, invitationer og jeres
             bryllupshjemmeside. I godkender; hun gør arbejdet.

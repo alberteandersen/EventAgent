@@ -68,7 +68,7 @@ export async function loadVendorOutreach(
         status: 409,
         payload: {
           error: "already_contacted",
-          message: `Ava har allerede skrevet til ${venue.name}.`,
+          message: `Juno har allerede skrevet til ${venue.name}.`,
         },
       },
     };
@@ -85,7 +85,7 @@ export async function loadVendorOutreach(
           status: 503,
           payload: {
             error: "outreach_unavailable",
-            message: "Avas postkasse er ved at blive sat op, prøv igen om lidt.",
+            message: "Junos postkasse er ved at blive sat op, prøv igen om lidt.",
           },
         },
       };

@@ -17,7 +17,7 @@ import { useLang } from './i18n';
 import { SignOutButton } from '@/components/auth/SignOutButton';
 
 export type ScreenId =
-  | 'home' | 'ava' | 'team' | 'inbox'
+  | 'home' | 'juno' | 'team' | 'inbox'
   | 'budget' | 'guests' | 'website' | 'registry' | 'invites' | 'planning' | 'seating'
   | 'nygift' | 'guides';
 
@@ -104,24 +104,24 @@ export default function Shell({
   current,
   onNavigate,
   inboxBadge = 0,
-  ava,
-  avaOpen = false,
-  onAvaOpenChange,
-  avaSignal = 0,
+  juno,
+  junoOpen = false,
+  onJunoOpenChange,
+  junoSignal = 0,
   children,
 }: {
   current: ScreenId;
   onNavigate: (s: ScreenId) => void;
   inboxBadge?: number;
-  /** Ava's chat. Beside the page from xl, over it as a drawer from lg, and a
+  /** Juno's chat. Beside the page from xl, over it as a drawer from lg, and a
    *  full-screen sheet on a phone. Kept mounted while closed, so a reply that
    *  is still streaming survives the panel being put away. */
-  ava?: React.ReactNode;
-  avaOpen?: boolean;
-  onAvaOpenChange?: (open: boolean) => void;
-  /** Bumped when Ava opens a page. On a phone the sheet steps aside, so the
+  juno?: React.ReactNode;
+  junoOpen?: boolean;
+  onJunoOpenChange?: (open: boolean) => void;
+  /** Bumped when Juno opens a page. On a phone the sheet steps aside, so the
    *  couple sees the page she opened. */
-  avaSignal?: number;
+  junoSignal?: number;
   children: React.ReactNode;
 }) {
   const { t } = useLang();
@@ -133,7 +133,7 @@ export default function Shell({
   const sidebarRail = sidebarCollapsed;
   const navigate = (s: ScreenId) => { setMoreOpen(false); onNavigate(s); };
   const moreActive = !MOBILE_TABS.includes(current);
-  const setAva = (open: boolean) => { setMoreOpen(false); onAvaOpenChange?.(open); };
+  const setJuno = (open: boolean) => { setMoreOpen(false); onJunoOpenChange?.(open); };
 
   // A new page starts at its top; the page scrolls inside <main>, not the window.
   useEffect(() => { main.current?.scrollTo({ top: 0 }); }, [current]);
@@ -150,14 +150,14 @@ export default function Shell({
     return () => observer.disconnect();
   }, [tabTitle]);
 
-  const lastSignal = useRef(avaSignal);
-  const setAvaRef = useRef(setAva);
-  useEffect(() => { setAvaRef.current = setAva; });
+  const lastSignal = useRef(junoSignal);
+  const setJunoRef = useRef(setJuno);
+  useEffect(() => { setJunoRef.current = setJuno; });
   useEffect(() => {
-    if (avaSignal === lastSignal.current) return;
-    lastSignal.current = avaSignal;
-    if (window.matchMedia('(max-width: 1023.98px)').matches) setAvaRef.current(false);
-  }, [avaSignal]);
+    if (junoSignal === lastSignal.current) return;
+    lastSignal.current = junoSignal;
+    if (window.matchMedia('(max-width: 1023.98px)').matches) setJunoRef.current(false);
+  }, [junoSignal]);
 
   return (
     <div className="flex h-dvh overflow-hidden text-ink" style={{ backgroundColor: CHROME_BG }}>
@@ -297,19 +297,19 @@ export default function Shell({
               <span className="lg:hidden"><Wordmark /></span>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {ava && (
+              {juno && (
                 <button
                   type="button"
-                  data-tour="ava-chat"
-                  aria-pressed={avaOpen}
-                  onClick={() => setAva(!avaOpen)}
+                  data-tour="juno-chat"
+                  aria-pressed={junoOpen}
+                  onClick={() => setJuno(!junoOpen)}
                   className={cn(
                     'hidden h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition-colors lg:flex',
-                    avaOpen ? 'border-ink bg-ink text-paper' : 'border-line bg-card/70 text-ink hover:border-ink',
+                    junoOpen ? 'border-ink bg-ink text-paper' : 'border-line bg-card/70 text-ink hover:border-ink',
                   )}
                 >
                   <MessageCircle size={14} strokeWidth={1.8} aria-hidden />
-                  {t('Ava')}
+                  {t('Juno')}
                 </button>
               )}
               <a
@@ -334,11 +334,11 @@ export default function Shell({
               <div className="min-h-full"><LoadGate>{children}</LoadGate></div>
             </main>
 
-            {ava && (
+            {juno && (
               <aside
-                aria-label={t('Ava')}
+                aria-label={t('Juno')}
                 className={cn(
-                  avaOpen ? 'flex' : 'hidden',
+                  junoOpen ? 'flex' : 'hidden',
                   // Phone: the whole screen, over the page and the bottom bar.
                   'fixed inset-0 z-50 flex-col overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]',
                   // lg: a drawer over the page, so a two-column screen keeps its width.
@@ -348,7 +348,7 @@ export default function Shell({
                 )}
                 style={{ backgroundColor: PAGE_BG }}
               >
-                {ava}
+                {juno}
               </aside>
             )}
           </div>
@@ -356,15 +356,15 @@ export default function Shell({
       </div>
 
       {/* ── Mobile bottom nav ───────────────────────────────────────── */}
-      {/* Put away while Ava's sheet is up: it would sit over her message box,
+      {/* Put away while Juno's sheet is up: it would sit over her message box,
           and the sheet has its own way down. */}
-      <nav className={cn('fixed inset-x-0 bottom-0 z-40 lg:hidden', avaOpen && Boolean(ava) && 'hidden')}>
+      <nav className={cn('fixed inset-x-0 bottom-0 z-40 lg:hidden', junoOpen && Boolean(juno) && 'hidden')}>
         <div className="mx-auto mb-4 flex max-w-sm items-center justify-between gap-1 rounded-full bg-card/95 px-2 py-2 shadow-[0_8px_30px_rgba(46,51,37,0.10)] backdrop-blur-xl rule">
-          {[...MOBILE_TABS.slice(0, 2), 'ava' as const, ...MOBILE_TABS.slice(2)].map((id) => {
-            if (id === 'ava') {
-              if (!ava) return null;
+          {[...MOBILE_TABS.slice(0, 2), 'juno' as const, ...MOBILE_TABS.slice(2)].map((id) => {
+            if (id === 'juno') {
+              if (!juno) return null;
               return (
-                <button key="ava" type="button" data-tour="ava-chat" onClick={() => setAva(true)} aria-label={t('Ava')}
+                <button key="juno" type="button" data-tour="juno-chat" onClick={() => setJuno(true)} aria-label={t('Juno')}
                   className="relative flex flex-1 flex-col items-center gap-1 rounded-full py-2 cursor-pointer">
                   <span className="relative z-10 flex size-7 -my-1 items-center justify-center rounded-full bg-ink text-paper">
                     <MessageCircle size={15} strokeWidth={1.8} />

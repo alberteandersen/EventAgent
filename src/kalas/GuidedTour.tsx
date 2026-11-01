@@ -1,29 +1,32 @@
 "use client";
 
-/* Juno's guided tour — the only one.
+/* Juno's guided tour — the only one, and she gives it herself: she hovers
+ * over what she is saying, looks at the thing to press, and is pleased when
+ * they press it.
  *
  * There used to be a second walkthrough that narrated by dropping bubbles into
  * the chat, and since onboarding opened on the chat, that was the
  * one everybody actually met: a column of text, nothing pointed at. This one
- * anchors to the real interface instead — it spotlights the control the step
- * is about, says in so many words what to press, and advances when they press
- * it. "Videre" is the escape hatch, not the intended path; that is the
- * difference between a tour you read and one you do.
+ * anchors to the real interface instead: it rings the menu item for the page
+ * the step is about, and her card, bottom right, carries the one way forward.
  *
  * It ends on Hjem with Juno's panel open beside it.
  */
 
-import { useCallback, useEffect, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type Dispatch, type SetStateAction } from 'react';
 import { createPortal } from 'react-dom';
 import { X, ArrowLeft, ArrowRight } from 'lucide-react';
 import type { ScreenId } from './Shell';
 import { useLang } from './i18n';
 import RichText from './chat/RichText';
+import { Juno } from '@/components/juno/Juno';
 import {
   WALKTHROUGH_STEPS,
 } from './walkthrough';
 
 type Box = { top: number; left: number; width: number; height: number };
+
+const noSubscription = () => () => {};
 
 /** The visible button for a target: some render twice (the header's Juno
  *  button and the phone's bottom bar), and the hidden copy has no width. */
@@ -48,12 +51,25 @@ export default function GuidedTour({
   onFinish: () => void;
 }) {
   const { t } = useLang();
+  // The portal needs document.body: false on the server and while hydrating.
+  const onClient = useSyncExternalStore(noSubscription, () => true, () => false);
 
   const step = WALKTHROUGH_STEPS[idx];
 
+  // A step taken: she is pleased for a moment.
+  const [glad, setGlad] = useState(false);
+  const calm = useRef<number | undefined>(undefined);
+  const cheer = useCallback(() => {
+    setGlad(true);
+    window.clearTimeout(calm.current);
+    calm.current = window.setTimeout(() => setGlad(false), 1100);
+  }, []);
+  useEffect(() => () => window.clearTimeout(calm.current), []);
+
   const advance = useCallback(() => {
+    cheer();
     setIdx((i) => Math.min(i + 1, WALKTHROUGH_STEPS.length - 1));
-  }, [setIdx]);
+  }, [setIdx, cheer]);
   const back = useCallback(() => {
     setIdx((i) => Math.max(i - 1, 0));
   }, [setIdx]);
@@ -61,17 +77,14 @@ export default function GuidedTour({
   const navigateRef = useRef(onNavigate);
   useEffect(() => { navigateRef.current = onNavigate; });
 
-  /* What lights up is the menu button for the NEXT page, not this one. The
-     tour has already opened the page the card describes, so highlighting its
-     own button asked them to press their way to where they already were —
-     which is why it looked like nothing happened. Skipped when the next step
-     stays on this page, since there would be nothing to travel to. */
-  const nextStep = WALKTHROUGH_STEPS[idx + 1];
-  const target = step.target
-    ?? (nextStep && nextStep.page && nextStep.page !== step.page ? nextStep.page : null);
+  /* What is ringed is the menu item for the page being described, so the
+     couple can see where it lives. The Juno step rings her button instead,
+     and there pressing it moves the tour on, since pressing it is the point
+     of the step. Everywhere else the way forward is "Næste" on the card. */
+  const target = step.target ?? step.page;
+  const pressAdvances = Boolean(step.target);
 
   const [box, setBox] = useState<Box | null>(null);
-  const targetElRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     // Cleared on a timer, not synchronously: a setState in an effect body is
@@ -90,7 +103,6 @@ export default function GuidedTour({
     const measure = () => {
       if (!el) {
         el = findNavButton(target);
-        targetElRef.current = el;
         if (!el) return;
         /* The menu scrolls once it outgrows the window, and the button for a
            page near the bottom sits outside its visible strip — the ring was
@@ -99,7 +111,7 @@ export default function GuidedTour({
            needed and leaves the page alone. Instant, because a smooth scroll
            here is silently dropped in at least one browser we run in. */
         el.scrollIntoView({ block: 'nearest' });
-        el.addEventListener('click', onClick);
+        if (pressAdvances) el.addEventListener('click', onClick);
       }
       const r = el.getBoundingClientRect();
       const next = { top: r.top - 6, left: r.left - 6, width: r.width + 12, height: r.height + 12 };
@@ -108,7 +120,7 @@ export default function GuidedTour({
       last = next;
       setBox(next);
     };
-    // Their click on the real button navigates; the tour just follows along.
+    // On the Juno step, their press on her real button moves the tour on.
     const onClick = () => advance();
 
     /* Three ways in, on purpose. requestAnimationFrame does not fire while
@@ -125,9 +137,8 @@ export default function GuidedTour({
       window.clearTimeout(first);
       window.clearInterval(poll);
       el?.removeEventListener('click', onClick);
-      targetElRef.current = null;
     };
-  }, [target, advance]);
+  }, [target, pressAdvances, advance]);
 
   /* Every step opens on the top of its page. The step describes what the page
      leads with, and arriving halfway down it — which is where the last page
@@ -156,123 +167,125 @@ export default function GuidedTour({
      getBoundingClientRect — viewport coordinates — but `position: fixed`
      resolves against the nearest ancestor carrying a transform, and this app
      is full of them (every motion.div). In place, the ring's inline top of
-     443px landed at 268px on screen: right number, wrong origin. */
-  if (typeof document === 'undefined') return null;
+     443px landed at 268px on screen: right number, wrong origin.
+
+     Out there it is also outside the app's .theme-kalas subtree, so it wraps
+     itself in one. Without it the card took the landing page's tokens, and
+     its body text came out pale khaki on white. */
+  if (!onClient) return null;
+
+  /* Her eyes rest on the thing to press. She hovers at the card's corner,
+     bottom right of the window, so the direction is from about there. */
+  const look = box
+    ? (() => {
+        const dx = box.left + box.width / 2 - (window.innerWidth - 300);
+        const dy = box.top + box.height / 2 - (window.innerHeight - 340);
+        const far = Math.hypot(dx, dy) || 1;
+        return { x: dx / far, y: dy / far };
+      })()
+    : { x: 0, y: 0.3 };
 
   return createPortal(
-    <>
-      {/* The ring, and a label on it. The target is always a menu button, so
-          it is always on the left — which is exactly why the card lives on
-          the right and the two can never collide. */}
+    <div className="theme-kalas font-sans">
+      {/* The ring. The target is always a menu button on the left, which is
+          why the card lives on the right: the two can never collide. */}
       {box && (
-        <>
-          <div
-            aria-hidden
-            /* No transition on the position. Animating top/left means the ring
-               is only in the right place once the animation finishes — and
-               transitions are throttled in a background tab and skipped under
-               reduced motion, which left it sitting on the previous step's
-               button indefinitely. It should just be where it is. */
-            className="pointer-events-none fixed z-40 rounded-[12px] border-2 border-sage-strong"
-            style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
-          />
-          <button
-            type="button"
-            onClick={() => {
-              /* It says "press here", so pressing it presses the real button:
-                 the app navigates exactly as it would have, and the tour just
-                 follows. Falls back to advancing if the button went away. */
-              const el = targetElRef.current;
-              if (el) el.click();
-              else advance();
-            }}
-            className="fixed z-40 cursor-pointer rounded-full bg-ink px-3 py-1.5 text-[12px] font-semibold whitespace-nowrap text-canvas shadow-[0_4px_14px_rgba(36,65,58,0.3)] transition-opacity hover:opacity-90"
-            style={{ top: box.top + box.height / 2 - 14, left: box.left + box.width + 10 }}
-          >
-            {t('Tryk her')}
-          </button>
-        </>
+        <div
+          aria-hidden
+          /* No transition on the position. Animating top/left means the ring
+             is only in the right place once the animation finishes — and
+             transitions are throttled in a background tab and skipped under
+             reduced motion, which left it sitting on the previous step's
+             button indefinitely. It should just be where it is. */
+          className="pointer-events-none fixed z-40 rounded-[12px] border-2 border-ink"
+          style={{ top: box.top, left: box.left, width: box.width, height: box.height }}
+        />
       )}
 
       {/* Bottom right, and it stays there. The highlight is always a menu
           button on the left, so this corner is the one place the card can
           never cover either the menu or what the step is pointing at — and a
           card that does not move is one that cannot land somewhere wrong. */}
-      <div
-        role="dialog"
-        aria-label={t('Rundvisning')}
-        className="fixed inset-x-4 bottom-6 z-50 overflow-hidden rounded-[20px] rule bg-card p-4 shadow-[0_14px_40px_rgba(36,65,58,0.18)] lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[320px]"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <p className="eyebrow">{eyebrow}</p>
-          <div className="flex items-center gap-2">
-            {/* How far in they are, as a ring rather than a number to read. */}
-            <span
-              aria-hidden
-              className="h-4 w-4 shrink-0 rounded-full"
-              style={{
-                background: `conic-gradient(var(--color-sage-strong) ${pct}%, var(--color-line) 0)`,
-              }}
-            />
-            <span className="sr-only">{t('{n} af {total}', { n: idx + 1, total })}</span>
+      <div className="fixed inset-x-4 bottom-6 z-50 lg:inset-x-auto lg:right-6 lg:bottom-6 lg:w-[340px]">
+        {/* Juno, giving the tour: hovering just above the corner of what she
+            is saying. */}
+        <div className="pointer-events-none absolute -top-[88px] left-3">
+          <div className="juno-bob">
+            <Juno size={92} flight="hover" mood={glad ? 'glad' : 'calm'} look={look} shadow={false} />
+          </div>
+        </div>
+
+        {/* Dark on purpose: the pages behind it are pale, and so are their
+            cards. This is the one thing on screen that is not the page. */}
+        <div
+          role="dialog"
+          aria-label={t('Rundvisning')}
+          className="rounded-[20px] bg-ink p-5 text-paper shadow-[0_18px_44px_-12px_rgba(18,51,43,0.6)]"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-micro font-semibold uppercase tracking-[0.18em] text-paper/75">{eyebrow}</p>
+            <div className="flex items-center gap-2">
+              {/* How far in they are, as a ring rather than a number to read. */}
+              <span
+                aria-hidden
+                className="h-4 w-4 shrink-0 rounded-full"
+                style={{
+                  background: `conic-gradient(var(--color-paper) ${pct}%, color-mix(in srgb, var(--color-paper) 28%, transparent) 0)`,
+                }}
+              />
+              <span className="sr-only">{t('{n} af {total}', { n: idx + 1, total })}</span>
+              <button
+                type="button"
+                onClick={onFinish}
+                aria-label={t('Spring rundvisningen over')}
+                className="-mr-1 flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-md text-paper/75 transition-colors hover:bg-paper/10 hover:text-paper"
+              >
+                <X size={15} strokeWidth={2} />
+              </button>
+            </div>
+          </div>
+
+          <h2 className="mt-2.5 font-serif text-[1.45rem] leading-tight text-paper">
+            {title}
+          </h2>
+
+          <div aria-live="polite" className="mt-2 text-[13.5px] leading-relaxed text-paper/85">
+            <RichText text={body} />
+          </div>
+
+          {/* The one way forward, on every step and every screen size. */}
+          {!step.final && (
+            <div className="mt-4 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={back}
+                disabled={idx === 0}
+                className="flex shrink-0 cursor-pointer items-center gap-1 rounded-full border border-paper/35 px-3 py-2 text-[13px] font-semibold text-paper/85 transition-colors hover:border-paper hover:text-paper disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ArrowLeft size={14} /> {t('Tilbage')}
+              </button>
+              <button
+                type="button"
+                onClick={advance}
+                className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-paper px-4 py-2 text-[13px] font-semibold text-ink transition-opacity hover:opacity-90"
+              >
+                {t('Næste')} <ArrowRight size={14} />
+              </button>
+            </div>
+          )}
+
+          {step.final && (
             <button
               type="button"
               onClick={onFinish}
-              aria-label={t('Spring rundvisningen over')}
-              className="-mr-1 flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md text-muted transition-colors hover:bg-shell hover:text-ink"
+              className="mt-5 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-paper px-4 py-2.5 text-meta font-semibold text-ink transition-opacity hover:opacity-90"
             >
-              <X size={14} strokeWidth={2} />
+              {t('Kom i gang')} <ArrowRight size={14} />
             </button>
-          </div>
+          )}
         </div>
-
-        <h2 className="mt-2 font-serif text-[1.4rem] leading-tight text-ink">
-          {title}
-        </h2>
-
-        <div aria-live="polite" className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">
-          <RichText text={body} />
-        </div>
-
-        {/* No forward/back button while the menu is showing them where to
-            press — the ring is the instruction, and a second way to advance
-            sitting next to it just competes with it.
-
-            Kept for the case where there is nothing to press: on a phone the
-            menu rail does not exist, and without this the tour is a dead end
-            whose only exit is abandoning it. That was the state it shipped in
-            once already. */}
-        {!step.final && !box && (
-          <div className="mt-4 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={back}
-              disabled={idx === 0}
-              className="flex shrink-0 cursor-pointer items-center gap-1 rounded-full rule px-3 py-2 text-[13px] font-semibold text-ink-soft transition-colors hover:border-ink hover:text-ink disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ArrowLeft size={14} /> {t('Tilbage')}
-            </button>
-            <button
-              type="button"
-              onClick={advance}
-              className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full bg-ink px-4 py-2 text-[13px] font-semibold text-canvas transition-opacity hover:opacity-90"
-            >
-              {t('Videre')} <ArrowRight size={14} />
-            </button>
-          </div>
-        )}
-
-        {step.final && (
-          <button
-            type="button"
-            onClick={onFinish}
-            className="mt-5 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full bg-ink px-4 py-2.5 text-meta font-semibold text-paper transition-opacity hover:opacity-90"
-          >
-            {t('Kom i gang')} <ArrowRight size={14} />
-          </button>
-        )}
       </div>
-    </>,
+    </div>,
     document.body,
   );
 }

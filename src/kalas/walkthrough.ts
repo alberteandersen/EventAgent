@@ -22,7 +22,8 @@ export const WALKTHROUGH_KEY = 'kalas_walkthrough';
 export const WALKTHROUGH_DONE_KEY = 'kalas_walkthrough_done';
 
 /** localStorage key: whether Juno's panel is open on this device. Onboarding
- *  opens it, so a new couple meets her first. */
+ *  opens it, so a new couple meets her first. The stored name predates her
+ *  rename (Ava until 2026-10-11) and stays, so nobody's panel resets. */
 export const JUNO_OPEN_KEY = 'kalas_ava_open';
 
 export type WalkthroughStep = {
@@ -52,7 +53,7 @@ const TOUR_PAGES: { page: ScreenId; title: string; body: string }[] = [
   {
     page: 'home',
     title: 'Det her er jeres side',
-    body: 'Jeres navne, jeres dato og hvor længe der er til — alt hvad I fortalte mig, står allerede her.\n\nJeg holder **Kom godt i gang** opdateret nedenunder, ét skridt ad gangen.',
+    body: 'Jeres navne, jeres dato og hvor længe der er til — alt hvad I fortalte mig, står allerede her.\n\nJeg holder **Kom godt i gang** opdateret, ét skridt ad gangen. Den ligger nederst til højre, når rundvisningen er slut.',
   },
   {
     page: 'planning',
@@ -100,7 +101,7 @@ export const WALKTHROUGH_STEPS: readonly WalkthroughStep[] = [
     eyebrow: 'Hjem',
     final: true,
     title: 'Sådan kommer I i gang',
-    body: 'Start i **Kom godt i gang** — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.',
+    body: 'Start i **Kom godt i gang** nederst til højre — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.',
   },
 ] as const;
 

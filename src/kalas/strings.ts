@@ -102,7 +102,8 @@ export const EN: Record<string, string> = {
   'Sæt jeres budget': 'Set your budget',
   'Sæt jeres dato': 'Set your date',
   'Juno fordeler det på kategorier bagefter': 'Juno splits it across categories afterwards',
-  'Tryk på datoen øverst på siden': 'Press the date at the top of the page',
+  'Tryk på datoen øverst på Hjem': 'Press the date at the top of Home',
+  'Minimér': 'Minimise',
   'Juno kan researche stedet og udfylde kapacitet, priser og praktisk info fra stedets egne sider.':
     'Juno can research the venue and fill in capacity, prices and practical details from its own pages.',
   'Ret datoen': 'Change the date',
@@ -162,10 +163,9 @@ export const EN: Record<string, string> = {
 
   // ── Classic-mode walkthrough ────────────────────────────────────────
   'Det her er jeres side': 'This is your page',
-  'Tryk her': 'Click here',
   'Sådan kommer I i gang': 'Where to start',
-  'Start i **Kom godt i gang** — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.':
-    'Start with **Kom godt i gang** — the next steps are there, one at a time, and I tick them off as you go.\n\nIf you are unsure, just ask me.',
+  'Start i **Kom godt i gang** nederst til højre — de næste skridt står der, ét ad gangen, og jeg krydser dem af, efterhånden som I kommer videre.\n\nEr I i tvivl, så spørg mig bare.':
+    'Start with **Getting started** at the bottom right — the next steps are there, one at a time, and I tick them off as you go.\n\nIf you are unsure, just ask me.',
   'Rundvisning': 'Guided tour',
   '{n} af {total}': '{n} of {total}',
   'Spring rundvisningen over': 'Skip the tour',
@@ -310,7 +310,6 @@ export const EN: Record<string, string> = {
   // ── Common verbs / chrome ───────────────────────────────────────────
   'Tilbage': 'Back',
   'Næste': 'Next',
-  'Videre': 'Continue',
   'Gem': 'Save',
   'Gemt': 'Saved',
   'Annuller': 'Cancel',
@@ -1715,29 +1714,10 @@ export const EN: Record<string, string> = {
   'Hjælp': 'Help',
   'Guides & FAQ': 'Guides & FAQ',
   'Guide': 'Guide (in Danish)',
-  'Råd til hele brylluppet, og svar på det, par spørger om.': 'Advice for the whole wedding, and answers to what couples ask.',
-  'Guiderne findes indtil videre kun på dansk.': 'The guides are only in Danish for now.',
-  'Søg i guides og spørgsmål': 'Search guides and questions',
-  'Guides': 'Guides',
-  'Spørgsmål og svar': 'Questions and answers',
-  '{n} min.': '{n} min',
-  '{n} min. læsning': '{n} min read',
-  'Ingen resultater for "{q}"': 'No results for "{q}"',
-  'Prøv et andet ord, eller spørg Juno i chatten.': 'Try another word, or ask Juno in the chat.',
-  'Alle guides': 'All guides',
-  'Åbn som webside': 'Open as a web page',
-  'Kort svar': 'Short answer',
-  'Kilder': 'Sources',
-  'Læs også': 'Read next',
-  'Gør det i Kalas': 'Do it in Kalas',
-  'Åbn tjeklisten': 'Open the checklist',
   'Åbn budgettet': 'Open the budget',
   'Find lokaler': 'Find venues',
-  'Åbn gæstelisten': 'Open the guest list',
   'Åbn invitationer': 'Open invitations',
   'Åbn bordplanen': 'Open the seating plan',
-  'Åbn hjemmesiden': 'Open the website',
-  'Åbn tidslinjen': 'Open the timeline',
 
   // ── Fortryd-toast og ental ─────────────────────────────────────────
   '{name} er fjernet': '{name} removed',
@@ -2055,8 +2035,8 @@ export const EN: Record<string, string> = {
   'Vælg hvad I vil holde styr på': 'Choose what you want to keep track of',
   'Slå fra, hvad der ikke hører til jeres bryllup. I kan altid slå det til igen.': 'Turn off what doesn\'t belong at your wedding. You can always turn it back on.',
   // ── Guided tour ─────────────────────────────────────────────────────
-  'Jeres navne, jeres dato og hvor længe der er til — alt hvad I fortalte mig, står allerede her.\n\nJeg holder **Kom godt i gang** opdateret nedenunder, ét skridt ad gangen.':
-    'Your names, your date and how long there is to go — everything you told me is already here.\n\nI keep **Getting started** up to date below, one step at a time.',
+  'Jeres navne, jeres dato og hvor længe der er til — alt hvad I fortalte mig, står allerede her.\n\nJeg holder **Kom godt i gang** opdateret, ét skridt ad gangen. Den ligger nederst til højre, når rundvisningen er slut.':
+    'Your names, your date and how long there is to go — everything you told me is already here.\n\nI keep **Getting started** up to date, one step at a time. It sits at the bottom right once the tour is over.',
   'Planen regnes baglæns fra jeres dato': 'The plan counts back from your date',
   'Den lægger sig selv ud, fase for fase, så I altid ved **hvad der haster nu**, og I skal ikke selv finde på punkterne.\n\nOg **Bryllupsdagen** er selve dagen, time for time, når I når dertil.':
     'It lays itself out phase by phase, so you always know **what is urgent now**, and you don\'t have to think up the items yourselves.\n\nAnd **The wedding day** is the day itself, hour by hour, when you get there.',

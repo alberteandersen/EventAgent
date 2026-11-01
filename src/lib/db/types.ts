@@ -131,7 +131,8 @@ export interface ChatThreadRow {
 export const MEMORY_CATEGORIES = ["preference", "decision", "fact", "followup"] as const;
 export type MemoryCategory = (typeof MEMORY_CATEGORIES)[number];
 
-/** Something Juno keeps about the couple across conversations. */
+/** Something Juno keeps about the couple across conversations. A row of
+ *  `ava_memories`: the table keeps the name she had before 2026-10-11. */
 export interface JunoMemoryRow {
   id: string;
   event_id: string;

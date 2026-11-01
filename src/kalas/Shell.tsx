@@ -6,12 +6,13 @@ import {
   Wallet, Users, Globe, Mail, ListChecks, LayoutDashboard,
   LayoutGrid, X, Settings, Gift, PanelLeftClose, PanelLeft,
   LogOut, UserPlus, Inbox,
-  MessageCircle, BookOpen,
+  MessageCircle, BookOpen, ExternalLink,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import WeddingRings from './icons/WeddingRings';
 import { useWedding } from './useWedding';
 import { nygiftInMenu } from './screens/nygift/shared';
+import { GUIDE_HUB_HREF } from './screens/guides/links';
 import { cn, ErrorState, Page, PageLoader, Wordmark } from './ui';
 import { useLang } from './i18n';
 import { SignOutButton } from '@/components/auth/SignOutButton';
@@ -19,9 +20,9 @@ import { SignOutButton } from '@/components/auth/SignOutButton';
 export type ScreenId =
   | 'home' | 'juno' | 'team' | 'inbox'
   | 'budget' | 'guests' | 'website' | 'registry' | 'invites' | 'planning' | 'seating'
-  | 'nygift' | 'guides';
+  | 'nygift';
 
-export type NavItem = { id: ScreenId; label: string; icon: LucideIcon; group: 'main' | 'plan' | 'help' };
+export type NavItem = { id: ScreenId; label: string; icon: LucideIcon; group: 'main' | 'plan' };
 
 export const NAV: NavItem[] = [
   { id: 'home',        label: 'Hjem',          icon: Home,          group: 'main' },
@@ -35,7 +36,6 @@ export const NAV: NavItem[] = [
   { id: 'invites',     label: 'Invitationer',  icon: Mail,          group: 'plan' },
   { id: 'seating',     label: 'Bordplan',      icon: LayoutDashboard, group: 'plan' },
   { id: 'nygift',      label: 'Nygift',        icon: WeddingRings,  group: 'plan' },
-  { id: 'guides',      label: 'Guides & FAQ',  icon: BookOpen,      group: 'help' },
 ];
 
 /** The menu as this wedding sees it: Nygift joins a week before the day. */
@@ -108,6 +108,7 @@ export default function Shell({
   junoOpen = false,
   onJunoOpenChange,
   junoSignal = 0,
+  corner,
   children,
 }: {
   current: ScreenId;
@@ -122,6 +123,8 @@ export default function Shell({
   /** Bumped when Juno opens a page. On a phone the sheet steps aside, so the
    *  couple sees the page she opened. */
   junoSignal?: number;
+  /** Floats in the bottom-right corner of the page, clear of Juno's panel. */
+  corner?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const { t } = useLang();
@@ -241,11 +244,26 @@ export default function Shell({
                 </p>
               )}
               {sidebarRail && <div className="mx-auto my-3 h-px w-8 bg-line" />}
-              {nav.filter((n) => n.group === 'help').map((n) => (
-                <NavRow key={n.id} item={n} active={current === n.id} onClick={() => navigate(n.id)}
-                  collapsed={sidebarRail}
-                />
-              ))}
+              {/* The guide lives on the website, so this row leaves the app. */}
+              <a
+                href={GUIDE_HUB_HREF}
+                target="_blank"
+                rel="noopener"
+                aria-label={t('Guides & FAQ')}
+                title={sidebarRail ? t('Guides & FAQ') : undefined}
+                className={cn(
+                  'mb-1.5 flex w-full items-center rounded-[10px] text-ink-soft transition-colors duration-200 hover:bg-ink/[0.06] hover:text-ink',
+                  sidebarRail ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5',
+                )}
+              >
+                <BookOpen size={18} strokeWidth={2} className="shrink-0" aria-hidden />
+                {!sidebarRail && (
+                  <>
+                    <span className="text-sm font-semibold">{t('Guides & FAQ')}</span>
+                    <ExternalLink size={13} strokeWidth={2} className="ml-auto shrink-0 text-muted" aria-hidden />
+                  </>
+                )}
+              </a>
             </nav>
 
             <div className={cn(
@@ -324,15 +342,18 @@ export default function Shell({
           </header>
 
           <div className="flex min-h-0 flex-1 pl-2.5 lg:pl-3">
-            {/* Solid page surface, covers the wash below the header */}
-            <main
-              id="kalas-main"
-              ref={main}
-              className="min-w-0 flex-1 overflow-y-auto rounded-tl-[20px] border border-line-soft border-b-0 border-r-0 pb-28 lg:pb-0 xl:rounded-tr-[20px] xl:border-r"
-              style={{ backgroundColor: PAGE_BG }}
-            >
-              <div className="min-h-full"><LoadGate>{children}</LoadGate></div>
-            </main>
+            <div className="relative flex min-h-0 min-w-0 flex-1">
+              {/* Solid page surface, covers the wash below the header */}
+              <main
+                id="kalas-main"
+                ref={main}
+                className="min-w-0 flex-1 overflow-y-auto rounded-tl-[20px] border border-line-soft border-b-0 border-r-0 pb-28 lg:pb-0 xl:rounded-tr-[20px] xl:border-r"
+                style={{ backgroundColor: PAGE_BG }}
+              >
+                <div className="min-h-full"><LoadGate>{children}</LoadGate></div>
+              </main>
+              {corner}
+            </div>
 
             {juno && (
               <aside
@@ -439,6 +460,11 @@ export default function Shell({
                     </button>
                   );
                 })}
+                <a href={GUIDE_HUB_HREF} target="_blank" rel="noopener"
+                  className="flex flex-col items-center gap-2 rounded-2xl bg-card px-2 py-4 text-ink-soft transition-colors hover:bg-shell">
+                  <BookOpen size={20} strokeWidth={1.6} />
+                  <span className="text-[0.72rem] font-medium">{t('Guides & FAQ')}</span>
+                </a>
                 <a href="/settings"
                   className="flex flex-col items-center gap-2 rounded-2xl bg-card px-2 py-4 text-ink-soft transition-colors hover:bg-shell">
                   <Settings size={20} strokeWidth={1.6} />

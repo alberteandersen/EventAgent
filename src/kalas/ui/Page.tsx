@@ -14,7 +14,7 @@ export function Page({
   ref,
 }: {
   children: React.ReactNode;
-  /** Reading-width pages (Guides) cap the line length; the rest use the width. */
+  /** Reading-width pages (Settings) cap the line length; the rest use the width. */
   narrow?: boolean;
   className?: string;
   ref?: React.Ref<HTMLDivElement>;

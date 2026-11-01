@@ -1,11 +1,9 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'motion/react';
-import {
-  MapPin, Flower2, Music, Camera, UtensilsCrossed, Pencil, SlidersHorizontal, Check, Plus,
-} from 'lucide-react';
-import { cn, CheckDot, Page, PageLoader, taskRowTone, doneLabelClass } from '../ui';
+import { MapPin, Flower2, Music, Camera, UtensilsCrossed, Pencil } from 'lucide-react';
+import { Page, PageLoader } from '../ui';
 import { useWedding } from '../useWedding';
 import type { NavigateTarget } from '../lib/hub-nav';
 import { navigateToHub } from '../lib/hub-nav';
@@ -26,23 +24,6 @@ const HERO_IMG = '/landing/hero.jpg';
    inviting a Danish couple to find somewhere that matches their mood. */
 const VENUE_FALLBACK_IMG = IMAGES.orangeri;
 
-type CheckStatus = 'completed' | 'in_progress' | 'todo';
-
-/* The two the product is built on: the read-back of what they told Juno, and
-   the date-and-budget that everything else is derived from. */
-const LOCKED_TASKS = ['welcome', 'basics'];
-
-type ChecklistItem = {
-  id: string;
-  label: string;
-  status: CheckStatus;
-  /** The concrete next move — a number they can react to beats a category name. */
-  hint?: string;
-  screen?: NavigateTarget;
-  hubTab?: 'explore' | 'shortlist';
-  hubCat?: HubCat;
-};
-
 function formatLongDate(iso: string, locale: string): string {
   return new Date(`${iso}T12:00:00`).toLocaleDateString(locale, {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
@@ -55,19 +36,16 @@ function kr(n: number): string {
 
 export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) => void }) {
   const {
-    loading, couple, event, journey, venues, guests, budgetItems, weddingSite, updateEvent,
+    loading, couple, event, venues, guests, budgetItems, weddingSite, updateEvent,
   } = useWedding();
   const [editingDate, setEditingDate] = useState(false);
-  const [customising, setCustomising] = useState(false);
   const { t, lang } = useLang();
   const locale = lang === 'en' ? 'en-US' : 'da-DK';
 
   const days = daysUntilWedding(event);
   const likedVenues = venues.filter((v) => v.category === 'venue' && v.swipe_status === 'liked');
-  const hasChosenVenue = Boolean(event?.chosen_venue_id);
   const guestsMissingContact = guests.filter((g) => !g.email?.trim()).length;
   const guestsConfirmed = guests.filter((g) => g.rsvp === 'ja').length;
-  const bookedVendors = venues.filter((v) => v.category !== 'venue' && v.booked_at).length;
 
   const budgetTotal = couple.budgetTotal || 0;
   const budgetCommitted = budgetItems.reduce((sum, item) => sum + (item.planned_amount ?? 0), 0);
@@ -81,143 +59,10 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
     ? `${formatLongDate(event.event_date, locale)}${couple.region ? ` · ${couple.region}` : ''}`
     : couple.dateLabel + (couple.region ? ` · ${couple.region}` : '');
 
-  /* A season chip in onboarding ("Forår 2028") lands in date_hint, not
-     event_date. Counting only the exact date meant nagging couples who had
-     already answered — the row is about the budget for everyone else. */
-  const hasDate = Boolean(event?.event_date || event?.date_hint);
-  const hasBudget = Boolean(event?.budget);
-  const venueStage = journey.find((s) => s.key === 'venue');
-  const vendorsStage = journey.find((s) => s.key === 'vendors');
-  const invitesStage = journey.find((s) => s.key === 'invites');
-
   /* What we can responsibly suggest they budget, from what they already told
      us — 0 when we know neither a budget nor a headcount, and a number with
      nothing behind it is worse than no number. */
   const budgetSuggestion = estimatedTotal(budgetTotal, guests.length || couple.guests || 0);
-
-  /* The opening list. Research on activation checklists is consistent on four
-     points: keep it to about four items, show progress, tie every row to a
-     real action, and have the first one already ticked. The couple just told
-     Juno everything about their wedding — starting them at "0 af 5 klaret" is
-     throwing that away. */
-  const allTasks = useMemo((): ChecklistItem[] => {
-    const items: ChecklistItem[] = [
-      {
-        id: 'welcome',
-        label: t('Fortæl Juno om jeres bryllup'),
-        status: 'completed',
-        screen: 'juno',
-      },
-      /* One row, but the two halves are edited in different places: the total
-         is a field on the budget page, the date opens the picker in the hero.
-         Sending both to Juno (as this used to) meant pressing "Vi foreslår kr
-         200.000" landed you in the chat instead of the budget. */
-      !hasBudget
-        ? {
-            id: 'basics',
-            label: t('Sæt jeres budget'),
-            hint: budgetSuggestion > 0
-              ? t('Vi foreslår kr {amount}', { amount: kr(budgetSuggestion) })
-              : t('Juno fordeler det på kategorier bagefter'),
-            status: 'in_progress' as CheckStatus,
-            screen: 'budget' as NavigateTarget,
-          }
-        : {
-            id: 'basics',
-            label: hasDate ? t('Angiv dato og budget') : t('Sæt jeres dato'),
-            hint: hasDate ? undefined : t('Tryk på datoen øverst på siden'),
-            status: (hasDate ? 'completed' : 'in_progress') as CheckStatus,
-            screen: 'budget' as NavigateTarget,
-          },
-      {
-        id: 'venues',
-        label: t('Shortlist jeres venues'),
-        hint: likedVenues.length > 0
-          ? t('{n} af 3 på shortlisten', { n: likedVenues.length })
-          : t('Juno søger på nettet og lægger dem på tavlen'),
-        status: hasChosenVenue || likedVenues.length >= 3
-          ? 'completed'
-          : likedVenues.length > 0 || venueStage?.status === 'active'
-            ? 'in_progress'
-            : 'todo',
-        screen: 'team',
-        hubTab: likedVenues.length > 0 ? 'shortlist' : 'explore',
-        hubCat: 'venue',
-      },
-      {
-        id: 'guests',
-        label: t('Lav gæstelisten'),
-        hint: guests.length > 0
-          ? t('{n} af 10 tilføjet', { n: guests.length })
-          : t('Tilføj de første 10 gæster'),
-        status: guests.length >= 10
-          ? 'completed'
-          : guests.length > 0
-            ? 'in_progress'
-            : 'todo',
-        screen: 'guests',
-      },
-      {
-        id: 'vendors',
-        label: t('Book jeres leverandører'),
-        status: bookedVendors >= 2
-          ? 'completed'
-          : bookedVendors > 0 || vendorsStage?.status === 'active'
-            ? 'in_progress'
-            : 'todo',
-        screen: 'team',
-        hubTab: 'explore',
-        hubCat: 'fotografi',
-      },
-      {
-        id: 'invites',
-        label: t('Send save the dates'),
-        status: invitesStage?.status === 'complete'
-          ? 'completed'
-          : invitesStage?.status === 'active'
-            ? 'in_progress'
-            : 'todo',
-        screen: 'invites',
-      },
-    ];
-    return items;
-  }, [
-    t, hasDate, hasBudget, budgetSuggestion, hasChosenVenue, likedVenues.length, venueStage?.status,
-    guests.length, bookedVendors, vendorsStage?.status, invitesStage?.status,
-  ]);
-
-  /* Not every wedding has a website, a registry or save-the-dates. A row they
-     will never tick is worse than no row, so they can switch any of them off —
-     except the two the whole product is built on. */
-  const hidden = useMemo(() => new Set(event?.checklist_hidden ?? []), [event?.checklist_hidden]);
-  const shownTasks = useMemo(
-    () => allTasks.filter((c) => !hidden.has(c.id)),
-    [allTasks, hidden],
-  );
-
-  const toggleTask = (id: string) => {
-    const next = hidden.has(id)
-      ? [...hidden].filter((x) => x !== id)
-      : [...hidden, id];
-    void updateEvent({ checklist_hidden: next });
-  };
-
-  /* Four rows at a time: what they have done, what they are on, and the next
-     two. The rest of the plan lives on the timeline — available, just not the
-     first thing they meet. */
-  const checklist = useMemo(() => {
-    const done = shownTasks.filter((c) => c.status === 'completed');
-    const open = shownTasks.filter((c) => c.status !== 'completed');
-    // Nothing left to do: show the tail of what they finished rather than a
-    // single lonely row.
-    if (open.length === 0) return done.slice(-4);
-    return [...done.slice(-1), ...open].slice(0, 4);
-  }, [shownTasks]);
-
-  const allTasksDone = shownTasks.every((c) => c.status === 'completed');
-  const hiddenTasks = shownTasks.length - checklist.length;
-
-  const checklistDone = checklist.filter((c) => c.status === 'completed').length;
 
   const vendorTiles = [
     {
@@ -257,11 +102,6 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
   const goHub = (tab: 'explore' | 'shortlist', cat?: HubCat) => {
     navigateToHub(tab, cat);
     onNavigate('team');
-  };
-
-  const openChecklist = (item: ChecklistItem) => {
-    if (item.hubTab) navigateToHub(item.hubTab, item.hubCat);
-    if (item.screen) onNavigate(item.screen);
   };
 
   // Before the wedding arrives the hero would read "Jeres bryllup" and a
@@ -338,118 +178,6 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
           </div>
         </div>
 
-        {/* Checklist */}
-        <div
-          className="flex flex-col gap-5 rounded-[28px] border border-line bg-card p-7"
-        >
-          <div className="flex items-end justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <h2 className="font-serif text-2xl font-semibold text-ink">
-                {t('Kom godt i gang')}
-              </h2>
-              <p className="text-sm text-ink-soft">
-                {allTasksDone
-                  ? t('I har været hele vejen igennem. Resten holder jeg øje med.')
-                  : t('De første skridt for at sætte planlægningen i gang.')}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-3">
-              <p aria-live="polite" className="text-sm font-bold text-sage-strong">
-                {t('{done} af {total} klaret', { done: checklistDone, total: checklist.length })}
-              </p>
-              <button
-                type="button"
-                onClick={() => setCustomising((v) => !v)}
-                aria-expanded={customising}
-                aria-label={t('Vælg hvad I vil holde styr på')}
-                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-line text-muted transition-colors hover:border-ink hover:text-ink"
-              >
-                <SlidersHorizontal size={14} strokeWidth={1.8} aria-hidden />
-              </button>
-            </div>
-          </div>
-
-          <div
-            role="progressbar"
-            aria-valuenow={checklistDone}
-            aria-valuemin={0}
-            aria-valuemax={checklist.length}
-            aria-label={t('Kom godt i gang')}
-            className="h-1 w-full overflow-hidden rounded-full bg-shell"
-          >
-            <div
-              className="h-full rounded-full bg-sage-strong"
-              style={{ width: `${(checklistDone / Math.max(checklist.length, 1)) * 100}%` }}
-            />
-          </div>
-
-          <div className="flex flex-col gap-3">
-            {checklist.map((item) => (
-              <ChecklistRow
-                key={item.id}
-                label={item.label}
-                hint={item.hint}
-                status={item.status}
-                statusLabel={
-                  item.status === 'completed'
-                    ? t('Færdig')
-                    : item.status === 'in_progress'
-                      ? t('I gang')
-                      : ''
-                }
-                onClick={() => openChecklist(item)}
-              />
-            ))}
-          </div>
-
-          {customising && (
-            <div className="flex flex-col gap-3 rounded-[18px] bg-shell p-4">
-              <div>
-                <p className="text-sm font-semibold text-ink">
-                  {t('Vælg hvad I vil holde styr på')}
-                </p>
-                <p className="mt-0.5 text-[13px] text-ink-soft">
-                  {t('Slå fra, hvad der ikke hører til jeres bryllup. I kan altid slå det til igen.')}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {allTasks
-                  .filter((task) => !LOCKED_TASKS.includes(task.id))
-                  .map((task) => {
-                    const on = !hidden.has(task.id);
-                    return (
-                      <button
-                        key={task.id}
-                        type="button"
-                        role="switch"
-                        aria-checked={on}
-                        onClick={() => toggleTask(task.id)}
-                        className={cn(
-                          'flex cursor-pointer items-center gap-2 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors',
-                          on
-                            ? 'border-sage-strong bg-sage-tint text-sage-strong'
-                            : 'border-line text-muted hover:border-ink hover:text-ink',
-                        )}
-                      >
-                        {on ? <Check size={13} strokeWidth={2.4} aria-hidden /> : <Plus size={13} strokeWidth={2.4} aria-hidden />}
-                        {task.label}
-                      </button>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {hiddenTasks > 0 && (
-            <button
-              type="button"
-              onClick={() => onNavigate('planning')}
-              className="-mt-1 w-fit cursor-pointer text-[13px] text-muted transition-colors hover:text-ink"
-            >
-              {t('Resten af planen ligger under Planlægning →')}
-            </button>
-          )}
-        </div>
       </motion.section>
 
       {/* Discovery */}
@@ -610,52 +338,6 @@ export default function Home({ onNavigate }: { onNavigate: (s: NavigateTarget) =
         {t('Planlagt med omtanke af {names}, guidet af Juno.', { names: coupleLabel })}
       </p>
     </Page>
-  );
-}
-
-function ChecklistRow({
-  label,
-  hint,
-  status,
-  statusLabel,
-  onClick,
-}: {
-  label: string;
-  hint?: string;
-  status: CheckStatus;
-  statusLabel: string;
-  onClick: () => void;
-}) {
-  const done = status === 'completed';
-  const active = status === 'in_progress';
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={statusLabel ? `${label} — ${statusLabel}` : label}
-      className={`flex w-full items-center gap-4 rounded-[18px] border px-5 py-4 text-left transition-colors hover:opacity-95 ${taskRowTone(
-        done ? 'done' : 'default',
-      )}`}
-    >
-      <CheckDot done={done} />
-      <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className={`text-base font-semibold ${done ? doneLabelClass : 'text-ink'}`}>
-          {label}
-        </span>
-        {/* A task that hasn't started shows its next move, not its absence. */}
-        {!done && hint && <span className="text-[13px] text-ink-soft">{hint}</span>}
-      </span>
-      {statusLabel && (
-        <span
-          className={`text-xs font-bold uppercase tracking-[0.12em] ${
-            done ? 'text-sage-strong' : active ? 'text-clay-ink' : 'text-muted'
-          }`}
-        >
-          {statusLabel}
-        </span>
-      )}
-    </button>
   );
 }
 

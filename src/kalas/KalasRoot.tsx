@@ -8,6 +8,7 @@ import { AnimatePresence, MotionConfig } from 'motion/react';
 import Shell, { type ScreenId } from './Shell';
 import { armTour, JUNO_OPEN_KEY, WALKTHROUGH_DONE_KEY, WALKTHROUGH_KEY, WALKTHROUGH_STEPS } from './walkthrough';
 import GuidedTour from './GuidedTour';
+import SetupGuide from './SetupGuide';
 import { WeddingProvider, useWedding } from './useWedding';
 import { LanguageProvider, type Lang } from './i18n';
 import { UndoProvider } from './undo';
@@ -17,8 +18,7 @@ import JunoPanel from './screens/JunoPanel';
 import type { AgentUiAction } from '@/lib/db/types';
 import { agentActionToScreen, migrateSavedScreen, resolveScreenNavigation, type NavigateTarget } from './lib/hub-nav';
 import { isLegacyHubScreen } from './screens/team/shared';
-import { OPEN_GUIDE_EVENT } from './screens/guides/links';
-import { Budget, Guests, Guides, Inbox, Invites, Nygift, Planning, Registry, Seating, VendorHub, Website, usePrefetchPages } from './pages';
+import { Budget, Guests, Inbox, Invites, Nygift, Planning, Registry, Seating, VendorHub, Website, usePrefetchPages } from './pages';
 
 
 export default function KalasRoot({ initialLang = 'da' }: { initialLang?: Lang }) {
@@ -132,12 +132,6 @@ function AppInner() {
   const navigateRef = useRef<(s: NavigateTarget) => void>(() => {});
   useEffect(() => { navigateRef.current = navigate; });
 
-  // "Guide: …" links on the pages open the Guides screen from wherever they are.
-  useEffect(() => {
-    const onOpenGuide = () => navigateRef.current('guides');
-    window.addEventListener(OPEN_GUIDE_EVENT, onOpenGuide);
-    return () => window.removeEventListener(OPEN_GUIDE_EVENT, onOpenGuide);
-  }, []);
   const setJunoRef = useRef(setJuno);
   useEffect(() => { setJunoRef.current = setJuno; });
   const navigatedForStep = useRef<number | null>(null);
@@ -187,7 +181,6 @@ function AppInner() {
     invites:     <Invites />,
     seating:     <Seating />,
     nygift:      <Nygift onNavigate={navigate} />,
-    guides:      <Guides onNavigate={navigate} />,
   };
 
   const activeScreen = screen === 'juno' ? 'home' : screen;
@@ -210,6 +203,8 @@ function AppInner() {
       junoOpen={junoOpen}
       onJunoOpenChange={setJuno}
       junoSignal={junoSignal}
+      /* The tour's card has the same corner, and ends by pointing at this. */
+      corner={walkthroughActive ? null : <SetupGuide onNavigate={navigate} />}
     >
       {/* Outside the keyed page, so a page change (a transition) keeps the
           current page up rather than falling back to the loader. */}

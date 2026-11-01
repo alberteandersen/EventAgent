@@ -8,9 +8,13 @@ const nextConfig: NextConfig = {
       "three/tsl": "./src/kalas/onboarding/three-webgpu-stub.ts",
     },
   },
-  // The FAQ lives in the guide; /faq is the address people guess.
+  // The FAQ lives in the guide; /faq and /guides are the addresses people guess.
   async redirects() {
-    return [{ source: "/faq", destination: "/guide/faq", permanent: true }];
+    return [
+      { source: "/faq", destination: "/guide/faq", permanent: true },
+      { source: "/guides", destination: "/guide", permanent: true },
+      { source: "/guides/:path*", destination: "/guide/:path*", permanent: true },
+    ];
   },
 };
 

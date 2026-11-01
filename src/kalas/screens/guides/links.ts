@@ -1,26 +1,14 @@
-/* How the app and the guide point at each other. Kept apart from the guide
-   content so a page header can link to its guide without pulling every
-   article into the app's first bundle; the Guides screen loads lazily. */
+/* How the app points at the guide. The guide itself is public, on the
+   website under /guide; the app only links to it, so no article is part of
+   the app's bundle. */
 
 import type { ScreenId } from '../../Shell';
-import type { NavigateTarget } from '../../lib/hub-nav';
 
-/** Fired to open a guide (or "faq") from anywhere in the app. */
-export const OPEN_GUIDE_EVENT = 'kalas:open-guide';
-const PENDING_KEY = 'kalas_guide';
+/** The guide's front page, with every article and the FAQ. */
+export const GUIDE_HUB_HREF = '/guide';
 
-/** The screen an article's advice is carried out on, and the button that opens it. */
-export const GUIDE_ACTION: Record<string, { target: NavigateTarget; label: string }> = {
-  'bryllup-tjekliste': { target: 'planning', label: 'Åbn tjeklisten' },
-  'hvad-koster-et-bryllup': { target: 'budget', label: 'Åbn budgettet' },
-  'saadan-bliver-i-gift': { target: 'planning', label: 'Åbn tjeklisten' },
-  'find-bryllupslokale': { target: 'venues', label: 'Find lokaler' },
-  'gaesteliste-til-bryllup': { target: 'guests', label: 'Åbn gæstelisten' },
-  'save-the-date-og-invitationer': { target: 'invites', label: 'Åbn invitationer' },
-  'bordplan-til-bryllup': { target: 'seating', label: 'Åbn bordplanen' },
-  'bryllupshjemmeside': { target: 'website', label: 'Åbn hjemmesiden' },
-  'program-for-bryllupsdagen': { target: 'planning', label: 'Åbn tidslinjen' },
-};
+/** An article's page on the website. */
+export const guideHref = (slug: string) => `${GUIDE_HUB_HREF}/${slug}`;
 
 /** The guide a screen's header links to, with a short title for the link. */
 export const SCREEN_GUIDE: Partial<Record<ScreenId, { slug: string; title: string }>> = {
@@ -33,25 +21,7 @@ export const SCREEN_GUIDE: Partial<Record<ScreenId, { slug: string; title: strin
   website: { slug: 'bryllupshjemmeside', title: 'Hvad skal stå på hjemmesiden?' },
 };
 
-/** Opens the Guides screen on `slug` (an article, or "faq"). The slug waits in
-    sessionStorage for a screen that has not mounted yet; the event reaches one
-    that has, and tells the app to switch to it. */
+/** Opens an article beside the app, so the couple keeps their place in it. */
 export function openGuide(slug: string) {
-  try { sessionStorage.setItem(PENDING_KEY, slug); } catch { /* private mode */ }
-  window.dispatchEvent(new CustomEvent(OPEN_GUIDE_EVENT, { detail: slug }));
-}
-
-/** Read without clearing: safe in a state initializer, which React may run twice. */
-export function peekPendingGuide(): string | null {
-  try { return sessionStorage.getItem(PENDING_KEY); } catch { return null; }
-}
-
-export function takePendingGuide(): string | null {
-  try {
-    const slug = sessionStorage.getItem(PENDING_KEY);
-    sessionStorage.removeItem(PENDING_KEY);
-    return slug;
-  } catch {
-    return null;
-  }
+  window.open(guideHref(slug), '_blank', 'noopener');
 }

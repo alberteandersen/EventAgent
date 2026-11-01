@@ -3,7 +3,7 @@
 import { lazy, useEffect } from 'react';
 
 /* Hjem and Juno's panel come with the app; every other page is its own chunk
-   (the venue hub alone brings the world map, Guides every article). They are
+   (the venue hub alone brings the world map). They are
    all fetched while the couple reads Hjem, and a page change is a transition,
    so the page on screen stays until the next one is ready: no loader between
    pages, and a first load that carries only what Hjem needs. */
@@ -18,7 +18,6 @@ const PAGES = {
   invites: () => import('./screens/Invites'),
   seating: () => import('./screens/Seating'),
   nygift: () => import('./screens/Nygift'),
-  guides: () => import('./screens/Guides'),
 };
 export const VendorHub = lazy(PAGES.team);
 export const Inbox = lazy(PAGES.inbox);
@@ -30,7 +29,6 @@ export const Registry = lazy(PAGES.registry);
 export const Invites = lazy(PAGES.invites);
 export const Seating = lazy(PAGES.seating);
 export const Nygift = lazy(PAGES.nygift);
-export const Guides = lazy(PAGES.guides);
 
 export function usePrefetchPages() {
   useEffect(() => {

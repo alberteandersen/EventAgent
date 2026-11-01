@@ -70,6 +70,9 @@ Juno's chat sits beside every page. Her tools are in `src/lib/gemini`
      `https://<your-domain>/api/admin/gmail/callback`. Its id and secret go
      in `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`.
    - Enable **Places API (New)** and create a key for `GOOGLE_PLACES_API_KEY`.
+   - Optional: enable **Maps JavaScript API** and create a second, separate
+     key for `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, restricted to that API and to
+     your site's addresses. It turns on the map beside the venue list.
 3. **Keys.** Gemini (aistudio.google.com), Jina Reader (jina.ai), Stripe.
 4. **Environment.** `cp .env.local.example .env.local` and fill it in. The
    example explains every variable.

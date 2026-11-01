@@ -7,6 +7,7 @@ import { applyFilters, type VenueFilters } from "@/lib/venue/filter";
 import { areaDestination, findRegion } from "@/lib/venue/regions";
 import { VENUE_SETTINGS, type VenueSetting } from "@/lib/venue/facts";
 import { distanceBetween } from "@/lib/venue/distance";
+import { boundsKey, parseBounds, type MapBounds } from "@/lib/venue/mapArea";
 
 /**
  * POST /api/onboarding/venues
@@ -52,6 +53,10 @@ interface Body {
   /** Places already on screen. The model can return the same venue under a
    *  different name; the resolved place_id is what actually identifies it. */
   exclude_place_ids?: string[];
+  /** Free text from "describe your dream venue". Steers the prompt. */
+  wish?: string;
+  /** The piece of map on screen, for "Søg i dette område". */
+  bounds?: MapBounds;
 }
 
 function cacheKey(args: {
@@ -64,6 +69,8 @@ function cacheKey(args: {
   wantsCatering: boolean;
   wantsAccommodation: boolean;
   exclude: string[];
+  wish: string;
+  bounds: MapBounds | null;
 }): string {
   const lovedKey = [...args.loved].sort().join("|").toLowerCase();
   // The exclude set is what makes page 2 page 2, so it has to be part of the
@@ -77,6 +84,12 @@ function cacheKey(args: {
   // rather than another Gemini call.
   const want = `${args.wantsCatering ? "c" : ""}${args.wantsAccommodation ? "a" : ""}` || "0";
   const settingKey = [...args.settings].sort().join(",") || "0";
+  // Both steer the prompt, so both are part of what was asked. Appended only
+  // when present, so every search made before they existed keeps its cache.
+  const wishKey = args.wish
+    ? [`w${createHash("sha1").update(args.wish.toLowerCase()).digest("hex").slice(0, 12)}`]
+    : [];
+  const boundsPart = args.bounds ? [`b${boundsKey(args.bounds)}`] : [];
   return [
     "venues:v7",
     args.lang,
@@ -87,6 +100,8 @@ function cacheKey(args: {
     want,
     lovedKey,
     pageKey,
+    ...wishKey,
+    ...boundsPart,
   ].join(":");
 }
 
@@ -135,6 +150,15 @@ export async function POST(request: NextRequest) {
   const wantsAccommodation =
     body.filters?.accommodation === "on_site" || body.filters?.accommodation === "on_site_or_nearby";
 
+  /* Their own words go into a prompt, so they are cut to a sentence and
+     stripped of what could close the quotation they are placed in. */
+  const wish = (typeof body.wish === "string" ? body.wish : "")
+    .replace(/["\n\r`]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 200);
+  const bounds = parseBounds(body.bounds);
+
   const promptArgs = {
     destination,
     guestCount,
@@ -145,6 +169,8 @@ export async function POST(request: NextRequest) {
     settings,
     wantsCatering,
     wantsAccommodation,
+    wish,
+    bounds,
   };
 
   // One cached Places lookup, shared by every shard of every later search.

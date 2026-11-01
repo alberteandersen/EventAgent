@@ -74,6 +74,7 @@ export default function DevVenueFiltersPage() {
   const [sort, setSort] = useState<VenueSort>('relevance');
   const [regionIds, setRegionIds] = useState<string[]>(['fyn']);
   const [saved, setSaved] = useState(false);
+  const [open, setOpen] = useState(true);
 
   return (
     <div className="theme-kalas min-h-screen bg-canvas p-10 font-sans text-ink">
@@ -97,23 +98,23 @@ export default function DevVenueFiltersPage() {
           onOpenSaved={() => {}}
         />
 
-        {/* The venue that unfolds under its row in the results grid. */}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          <div className="h-44 rounded-2xl border border-line bg-card" />
-          <div className="h-44 rounded-2xl border border-line bg-card" />
-          <div className="h-44 rounded-2xl border border-ink bg-card" />
-          <VenuePanel
-            v={VENUE}
-            badges={BADGES}
-            saved={saved}
-            saving={false}
-            onSave={() => setSaved(true)}
-            onClose={() => {}}
-            onPhoto={() => {}}
-          />
-          <div className="h-44 rounded-2xl border border-line bg-card" />
-          <div className="h-44 rounded-2xl border border-line bg-card" />
-        </div>
+        {/* The venue modal a card in the results grid opens. */}
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="mt-8 h-44 w-full cursor-pointer rounded-2xl border border-line bg-card text-meta text-muted sm:w-1/3"
+        >
+          {VENUE.name}
+        </button>
+        <VenuePanel
+          v={open ? VENUE : null}
+          badges={BADGES}
+          saved={saved}
+          saving={false}
+          onSave={() => setSaved(true)}
+          onClose={() => setOpen(false)}
+          onPhoto={() => {}}
+        />
 
         <pre className="mt-10 overflow-x-auto rounded-2xl border border-line bg-card p-5 text-[0.72rem] leading-relaxed text-muted">
           {JSON.stringify({ filters, sort, regionIds }, null, 2)}

@@ -20,6 +20,7 @@ import {
 import { normalizeFacts, VENUE_SETTINGS, type RawFacts, type VenueFacts } from "./facts";
 import { readAmenities, type PlaceAmenities } from "./amenities";
 import { distanceBetween, type Coords } from "./distance";
+import { boundsCentre, boundsHeightKm, inBounds, type MapBounds } from "./mapArea";
 
 /** Candidates asked of the model per area. Higher than the number we keep,
  *  because Places verification always rejects some. */
@@ -222,10 +223,26 @@ export interface PromptArgs {
   settings: string[];
   wantsCatering: boolean;
   wantsAccommodation: boolean;
+  /** What they typed into "describe your dream venue", in their own words. */
+  wish?: string;
+  /** "Søg i dette område": only venues inside this piece of map. */
+  bounds?: MapBounds | null;
 }
 
 function requirementLines(args: PromptArgs): string {
   const lines: string[] = [];
+  if (args.wish) {
+    // First, because it is the one thing here the couple wrote themselves.
+    lines.push(
+      `In their own words, the couple is looking for: "${args.wish}". This outranks variety: pick venues that genuinely match it, and let why_fit say how each one does.`
+    );
+  }
+  if (args.bounds) {
+    const centre = boundsCentre(args.bounds);
+    lines.push(
+      `ONLY venues inside the map area they are looking at: latitude ${args.bounds.south.toFixed(3)} to ${args.bounds.north.toFixed(3)}, longitude ${args.bounds.west.toFixed(3)} to ${args.bounds.east.toFixed(3)} (centre ${centre.lat.toFixed(3)}, ${centre.lng.toFixed(3)}, about ${boundsHeightKm(args.bounds)} km north to south). A venue outside it is no use, however good.`
+    );
+  }
   if (args.guestCount) {
     lines.push(
       `MUST fit at least ${args.guestCount} seated guests, a venue that cannot seat ${args.guestCount} is useless here, skip it.`
@@ -499,6 +516,9 @@ export async function searchArea(args: AreaSearchArgs): Promise<VenueSuggestion[
     if (seenPlaces.has(v.place.id)) continue;
     // Same place under a different name — only the resolved id catches this.
     if (args.excludePlaceIds.has(v.place.id)) continue;
+    // The rectangle in the prompt is a request. Google's coordinates are what
+    // actually decide whether a venue is on the piece of map they asked about.
+    if (args.bounds && !inBounds(args.bounds, v.place.location?.latitude ?? null, v.place.location?.longitude ?? null)) continue;
     seenPlaces.add(v.place.id);
     keep.push(v);
   }

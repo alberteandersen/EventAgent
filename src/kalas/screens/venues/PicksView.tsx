@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Check, MessageCircle, ArrowLeft, MapPin, Globe as GlobeIcon, Plus, Send, ArrowRight } from 'lucide-react';
 import type { Couple } from '../../useWedding';
 import { Button, Eyebrow, cn } from '../../ui';
 import { useLang } from '../../i18n';
+import { Lightbox } from '../../onboarding/Lightbox';
 import { ComparisonView } from './ComparisonView';
 import { VenueDetail } from './VenueDetail';
 import { type DisplayVenue, RatingBadge, StageChip, type VenueStage, imgSrc, venueAreaLabel } from './shared';
@@ -32,6 +33,7 @@ export function PicksView({
   const { t } = useLang();
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId ?? null);
   const [comparing, setComparing] = useState(false);
+  const [lightbox, setLightbox] = useState<{ photos: string[]; index: number; alt: string } | null>(null);
   const venueCity = venueAreaLabel(couple.region);
   const savedVenues = venues.filter(v => saved.has(v.id));
   const selectedVenue = selectedId ? venues.find((v) => v.id === selectedId) ?? null : null;
@@ -53,27 +55,6 @@ export function PicksView({
         onToggleSave={onToggleSave}
         onBook={onBook}
       />
-    );
-  }
-
-  if (selectedVenue) {
-    return (
-      <AnimatePresence mode="wait">
-        <VenueDetail
-          key={selectedVenue.id}
-          venue={selectedVenue}
-          allVenues={venues}
-          saved={saved.has(selectedVenue.id)}
-          sent={sent.has(selectedVenue.id)}
-          isBooked={booked === selectedVenue.id}
-          onBack={() => setSelectedId(null)}
-          onSave={() => onToggleSave(selectedVenue.id)}
-          onContact={() => { onOutreach(selectedVenue.id); setSelectedId(null); }}
-          onBook={() => onBook(selectedVenue.id)}
-          onSelectOther={(id) => setSelectedId(id)}
-          onRefresh={onRefresh}
-        />
-      </AnimatePresence>
     );
   }
 
@@ -186,6 +167,38 @@ export function PicksView({
           </div>
         </motion.div>
       </div>
+
+      {/* The photo viewer opens on top of the modal; Escape and the backdrop
+          then belong to the viewer, so the modal stays put until it is gone. */}
+      <VenueDetail
+        venue={selectedVenue}
+        saved={selectedVenue ? saved.has(selectedVenue.id) : false}
+        sent={selectedVenue ? sent.has(selectedVenue.id) : false}
+        isBooked={selectedVenue ? booked === selectedVenue.id : false}
+        onClose={() => { if (!lightbox) setSelectedId(null); }}
+        onSave={() => { if (selectedVenue) onToggleSave(selectedVenue.id); }}
+        onContact={() => { if (selectedVenue) { onOutreach(selectedVenue.id); setSelectedId(null); } }}
+        onBook={() => { if (selectedVenue) onBook(selectedVenue.id); }}
+        onPhoto={(index) => {
+          if (!selectedVenue) return;
+          setLightbox({
+            photos: selectedVenue.photos.length ? selectedVenue.photos : [imgSrc(selectedVenue.image)],
+            index,
+            alt: selectedVenue.name,
+          });
+        }}
+        onRefresh={onRefresh}
+      />
+
+      {lightbox && (
+        <Lightbox
+          photos={lightbox.photos}
+          index={Math.min(Math.max(lightbox.index, 0), lightbox.photos.length - 1)}
+          onIndex={(i) => setLightbox((lb) => (lb ? { ...lb, index: i } : lb))}
+          onClose={() => setLightbox(null)}
+          alt={lightbox.alt}
+        />
+      )}
     </motion.div>
   );
 }
@@ -243,7 +256,8 @@ function VenueGridCard({
       transition={{ duration: 0.5, delay: Math.min(index, 6) * 0.05, ease: [0.22, 1, 0.36, 1] }}
       className="group flex flex-col overflow-hidden rounded-[18px] border border-line bg-white">
 
-      <button type="button" onClick={onSelect} className="relative block aspect-[4/3] overflow-hidden cursor-pointer text-left">
+      <button type="button" onClick={onSelect} aria-haspopup="dialog" aria-label={t('Åbn {name}', { name: venue.name })}
+        className="relative block aspect-[4/3] overflow-hidden cursor-pointer text-left">
         <img src={imgSrc(venue.image)} alt={venue.name}
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-deep/45 to-transparent" />
@@ -291,7 +305,7 @@ function VenueGridCard({
         </div>
 
         <div className="mt-4 flex items-center gap-2">
-          <button onClick={onSelect}
+          <button onClick={onSelect} aria-haspopup="dialog"
             className="flex h-8 flex-1 items-center justify-center rounded-full border border-line-soft px-3 text-xs font-semibold text-ink hover:bg-paper transition-colors cursor-pointer">
             {t('Se venue')}
           </button>

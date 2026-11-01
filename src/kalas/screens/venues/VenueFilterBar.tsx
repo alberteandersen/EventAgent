@@ -43,7 +43,7 @@ export interface VenueFilterCounts {
 }
 
 /** Danish labels for the aesthetic buckets in VENUE_SETTINGS. */
-const SETTING_LABELS: Record<VenueSetting, string> = {
+export const SETTING_LABELS: Record<VenueSetting, string> = {
   barn: 'Lade',
   castle: 'Slot',
   manor: 'Herregård',
@@ -74,6 +74,7 @@ export default function VenueFilterBar({
   loading,
   savedCount = 0,
   onOpenSaved,
+  showSettings = true,
 }: {
   filters: VenueFilters;
   onChange: (next: VenueFilters) => void;
@@ -93,6 +94,8 @@ export default function VenueFilterBar({
   savedCount?: number;
   /** Opens the favourites tab. Omitted when there is nowhere to go. */
   onOpenSaved?: () => void;
+  /** Off where the kind of place is chosen from pictures instead (MoodRow). */
+  showSettings?: boolean;
 }) {
   const { t, tn } = useLang();
   /** Only one menu at a time — two open popovers is two ways to be lost. */
@@ -288,7 +291,7 @@ export default function VenueFilterBar({
             icon={<Trees size={13} />} label={t('Have eller terrasse')} />
         </FilterPill>
 
-        <FilterPill
+        {showSettings && <FilterPill
           {...withCount('setting')}
           label={t('Stemning')}
           count={settings.length}
@@ -311,7 +314,7 @@ export default function VenueFilterBar({
               />
             ))}
           </div>
-        </FilterPill>
+        </FilterPill>}
 
         <FilterPill
           {...withCount('included')}

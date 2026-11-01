@@ -9,15 +9,16 @@
   # Next inlines every NEXT_PUBLIC_* value into the client bundle — that is
   # what the prefix is for — so Netlify's secrets scanner finds them in the
   # build output and stops the deploy. Listing them here says "public by
-  # design", which is true of all five: a URL, a price, a logo path, and the
+  # design", which is true of all six: a URL, a price, a logo path, the
   # Supabase anon key, which is meant for the browser and is worth nothing
-  # without the RLS policies behind it.
+  # without the RLS policies behind it, and the Google Maps browser key, which
+  # is locked to this site's addresses in the Google Cloud console.
   #
   # Never add a server-only key to this list. SUPABASE_SERVICE_ROLE_KEY,
   # GOOGLE_CLIENT_SECRET, TOKEN_ENCRYPTION_KEY, STRIPE_SECRET_KEY and
   # CRON_SECRET reaching the bundle is a real leak, and the failed build is
   # the alarm — do not silence it.
-  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_KALAS_LOGO_URL,NEXT_PUBLIC_WEBSITE_PRICE_DKK"
+  SECRETS_SCAN_OMIT_KEYS = "NEXT_PUBLIC_APP_URL,NEXT_PUBLIC_SUPABASE_URL,NEXT_PUBLIC_SUPABASE_ANON_KEY,NEXT_PUBLIC_KALAS_LOGO_URL,NEXT_PUBLIC_WEBSITE_PRICE_DKK,NEXT_PUBLIC_GOOGLE_MAPS_API_KEY"
 
 # Our own functions, next to the ones the Next.js plugin generates. The one
 # that matters is run-job-background: Netlify ends a request at 60 seconds,

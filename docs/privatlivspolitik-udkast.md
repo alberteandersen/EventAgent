@@ -43,6 +43,7 @@ Vi opbevarer ikke kortoplysninger. Betaling sker hos Stripe.
 | Google (Gemini API) | AI: Juno, tekster, hjemmeside og invitationsdesign | USA/EU | Bruges indhold til træning? Databehandleraftale og overførselsgrundlag |
 | Google (Gmail API) | Kalas' egen postkasse, som Juno skriver fra og læser svar i | USA/EU | Overførselsgrundlag |
 | Google (Places API) | Opslag af lokaler og leverandører | USA/EU | |
+| Google (Maps JavaScript API) | Kortet over lokaler under Venues. Hentes først, når parret selv åbner kortet | USA/EU | **Tjek:** parrets IP-adresse sendes til Google, når kortet åbnes. Kun slået til, når `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` er sat |
 | Google (login) | Log ind med Google | USA/EU | |
 | Stripe | Betaling for tilvalg (hjemmeside, trykte invitationer) | USA/EU | Selvstændig dataansvarlig for betalingen? |
 | Netlify | Hosting af hjemmesiden | USA/EU | Databehandleraftale |

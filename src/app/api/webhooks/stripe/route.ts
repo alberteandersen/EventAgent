@@ -1,12 +1,15 @@
 import { NextRequest } from "next/server";
 import Stripe from "stripe";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { settleWebsiteOrder } from "@/lib/website/orders";
 
 /**
  * POST /api/webhooks/stripe — Stripe webhook receiver.
- * Handles checkout.session.completed (order → paid) and
- * checkout.session.expired (order → canceled). Signature-verified;
- * uses the admin client because Stripe calls without a user session.
+ * Handles checkout.session.completed and .async_payment_succeeded (order →
+ * paid, once the money is in), and checkout.session.expired and
+ * .async_payment_failed (order → canceled). Signature-verified; uses the
+ * admin client because Stripe calls without a user session. A failed write
+ * answers 500 so Stripe delivers the event again.
  */
 export async function POST(request: NextRequest) {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -30,32 +33,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  if (
-    event.type === "checkout.session.completed" ||
-    event.type === "checkout.session.expired"
-  ) {
-    const session = event.data.object as Stripe.Checkout.Session;
-    const orderId = session.metadata?.order_id;
-    if (orderId) {
-      const supabase = createAdminClient();
+  switch (event.type) {
+    case "checkout.session.completed":
+    case "checkout.session.async_payment_succeeded":
+    case "checkout.session.expired":
+    case "checkout.session.async_payment_failed": {
       // Only the website checkout remains (it unlocks both AI designers).
-      const table = "website_orders";
-      if (event.type === "checkout.session.completed") {
-        await supabase
-          .from(table)
-          .update({
-            status: "paid",
-            stripe_payment_intent:
-              typeof session.payment_intent === "string" ? session.payment_intent : null,
-          })
-          .eq("id", orderId)
-          .eq("status", "pending_payment");
-      } else {
-        await supabase
-          .from(table)
-          .update({ status: "canceled" })
-          .eq("id", orderId)
-          .eq("status", "pending_payment");
+      const session = event.data.object;
+      try {
+        await settleWebsiteOrder(
+          createAdminClient(),
+          session,
+          event.type === "checkout.session.async_payment_failed" ? "canceled" : undefined
+        );
+      } catch (err) {
+        console.error(`[webhooks/stripe] ${event.type} ${event.id} not recorded`, err);
+        return Response.json({ error: "Could not record the event" }, { status: 500 });
       }
     }
   }

@@ -98,7 +98,10 @@ every `/dev` page is a 404 in a production build).
   repository secrets the workflow lists. One pass locally:
   `npx tsx --env-file=.env worker/poll.ts`.
 - **Stripe**: point a webhook at `/api/webhooks/stripe` for
-  `checkout.session.completed` and `checkout.session.expired`.
+  `checkout.session.completed`, `checkout.session.expired`,
+  `checkout.session.async_payment_succeeded` and
+  `checkout.session.async_payment_failed`. Every purchase also gets a paid
+  invoice from Stripe (`invoice_creation` in the checkout route).
 - **Stripe is required in production.** Without `STRIPE_SECRET_KEY` the AI
   designers stay locked there (development runs them unlocked).
 - **Privacy policy** (`/privatliv`): fill in `src/lib/legal.ts` (the company,

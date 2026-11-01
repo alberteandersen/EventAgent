@@ -323,16 +323,25 @@ function WebsiteBuilder({ pickedTab, setTab, contentStep, setContentStep, onSavi
     setGenError('Betalingen kunne ikke startes. Prøv igen om lidt.');
   };
 
-  // Back from Stripe: land on this screen and poll until the webhook lands.
+  // Back from Stripe: land on this screen, have the server confirm the
+  // payment, and poll in case only the webhook can (a delayed method).
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     if (!params.has('website_checkout')) return;
     const success = params.get('website_checkout') === 'success';
+    const sessionId = params.get('session_id');
     params.delete('website_checkout');
+    params.delete('session_id');
     const qs = params.toString();
     window.history.replaceState({}, '', `${window.location.pathname}${qs ? `?${qs}` : ''}`);
     if (!success) return;
+    if (sessionId) {
+      void fetch('/api/website/checkout/confirm', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      }).then(() => refresh()).catch(() => null);
+    }
     let tries = 0;
     const t = setInterval(() => {
       tries += 1;

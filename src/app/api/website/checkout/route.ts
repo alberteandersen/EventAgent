@@ -1,13 +1,15 @@
 import { NextRequest } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { websitePriceCents } from "@/lib/website/pricing";
 
 /**
  * POST /api/website/checkout — create a website order and a Stripe Checkout
  * Session for it. Body: { eventId }. Returns { url } to redirect the
  * browser. 503 when Stripe isn't configured (the feature then runs
- * unlocked — see hasWebsiteAccess).
+ * unlocked — see hasWebsiteAccess). Orders are written with the admin
+ * client: the couple can read them, never write them.
  */
 export async function POST(request: NextRequest) {
   const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -37,8 +39,9 @@ export async function POST(request: NextRequest) {
     .eq("status", "paid");
   if ((paidCount ?? 0) > 0) return Response.json({ error: "already_paid" }, { status: 409 });
 
+  const admin = createAdminClient();
   const amountCents = websitePriceCents();
-  const { data: order, error: orderError } = await supabase
+  const { data: order, error: orderError } = await admin
     .from("website_orders")
     .insert({
       event_id: eventId,
@@ -55,26 +58,46 @@ export async function POST(request: NextRequest) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin;
   const stripe = new Stripe(stripeKey);
-  const session = await stripe.checkout.sessions.create({
-    mode: "payment",
-    line_items: [
+  const metadata = { order_id: order.id, event_id: eventId, user_id: user.id, order_type: "website" };
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await stripe.checkout.sessions.create(
       {
-        quantity: 1,
-        price_data: {
-          currency: "dkk",
-          unit_amount: amountCents,
-          product_data: {
-            name: "Kalas, AI-designet bryllupshjemmeside",
-            description: "Juno designer jeres personlige hjemmeside, inkl. fjernelse af Kalas-branding.",
+        mode: "payment",
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: "dkk",
+              unit_amount: amountCents,
+              product_data: {
+                name: "Kalas, AI-designet bryllupshjemmeside",
+                description: "Juno designer jeres personlige hjemmeside, inkl. fjernelse af Kalas-branding.",
+              },
+            },
           },
-        },
+        ],
+        client_reference_id: order.id,
+        customer_email: user.email,
+        metadata,
+        // The same metadata on the payment, so a refund or dispute in the
+        // dashboard leads back to the order.
+        payment_intent_data: { metadata },
+        // A paid invoice (PDF, hosted page) for the couple's records.
+        invoice_creation: { enabled: true, invoice_data: { metadata } },
+        // The session id lets the return confirm the payment itself rather
+        // than wait for the webhook.
+        success_url: `${appUrl}/home?website_checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${appUrl}/home?website_checkout=canceled`,
       },
-    ],
-    metadata: { order_id: order.id, event_id: eventId, user_id: user.id, order_type: "website" },
-    success_url: `${appUrl}/home?website_checkout=success`,
-    cancel_url: `${appUrl}/home?website_checkout=canceled`,
-  });
+      { idempotencyKey: `website-order-${order.id}` }
+    );
+  } catch (err) {
+    console.error("[website/checkout] Stripe refused the session", err);
+    await admin.from("website_orders").update({ status: "canceled" }).eq("id", order.id);
+    return Response.json({ error: "Could not start the payment" }, { status: 502 });
+  }
 
-  await supabase.from("website_orders").update({ stripe_session_id: session.id }).eq("id", order.id);
+  await admin.from("website_orders").update({ stripe_session_id: session.id }).eq("id", order.id);
   return Response.json({ url: session.url });
 }

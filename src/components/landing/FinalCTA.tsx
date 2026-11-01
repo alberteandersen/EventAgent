@@ -1,41 +1,28 @@
-"use client";
-
 import Link from "next/link";
-import { motion } from "motion/react";
-import { BlurFade } from "@/components/ui/blur-fade";
+import { Juno } from "@/components/juno/Juno";
 
+/* The close mirrors the opening: the laurel field, and Juno, hovering. */
 export function FinalCTA() {
   return (
-    <section className="relative overflow-hidden px-6 py-28">
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-1/4 top-0 h-72 w-72 rounded-full bg-rose-blush blur-[110px]" />
-        <div className="absolute right-1/4 bottom-0 h-72 w-72 rounded-full bg-rose-blush/70 blur-[110px]" />
-      </div>
-
-      <BlurFade inView duration={0.7} className="mx-auto max-w-2xl text-center">
-        <motion.div
-          animate={{ rotate: [0, 14, -10, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          className="mx-auto mb-6 text-5xl"
-        >
-          💍
-        </motion.div>
-        <h2 className="font-[family-name:var(--font-cormorant)] text-5xl font-semibold leading-[1.02] tracking-[-0.4px] text-[#4A4E3C] sm:text-7xl">
-          Jeres bryllupsdag,
-          <br />
-          <span className="text-accent">så godt som planlagt.</span>
+    <section data-ground="laurel" className="bg-laurel text-on-laurel">
+      <div className="mx-auto flex max-w-3xl flex-col items-center px-6 py-28 text-center sm:py-36">
+        <div className="juno-bob">
+          <Juno size={220} bow follow flight="hover" shadow={false} />
+        </div>
+        <h2 className="mt-10 text-balance font-serif text-5xl font-semibold leading-[1] tracking-[-0.015em] sm:text-7xl">
+          Sig hej til Juno.
         </h2>
-        <p className="mx-auto mt-6 max-w-md text-lg text-velvet-body">
-          Opret en konto, og fortæl Juno om jeres bryllup. Hun kan skrive til
-          de første steder allerede i dag.
+        <p className="mt-6 max-w-md text-lg leading-relaxed text-on-laurel-soft">
+          Fortæl hende, hvor og hvornår I vil giftes. Hun kan skrive til de
+          første steder allerede i dag.
         </p>
         <Link
           href="/login"
-          className="mt-10 inline-flex rounded-full bg-blue px-10 py-4 text-sm font-medium text-on-ink shadow-[0px_4px_14px_rgba(58,79,55,0.22)] transition hover:bg-blue-light"
+          className="mt-10 rounded-full bg-cream px-10 py-4 text-sm font-semibold text-ink shadow-[0_10px_24px_-12px_rgba(0,0,0,0.55)] transition-colors hover:bg-white"
         >
-          Start planlægningen, det er gratis
+          Kom i gang gratis
         </Link>
-      </BlurFade>
+      </div>
     </section>
   );
 }

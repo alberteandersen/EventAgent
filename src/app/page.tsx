@@ -7,9 +7,9 @@ import { pageMetadata } from "@/lib/guide/metadata";
 import { graph, organization, softwareApplication, website } from "@/lib/guide/schema";
 
 export const metadata = pageMetadata({
-  title: "Kalas: AI-bryllupsplanlægger, der finder steder og henter tilbud",
+  title: "Kalas: Juno, jeres bryllupskoordinator",
   description:
-    "Juno, bryllupsplanlæggeren i Kalas, finder rigtige steder, skriver til dem på deres eget sprog og gør svarene til tilbud, I kan sammenligne. Gratis at komme i gang.",
+    "Juno finder rigtige steder til jeres bryllup, skriver til dem på deres eget sprog og gør svarene til tilbud, I kan sammenligne. Hun holder styr på gæster, budget og bordplan. Gratis at komme i gang.",
   path: "/",
   og: "kalas",
   locale: "da_DK",

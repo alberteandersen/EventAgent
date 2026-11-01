@@ -1,83 +1,68 @@
 import Link from "next/link";
-import { BlurFade } from "@/components/ui/blur-fade";
 import { PRIVACY_POLICY_LIVE } from "@/lib/legal";
 
 const columns = [
   {
-    title: "Produkt",
+    title: "På siden",
     links: [
-      { label: "Steder", href: "#features" },
-      { label: "Tilbud", href: "#features" },
-      { label: "Budget", href: "#features" },
-      { label: "Gæster", href: "#features" },
-      { label: "Hjemmeside", href: "#features" },
-      { label: "Tidsplan", href: "#features" },
+      { label: "Sådan arbejder Juno", href: "#arbejde" },
+      { label: "Steder", href: "#steder" },
+      { label: "Fra ja til tak", href: "#resten" },
+      { label: "I bestemmer", href: "#vilkaar" },
     ],
   },
   {
-    title: "Ressourcer",
+    title: "Guides",
     links: [
-      { label: "Bryllupsguides", href: "/guide" },
+      { label: "Alle bryllupsguides", href: "/guide" },
       { label: "Tjekliste", href: "/guide/bryllup-tjekliste" },
       { label: "Hvad koster et bryllup?", href: "/guide/hvad-koster-et-bryllup" },
-      { label: "FAQ", href: "/guide/faq" },
+      { label: "Spørgsmål og svar", href: "/guide/faq" },
     ],
   },
 ];
 
-/* Only pages that exist. About, contact, legal and social links come back when
-   there is a page or a profile to send people to: a footer of 404s tells
-   search engines and couples alike that the site is unfinished. */
-
+/* Only pages that exist. About, contact and social links come back when there
+   is a page or a profile to send people to. */
 export function LandingFooter() {
   return (
-    <footer className="border-t border-border bg-surface">
-      <BlurFade inView className="mx-auto w-full max-w-6xl px-6 py-16">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-          <div className="lg:col-span-1">
-            <Link
-              href="/"
-              className="font-[family-name:var(--font-wordmark)] text-[1.6rem] font-bold leading-none text-ink"
-            >
+    <footer data-ground="laurel" className="bg-laurel-deep text-on-laurel">
+      <div className="mx-auto w-full max-w-7xl px-6 py-16 sm:px-8">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
+          <div>
+            <Link href="/" aria-label="Kalas" className="font-[family-name:var(--font-wordmark)] text-[1.6rem] font-bold leading-none">
               kalas
             </Link>
-            <p className="mt-3 max-w-[14rem] text-sm leading-relaxed text-velvet-body">
+            <p className="mt-3 max-w-[16rem] text-sm leading-relaxed text-on-laurel-soft">
               Juno planlægger jeres bryllup. I træffer beslutningerne.
             </p>
           </div>
 
           {columns.map((col) => (
-            <div key={col.title}>
-              <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent-ink">
-                {col.title}
-              </p>
-              <ul className="mt-4 space-y-2.5">
+            <nav key={col.title} aria-label={col.title}>
+              <p className="font-serif text-lg font-semibold">{col.title}</p>
+              <ul className="mt-3 space-y-2.5">
                 {col.links.map((link) => (
                   <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-velvet-body transition hover:text-ink"
-                    >
+                    <Link href={link.href} className="text-sm text-on-laurel-soft transition-colors hover:text-on-laurel">
                       {link.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
           ))}
         </div>
 
-        <div className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-8">
-          <span className="text-xs text-velvet-body">
-            © {new Date().getFullYear()} Kalas. Alle rettigheder forbeholdes.
-          </span>
+        <div className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t border-on-laurel/15 pt-8 text-xs text-on-laurel-soft">
+          <span>© {new Date().getFullYear()} Kalas</span>
           {PRIVACY_POLICY_LIVE && (
-            <Link href="/privatliv" className="text-xs text-velvet-body transition hover:text-ink">
+            <Link href="/privatliv" className="transition-colors hover:text-on-laurel">
               Privatlivspolitik
             </Link>
           )}
         </div>
-      </BlurFade>
+      </div>
     </footer>
   );
 }

@@ -1,57 +1,68 @@
 "use client";
 
 import Link from "next/link";
-import { useScroll, useMotionValueEvent } from "motion/react";
-import { useState } from "react";
-import { BlurFade } from "@/components/ui/blur-fade";
+import { useEffect, useState } from "react";
 
+/* The bar answers the ground it is over: a cream pill on the laurel fields,
+   a laurel pill on the cream and pistachio ones. A section says it is laurel
+   with data-ground="laurel"; the page opens on one, so the bar starts cream. */
 export function Nav() {
-  const { scrollY } = useScroll();
-  const [scrolled, setScrolled] = useState(false);
-  useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 24));
+  const [onLaurel, setOnLaurel] = useState(true);
+
+  useEffect(() => {
+    let frame = 0;
+    const read = () => {
+      frame = 0;
+      const line = 44; // the bar's own middle, from the top of the window
+      const over = Array.from(document.querySelectorAll<HTMLElement>('[data-ground="laurel"]')).some((el) => {
+        const r = el.getBoundingClientRect();
+        return r.top <= line && r.bottom > line;
+      });
+      setOnLaurel(over);
+    };
+    const queue = () => { if (!frame) frame = requestAnimationFrame(read); };
+    queue();
+    window.addEventListener("scroll", queue, { passive: true });
+    window.addEventListener("resize", queue);
+    return () => {
+      window.removeEventListener("scroll", queue);
+      window.removeEventListener("resize", queue);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  const shift = "transition-colors duration-300";
+  const link = `rounded-full px-3 py-2 text-sm sm:px-4 ${shift} ${
+    onLaurel ? "text-ink-body hover:text-ink" : "text-on-laurel-soft hover:text-on-laurel"
+  }`;
 
   return (
-    <BlurFade delay={0.05} duration={0.6} className="fixed inset-x-0 top-0 z-50">
+    <header className="fixed inset-x-0 top-0 z-50">
       <div
-        className={`mx-auto mt-3 flex w-[min(80rem,calc(100%-2rem))] items-center justify-between rounded-full py-2.5 pl-5 pr-2 transition-all duration-300 sm:px-8 ${
-          scrolled
-            ? "border border-border bg-surface/80 shadow-[0_8px_30px_rgba(74,78,60,0.06)] backdrop-blur-xl"
-            : "border border-transparent"
+        className={`mx-auto mt-3 flex w-[min(80rem,calc(100%-2rem))] items-center justify-between rounded-full border py-2.5 pl-5 pr-2 shadow-[0_10px_30px_-14px_rgba(20,30,18,0.45)] sm:pl-8 sm:pr-2.5 ${shift} ${
+          onLaurel ? "border-border bg-cream" : "border-laurel bg-laurel"
         }`}
       >
         <Link
           href="/"
-          className={`flex items-center gap-2 font-[family-name:var(--font-wordmark)] text-[1.6rem] font-bold leading-none transition-colors duration-300 ${
-            scrolled ? "text-ink" : "text-surface drop-shadow-[0_1px_8px_rgba(0,0,0,0.25)]"
-          }`}
+          aria-label="Kalas"
+          className={`font-[family-name:var(--font-wordmark)] text-[1.6rem] font-bold leading-none ${shift} ${onLaurel ? "text-ink" : "text-on-laurel"}`}
         >
           kalas
         </Link>
-        <nav className="flex items-center gap-1.5">
-          <Link
-            href="/guide"
-            className={`hidden rounded-full px-4 py-2 text-sm transition-colors duration-300 sm:inline-flex ${
-              scrolled ? "text-ink-body hover:text-ink" : "text-surface/90 hover:text-surface"
-            }`}
-          >
-            Guides
-          </Link>
+        <nav aria-label="Primær" className="flex items-center gap-1">
+          <Link href="/guide" className={`hidden sm:inline-flex ${link}`}>Guides</Link>
+          <Link href="/login" className={link}>Log ind</Link>
           <Link
             href="/login"
-            className={`rounded-full px-3 py-2 text-sm transition-colors duration-300 sm:px-4 ${
-              scrolled ? "text-ink-body hover:text-ink" : "text-surface/90 hover:text-surface"
+            className={`ml-1 rounded-full px-4 py-2 text-sm font-semibold ${shift} ${
+              onLaurel ? "bg-laurel text-on-laurel hover:bg-blue-light" : "bg-cream text-ink hover:bg-white"
             }`}
-          >
-            Log ind
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-full bg-blue px-4 py-2 text-sm font-medium text-on-ink transition hover:bg-blue-light"
           >
             Kom i gang
           </Link>
         </nav>
       </div>
-    </BlurFade>
+    </header>
   );
 }

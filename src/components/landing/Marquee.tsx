@@ -86,34 +86,24 @@ function EventCard({
 
 export function Marquee() {
   return (
-    <section className="border-y border-[#D4D6C0] bg-[#F6F0E8] py-14 sm:py-20 lg:py-24 overflow-x-clip">
-      <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[minmax(0,36%)_minmax(0,64%)] lg:gap-12 xl:gap-14">
-        <motion.div
-          initial={{ opacity: 0, y: 24, filter: "blur(8px)" }}
-          whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          viewport={{ once: true, amount: 0.5 }}
-          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="max-w-lg"
-        >
-          <p className="text-[11px] font-medium uppercase tracking-[1.5px] text-accent-ink">
-            Jeres dag, på jeres måde
-          </p>
-          <h2 className="mt-4 font-[family-name:var(--font-cormorant)] text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.01em] text-[#4A4E3C] sm:text-6xl lg:text-[4rem]">
-            Til alle slags bryllupper
+    <section id="steder" className="scroll-mt-24 overflow-x-clip border-y border-border bg-cream py-20 sm:py-24 lg:py-28">
+      <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 sm:px-8 lg:grid-cols-[minmax(0,36%)_minmax(0,64%)] lg:gap-14">
+        <div className="max-w-lg">
+          <h2 className="text-balance font-serif text-[2.75rem] font-semibold leading-[1.02] tracking-[-0.01em] text-ink sm:text-6xl lg:text-[4rem]">
+            Fra Skagen til Toscana.
           </h2>
-          <p className="mt-5 text-base leading-relaxed text-velvet-body sm:text-[17px]">
-            Fra det lille bryllup for to til den store fest: Kalas finder stedet,
-            skriver til leverandørerne og holder styr på detaljerne, så I kan
-            koncentrere jer om hinanden.
+          <p className="mt-5 text-base leading-relaxed text-ink-body sm:text-[17px]">
+            Juno leder, hvor I vil giftes: en lade på Fyn, en tagterrasse i
+            København eller en villa blandt vinmarker. Hun skriver til stedet på
+            dets eget sprog, så afstanden bliver hendes arbejde og ikke jeres.
           </p>
           <Link
-            href="#features"
-            className="mt-8 inline-flex items-center gap-2 rounded-xl bg-[#4A4E3C] px-6 py-3.5 text-sm font-medium text-[#F6F0E8] transition hover:bg-[#575B47]"
+            href="/login"
+            className="mt-8 inline-flex rounded-full bg-laurel px-7 py-3.5 text-sm font-semibold text-on-laurel transition-colors hover:bg-blue-light"
           >
-            Se hvordan det virker
-            <span aria-hidden>→</span>
+            Fortæl Juno, hvor I vil giftes
           </Link>
-        </motion.div>
+        </div>
 
         <div className="grid h-[520px] w-full min-w-0 grid-cols-12 grid-rows-6 gap-3 sm:h-[580px] sm:gap-4 lg:h-[640px]">
           {eventCards.map((card) => (

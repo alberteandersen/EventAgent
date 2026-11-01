@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { motion } from 'motion/react';
-import { Plus, X, Pencil, Bell, StickyNote, ChevronRight, ChevronDown, MessageCircle } from 'lucide-react';
+import { Plus, X, Pencil, Bell, StickyNote, ChevronRight, ChevronDown, MessageCircle, ArrowRight, CalendarClock } from 'lucide-react';
 import BudgetLineDetail from './BudgetLineDetail';
 import BudgetJunoAssistant from './BudgetJunoAssistant';
 import { budgetLines, type BudgetLine } from '@/lib/budget/benchmarks';
@@ -11,13 +11,14 @@ import {
   resolveBudgetIcon,
   type BudgetIconId,
 } from '../lib/budget-style';
-import { Button, Eyebrow, Chip, CheckDot, Page, PageHeader, PageLoader, cn } from '../ui';
+import { Button, Eyebrow, Chip, CheckDot, Page, PageHeader, PageLoader, cn, inputClass } from '../ui';
 import AnimateNumber from '../AnimateNumber';
 import { useWedding } from '../useWedding';
 import { useUndo } from '../undo';
 import { useLang } from '../i18n';
 import { navigateToHub, type NavigateTarget } from '../lib/hub-nav';
 import { estimatedTotal, estimatedLines, rentalSplit, subItemSeeds } from './budget/estimate';
+import CategoryMark from './budget/CategoryMark';
 import type { HubCat } from './team/shared';
 
 const isCustomLine = (id: string) => id.startsWith('custom-');
@@ -44,6 +45,9 @@ const splitting = new Set<string>();
 const subSeeding = new Set<string>();
 
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
+/** The unit after a figure. A no-break space: an ordinary one at the start of
+ *  AnimateNumber's suffix is dropped, and the figure read "225.000kr". */
+const KR = '\u00a0kr';
 /** Undo key for a category: its id is a category name, not a row id. */
 const lineKey = (category: string) => `budget-line:${category}`;
 
@@ -276,6 +280,15 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
 
   const setAmount = (id: string, v: number) => setAmounts((a) => ({ ...a, [id]: v }));
 
+  // Sliders that have been moved since their last save. A slider that was
+  // only tabbed past saves nothing: its own value is rounded to its step and
+  // capped at its max, which would quietly overwrite a typed amount.
+  const slid = useRef<Set<string>>(new Set());
+  const commitSlider = (id: string, value: number) => {
+    if (!slid.current.delete(id)) return;
+    persist(id, value);
+  };
+
   const addLine = () => {
     const label = newLabel.trim();
     if (!label) return;
@@ -435,6 +448,9 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
 
   if (loading) return <PageLoader />;
 
+  /** A category's share of the whole budget, in whole percent. */
+  const share = (amount: number) => (total > 0 ? Math.round((amount / total) * 100) : 0);
+
   return (
     <Page>
       <PageHeader
@@ -461,180 +477,193 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
         }
       />
 
-      <div>
-      {/* Totals strip */}
-      <div className="grid gap-px overflow-hidden rounded-3xl rule bg-line sm:grid-cols-3">
-        <Stat
-          label="Samlet budget"
-          value={total}
-          tone="total"
-          onCommit={(next) => void updateEvent({ budget: next > 0 ? String(next) : null })}
-        />
-        <Stat label="Fordelt" value={allocated} tone="allocated" />
-        <Stat label={remaining < 0 ? 'Over budget' : 'Tilbage at fordele'} value={Math.abs(remaining)} tone={remaining < 0 ? 'over' : 'remaining'} />
-      </div>
-
-      <p className="mt-4 text-[0.82rem] text-muted">
-        {t('Betalt indtil videre:')} <span className="text-ink">{kr(spent)} kr</span> · {t('Juno advarer, hvis I rammer loftet.')}
-      </p>
-
-      {/* Stacked allocation bar */}
-      <div className="mt-8 flex h-3 overflow-hidden rounded-full bg-shell">
-        {lines.map((b) => (
-          <motion.div key={b.id}
-            initial={{ width: 0 }} animate={{ width: `${((amounts[b.id] ?? 0) / total) * 100}%` }}
-            transition={{ duration: 0.5 }}
-            style={{ background: b.color }}
-            title={t(b.label)}
+      {/* The totals, and under them how the money is spread: one block, so
+          the bar reads as part of the figures rather than a stripe adrift on
+          the page. */}
+      <section className="@container overflow-hidden rounded-3xl rule bg-card">
+        {/* On a phone the total takes the row and the other two share the
+            next, so the three figures do not fill the whole first screen. */}
+        <div className="grid grid-cols-2 gap-px bg-line sm:grid-cols-3">
+          <Stat
+            label="Samlet budget"
+            value={total}
+            tone="total"
+            onCommit={(next) => void updateEvent({ budget: next > 0 ? String(next) : null })}
           />
-        ))}
-      </div>
-      {/* Legend, so the bar actually reads */}
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
-        {lines.map((b) => {
-          const Icon = resolveBudgetIcon(b.icon);
-          return (
-            <span key={b.id} className="flex items-center gap-1.5 text-[0.72rem] text-muted">
-              <span className="flex h-4 w-4 items-center justify-center rounded-full shrink-0"
-                style={{ background: b.color }}>
-                <Icon size={9} className="text-white" strokeWidth={2.5} />
-              </span>
-              {t(b.label)} · {Math.round(((amounts[b.id] ?? 0) / total) * 100)}%
-            </span>
-          );
-        })}
-      </div>
+          <Stat label="Fordelt" value={allocated} tone="allocated" />
+          <Stat label={remaining < 0 ? 'Over budget' : 'Tilbage at fordele'} value={Math.abs(remaining)} tone={remaining < 0 ? 'over' : 'remaining'} />
+        </div>
 
-      {/* Editable lines */}
-      <div className="mt-10 divide-y divide-line">
+        <div className="border-t border-line px-5 py-5 sm:px-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+            <Eyebrow>{t('Fordeling')}</Eyebrow>
+            <p className="text-meta text-muted">
+              {t('Betalt indtil videre:')} <span className="font-semibold text-ink tabular-nums">{kr(spent)} kr</span> · {t('Juno advarer, hvis I rammer loftet.')}
+            </p>
+          </div>
+
+          {total > 0 && (
+            <>
+              {/* The legend below says the same in words, so the bar is for the eye only. */}
+              <div className="mt-4 flex h-3 gap-0.5 overflow-hidden rounded-full bg-shell" aria-hidden>
+                {lines.filter((b) => (amounts[b.id] ?? 0) > 0).map((b) => (
+                  <span key={b.id}
+                    className="min-w-0 transition-[flex-grow] duration-500 ease-out"
+                    style={{ flexGrow: amounts[b.id], flexBasis: 0, background: b.color }}
+                    title={t(b.label)}
+                  />
+                ))}
+                {remaining > 0 && <span className="min-w-0" style={{ flexGrow: remaining, flexBasis: 0 }} />}
+              </div>
+              <ul className="mt-4 grid grid-cols-2 gap-x-8 gap-y-2 @2xl:grid-cols-3 @5xl:grid-cols-4">
+                {lines.map((b) => (
+                  <li key={b.id} className="flex min-w-0 items-center gap-2 text-xs">
+                    <span className="size-2 shrink-0 rounded-full" style={{ background: b.color }} aria-hidden />
+                    <span className="min-w-0 flex-1 truncate text-ink-soft">{t(b.label)}</span>
+                    <span className="shrink-0 font-semibold text-ink tabular-nums">{share(amounts[b.id] ?? 0)}%</span>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* One card per category, built like the block above: its figures in
+          labelled tiles, then the posts that make it up. */}
+      <div className="@container flex flex-col gap-4">
         {lines.map((b) => {
           const est = amounts[b.id] ?? 0;
           const actual = actuals[b.id] ?? 0;
           const paid = paids[b.id] ?? 0;
           const state = paidState(actual, paid);
+          const rest = Math.max(0, actual - paid);
           const hubCat = BUDGET_TO_HUBCAT[b.id];
           const reminder = reminderById[b.id] ?? '';
           const note = noteById[b.id] ?? '';
-          const Icon = resolveBudgetIcon(b.icon);
+          const overdue = state !== 'full' && (daysUntil(reminder) ?? 0) < 0;
           const subs = subItems.filter((s) => s.category === b.id);
           const subCount = subs.length;
           const subTotal = subs.reduce((a, s) => a + s.amount, 0);
+          const open = !collapsedIds.has(b.id);
+          const adding = addingSubIn === b.id;
+          // The slider reaches 45% of the budget, or as far as the saved
+          // figure when that is more, so a typed amount is never out of range.
+          const saved = budgetItems.find((i) => i.category === b.id)?.planned_amount ?? 0;
+          const sliderMax = Math.max(Math.round(total * 0.45), saved);
           return (
-          <motion.div key={b.id}
+          <motion.section key={b.id}
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="py-7">
-            <div className="flex items-baseline justify-between gap-4">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <button
-                  type="button"
-                  onClick={() => toggleCollapsed(b.id)}
-                  aria-label={collapsedIds.has(b.id) ? t('Vis underposter') : t('Skjul underposter')}
-                  aria-expanded={!collapsedIds.has(b.id)}
-                  className="shrink-0 -ml-1 rounded-full p-1 text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
-                >
-                  <ChevronDown
-                    size={15}
-                    className={cn('transition-transform duration-200', collapsedIds.has(b.id) && '-rotate-90')}
-                  />
-                </button>
-                <span
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                  style={{ background: b.color }}
-                  aria-hidden
-                >
-                  <Icon size={15} className="text-white" strokeWidth={2.25} />
-                </span>
-                {/* Opens the same Detaljer panel as the chevron below — one
-                    place to rename a category, not two competing ones. */}
-                <button onClick={() => setDetailId(b.id)}
-                  className="group flex items-center gap-1.5 text-left cursor-pointer" title={t('Åbn detaljer')}>
-                  <span className="font-serif text-[1.2rem] text-ink">{t(b.label)}</span>
-                  <Pencil size={12} className="text-muted/0 group-hover:text-muted transition-colors" />
-                </button>
-                {state === 'full' && <Chip tone="success">{t('Fuldt betalt')}</Chip>}
-                {state === 'partial' && (
-                  <Chip tone="success">{t('{paid} af {actual} betalt', { paid: kr(paid), actual: kr(actual) })}</Chip>
-                )}
-              </div>
-              <div className="flex items-baseline gap-3 shrink-0">
-                <div className="font-serif text-[1.3rem] text-ink tabular-nums">
-                  <AnimateNumber value={est} suffix=" kr" />
+            className="overflow-hidden rounded-[22px] border border-line bg-card">
+            <div className="flex items-center gap-3 py-4 pl-5 pr-3 sm:pl-6 sm:pr-4">
+              <CategoryMark icon={b.icon} color={b.color} />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  {/* Opens Detaljer, the one place to rename a category. */}
+                  <h2 className="min-w-0">
+                    <button type="button" onClick={() => setDetailId(b.id)}
+                      className="group/name flex max-w-full cursor-pointer items-center gap-1.5 text-left" title={t('Åbn detaljer')}>
+                      <span className="truncate font-serif text-title text-ink">{t(b.label)}</span>
+                      <Pencil size={12} aria-hidden className="shrink-0 text-muted opacity-0 transition-opacity group-hover/name:opacity-100 group-focus-visible/name:opacity-100" />
+                    </button>
+                  </h2>
+                  {state === 'full' && <Chip tone="success">{t('Fuldt betalt')}</Chip>}
+                  {state === 'partial' && (
+                    <Chip tone="success">{t('{paid} af {actual} betalt', { paid: kr(paid), actual: kr(actual) })}</Chip>
+                  )}
                 </div>
-                <button onClick={() => removeLine(b.id)} aria-label={t('Fjern {label}', { label: t(b.label) })}
-                  className="text-muted hover:text-terracotta transition-colors cursor-pointer">
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
-
-            {/* Estimate slider (primary) */}
-            <div className="mt-4 flex items-center gap-4">
-              <input
-                type="range" min={0} max={Math.round(total * 0.45)} step={500}
-                value={amounts[b.id] ?? 0} onChange={(e) => setAmount(b.id, Number(e.target.value))}
-                onPointerUp={(e) => persist(b.id, Number((e.target as HTMLInputElement).value))}
-                onBlur={(e) => persist(b.id, Number(e.target.value))}
-                className="kalas-range flex-1"
-                aria-label={t('Justér {label}', { label: t(b.label) })}
-              />
-              <span className="w-12 shrink-0 text-right text-[0.78rem] text-muted tabular-nums">
-                {Math.round(((amounts[b.id] ?? 0) / total) * 100)}%
-              </span>
-            </div>
-
-            {/* Betalinger, at a glance — click the row to open Detaljer, where
-                the reminder, the note and the contract review live now
-                instead of three separate icon-toggles. No labeled button:
-                the whole strip is the target, and the only affordance is a
-                chevron that slides in on hover — the numbers should not have
-                to share space with a control that says what they already do. */}
-            <button
-              type="button"
-              onClick={() => setDetailId(b.id)}
-              aria-label={t('Åbn detaljer for {label}', { label: t(b.label) })}
-              className="group -mx-2.5 mt-5 flex w-full flex-wrap items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-left transition-colors hover:bg-shell cursor-pointer"
-            >
-              <span className="flex flex-wrap items-center gap-x-5 gap-y-1.5 text-[0.82rem]">
-                <span className="inline-flex items-baseline gap-1.5">
-                  <span className="text-muted">{t('Faktisk')}</span>
-                  <span className="font-semibold text-ink tabular-nums">{actual > 0 ? kr(actual) : '–'}</span>
-                </span>
-                <span className="inline-flex items-baseline gap-1.5">
-                  <span className="text-muted">{t('Betalt')}</span>
-                  <span className="font-semibold text-ink tabular-nums">{paid > 0 ? kr(paid) : '–'}</span>
-                </span>
-                {actual > 0 && (
-                  <span className="inline-flex items-baseline gap-1.5">
-                    <span className="text-muted">{t('Rest')}</span>
-                    <span className={cn('font-semibold tabular-nums', actual - paid > 0 ? 'text-terracotta' : 'text-success')}>
-                      {kr(Math.max(0, actual - paid))}
-                    </span>
-                  </span>
+                {(subCount > 0 || reminder || note) && (
+                  <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted">
+                    {subCount > 0 && <span>{tn(subCount, '{n} post', '{n} poster')}</span>}
+                    {reminder && (
+                      <span className={cn('inline-flex items-center gap-1', overdue ? 'text-terracotta' : 'text-clay-ink')}>
+                        <Bell size={12} aria-hidden /> {fmtDate(reminder)}
+                      </span>
+                    )}
+                    {note && (
+                      <span className="inline-flex text-clay-ink" title={t('Noter')}>
+                        <StickyNote size={12} aria-hidden />
+                        <span className="sr-only">{t('Noter')}</span>
+                      </span>
+                    )}
+                  </p>
                 )}
-              </span>
+              </div>
+              <button type="button" onClick={() => removeLine(b.id)} aria-label={t('Fjern {label}', { label: t(b.label) })}
+                className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-colors hover:bg-terracotta-tint hover:text-terracotta">
+                <X size={15} aria-hidden />
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleCollapsed(b.id)}
+                aria-label={open ? t('Skjul underposter') : t('Vis underposter')}
+                aria-expanded={open}
+                className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-colors hover:bg-shell hover:text-ink"
+              >
+                <ChevronDown size={17} aria-hidden className={cn('transition-transform duration-200', !open && '-rotate-90')} />
+              </button>
+            </div>
 
-              <span className="flex shrink-0 items-center gap-1.5">
-                {subCount > 0 && <span className="text-[0.72rem] text-muted">{tn(subCount, '{n} post', '{n} poster')}</span>}
-                {reminder && <Bell size={12} className="text-clay" aria-hidden />}
-                {note && <StickyNote size={12} className="text-clay" aria-hidden />}
-                <ChevronRight
-                  size={16}
-                  className="-translate-x-1 text-muted opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100"
-                  aria-hidden
+            {/* The figures, in the same tiles as the totals. Budgetteret is
+                theirs to set, by the slider or by typing; the other three
+                open Detaljer, where the actual price and what is paid are
+                kept as a draft until saved. */}
+            <div className="grid grid-cols-3 gap-px border-y border-line bg-line @3xl:grid-cols-5">
+              <div className="col-span-3 bg-sage-wash px-5 py-4 sm:px-6 @3xl:col-span-2">
+                <div className="flex items-baseline justify-between gap-3">
+                  <Eyebrow className="!text-ink-soft">{t('Budgetteret')}</Eyebrow>
+                  {total > 0 && <span className="text-xs text-ink-soft tabular-nums">{t('{n}% af budgettet', { n: share(est) })}</span>}
+                </div>
+                <MoneyFigure
+                  value={est}
+                  label={t('Ret beløbet for {label}', { label: t(b.label) })}
+                  onCommit={(next) => { setAmount(b.id, next); persist(b.id, next); }}
+                  className="mt-1.5 text-[1.6rem] leading-tight text-ink"
                 />
-              </span>
-            </button>
+                {total > 0 && (
+                  <input
+                    type="range" min={0} max={sliderMax} step={500}
+                    value={est}
+                    onChange={(e) => { slid.current.add(b.id); setAmount(b.id, Number(e.target.value)); }}
+                    onPointerUp={(e) => commitSlider(b.id, Number(e.currentTarget.value))}
+                    onKeyUp={(e) => commitSlider(b.id, Number(e.currentTarget.value))}
+                    onBlur={(e) => commitSlider(b.id, Number(e.currentTarget.value))}
+                    className="budget-range mt-2"
+                    style={{ '--ratio': sliderMax > 0 ? Math.min(1, est / sliderMax) : 0, '--tone': b.color } as CSSProperties}
+                    aria-label={t('Justér {label}', { label: t(b.label) })}
+                  />
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailId(b.id)}
+                title={t('Åbn detaljer')}
+                className="group/figs col-span-3 grid cursor-pointer grid-cols-3 gap-px bg-line text-left focus-visible:-outline-offset-2!"
+              >
+                <FigureTile label={t('Faktisk')} value={actual > 0 ? actual : null} />
+                <FigureTile label={t('Betalt')} value={paid > 0 ? paid : null} />
+                <FigureTile
+                  label={t('Rest')}
+                  value={actual > 0 ? rest : null}
+                  tone={actual > 0 ? (rest > 0 ? 'due' : 'settled') : undefined}
+                />
+                <span className="sr-only">{t('Åbn detaljer for {label}', { label: t(b.label) })}</span>
+              </button>
+            </div>
 
             {/* The posts that make up this category, out by default: each with
                 a tick for paid, its vendor and its price. A row opens Detaljer
                 for the rest; a new post can be added right here. */}
-            {!collapsedIds.has(b.id) && (
-              <div className="mt-3 overflow-hidden rounded-2xl rule bg-card">
-                {subs.map((s, idx) => (
+            {open && (
+              <div>
+                {/* Two columns once the card is wide enough: a list of posts
+                    is short lines, and one column left most of each row empty. */}
+                <div className="grid gap-px bg-line-soft @4xl:grid-cols-2">
+                {subs.map((s) => (
                   <div
                     key={s.id}
-                    className={cn('group flex items-center gap-3 px-4 transition-colors hover:bg-shell', idx > 0 && 'border-t border-line')}
+                    className="group/post flex items-center gap-3 bg-card pl-5 transition-colors hover:bg-paper sm:pl-6"
                   >
                     {/* Only once the database knows about paid (0037). */}
                     {s.paid !== undefined && (
@@ -644,7 +673,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                         aria-checked={s.paid}
                         aria-label={s.paid ? t("Markér '{title}' som ikke betalt", { title: s.label }) : t("Markér '{title}' som betalt", { title: s.label })}
                         onClick={() => void updateBudgetSubItem(s.id, { paid: !s.paid })}
-                        className="shrink-0 cursor-pointer py-3 transition-transform hover:scale-105"
+                        className="shrink-0 cursor-pointer rounded-full transition-transform hover:scale-105"
                       >
                         <CheckDot done={s.paid} />
                       </button>
@@ -653,28 +682,29 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                       type="button"
                       onClick={() => setDetailId(b.id)}
                       aria-label={t('Rediger {label}', { label: s.label })}
-                      className="flex min-w-0 flex-1 items-center gap-3 py-3 text-left cursor-pointer"
+                      className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 py-3.5 pr-5 text-left sm:pr-6 focus-visible:-outline-offset-2!"
                     >
-                      {/* The parent's own icon and colour, so a post reads as
-                          belonging to this category rather than floating loose. */}
-                      <Icon size={13} className="shrink-0" style={{ color: b.color }} strokeWidth={2.25} aria-hidden />
-                      <span className={cn('min-w-0 flex-1 truncate text-[0.88rem]', s.paid ? 'text-muted line-through decoration-line-strong' : 'text-ink')}>
+                      <span className={cn('min-w-0 flex-1 truncate text-sm', s.paid ? 'text-muted line-through decoration-line-strong' : 'text-ink')}>
                         {t(s.label)}
                         {s.vendor && <span className="text-muted"> · {s.vendor}</span>}
                       </span>
-                      <span className={cn('shrink-0 text-[0.88rem] font-semibold tabular-nums', s.amount > 0 ? 'text-ink' : 'text-muted')}>
+                      <span className={cn('shrink-0 text-sm tabular-nums', s.amount > 0 ? 'font-semibold text-ink' : 'text-muted')}>
                         {kr(s.amount)} kr
                       </span>
-                      <ChevronRight size={13} aria-hidden
-                        className="shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100" />
+                      <ChevronRight size={14} aria-hidden
+                        className="hidden shrink-0 text-muted opacity-0 transition-opacity group-hover/post:opacity-100 sm:block" />
                     </button>
                   </div>
                 ))}
+                {/* An odd count leaves a hole in the second column; fill it,
+                    or the grid's own rule colour shows through. */}
+                {subCount % 2 === 1 && <div className="hidden bg-card @4xl:block" aria-hidden />}
+                </div>
 
-                {addingSubIn === b.id ? (
+                {adding && (
                   <form
                     onSubmit={(e) => { e.preventDefault(); commitSubItem(b.id, subCount); }}
-                    className={cn('flex items-center gap-2 px-3 py-2', subCount > 0 && 'border-t border-line')}
+                    className={cn('flex items-center gap-2 px-5 py-3 sm:px-6', subCount > 0 && 'border-t border-line-soft')}
                   >
                     <input
                       autoFocus
@@ -683,7 +713,7 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                       onKeyDown={(e) => { if (e.key === 'Escape') { setAddingSubIn(null); setNewSubLabel(''); setNewSubAmount(''); } }}
                       placeholder={t('Ny post, fx sko')}
                       aria-label={t('Navn på ny underpost')}
-                      className="min-w-0 flex-1 rounded-lg bg-shell px-3 py-2 text-[0.85rem] text-ink placeholder:text-muted/60 focus:outline-none"
+                      className={cn(inputClass, 'min-w-0 flex-1')}
                     />
                     <input
                       type="number" min={0} step={100}
@@ -691,82 +721,65 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                       onChange={(e) => setNewSubAmount(e.target.value)}
                       placeholder="0"
                       aria-label={t('Beløb')}
-                      className="w-24 shrink-0 rounded-lg bg-shell px-3 py-2 text-right text-[0.85rem] text-ink tabular-nums placeholder:text-muted/60 focus:outline-none"
+                      className={cn(inputClass, 'w-24! shrink-0 text-right tabular-nums')}
                     />
-                    <button type="submit" disabled={!newSubLabel.trim()}
-                      className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[0.75rem] font-semibold text-canvas disabled:opacity-40 cursor-pointer">
-                      {t('Tilføj')}
-                    </button>
+                    <Button type="submit" disabled={!newSubLabel.trim()}>{t('Tilføj')}</Button>
                   </form>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => { setAddingSubIn(b.id); setNewSubLabel(''); setNewSubAmount(''); }}
-                    className={cn('flex w-full items-center gap-2 px-4 py-2.5 text-left text-[0.8rem] text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer', subCount > 0 && 'border-t border-line')}
-                  >
-                    <Plus size={13} /> {t('Tilføj post')}
-                  </button>
                 )}
 
-                {subCount > 0 && (
-                  <div className="flex items-center justify-between border-t border-line bg-shell/60 px-4 py-2.5">
-                    <span className="text-[0.68rem] font-semibold uppercase tracking-[0.14em] text-muted">
-                      {t('I alt')}
+                {b.hint && <p className="border-t border-line-soft px-5 py-3 text-xs text-muted sm:px-6">{b.hint}</p>}
+
+                <div className={cn('flex flex-wrap items-center gap-x-1 gap-y-2 bg-paper px-2.5 py-2.5 sm:px-3.5', (subCount > 0 || adding || b.hint) && 'border-t border-line')}>
+                  {!adding && (
+                    <Button variant="ghost" size="sm" icon={Plus}
+                      onClick={() => { setAddingSubIn(b.id); setNewSubLabel(''); setNewSubAmount(''); }}>
+                      {t('Tilføj post')}
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => setDetailId(b.id)}>{t('Detaljer')}</Button>
+                  {hubCat && (
+                    <Button variant="ghost" size="sm" iconEnd={ArrowRight} onClick={() => goFind(b.id)}>
+                      {b.id === 'venue' ? t('Se venues der matcher jer') : t('Se top matches')}
+                    </Button>
+                  )}
+                  {subCount > 0 && (
+                    <p className="ml-auto flex items-baseline gap-3 px-2.5 text-xs text-muted">
                       {subs.some((x) => x.paid !== undefined) && (
-                        <span className="ml-2 normal-case tracking-normal">
-                          · {t('{n} af {total} betalt', { n: subs.filter((x) => x.paid).length, total: subCount })}
-                        </span>
+                        <span>{t('{n} af {total} betalt', { n: subs.filter((x) => x.paid).length, total: subCount })}</span>
                       )}
-                    </span>
-                    <span className="text-[0.85rem] font-semibold text-ink tabular-nums">{kr(subTotal)} kr</span>
-                  </div>
-                )}
+                      <span className="font-semibold uppercase tracking-[0.14em]">{t('I alt')}</span>
+                      <span className="text-sm font-semibold text-ink tabular-nums">{kr(subTotal)} kr</span>
+                    </p>
+                  )}
+                </div>
               </div>
             )}
-
-            {hubCat && (
-              <button onClick={() => goFind(b.id)}
-                className="mt-3 text-[0.82rem] text-ink underline underline-offset-2 hover:text-ink-soft transition-colors cursor-pointer">
-                {b.id === 'venue' ? t('Se venues der matcher jer') : t('Se top matches')}
-              </button>
-            )}
-
-
-            {b.hint && <p className="mt-1.5 text-[0.78rem] text-muted">{b.hint}</p>}
-          </motion.div>
+          </motion.section>
           );
         })}
 
         {/* Add new category */}
         {addingNew ? (
-          <div className="py-5 space-y-4">
+          <div className="rounded-[22px] border border-line bg-card p-5 sm:p-6">
             <div className="flex items-center gap-3">
-              <span
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                style={{ background: newColor }}
-                aria-hidden
-              >
-                {(() => { const Preview = resolveBudgetIcon(newIcon); return <Preview size={16} className="text-white" strokeWidth={2.25} />; })()}
-              </span>
+              <CategoryMark icon={newIcon} color={newColor} />
               <input
                 ref={inputRef}
                 type="text"
                 placeholder={t('Kategorinavn, fx. Transport')}
+                aria-label={t('Kategorinavn, fx. Transport')}
                 value={newLabel}
                 onChange={(e) => setNewLabel(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') addLine();
                   if (e.key === 'Escape') { setAddingNew(false); setNewLabel(''); }
                 }}
-                className="flex-1 bg-transparent font-serif text-[1.2rem] text-ink placeholder:text-muted/50 focus:outline-none border-b border-line-strong pb-1"
+                className="min-w-0 flex-1 border-b border-line-strong bg-transparent pb-1 font-serif text-title text-ink placeholder:text-muted/70 focus:outline-none"
               />
-              <button onClick={addLine}
-                className="h-8 rounded-full bg-ink px-3 text-xs font-semibold text-canvas hover:bg-ink/80 transition-colors cursor-pointer">
-                {t('Tilføj')}
-              </button>
-              <button onClick={() => { setAddingNew(false); setNewLabel(''); }}
-                className="text-muted hover:text-ink transition-colors cursor-pointer">
-                <X size={16} />
+              <Button size="sm" onClick={addLine} disabled={!newLabel.trim()}>{t('Tilføj')}</Button>
+              <button type="button" onClick={() => { setAddingNew(false); setNewLabel(''); }} aria-label={t('Annuller')}
+                className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-colors hover:bg-shell hover:text-ink">
+                <X size={16} aria-hidden />
               </button>
             </div>
             <StylePicker
@@ -777,28 +790,31 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
             />
           </div>
         ) : (
-          <div className="py-5">
-            <button onClick={startAdding}
-              className="flex items-center gap-2 text-[0.82rem] font-medium text-muted hover:text-ink transition-colors cursor-pointer">
-              <Plus size={15} /> {t('Tilføj kategori')}
-            </button>
-          </div>
+          <button type="button" onClick={startAdding}
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[22px] border border-dashed border-line-strong px-5 py-4 text-meta font-semibold text-muted transition-colors hover:border-ink hover:bg-card hover:text-ink">
+            <Plus size={15} aria-hidden /> {t('Tilføj kategori')}
+          </button>
         )}
       </div>
 
       {/* Payment timeline */}
-      <div className="mt-14 rule-t pt-10">
+      <section className="mt-6 rule-t pt-9">
         <Eyebrow>{t('Betalingstidslinje')}</Eyebrow>
-        <h2 className="display mt-3 text-[clamp(1.8rem,3.5vw,2.6rem)] text-ink">
+        <h2 className="display mt-2.5 text-[1.75rem] text-ink">
           {t('Hvornår skal')} <span className="italic">{t('pengene bruges?')}</span>
         </h2>
         {timeline.length === 0 ? (
-          <p className="mt-8 rule rounded-2xl bg-card px-5 py-6 text-[0.85rem] text-muted">
-            {t('Tilføj en faktisk pris og en påmindelse på en kategori, så bygger vi jeres betalingsplan her.')}
-          </p>
+          <div className="mt-6 flex items-center gap-4 rounded-[22px] border border-line bg-card px-5 py-5 sm:px-6">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-[13px] bg-shell text-ink-soft" aria-hidden>
+              <CalendarClock size={18} strokeWidth={1.9} />
+            </span>
+            <p className="max-w-xl text-meta text-muted">
+              {t('Tilføj en faktisk pris og en påmindelse på en kategori, så bygger vi jeres betalingsplan her.')}
+            </p>
+          </div>
         ) : (
           <>
-            <div className="mt-8 space-y-0 divide-y divide-line rule rounded-2xl overflow-hidden">
+            <div className="mt-6 divide-y divide-line overflow-hidden rounded-[22px] border border-line">
               {timeline.map((p, i) => {
                 const isNext = i === nextDueIdx;
                 const overdueDays = daysUntil(p.due);
@@ -806,29 +822,29 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                 <motion.div key={p.id}
                   initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                  className={`flex items-center gap-4 px-5 py-4 ${isNext ? 'bg-sage-tint/50' : 'bg-card'}`}>
-                  <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${p.fullyPaid ? 'bg-sage-tint' : isNext ? 'bg-sage' : 'bg-shell'}`}>
+                  className={cn('flex items-center gap-4 px-5 py-4 sm:px-6', isNext ? 'bg-sage-wash' : 'bg-card')}>
+                  <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-full', p.fullyPaid ? 'bg-sage-tint' : isNext ? 'bg-sage' : 'bg-shell')}>
                     {p.fullyPaid
                       ? <span className="h-2 w-2 rounded-full bg-sage" />
-                      : <span className={`h-2 w-2 rounded-full ${isNext ? 'bg-ink' : 'bg-line-strong'}`} />}
+                      : <span className={cn('h-2 w-2 rounded-full', isNext ? 'bg-ink' : 'bg-line-strong')} />}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-[0.88rem] ${p.fullyPaid ? 'text-muted line-through' : 'text-ink'}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className={cn('text-sm', p.fullyPaid ? 'text-muted line-through' : 'text-ink')}>
                       {t(p.label)}
                       {isNext && (
-                        <span className="ml-2 rounded-full bg-ink px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.12em] text-canvas align-middle">
+                        <span className="ml-2 rounded-full bg-ink px-2 py-0.5 align-middle text-[0.58rem] font-bold uppercase tracking-[0.12em] text-canvas">
                           {t('Næste')}
                         </span>
                       )}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="shrink-0 text-right">
                     {p.outstanding > 0 && (
-                      <p className={`font-serif text-[0.95rem] ${p.fullyPaid ? 'text-muted' : 'text-ink'}`}>
+                      <p className={cn('font-serif text-[1.15rem] leading-tight tabular-nums', p.fullyPaid ? 'text-muted' : 'text-ink')}>
                         {kr(p.outstanding)} kr
                       </p>
                     )}
-                    <p className={`text-[0.68rem] uppercase tracking-[0.14em] mt-0.5 ${!p.fullyPaid && overdueDays != null && overdueDays < 0 ? 'text-terracotta' : 'text-muted'}`}>
+                    <p className={cn('mt-0.5 text-[0.68rem] uppercase tracking-[0.14em]', !p.fullyPaid && overdueDays != null && overdueDays < 0 ? 'text-terracotta' : 'text-muted')}>
                       {p.due ? fmtDate(p.due) : t('ingen dato')}
                     </p>
                   </div>
@@ -836,14 +852,14 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
                 );
               })}
             </div>
-            <p className="mt-3 text-[0.78rem] text-muted">
+            <p className="mt-3 text-xs text-muted">
               {t('Udestående betalinger:')}{' '}
-              <span className="text-ink font-medium">{kr(remainingKnown)} kr</span>
+              <span className="font-semibold text-ink tabular-nums">{kr(remainingKnown)} kr</span>
               {' '}{t('· baseret på faktiske priser I har indtastet')}
             </p>
           </>
         )}
-      </div>
+      </section>
 
       {detailId && (() => {
         const b = lines.find((l) => l.id === detailId);
@@ -890,10 +906,17 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
         />
       )}
 
+      {/* The slider: a track filled to the thumb in the category's colour.
+          --ratio is how far along it is; the thumb's centre travels between
+          half a thumb from each end, and the fill follows it there. */}
       <style>{`
-        .kalas-range { -webkit-appearance: none; appearance: none; height: 2px; background: var(--color-line-strong); border-radius: 999px; cursor: pointer; }
-        .kalas-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 999px; background: var(--color-sage); border: 2px solid var(--color-canvas); box-shadow: 0 1px 4px rgba(46,51,37,0.2); cursor: pointer; }
-        .kalas-range::-moz-range-thumb { width: 16px; height: 16px; border-radius: 999px; background: var(--color-sage); border: 2px solid var(--color-canvas); cursor: pointer; }
+        .budget-range { -webkit-appearance: none; appearance: none; display: block; width: 100%; height: 20px; margin: 0; background: transparent; cursor: pointer; --track: color-mix(in srgb, var(--color-ink) 14%, transparent); --fill: calc(10px + (100% - 20px) * var(--ratio, 0)); }
+        .budget-range::-webkit-slider-runnable-track { height: 6px; border-radius: 999px; background: linear-gradient(to right, var(--tone) var(--fill), var(--track) var(--fill)); }
+        .budget-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; margin-top: -7px; border-radius: 999px; background: var(--color-card); border: 1.5px solid var(--tone); box-shadow: 0 1px 3px rgb(18 51 43 / 0.2); transition: transform 150ms ease-out; }
+        .budget-range:active::-webkit-slider-thumb { transform: scale(1.12); }
+        .budget-range::-moz-range-track { height: 6px; border-radius: 999px; background: var(--track); }
+        .budget-range::-moz-range-progress { height: 6px; border-radius: 999px; background: var(--tone); }
+        .budget-range::-moz-range-thumb { width: 17px; height: 17px; border-radius: 999px; background: var(--color-card); border: 1.5px solid var(--tone); box-shadow: 0 1px 3px rgb(18 51 43 / 0.2); }
         .kalas-date { color: #24413a; }
         .kalas-date::-webkit-datetime-edit,
         .kalas-date::-webkit-datetime-edit-fields-wrapper,
@@ -903,7 +926,6 @@ export default function Budget({ onNavigate }: { onNavigate?: (s: NavigateTarget
         .kalas-date::-webkit-datetime-edit-year-field { color: #24413a; }
         .kalas-date::-webkit-calendar-picker-indicator { filter: invert(19%) sepia(18%) saturate(1200%) hue-rotate(60deg); }
       `}</style>
-      </div>
     </Page>
   );
 }
@@ -979,6 +1001,83 @@ function StylePicker({
   );
 }
 
+/* A figure that is the couple's to set, changed where it stands: the number
+   with a pencil, and on a click a field of the same size in its place. Used
+   for the whole budget and for each category's share of it. */
+function MoneyFigure({ value, label, title, onCommit, className }: {
+  value: number;
+  /** What the figure is, for a screen reader: the button and the field. */
+  label: string;
+  title?: string;
+  onCommit: (next: number) => void;
+  className?: string;
+}) {
+  const [editing, setEditing] = useState(false);
+
+  const commit = (raw: string) => {
+    setEditing(false);
+    const digits = raw.replace(/[^\d]/g, '');
+    const next = digits ? Number.parseInt(digits, 10) : 0;
+    if (next !== value) onCommit(next);
+  };
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        inputMode="numeric"
+        defaultValue={value > 0 ? kr(value) : ''}
+        // Selected, so typing replaces the figure rather than adding to it.
+        onFocus={(e) => e.currentTarget.select()}
+        onBlur={(e) => commit(e.currentTarget.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') e.currentTarget.blur();
+          if (e.key === 'Escape') setEditing(false);
+        }}
+        aria-label={label}
+        className={cn('block w-full border-b border-current/30 bg-transparent font-serif tabular-nums focus:outline-none', className)}
+      />
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      title={title ?? label}
+      className={cn('group/fig flex max-w-full cursor-pointer items-center gap-2 border-b border-transparent text-left font-serif', className)}
+    >
+      <AnimateNumber value={value} suffix={KR} />
+      <Pencil size={14} aria-hidden className="shrink-0 opacity-40 transition-opacity group-hover/fig:opacity-80" />
+      <span className="sr-only">{label}</span>
+    </button>
+  );
+}
+
+/* One of a category's read-only figures, in the totals' own tile: a tracked
+   label over a serif number. A span, because the three of them sit inside
+   the one button that opens Detaljer. */
+function FigureTile({ label, value, tone }: {
+  label: string;
+  /** Null when there is nothing to show yet, which is not the same as 0 kr. */
+  value: number | null;
+  tone?: 'due' | 'settled';
+}) {
+  return (
+    <span className={cn(
+      'flex min-w-0 flex-col gap-1.5 px-4 py-4 transition-colors sm:px-6',
+      tone === 'due' ? 'bg-terracotta-wash' : tone === 'settled' ? 'bg-sage-wash' : 'bg-paper group-hover/figs:bg-shell',
+    )}>
+      <span className={cn('eyebrow', tone === 'due' && '!text-clay-ink')}>{label}</span>
+      <span className={cn(
+        'font-serif text-[1.2rem] leading-tight tabular-nums @xl:text-[1.45rem] @3xl:text-[1.6rem]',
+        value == null ? 'text-muted' : tone === 'due' ? 'text-clay-ink' : tone === 'settled' ? 'text-success' : 'text-ink',
+      )}>
+        {value == null ? '–' : `${kr(value)}${KR}`}
+      </span>
+    </span>
+  );
+}
+
 /* The totals. `onCommit` makes one of them the couple's own figure rather
    than a read-out: the budget was settable only by asking Juno, while this tile
    sat here showing the number it would not let them change. */
@@ -988,50 +1087,26 @@ function Stat({ label, value, tone, onCommit }: {
 }) {
   const { t } = useLang();
   const s = STAT_STYLES[tone];
-  const [editing, setEditing] = useState(false);
-
-  const commit = (raw: string) => {
-    setEditing(false);
-    const digits = raw.replace(/[^\d]/g, '');
-    const next = digits ? Number.parseInt(digits, 10) : 0;
-    if (next !== value) onCommit?.(next);
-  };
-
+  // The total is the wide one on a phone and keeps its size there.
+  const size = tone === 'total' ? 'text-[2rem]' : 'text-[1.5rem] sm:text-[2rem]';
   return (
-    <div className={cn('px-6 py-7', s.bg)}>
+    <div className={cn(
+      'flex min-w-0 flex-col justify-between overflow-hidden px-5 sm:px-6 sm:py-7',
+      tone === 'total' ? 'col-span-2 py-6 sm:col-span-1' : 'py-5',
+      s.bg,
+    )}>
       <Eyebrow className={s.label}>{t(label)}</Eyebrow>
-      {editing ? (
-        <input
-          autoFocus
-          inputMode="numeric"
-          defaultValue={value > 0 ? kr(value) : ''}
-          onBlur={(e) => commit(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') e.currentTarget.blur();
-            if (e.key === 'Escape') setEditing(false);
-          }}
-          aria-label={t(label)}
-          className={cn(
-            'mt-2 w-full border-b border-current/30 bg-transparent font-serif text-[2rem] focus:outline-none',
-            s.value,
-          )}
-        />
-      ) : onCommit ? (
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
+      {onCommit ? (
+        <MoneyFigure
+          value={value}
+          label={t(label)}
           title={t('Ret det samlede budget')}
-          className={cn(
-            'mt-2 flex w-full items-center gap-2 text-left font-serif text-[2rem] cursor-pointer',
-            s.value,
-          )}
-        >
-          <AnimateNumber value={value} suffix=" kr" />
-          <Pencil size={15} className="shrink-0 opacity-50" />
-        </button>
+          onCommit={onCommit}
+          className={cn('mt-2', size, s.value)}
+        />
       ) : (
-        <div className={cn('mt-2 font-serif text-[2rem]', s.value)}>
-          <AnimateNumber value={value} suffix=" kr" />
+        <div className={cn('mt-2 border-b border-transparent font-serif', size, s.value)}>
+          <AnimateNumber value={value} suffix={KR} />
         </div>
       )}
     </div>

@@ -27,6 +27,7 @@ import {
 import { Button, Dialog, Eyebrow, cn } from '../ui';
 import { useLang } from '../i18n';
 import { subItemSuggestions } from './budget/estimate';
+import CategoryMark from './budget/CategoryMark';
 import type { BudgetSubItemRow } from '@/lib/db/types';
 
 const kr = (n: number) => new Intl.NumberFormat('da-DK').format(Math.round(n));
@@ -176,14 +177,7 @@ export default function BudgetLineDetail({
   // The category's own icon and colour, which the couple can change below.
   const title = (
     <span className="flex min-w-0 items-center gap-2.5">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full" style={{ background: dColor }} aria-hidden>
-        {/* [dIcon].map(...): the lint rule for "component created during render"
-            only exempts a dynamically resolved component inside a .map(). */}
-        {[dIcon].map((id) => {
-          const Icon = resolveBudgetIcon(id);
-          return <Icon key={id} size={15} className="text-white" strokeWidth={2.25} />;
-        })}
-      </span>
+      <CategoryMark icon={dIcon} color={dColor} size="sm" />
       <span className="truncate">{dLabel || label}</span>
     </span>
   );

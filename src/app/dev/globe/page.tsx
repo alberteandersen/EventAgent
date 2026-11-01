@@ -106,7 +106,7 @@ export default function DevGlobePage() {
 
         <div className="relative h-[min(62vh,560px)] overflow-hidden rounded-[28px] border border-line bg-[#f7f5ef]">
           <DestinationGlobe
-            selectedCountry="Denmark"
+            selectedCountries={['Denmark']}
             onCountryPick={(c) => setPicked(`country: ${c}`)}
             focus={focus}
           />

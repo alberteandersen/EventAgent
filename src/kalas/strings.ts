@@ -614,8 +614,13 @@ export const EN: Record<string, string> = {
   'Et par korte trin hjælper Juno med at skræddersy opgaver og anbefalinger til jeres bryllup.':
     'A few short steps help Juno tailor every task and recommendation to your wedding.',
   'Hvor i verden vil I': 'Where in the world will you',
-  'Hjemme eller langt væk. Et land er nok for nu, Juno hjælper jer med at finde stedet bagefter.':
-    'Close to home or far away. A country is enough for now, Juno helps you find the place afterwards.',
+  'Hjemme eller langt væk. Vælg ét land eller flere, og en by, hvis I har en i tankerne.':
+    'Close to home or far away. Pick one country or several, and a town if you have one in mind.',
+  'Tilføj et land mere': 'Add another country',
+  'Valgte steder': 'Chosen places',
+  'By eller område, hvis I har et i tankerne': 'Town or area, if you have one in mind',
+  'By eller område (valgfrit)': 'Town or area (optional)',
+  'I kan vælge flere lande, og ændre det senere.': 'You can pick several countries, and change it later.',
   'Søg efter et land, f.eks. Italien': 'Search for a country, e.g. Italy',
   'Brug “{q}”': 'Use “{q}”',
   'Vi er ikke sikre endnu': "We're not sure yet",
@@ -640,7 +645,9 @@ export const EN: Record<string, string> = {
     'A photo on the front page makes the planning yours. You can change it any time.',
   'Jeres forside': 'Your front page',
   'Gør jeres rum klar…': 'Getting your space ready…',
-  'Vælg dagen, hvis I har den. Ellers er en sæson fint.': "Pick the day if you have it. Otherwise a season is fine.",
+  'Vælg dagen, hvis I har den. Ellers er en sæson eller et år fint.': "Pick the day if you have it. Otherwise a season or a year is fine.",
+  'Engang i {year}': 'Some time in {year}',
+  'Vælg år': 'Choose year',
   'Ingen dato endnu?': 'No date yet?',
 
   // Destination labels (source Danish → English)

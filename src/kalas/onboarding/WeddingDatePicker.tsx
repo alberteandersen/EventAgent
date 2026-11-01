@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../ui';
 import { useLang } from '../i18n';
 
@@ -37,6 +37,9 @@ function sameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
 
+/** How far ahead the year dropdown reaches. */
+const YEARS_AHEAD = 6;
+
 /** Inline month calendar — shown when the couple already knows their wedding date. */
 export default function WeddingDatePicker({ value, onChange, lang, className }: Props) {
   const { t } = useLang();
@@ -50,7 +53,7 @@ export default function WeddingDatePicker({ value, onChange, lang, className }: 
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(selected ?? today));
 
   const locale = lang === 'en' ? 'en-US' : 'da-DK';
-  const monthLabel = viewMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  const monthLabel = viewMonth.toLocaleDateString(locale, { month: 'long' });
 
   const weekdayLabels = useMemo(() => {
     const fmt = new Intl.DateTimeFormat(locale, { weekday: 'short' });
@@ -75,6 +78,19 @@ export default function WeddingDatePicker({ value, onChange, lang, className }: 
   const minMonth = startOfMonth(today);
   const canGoPrev = viewMonth > minMonth;
 
+  /* A wedding two years out was twenty-four taps on "next month". The year is
+     a dropdown instead; the arrows are still there for the months. */
+  const viewYear = viewMonth.getFullYear();
+  const years = Array.from(
+    { length: Math.max(YEARS_AHEAD, viewYear - today.getFullYear()) + 1 },
+    (_, i) => today.getFullYear() + i,
+  );
+  const pickYear = (year: number) => {
+    const next = new Date(year, viewMonth.getMonth(), 1);
+    // This year's months that have already gone are not on offer.
+    setViewMonth(next < minMonth ? minMonth : next);
+  };
+
   const pick = (d: Date) => {
     if (d < today) return;
     onChange(toIso(d));
@@ -95,7 +111,20 @@ export default function WeddingDatePicker({ value, onChange, lang, className }: 
         >
           <ChevronLeft size={18} />
         </button>
-        <p className="font-serif text-[1.1rem] capitalize tracking-[-0.02em] text-ink">{monthLabel}</p>
+        <div className="flex items-baseline gap-1.5 font-serif text-[1.1rem] tracking-[-0.02em] text-ink">
+          <span className="capitalize" aria-live="polite">{monthLabel}</span>
+          <span className="relative">
+            <select
+              value={viewYear}
+              onChange={(e) => pickYear(Number(e.target.value))}
+              aria-label={t('Vælg år')}
+              className="cursor-pointer appearance-none rounded-full border border-line bg-transparent py-0.5 pl-2.5 pr-6 font-serif text-[1.1rem] tracking-[-0.02em] text-ink transition-colors hover:bg-shell focus-visible:border-ink focus-visible:outline-none"
+            >
+              {years.map((y) => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <ChevronDown size={14} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-muted" />
+          </span>
+        </div>
         <button
           type="button"
           onClick={() => setViewMonth((m) => addMonths(m, 1))}

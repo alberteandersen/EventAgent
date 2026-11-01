@@ -46,8 +46,14 @@ function toISODateLocal(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Parse hints like "Efterår 2027" or "Fall 2027" into a mid-season date. */
+/**
+ * Parse hints like "Efterår 2027" or "Fall 2027" into a mid-season date. A
+ * bare year, onboarding's "some time in 2028", lands in the middle of it.
+ */
 export function estimateDateFromHint(hint: string): Date | null {
+  const yearOnly = hint.trim().match(/^(\d{4})$/);
+  if (yearOnly) return new Date(Number.parseInt(yearOnly[1], 10), 6, 1);
+
   const match = hint.trim().match(/^(\S+)\s+(\d{4})$/);
   if (!match) return null;
 

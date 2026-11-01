@@ -36,7 +36,8 @@ export type PhotoDraft = { id: string; file: File; url: string };
    journey logic and Juno's briefs get clean, bounded inputs. */
 export type FormState = {
   nameA: string; nameB: string;
-  location: string;     // the globe's country name, or a place they typed
+  locations: string[];  // the globe's country names, or places they typed, in the order picked
+  city: string;         // a town or area they already have in mind, optional
   whereUndecided: boolean;
   dateChoice: string;   // '' | season key | 'exact' | 'undecided'
   exactDate: string;    // ISO, when dateChoice === 'exact'
@@ -49,7 +50,7 @@ export type FormState = {
 
 export const EMPTY_FORM: FormState = {
   nameA: '', nameB: '',
-  location: '', whereUndecided: false,
+  locations: [], city: '', whereUndecided: false,
   dateChoice: '', exactDate: '',
   guestBand: '', budgetAmount: 200_000, budgetPrivate: false,
   partnerEmail: '', photos: [],
@@ -72,40 +73,57 @@ const BUDGET_STEP = 25_000;
 const SEASONS_DA = ['Forår', 'Sommer', 'Efterår', 'Vinter'] as const;
 const SEASON_START_MONTH = [2, 5, 8, 11]; // Mar, Jun, Sep, Dec
 
-type DateChip = { key: string; season: string; year: number };
+/** A rough answer to "when": a season of a year, or just the year. */
+type DateChip = { key: string; season: string | null; year: number };
 type TFn = (s: string, params?: Record<string, string | number>) => string;
-/** The next `count` season-year chips starting from the upcoming season. */
-function seasonChipsDa(count = 6, from = new Date()): DateChip[] {
-  const chips: DateChip[] = [];
-  let year = from.getFullYear();
-  let idx = SEASON_START_MONTH.findIndex((m) => m > from.getMonth());
-  if (idx === -1) { idx = 0; year += 1; }
-  while (chips.length < count) {
-    chips.push({ key: `${SEASONS_DA[idx].toLowerCase()}_${year}`, season: SEASONS_DA[idx], year });
-    idx += 1;
-    if (idx === SEASONS_DA.length) { idx = 0; year += 1; }
+const DATE_YEARS_AHEAD = 3;
+/** Every season still to come this year and in the years after it, by year,
+ *  each year ending on a chip for "some time that year". */
+function dateChipsByYear(from = new Date()): { year: number; chips: DateChip[] }[] {
+  const thisYear = from.getFullYear();
+  const years: { year: number; chips: DateChip[] }[] = [];
+  for (let year = thisYear; year <= thisYear + DATE_YEARS_AHEAD; year++) {
+    const chips: DateChip[] = SEASONS_DA
+      .filter((_, i) => year > thisYear || SEASON_START_MONTH[i] > from.getMonth())
+      .map((season) => ({ key: `${season.toLowerCase()}_${year}`, season, year }));
+    // "Some time in 2026" says nothing once there is a single season of it left.
+    if (chips.length > 1) chips.push({ key: `year_${year}`, season: null, year });
+    if (chips.length > 0) years.push({ year, chips });
   }
-  return chips;
+  return years;
 }
-const DATE_CHIPS = seasonChipsDa(6);
-const chipLabel = (c: DateChip, t: TFn) => `${t(c.season)} ${c.year}`;
+const DATE_YEARS = dateChipsByYear();
+const DATE_CHIPS = DATE_YEARS.flatMap((y) => y.chips);
+/** The year is picked above the chips, so a chip only has to say which part of it. */
+const chipLabel = (c: DateChip, t: TFn) => (c.season ? t(c.season) : t('Engang i {year}', { year: c.year }));
 
 /* ── Payload builders (all band/date logic lives here) ─────────────────── */
 function buildDate(form: FormState): OnboardingDate {
   if (form.dateChoice === 'exact' && form.exactDate) return { precision: 'exact', iso: form.exactDate };
   const chip = DATE_CHIPS.find((c) => c.key === form.dateChoice);
-  if (chip) return { precision: 'season', hint: `${chip.season} ${chip.year}` };
+  if (chip) return { precision: 'season', hint: chip.season ? `${chip.season} ${chip.year}` : String(chip.year) };
   return { precision: 'undecided' };
 }
 function buildBudget(form: FormState): string | null {
   if (form.budgetPrivate) return null;
   return String(form.budgetAmount);
 }
+/* events.location holds one place, "France" or "Provence, France", and Venues
+   reads the country off the end of it. So a town only goes in front when
+   there is a single country for it to belong to. With several picked, the
+   first is the one Venues opens on, and the whole list rides along for Juno. */
+function buildWhere(form: FormState): { city: string; loved_destinations: string[] } {
+  if (form.whereUndecided) return { city: '', loved_destinations: [] };
+  const town = form.city.trim();
+  const [first = '', ...rest] = form.locations;
+  if (rest.length === 0) return { city: [town, first].filter(Boolean).join(', '), loved_destinations: [] };
+  return { city: first, loved_destinations: [town, ...form.locations].filter(Boolean) };
+}
 export function toOnboardingPayload(form: FormState) {
   return {
     name: form.nameA.trim(),
     partner_name: form.nameB.trim() || null,
-    city: form.whereUndecided ? '' : form.location.trim(),
+    ...buildWhere(form),
     date: buildDate(form),
     guest_band: form.guestBand || null,
     budget: buildBudget(form),
@@ -114,6 +132,11 @@ export function toOnboardingPayload(form: FormState) {
 }
 
 /* ── Display helpers ─────────────────────────────────────────────────── */
+/** A picked place as the couple reads it: the country in their language, or what they typed. */
+function placeLabel(place: string, lang: string): string {
+  const country = globeCountry(place);
+  return country ? countryLabel(country, lang) : place;
+}
 type SetText = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
 
 const inputCls = 'w-full rounded-2xl border border-line-strong bg-canvas px-4 py-3.5 text-[1rem] text-ink placeholder:text-muted focus:border-ink focus:outline-none transition-colors';
@@ -143,6 +166,14 @@ export default function Onboarding({ onEnter, initialStep = 0 }: {
   const [entering, setEntering] = useState(false);
   const id = STEPS[step];
 
+  /* The globe is three.js, by far the heaviest thing in onboarding. Fetch it
+     while they type their names, so step two opens on the globe and not on
+     "Indlæser kloden…". Same module as the dynamic() above, so one download. */
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void import('../onboarding/DestinationGlobe'); }, 800);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
   const setField = <K extends keyof FormState>(k: K, v: FormState[K]) =>
@@ -163,7 +194,7 @@ export default function Onboarding({ onEnter, initialStep = 0 }: {
 
   const canAdvance =
     (id === 'names' && Boolean(form.nameA.trim() && form.nameB.trim())) ||
-    (id === 'where' && Boolean(form.location.trim() || form.whereUndecided)) ||
+    (id === 'where' && (form.locations.length > 0 || form.whereUndecided)) ||
     (id === 'date' && (form.dateChoice === 'exact' ? Boolean(form.exactDate) : Boolean(form.dateChoice))) ||
     (id === 'scope' && Boolean(form.guestBand)) ||
     id === 'photos' || id === 'partner';
@@ -218,7 +249,7 @@ export default function Onboarding({ onEnter, initialStep = 0 }: {
                   form={form}
                   setField={setField}
                   onSkip={() => {
-                    setForm((f) => ({ ...f, location: '', whereUndecided: true }));
+                    setForm((f) => ({ ...f, locations: [], city: '', whereUndecided: true }));
                     go(step + 1);
                   }}
                 />
@@ -369,8 +400,9 @@ function ContextPanel({ step, form }: { step: StepId; form: FormState }) {
 function CoverPreview({ url, form }: { url: string; form: FormState }) {
   const { t, lang } = useLang();
   const names = [form.nameA.trim(), form.nameB.trim()].filter(Boolean).join(' & ');
-  const country = globeCountry(form.location);
-  const place = form.whereUndecided ? '' : country ? countryLabel(country, lang) : form.location.trim();
+  const place = form.whereUndecided
+    ? ''
+    : [form.city.trim(), ...form.locations.map((p) => placeLabel(p, lang))].filter(Boolean).slice(0, 3).join(', ');
   return (
     <aside className="relative hidden w-full max-w-[430px] shrink-0 overflow-hidden rounded-3xl bg-ink shadow-[0px_18px_50px_rgba(36,65,58,0.16)] lg:flex lg:h-full">
       <motion.div
@@ -543,7 +575,8 @@ function NamesStep({ form, set, onNext }: { form: FormState; set: SetText; onNex
    STEP 2, WHERE (country search + globe)
 ══════════════════════════════════════════════════════════════════════ */
 /* One question, answered at the level couples actually know it this early:
-   the country. It used to open a drawer of cities and venues per country,
+   the country, or the two or three they are still choosing between, and the
+   town if they already have one. It used to open a drawer of cities and venues per country,
    which was a venue finder wearing an onboarding step's clothes, and Venues
    does that job properly once they are inside. The globe is here to make the
    answer feel like a place, so it follows the search instead of being the
@@ -565,54 +598,59 @@ function WhereStep({ form, setField, onSkip }: {
   onSkip: () => void;
 }) {
   const { t, lang } = useLang();
-  const picked = globeCountry(form.location);
-  const shown = picked ? countryLabel(picked, lang) : form.location;
-  const [query, setQuery] = useState(shown);
+  const picks = form.locations;
+  const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
 
-  const hits = searchCountries(query);
+  const countries = picks.filter((p) => globeCountry(p) === p);
+  // The camera goes to whichever country they added last.
+  const latest = countries[countries.length - 1] ?? null;
+
+  const hits = searchCountries(query).filter((c) => !picks.includes(c));
   const typed = query.trim();
+  const known = (label: string) => label.toLowerCase() === typed.toLowerCase();
   // Somewhere the globe does not know ("Bornholm", "Sydfyn") is still an answer.
   const options: { value: string; label: string; free?: boolean }[] = [
     ...hits.map((c) => ({ value: c, label: countryLabel(c, lang) })),
-    ...(typed.length >= 2 && !hits.some((c) => countryLabel(c, lang).toLowerCase() === typed.toLowerCase())
+    ...(typed.length >= 2
+      && !hits.some((c) => known(countryLabel(c, lang)))
+      && !picks.some((p) => known(placeLabel(p, lang)))
       ? [{ value: typed, label: t('Brug “{q}”', { q: typed }), free: true }]
       : []),
   ];
 
-  const choose = (value: string) => {
-    const country = globeCountry(value);
-    setField('location', country ?? value);
+  const remove = (place: string) => setField('locations', picks.filter((p) => p !== place));
+  const add = (value: string) => {
+    const place = globeCountry(value) ?? value.trim();
+    if (place && !picks.includes(place)) setField('locations', [...picks, place]);
     setField('whereUndecided', false);
-    setQuery(country ? countryLabel(country, lang) : value);
+    setQuery('');
     setOpen(false);
   };
 
-  const clear = () => {
-    setField('location', '');
-    setQuery('');
-    setOpen(true);
-  };
-
   const onKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Backspace in an empty box takes back the last pick, as in any tag field.
+    if (e.key === 'Backspace' && !query && picks.length > 0) { remove(picks[picks.length - 1]); return; }
     if (!open || options.length === 0) return;
     if (e.key === 'ArrowDown') { e.preventDefault(); setActive((i) => (i + 1) % options.length); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => (i - 1 + options.length) % options.length); }
-    else if (e.key === 'Enter') { e.preventDefault(); choose(options[Math.min(active, options.length - 1)].value); }
+    else if (e.key === 'Enter') { e.preventDefault(); add(options[Math.min(active, options.length - 1)].value); }
     else if (e.key === 'Escape') setOpen(false);
   };
 
+  const fieldCls = 'w-full rounded-[14px] border border-line-strong bg-card pl-12 text-base text-ink placeholder:text-muted transition-shadow focus:border-2 focus:border-ink focus:shadow-[0px_0px_0px_4px_rgba(122,144,104,0.18)] focus:outline-none';
+
   return (
     <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-12">
-      <div className="flex w-full flex-col gap-6 lg:max-w-[440px] lg:shrink-0">
+      <div className="flex w-full flex-col gap-5 lg:max-w-[440px] lg:shrink-0">
         <div className="flex flex-col gap-3">
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-muted">{t('Destination')}</p>
           <h1 className="font-serif text-[clamp(2.25rem,5vw,3.25rem)] leading-[1.04] tracking-[-0.03em] text-ink">
             {t('Hvor i verden vil I')} <span className="italic">{t('giftes?')}</span>
           </h1>
           <p className="max-w-[420px] text-base leading-[1.6] text-muted">
-            {t('Hjemme eller langt væk. Et land er nok for nu, Juno hjælper jer med at finde stedet bagefter.')}
+            {t('Hjemme eller langt væk. Vælg ét land eller flere, og en by, hvis I har en i tankerne.')}
           </p>
         </div>
 
@@ -624,38 +662,21 @@ function WhereStep({ form, setField, onSkip }: {
               setQuery(e.target.value);
               setActive(0);
               setOpen(true);
-              if (form.location) setField('location', '');
             }}
             onFocus={() => setOpen(true)}
             onBlur={() => setOpen(false)}
             onKeyDown={onKey}
-            placeholder={t('Søg efter et land, f.eks. Italien')}
-            className={cn(
-              wonderInputCls,
-              'pl-12 pr-12',
-              form.location
-                ? 'border-2 border-ink'
-                : 'border border-line-strong focus:border-2 focus:border-ink focus:shadow-[0px_0px_0px_4px_rgba(122,144,104,0.18)]',
-            )}
+            placeholder={picks.length > 0 ? t('Tilføj et land mere') : t('Søg efter et land, f.eks. Italien')}
+            className={cn(fieldCls, 'h-[62px] pr-[18px]')}
             role="combobox"
             aria-expanded={open && options.length > 0}
             aria-controls="where-options"
             aria-autocomplete="list"
             autoFocus
           />
-          {form.location ? (
-            <button
-              type="button"
-              onClick={clear}
-              aria-label={t('Ryd')}
-              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-muted transition-colors hover:bg-shell hover:text-ink cursor-pointer"
-            >
-              <X size={16} />
-            </button>
-          ) : null}
 
           <AnimatePresence>
-            {open && options.length > 0 && !form.location && (
+            {open && options.length > 0 && (
               <motion.ul
                 id="where-options"
                 role="listbox"
@@ -670,7 +691,7 @@ function WhereStep({ form, setField, onSkip }: {
                     <button
                       type="button"
                       // mousedown, not click: the input's blur closes the list first.
-                      onMouseDown={(e) => { e.preventDefault(); choose(o.value); }}
+                      onMouseDown={(e) => { e.preventDefault(); add(o.value); }}
                       onMouseEnter={() => setActive(i)}
                       className={cn(
                         'flex w-full items-center gap-3 px-4 py-2.5 text-left text-[15px] transition-colors cursor-pointer',
@@ -688,14 +709,42 @@ function WhereStep({ form, setField, onSkip }: {
           </AnimatePresence>
         </div>
 
+        {picks.length > 0 && (
+          <>
+            <ul className="flex flex-wrap gap-2" aria-label={t('Valgte steder')}>
+              {picks.map((p) => (
+                <li key={p} className="flex items-center gap-1 rounded-full bg-ink py-1.5 pl-3.5 pr-1.5 text-[0.88rem] font-medium text-card">
+                  {placeLabel(p, lang)}
+                  <button
+                    type="button"
+                    onClick={() => remove(p)}
+                    aria-label={t('Fjern {name}', { name: placeLabel(p, lang) })}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-sage-tint transition-colors hover:bg-white/15 hover:text-card cursor-pointer"
+                  >
+                    <X size={13} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            {/* Only once there is a country: a town with nowhere to be in is
+                not an answer Venues can open on. */}
+            <div className="relative">
+              <MapPin size={18} className="pointer-events-none absolute left-[18px] top-1/2 -translate-y-1/2 text-muted" />
+              <input
+                value={form.city}
+                onChange={(e) => setField('city', e.target.value)}
+                maxLength={60}
+                placeholder={t('By eller område, hvis I har et i tankerne')}
+                aria-label={t('By eller område (valgfrit)')}
+                className={cn(fieldCls, 'h-[52px] pr-[18px]')}
+              />
+            </div>
+          </>
+        )}
+
         <div className="flex flex-wrap items-center gap-3">
-          {form.location ? (
-            <motion.div key={form.location} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 rounded-full bg-sage-tint px-4 py-2">
-              <Check size={14} className="text-ink" />
-              <span className="text-[0.9rem] font-medium text-ink">{shown}</span>
-            </motion.div>
-          ) : (
+          {picks.length === 0 && (
             <button
               type="button"
               onClick={onSkip}
@@ -705,16 +754,17 @@ function WhereStep({ form, setField, onSkip }: {
             </button>
           )}
           <span className="text-[13px] text-muted">
-            {form.location ? t('I kan altid ændre det senere.') : t('Eller tryk på et land på kloden.')}
+            {picks.length > 0 ? t('I kan vælge flere lande, og ændre det senere.') : t('Eller tryk på et land på kloden.')}
           </span>
         </div>
       </div>
 
       <div className={cn('relative -order-1 min-w-0 overflow-hidden rounded-3xl lg:order-none lg:flex-1', GLOBE_H)}>
         <DestinationGlobe
-          selectedCountry={picked}
-          onCountryPick={(c) => choose(c)}
-          focus={globeFocus(picked)}
+          selectedCountries={countries}
+          // A second tap on a country takes it back off the list.
+          onCountryPick={(c) => (picks.includes(c) ? remove(c) : add(c))}
+          focus={globeFocus(latest)}
         />
       </div>
     </div>
@@ -911,18 +961,41 @@ function DateStep({ form, setField }: {
     setField('dateChoice', choice);
     setField('exactDate', '');
   };
+  /* Opens on the year of their answer if they are coming back to this step,
+     otherwise on the first year with more than a last season left in it. */
+  const [roughYear, setRoughYear] = useState(
+    () => (DATE_CHIPS.find((c) => c.key === form.dateChoice) ?? DATE_YEARS.find((y) => y.chips.length > 1) ?? DATE_YEARS[0]).year,
+  );
   return (
     <div>
       <StepHead eyebrow="Hvornår" title={<>{t('Hvornår siger I')} <span className="italic">{t('ja?')}</span></>}
-        sub="Vælg dagen, hvis I har den. Ellers er en sæson fint." />
+        sub="Vælg dagen, hvis I har den. Ellers er en sæson eller et år fint." />
       <div className="flex flex-col gap-7 sm:flex-row sm:items-start sm:gap-8">
         <div className="w-full sm:max-w-[360px] sm:shrink-0">
           <WeddingDatePicker value={form.exactDate} onChange={pickDay} lang={lang} className="mt-0" />
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-3 sm:pt-1">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-ink-soft">{t('Ingen dato endnu?')}</p>
+          {/* A year first, then what part of it. Every season of four years
+              at once was a wall of sixteen chips taller than the calendar. */}
+          <div className="flex w-fit max-w-full flex-wrap rounded-full border border-line-strong bg-shell p-1" role="group" aria-label={t('Vælg år')}>
+            {DATE_YEARS.map(({ year }) => (
+              <button
+                key={year}
+                type="button"
+                aria-pressed={year === roughYear}
+                onClick={() => setRoughYear(year)}
+                className={cn(
+                  'rounded-full px-3.5 py-1.5 text-[0.85rem] transition-colors cursor-pointer',
+                  year === roughYear ? 'bg-ink font-medium text-card' : 'text-ink-soft hover:text-ink',
+                )}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-wrap gap-2">
-            {DATE_CHIPS.map((c) => (
+            {(DATE_YEARS.find((y) => y.year === roughYear)?.chips ?? []).map((c) => (
               <Chip key={c.key} selected={form.dateChoice === c.key}
                 onClick={() => pickRough(c.key)}>{chipLabel(c, t)}</Chip>
             ))}

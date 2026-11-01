@@ -103,7 +103,19 @@ export async function POST(request: NextRequest) {
      run-on sentence with their answers comma-joined into the middle of it —
      written out as a short greeting, a bulleted read-back they can check at a
      glance, and one question. RichText in the chat renders the bullets. */
-  const place = city ? countryLabel(globeCountry(city) ?? city, language) : null;
+  /* One place ("Tuscany, Italy") or, when they are still choosing between
+     countries, the list of them. Country names go out in the couple's
+     language; a town is theirs as typed. */
+  const inTheirLanguage = (p: string) =>
+    p.split(",").map((part) => {
+      const country = globeCountry(part);
+      return country ? countryLabel(country, language) : part.trim();
+    }).join(", ");
+  const places = (lovedDestinations.length > 1 ? lovedDestinations : city ? [city] : []).map(inTheirLanguage);
+  const place =
+    places.length > 1
+      ? `${places.slice(0, -1).join(", ")} ${language === "en" ? "or" : "eller"} ${places[places.length - 1]}`
+      : places[0] ?? null;
   const facts = [
     place,
     dateKnown,

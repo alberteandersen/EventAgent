@@ -26,6 +26,12 @@ describe("estimateDateFromHint", () => {
     expect(d?.getMonth()).toBe(0);
     expect(d?.getDate()).toBe(15);
   });
+
+  it("puts a bare year in the middle of it", () => {
+    const d = estimateDateFromHint("2028");
+    expect(d?.getFullYear()).toBe(2028);
+    expect(d?.getMonth()).toBe(6);
+  });
 });
 
 describe("resolveWeddingDate", () => {

@@ -1,21 +1,18 @@
 "use client";
 
-/* Interactive destination picker: a Kalas-styled three.js globe (ivory sphere,
+/* Interactive country picker: a Kalas-styled three.js globe (ivory sphere,
    sage dot-matrix continents) where whole countries are the click targets.
-   Spin it, zoom it, tap a country, the pick zooms in and the parent opens a
-   panel of cities & wedding destinations for it. Country shapes are bundled
-   Natural Earth data (countries-110m), no runtime fetches.
+   Spin it, zoom it, tap a country. Country shapes are bundled Natural Earth
+   data (countries-110m), no runtime fetches.
 
-   It does not draw place markers. Ten Danish regions sat on top of each other
-   as a clump of dots that read as damage on the map, and the panel beside the
-   globe already lists the same regions and towns with more room and a
-   breadcrumb. Countries are picked here, everything below that is picked
-   there. `focus` still flies the camera to whatever the panel selects, so the
-   two stay in step. It drills at
-   the level the parent is on, and `focus` flies the camera there; the parent
-   owns the level and the breadcrumb. Both are optional,
-   so Onboarding, which only wants a country picker, passes neither and
-   gets exactly what it had. */
+   It answers one question, which country, and that is why it lives in
+   onboarding and no longer in Venues: venues are chosen tens of kilometres
+   apart, at a scale where a globe has no towns or coast to tell them apart
+   by, and that page has a real map now (venues/VenueMap.tsx).
+
+   `focus` flies the camera to whatever the parent selects, so a search box
+   beside the globe and the globe itself stay in step. It is optional; a
+   parent that passes none gets a globe that zooms to whatever is tapped. */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Globe, { type GlobeMethods } from 'react-globe.gl';
@@ -24,8 +21,12 @@ import { feature } from 'topojson-client';
 import countriesTopo from './countries-110m.json';
 import { useLang } from '../i18n';
 
+type Ring = [number, number][];
 type CountryFeature = {
   properties: { name: string };
+  geometry:
+    | { type: 'Polygon'; coordinates: Ring[] }
+    | { type: 'MultiPolygon'; coordinates: Ring[][] };
 };
 
 /** A marker on the globe: a region to open, or a town to search. */
@@ -51,16 +52,91 @@ const LAND = (feature(topo, topo.objects.countries) as unknown as { features: Co
   // Antarctica is a giant click target with no wedding cities — leave it as dots only.
   .filter((f) => f.properties.name !== 'Antarctica');
 
+/* The 110m data squashes one North Korean islet to four copies of the same
+   point. H3 throws on a polygon with no area, and the throw stopped the
+   dot-matrix where it stood: every country after North Korea in the file
+   came out bare. */
+const hasArea = ([outer]: Ring[]) => new Set(outer.map(([lng, lat]) => `${lng},${lat}`)).size >= 3;
+const polygonsOf = ({ geometry }: CountryFeature) =>
+  (geometry.type === 'Polygon' ? [geometry.coordinates] : geometry.coordinates).filter(hasArea);
+
+/* The dot-matrix is one colour everywhere, so all land goes in as a single
+   shape: one mesh and one draw call, where a feature per country was 176. */
+const DOTS = [{ geometry: { type: 'MultiPolygon', coordinates: LAND.flatMap(polygonsOf) } }];
+
 const SAGE = '#A9B380';
+
+/* Country caps are nearly invisible, the sage dot-matrix stays the visual,
+   but they are the raycast targets, and they tint on hover / selection.
+
+   Two things here are for speed, and both were costing far more than they
+   look like. Three materials are shared by every country, where globe.gl
+   makes one per polygon. And forceSinglePass: three.js draws a transparent
+   double-sided material in two passes and marks it changed before each, so
+   it re-derived the shader program for every polygon, twice, on every frame.
+   That was a third of a CPU core for as long as the globe was on screen, and
+   most of a second of frozen page before it first showed. */
+const capMaterial = (color: string, opacity: number) =>
+  new THREE.MeshBasicMaterial({
+    color, opacity, transparent: true, side: THREE.DoubleSide, forceSinglePass: true,
+  });
+const CAP = capMaterial(SAGE, 0.22);
+const CAP_HOVERED = capMaterial(SAGE, 0.55);
+const CAP_SELECTED = capMaterial('#C17B5C', 0.5);
+const CAP_ALTITUDE = 0.012;
+
+/* The borders, as one object. globe.gl's own polygon stroke is a line object
+   and a material per polygon, some 290 of them, set up and drawn one by one;
+   this is the same lines in a single draw call. Points follow the great
+   circle between vertices, as the caps do, so a long straight border (the
+   49th parallel) stays on the surface instead of cutting under it. */
+const GLOBE_RADIUS = 100; // globe.gl's, in scene units
+const RAD = Math.PI / 180;
+const BORDER_STEP = 5 * RAD;
+function borderLines() {
+  const r = GLOBE_RADIUS * (1 + CAP_ALTITUDE + 1e-4); // a hair above the caps
+  const onSphere = ([lng, lat]: [number, number]) =>
+    new THREE.Vector3().setFromSphericalCoords(1, (90 - lat) * RAD, lng * RAD);
+  const points: number[] = [];
+  for (const country of LAND) {
+    for (const ring of polygonsOf(country).flat()) {
+      let from = onSphere(ring[0]);
+      for (let i = 1; i < ring.length; i++) {
+        const to = onSphere(ring[i]);
+        const steps = Math.max(1, Math.ceil(from.angleTo(to) / BORDER_STEP));
+        let a = from;
+        for (let s = 1; s <= steps; s++) {
+          const b = s === steps ? to : new THREE.Vector3().lerpVectors(from, to, s / steps).normalize();
+          points.push(a.x * r, a.y * r, a.z * r, b.x * r, b.y * r, b.z * r);
+          a = b;
+        }
+        from = to;
+      }
+    }
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(points, 3));
+  const lines = new THREE.LineSegments(
+    geometry,
+    new THREE.LineBasicMaterial({ color: '#3B432A', opacity: 0.28, transparent: true })
+  );
+  // Decoration only: the caps underneath are what hover and clicks should hit.
+  lines.raycast = () => {};
+  return lines;
+}
+// Stable identities, so globe.gl builds the borders once rather than per render.
+const BORDERS = [{}];
+const keepBorders = () => {};
 
 const countryName = (f: object) => (f as CountryFeature).properties.name;
 
 export default function DestinationGlobe({
-  selectedCountry,
+  selectedCountries,
   onCountryPick,
   focus,
 }: {
-  selectedCountry: string | null;
+  /** The globe's own country names. Onboarding lets a couple pick several. */
+  selectedCountries: readonly string[];
   onCountryPick: (country: string, coords: { lat: number; lng: number }) => void;
   /** Controlled camera. The globe flies whenever this changes. */
   focus?: GlobeFocus | null;
@@ -148,15 +224,12 @@ export default function DestinationGlobe({
     onCountryPick(name, coords);
   };
 
-  // Country caps are nearly invisible — the sage dot-matrix stays the visual —
-  // but they are the raycast targets, and they tint on hover / selection.
-  const capColor = (f: object) => {
+  const capFor = (f: object) => {
     const name = countryName(f);
-    if (name === selectedCountry) return 'rgba(193,123,92,0.5)';
-    if (name === hovered) return 'rgba(169,179,128,0.55)';
-    return 'rgba(169,179,128,0.22)';
+    if (selectedCountries.includes(name)) return CAP_SELECTED;
+    if (name === hovered) return CAP_HOVERED;
+    return CAP;
   };
-
 
   return (
     <div
@@ -175,15 +248,18 @@ export default function DestinationGlobe({
           showAtmosphere
           atmosphereColor={SAGE}
           atmosphereAltitude={0.13}
-          hexPolygonsData={LAND}
+          hexPolygonsData={DOTS}
           hexPolygonResolution={3}
           hexPolygonMargin={0.62}
           hexPolygonColor={() => SAGE}
           polygonsData={LAND}
-          polygonAltitude={0.012}
-          polygonCapColor={capColor}
-          polygonSideColor={() => 'rgba(0,0,0,0)'}
-          polygonStrokeColor={() => 'rgba(59,67,42,0.28)'}
+          polygonAltitude={CAP_ALTITUDE}
+          polygonCapMaterial={capFor}
+          // No sides: at this height they were never visible, only built and drawn.
+          polygonSideColor={() => ''}
+          customLayerData={BORDERS}
+          customThreeObject={borderLines}
+          customThreeObjectUpdate={keepBorders}
           polygonsTransitionDuration={0}
           onPolygonClick={(f, _e, coords) => pick(f as object, coords)}
           onPolygonHover={(f) => {

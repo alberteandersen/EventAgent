@@ -51,7 +51,7 @@ Languages: Danish first, English kept as a switchable translation in the app. Th
 ## Brand Commitments
 
 - Name: Kalas. The coordinator is **Juno** (chosen 2026-10-11, after the Roman goddess of marriage), referred to as "hun". She was called Ava until then: the database table `ava_memories` and the browser setting `kalas_ava_open` keep that name on purpose, and the migrations are left as written.
-- Juno is a character and the centre of the marketing: the couple's wedding coordinator, drawn as a little cupid (a round peach body, two small wings, a gold halo, a bow with a heart-tipped arrow). `src/components/juno/Juno.tsx`; preview at `/dev/juno`. The character is on the landing page; the app uses her name but not yet her picture.
+- Juno is a character and the centre of the marketing: the couple's wedding coordinator, drawn as a little cupid (a round peach body, two small wings, a gold halo, a bow with a heart-tipped arrow). `src/components/juno/Juno.tsx`; preview at `/dev/juno`. The character is on the landing page, and in the app she gives the guided tour and sits in her own chat panel.
 - She is cute, and she moves (she flies and hovers), but the motion must not distract from reading. The product must not read as an "AI product".
 - Two earlier shapes were rejected and must not come back: a pointed droplet (read as a game slime) and a dollop with a curled tip (read as something worse).
 - Voice: the couple is addressed as "I / jer / jeres". Plain Danish, no English words where a Danish one exists.

@@ -13,6 +13,7 @@ import { useWedding } from '../useWedding';
 import { cn } from '../ui';
 import { useLang } from '../i18n';
 import type { NavigateTarget } from '../lib/hub-nav';
+import { Juno } from '@/components/juno/Juno';
 import { createClient } from '@/lib/supabase/client';
 import { useAgentChat, type ChatMessageView } from '@/lib/hooks/useAgentChat';
 import type { AgentUiAction, ChatMessageRow, ChatThreadRow } from '@/lib/db/types';
@@ -230,7 +231,7 @@ function JunoChat({
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="flex h-14 shrink-0 items-center gap-2 border-b border-line-soft px-3">
         {view === 'chat' ? (
-          <Avatar small />
+          <Avatar small busy={busy} />
         ) : (
           <IconButton label={t('Tilbage')} onClick={() => setView('chat')}>
             <ArrowLeft size={17} />
@@ -333,7 +334,7 @@ function Messages({
   if (messages.length === 0 && !busy) {
     return (
       <div className="flex min-h-0 flex-1 flex-col justify-end overflow-y-auto px-4 pb-4">
-        <Avatar />
+        <Avatar className="self-start" />
         <p className="mt-3 font-serif text-[1.3rem] leading-snug text-ink">
           {coupleA ? t('Hej {name}. Hvad skal vi kigge på?', { name: coupleA }) : t('Hej. Hvad skal vi kigge på?')}
         </p>
@@ -462,11 +463,18 @@ function IconButton({
   );
 }
 
-function Avatar({ small = false }: { small?: boolean }) {
+/** Juno herself: beside her name in the header, where she works her wings
+ *  while she answers, and larger over an empty conversation, where she looks
+ *  up at the pointer. */
+function Avatar({ small = false, busy = false, className }: { small?: boolean; busy?: boolean; className?: string }) {
   return (
-    <div className={cn('flex shrink-0 items-center justify-center rounded-full bg-ink-deep', small ? 'size-8' : 'size-10')}>
-      <span className={cn('font-serif leading-none text-white', small ? 'text-[1.05rem]' : 'text-[1.3rem]')}>K</span>
-    </div>
+    <Juno
+      size={small ? 40 : 96}
+      flight={busy ? 'hover' : 'rest'}
+      follow={!small}
+      shadow={!small}
+      className={cn('shrink-0', className)}
+    />
   );
 }
 

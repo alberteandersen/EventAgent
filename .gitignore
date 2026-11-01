@@ -50,3 +50,6 @@ next-env.d.ts
 
 # scripts/try-card-design.mts output
 /public/invitations/dev-try.*
+
+# Impeccable: review captures are working files
+.impeccable/review/

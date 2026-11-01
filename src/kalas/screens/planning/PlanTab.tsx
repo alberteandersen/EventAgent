@@ -1,7 +1,7 @@
 import * as React from 'react';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
-import { ArrowLeft, ArrowRight, CalendarClock, Check, ChevronDown, PartyPopper, Plus, Search, X } from 'lucide-react';
+import { ArrowRight, CalendarClock, Check, ChevronDown, PartyPopper, Plus, Search, X } from 'lucide-react';
 import { useWedding } from '../../useWedding';
 import { useRemoveWithUndo, useWithoutPending } from '../../undo';
 import { showNotice } from '../../notice';
@@ -17,14 +17,16 @@ import ResetControl from './ResetControl';
 import { canRun, runMilestoneAction } from './actions';
 import { seeding, useChecklistSeed } from './useChecklistSeed';
 import { defaultMilestones, DEFAULT_MILESTONE_TITLES } from './milestones';
-import { defaultChecklist, phaseLabel, phaseOf, PHASES, type Phase } from './checklist-data';
+import { defaultChecklist, phaseOf, PHASES, type Phase } from './checklist-data';
 import { phaseNow, phaseOfRow, phaseWindow, planByPhase, type PhaseGroup } from './phases';
 import {
-  CHECKLIST_AREAS, MILESTONE_ACTIONS, areaOf, assigneeInitials, assigneeName, daysDiff,
+  CHECKLIST_AREAS, MILESTONE_ACTIONS, areaOf, assigneeInitials, assigneeName,
   isCheck, isMilestone, nextSort, priorityOf, shiftPlan, todayISO, topUpKey,
 } from './shared';
 
-/** The phase as a heading, and as a step on the bar. Danish source strings. */
+/** The phase as a heading, and in a few words on a search result. Danish
+ *  source strings. With a wedding date, the phases counted in months go by
+ *  their calendar months instead (MONTH_PHASES below). */
 const PHASE_TITLE: Record<Phase, string> = {
   '12-18': '12–18 måneder før', '9-12': '9–12 måneder før', '6-9': '6–9 måneder før',
   '3-6': '3–6 måneder før', '1-3': '1–3 måneder før', maaned: 'Den sidste måned',
@@ -34,14 +36,27 @@ const PHASE_STEP: Record<Phase, string> = {
   '12-18': '12–18 mdr.', '9-12': '9–12 mdr.', '6-9': '6–9 mdr.', '3-6': '3–6 mdr.', '1-3': '1–3 mdr.',
   maaned: 'Sidste måned', uge: 'Ugen før', dagen: 'Dagen', efter: 'Efter',
 };
+const MONTH_PHASES = new Set<Phase>(['12-18', '9-12', '6-9', '3-6', '1-3']);
+
+/** The page's sections, each named by its first phase. Most are one phase;
+ *  the last month, the week before and the day share one, since three
+ *  sections for thirty days is two too many. Inside it they keep a heading
+ *  each (PART_TITLE). */
+const PERIODS: Phase[][] = [['12-18'], ['9-12'], ['6-9'], ['3-6'], ['1-3'], ['maaned', 'uge', 'dagen'], ['efter']];
+const PART_TITLE: Partial<Record<Phase, string>> = { maaned: 'De første uger', uge: 'Ugen før', dagen: 'På dagen' };
+
+/** How many to-dos the period they are in opens with, before "Vis alle". */
+const START = 4;
+const PRIORITY_RANK = { high: 0, medium: 1, low: 3 } as const;
 
 type Row = TimelineTaskRow;
 
 /**
- * The plan, one phase at a time: a bar of the phases along the top, opened on
- * the one the couple is in, and under it only that phase's milestones and
- * to-dos. Fourteen milestones and two hundred to-dos, split into two tabs,
- * read as two spreadsheets; this reads as the next few months.
+ * The plan on one page, read from the top: the years as markers down a rail,
+ * the period the couple is in open with its milestones and a handful of
+ * to-dos, and every other period one line that opens in place. Nine tabs with
+ * a counter each put two hundred undone things in front of a couple before
+ * they had read one of them.
  */
 export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
   onCelebrate: (title: string) => void;
@@ -64,38 +79,46 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
   const groups = planByPhase(tasks, weddingISO, today);
   const order = PHASES.map((p) => p.id);
 
-  const [selected, setSelected] = useState<Phase>(now);
-  const [direction, setDirection] = useState(1);
-  const [showDone, setShowDone] = useState(false);
+  const nowPeriod = PERIODS.find((ps) => ps.includes(now))![0];
+  const [openPeriods, setOpenPeriods] = useState<Set<Phase>>(() => new Set([nowPeriod]));
+  const [showAll, setShowAll] = useState(false);
+  const [showDone, setShowDone] = useState<Set<Phase>>(() => new Set());
   const [menuId, setMenuId] = useState<string | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
-  const [adding, setAdding] = useState<'todo' | 'milestone' | null>(null);
+  const [adding, setAdding] = useState<{ kind: 'todo' | 'milestone'; phase: Phase } | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDate, setNewDate] = useState('');
   const [searching, setSearching] = useState(false);
   const [query, setQuery] = useState('');
   const newInputRef = useRef<HTMLInputElement>(null);
-  const stepRefs = useRef(new Map<Phase, HTMLButtonElement>());
 
-  const group = groups.find((g) => g.phase === selected)!;
-  const at = order.indexOf(selected);
   const nowAt = order.indexOf(now);
   const fmt = (iso: string, withYear = true) =>
     new Date(`${iso}T12:00:00`).toLocaleDateString(locale, { day: 'numeric', month: 'short', ...(withYear ? { year: 'numeric' } : {}) });
 
-  function select(next: Phase) {
-    const i = order.indexOf(next);
-    setDirection(i >= at ? 1 : -1);
-    setSelected(next);
-    setShowDone(false);
+  /* A phase by name: its calendar months when there is a date to count from,
+     "Sep.–mar." in short and "September – marts" as a heading. The year is
+     left to the markers on the rail. */
+  const monthOf = (iso: string, style: 'short' | 'long') =>
+    new Date(`${iso}T12:00:00`).toLocaleDateString(locale, { month: style });
+  function phaseName(p: Phase, style: 'short' | 'long') {
+    if (!weddingISO || !MONTH_PHASES.has(p)) return t((style === 'short' ? PHASE_STEP : PHASE_TITLE)[p]);
+    const w = phaseWindow(p, weddingISO);
+    const [a, b] = [monthOf(w.from, style), monthOf(w.to, style)];
+    const range = a === b ? a : style === 'short' ? `${a}–${b}` : `${a} – ${b}`;
+    return range.charAt(0).toLocaleUpperCase(locale) + range.slice(1);
+  }
+
+  const toggleIn = (set: Set<Phase>, p: Phase) => {
+    const next = new Set(set);
+    if (!next.delete(p)) next.add(p);
+    return next;
+  };
+  function togglePeriod(id: Phase) {
+    setOpenPeriods((s) => toggleIn(s, id));
     setAdding(null);
     setMenuId(null);
   }
-
-  // Keep the chosen step in view on a phone, where the bar scrolls sideways.
-  useEffect(() => {
-    stepRefs.current.get(selected)?.scrollIntoView({ block: 'nearest', inline: 'center', behavior: reduce ? 'auto' : 'smooth' });
-  }, [selected, reduce]);
 
   /* ── When the wedding has moved ─────────────────────────────────────── */
   const weddingRow = tasks.find((r) => r.category === 'wedding_day');
@@ -123,7 +146,7 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
       assigneeName: r.assignee ? t(assigneeName(r.assignee, couple) ?? '') : null,
       hasNotes: !!r.notes?.trim(),
       dateOptional: isCheck(r),
-      phase: p ? phaseLabel(p) : null,
+      phase: p ? phaseName(p, 'short') : null,
     };
   };
 
@@ -133,7 +156,7 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
     if (!nowDone) return;
     // The last open thing in the phase: the whole phase is done.
     const g = groups.find((x) => x.phase === phaseOfRow(r, weddingISO, now));
-    if (g && g.total > 1 && g.done + 1 === g.total) onCelebrate(t('{phase} er klaret', { phase: t(PHASE_TITLE[g.phase]) }));
+    if (g && g.total > 1 && g.done + 1 === g.total) onCelebrate(t('{phase} er klaret', { phase: phaseName(g.phase, 'long') }));
     else onCelebrate(r.title);
   }
 
@@ -157,25 +180,25 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
     };
   }
 
-  /* ── Adding, into the phase on screen ─────────────────────────────────
+  /* ── Adding, into the phase it was asked for in ───────────────────────
      With a date, a new to-do is due by the end of the phase it was added in,
      which is also what keeps it in that phase. */
-  const phaseEnd = weddingISO ? phaseWindow(selected, weddingISO).to : '';
-  function openAdd(kind: 'todo' | 'milestone') {
-    setAdding(kind);
+  const phaseEnd = (p: Phase) => (weddingISO ? phaseWindow(p, weddingISO).to : '');
+  function openAdd(kind: 'todo' | 'milestone', phase: Phase) {
+    setAdding({ kind, phase });
     setNewTitle('');
-    setNewDate(phaseEnd || today);
+    setNewDate(phaseEnd(phase) || today);
     setTimeout(() => newInputRef.current?.focus(), 60);
   }
   function commitAdd() {
     const title = newTitle.trim();
-    if (!title) { setAdding(null); return; }
+    if (!title || !adding) { setAdding(null); return; }
     const milestones = tasks.filter(isMilestone);
-    if (adding === 'milestone') {
+    if (adding.kind === 'milestone') {
       void addTask({ title, due_date: newDate || null, kind: 'milestone', sort: nextSort(milestones) });
     } else {
       void addTask({
-        title, due_date: phaseEnd || null, category: 'ovrigt', kind: 'check',
+        title, due_date: phaseEnd(adding.phase) || null, category: 'ovrigt', kind: 'check',
         sort: nextSort(tasks.filter((r) => isCheck(r) && areaOf(r) === 'ovrigt')),
       });
     }
@@ -223,28 +246,158 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
   const results = q ? tasks.filter((r) => t(r.title).toLowerCase().includes(q)) : [];
 
   const openTask = tasks.find((r) => r.id === openId) ?? null;
-  const open = (g: PhaseGroup<Row>) => ({ milestones: g.milestones.filter((r) => !r.done), todos: g.todos.filter((r) => !r.done) });
-  const shown = open(group);
-  const doneRows = [...group.milestones, ...group.todos].filter((r) => r.done);
-  const byArea = CHECKLIST_AREAS
-    .map((a) => ({ area: a, rows: shown.todos.filter((r) => areaOf(r) === a.id) }))
-    .filter((x) => x.rows.length > 0);
 
-  /* Where the couple is now, what earlier phases left behind: a late
-     milestone is the most important thing on the screen, and it must not
-     hide in a phase they have already scrolled past. */
-  const earlier = selected === now ? groups.filter((g) => order.indexOf(g.phase) < nowAt) : [];
-  const lateMilestones = earlier.flatMap((g) => g.milestones.filter((r) => !r.done));
-  const leftovers = earlier
-    .map((g) => ({ phase: g.phase, left: g.todos.filter((r) => !r.done).length }))
-    .filter((x) => x.left > 0);
+  /* ── The periods down the page ───────────────────────────────────────
+     An earlier one with nothing in it has nothing to say and is left out. */
+  const periods = PERIODS.map((phases) => {
+    const parts = phases.map((p) => groups.find((g) => g.phase === p)!);
+    const total = parts.reduce((n, g) => n + g.total, 0);
+    const done = parts.reduce((n, g) => n + g.done, 0);
+    const time = phases.includes(now) ? 'now' as const
+      : order.indexOf(phases[phases.length - 1]) < nowAt ? 'past' as const : 'ahead' as const;
+    const span = weddingISO
+      ? { from: phaseWindow(phases[0], weddingISO).from, to: phaseWindow(phases[phases.length - 1], weddingISO).to }
+      : null;
+    return { id: phases[0], parts, total, done, time, span };
+  }).filter((p) => p.time !== 'past' || p.total > 0);
 
-  // Where this phase stands, in a few words under its heading.
-  const left = group.total - group.done;
-  const standing = selected === now ? { text: t('Her er I nu'), tone: 'now' as const }
-    : at < nowAt ? (left > 0 ? { text: tn(left, 'Én ting mangler', '{n} ting mangler'), tone: 'late' as const } : { text: t('Klaret'), tone: 'done' as const })
-    : weddingISO ? { text: tn(Math.max(1, Math.round(daysDiff(phaseWindow(selected, weddingISO).from, today) / 30)), 'Starter om en måned', 'Starter om {n} måneder'), tone: 'ahead' as const }
-    : null;
+  /* A late milestone is the most important thing on the screen, so it also
+     shows where they are now, unless its own period is open right above. */
+  const lateMilestones = periods
+    .filter((p) => p.time === 'past' && !openPeriods.has(p.id))
+    .flatMap((p) => p.parts.flatMap((g) => g.milestones.filter((r) => !r.done)));
+
+  const partDates = (p: Phase) => {
+    if (!weddingISO) return null;
+    if (p === 'dagen') return longDate(weddingISO);
+    const w = phaseWindow(p, weddingISO);
+    return `${fmt(w.from, false)} – ${fmt(w.to, false)}`;
+  };
+
+  /* One phase, opened: its milestones, its to-dos, and adding to it. Where
+     they are now it opens on a handful of to-dos rather than all of them. */
+  function phaseBody(g: PhaseGroup<Row>) {
+    const milestones = g.milestones.filter((r) => !r.done);
+    const todos = g.todos.filter((r) => !r.done);
+    const doneRows = [...g.milestones, ...g.todos].filter((r) => r.done);
+    const folds = g.phase === now && todos.length > START + 1;
+    const rank = (r: Row) => { const p = priorityOf(r); return p ? PRIORITY_RANK[p] : 2; };
+    const first = folds && !showAll ? [...todos].sort((a, b) => rank(a) - rank(b)).slice(0, START) : null;
+    const byArea = first ? [] : CHECKLIST_AREAS
+      .map((a) => ({ area: a, rows: todos.filter((r) => areaOf(r) === a.id) }))
+      .filter((x) => x.rows.length > 0);
+    const addingHere = adding?.phase === g.phase ? adding : null;
+    const doneOpen = showDone.has(g.phase);
+    // Hanken set inline: the theme sets every heading in Cormorant, and a 13px
+    // label in the display face read as a smudge.
+    const label = 'flex items-center gap-2 text-[13px] font-semibold text-ink-soft';
+
+    return (
+      <>
+        {milestones.length > 0 && (
+          <div className="mt-4 flex flex-col gap-3">
+            {milestones.map((r) => <TaskRow key={r.id} {...rowProps(r)} />)}
+          </div>
+        )}
+
+        {g.phase === 'dagen' && (
+          <button type="button" onClick={onOpenDay}
+            className="group mt-3 flex w-full items-center justify-between gap-3 rounded-[18px] bg-shell px-5 py-4 text-left transition-colors hover:bg-line/50 cursor-pointer">
+            <span className="flex items-center gap-3">
+              <PartyPopper size={18} className="text-sage-strong" aria-hidden />
+              <span>
+                <span className="block text-[15px] font-semibold text-ink">{t('Programmet for dagen')}</span>
+                <span className="block text-[13px] text-muted">{t('Minut for minut, fra ankomst til natmad')}</span>
+              </span>
+            </span>
+            <ArrowRight size={16} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
+          </button>
+        )}
+
+        {first && (
+          <section className="mt-6">
+            <h4 style={{ fontFamily: 'var(--font-sans)' }} className={label}>{t('Start her')}</h4>
+            <div className="mt-1 divide-y divide-line/70">
+              {first.map((r) => <div key={r.id}><TaskRow variant="list" {...rowProps(r)} /></div>)}
+            </div>
+          </section>
+        )}
+
+        {byArea.length > 0 && (
+          <div className="mt-6 flex flex-col gap-6">
+            {byArea.map(({ area, rows }) => (
+              <section key={area.id}>
+                <h4 style={{ fontFamily: 'var(--font-sans)' }} className={label}>
+                  <area.Icon size={14} strokeWidth={2} className="text-sage-strong" aria-hidden />
+                  {t(area.label)}
+                </h4>
+                <div className="mt-1 divide-y divide-line/70">
+                  {rows.map((r) => <div key={r.id}><TaskRow variant="list" {...rowProps(r)} /></div>)}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+
+        {milestones.length === 0 && todos.length === 0 && g.phase !== 'dagen' && (
+          <p className="mt-4 rounded-[18px] bg-shell px-5 py-5 text-center font-serif text-lg text-ink">
+            {g.total === 0 ? t('Intet her endnu.') : t('Alt her er klaret.')}
+          </p>
+        )}
+
+        <AnimatePresence>
+          {addingHere && (
+            <div className="mt-4">
+              <AddRow
+                inputRef={newInputRef} title={newTitle}
+                placeholder={addingHere.kind === 'milestone' ? 'Milepælens navn…' : 'Hvad skal huskes?'}
+                onTitleChange={setNewTitle}
+                {...(addingHere.kind === 'milestone' ? { date: newDate, onDateChange: setNewDate } : {})}
+                onSave={commitAdd} onCancel={() => setAdding(null)}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+        {!addingHere && (
+          <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
+            {folds && (
+              <button type="button" onClick={() => setShowAll((v) => !v)} aria-expanded={showAll}
+                className="inline-flex items-center gap-1.5 py-2 text-[13px] font-semibold text-ink transition-colors hover:text-sage-strong cursor-pointer">
+                {showAll ? t('Vis færre') : t('Vis alle {n} opgaver', { n: todos.length })}
+                <ChevronDown size={14} className={cn('transition-transform', showAll && 'rotate-180')} aria-hidden />
+              </button>
+            )}
+            <button type="button" onClick={() => openAdd('todo', g.phase)}
+              className="inline-flex items-center gap-2 py-2 text-[13px] font-semibold text-muted transition-colors hover:text-ink cursor-pointer">
+              <Plus size={14} aria-hidden /> {t('Tilføj opgave')}
+            </button>
+            <button type="button" onClick={() => openAdd('milestone', g.phase)}
+              className="inline-flex items-center gap-2 py-2 text-[13px] font-semibold text-muted transition-colors hover:text-ink cursor-pointer">
+              <Plus size={14} aria-hidden /> {t('Tilføj milepæl')}
+            </button>
+          </div>
+        )}
+
+        {doneRows.length > 0 && (
+          <div className="mt-3">
+            <button type="button" onClick={() => setShowDone((s) => toggleIn(s, g.phase))} aria-expanded={doneOpen}
+              className="inline-flex items-center gap-2 py-1 text-[13px] font-semibold text-muted transition-colors hover:text-ink cursor-pointer">
+              <span className="flex size-5 items-center justify-center rounded-full bg-sage-tint text-sage-strong">
+                <Check size={11} strokeWidth={3} aria-hidden />
+              </span>
+              {tn(doneRows.length, 'Én ting er klaret her', '{n} ting er klaret her')}
+              <ChevronDown size={14} className={cn('transition-transform', doneOpen && 'rotate-180')} aria-hidden />
+            </button>
+            {doneOpen && (
+              <div className="mt-1 divide-y divide-line/70">
+                {doneRows.map((r) => <div key={r.id}><TaskRow variant="list" {...rowProps(r)} /></div>)}
+              </div>
+            )}
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <motion.section
@@ -289,66 +442,6 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
         </p>
       )}
 
-      {/* ── The phases ─────────────────────────────────────────────────────
-          Time runs left to right, the couple's phase marked, each step with
-          how much of it is done. Arrow keys move along it. */}
-      <div className="flex items-start gap-2">
-        <div className="-mx-4 min-w-0 flex-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
-          <ol
-            aria-label={t('Planens faser')}
-            className="flex min-w-max gap-1.5 lg:grid lg:min-w-0 lg:grid-cols-9"
-            onKeyDown={(e) => {
-              if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
-              e.preventDefault();
-              const next = order[Math.min(order.length - 1, Math.max(0, at + (e.key === 'ArrowRight' ? 1 : -1)))];
-              select(next);
-              stepRefs.current.get(next)?.focus();
-            }}
-          >
-            {groups.map((g, i) => {
-              const isSel = g.phase === selected;
-              const isNow = g.phase === now;
-              const gLeft = g.total - g.done;
-              const pct = g.total ? (g.done / g.total) * 100 : 0;
-              return (
-                <li key={g.phase}>
-                  <button
-                    ref={(el) => { if (el) stepRefs.current.set(g.phase, el); }}
-                    type="button"
-                    onClick={() => select(g.phase)}
-                    aria-current={isSel ? 'step' : undefined}
-                    tabIndex={isSel ? 0 : -1}
-                    className={cn(
-                      'flex w-[7.2rem] flex-col items-start rounded-2xl border px-3 pb-2.5 pt-2 text-left transition-colors cursor-pointer lg:w-full',
-                      isSel ? 'border-ink bg-ink text-canvas'
-                        : isNow ? 'border-ink/60 bg-card text-ink hover:bg-shell'
-                        : 'border-line bg-card text-ink hover:bg-shell',
-                    )}
-                  >
-                    <span className="text-[13px] font-semibold leading-tight">{t(PHASE_STEP[g.phase])}</span>
-                    <span className={cn(
-                      'mt-0.5 text-[11px] font-medium tabular-nums',
-                      isSel ? 'text-canvas/75'
-                        : isNow ? 'text-sage-strong'
-                        : i < nowAt && gLeft > 0 ? 'text-clay-ink'
-                        : 'text-muted',
-                    )}>
-                      {isNow ? t('Nu') : g.total === 0 ? '–'
-                        : i < nowAt && gLeft === 0 ? t('Klaret')
-                        : i < nowAt ? tn(gLeft, 'én tilbage', '{n} tilbage')
-                        : `${g.done}/${g.total}`}
-                    </span>
-                    <span aria-hidden className={cn('mt-2 h-1 w-full overflow-hidden rounded-full', isSel ? 'bg-canvas/20' : 'bg-line')}>
-                      <span className={cn('block h-full rounded-full', isSel ? 'bg-canvas' : 'bg-sage-strong')} style={{ width: `${pct}%` }} />
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </div>
-
       {/* ── Search, and the tab's other actions ─────────────────────────── */}
       <div className="flex items-center gap-2">
         {searching ? (
@@ -383,174 +476,105 @@ export default function PlanTab({ onCelebrate, onNavigate, onOpenDay }: {
           </div>
         </div>
       ) : (
-        <AnimatePresence mode="wait" initial={false} custom={direction}>
-          <motion.div
-            key={selected}
-            custom={direction}
-            initial={reduce ? false : { opacity: 0, x: 24 * direction }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, x: -24 * direction }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col"
-          >
-            {/* The phase */}
-            <header>
-              <h2 className="font-serif text-[1.8rem] leading-tight text-ink sm:text-[2.2rem]">{t(PHASE_TITLE[selected])}</h2>
-              <p className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-muted">
-                {weddingISO && selected !== 'dagen' && (() => {
-                  const w = phaseWindow(selected, weddingISO);
-                  return <span>{fmt(w.from)} – {fmt(w.to)}</span>;
-                })()}
-                {weddingISO && selected === 'dagen' && <span>{longDate(weddingISO)}</span>}
-                {group.total > 0 && <span>· {t('{done} af {total} klaret', { done: group.done, total: group.total })}</span>}
-                {standing && (
-                  <span className={cn(
-                    'rounded-full px-2.5 py-0.5 text-[12px] font-semibold',
-                    standing.tone === 'now' && 'bg-sage-tint text-success',
-                    standing.tone === 'late' && 'bg-clay-tint text-clay-ink',
-                    standing.tone === 'done' && 'bg-sage-tint text-success',
-                    standing.tone === 'ahead' && 'bg-shell text-muted',
-                  )}>
-                    {standing.text}
-                  </span>
+        /* ── The periods ─────────────────────────────────────────────────
+           Time runs down a rail on the left: a year where one starts, a dot
+           per period. --rail is how far the content sits from the rail's
+           left edge; the dots and the years pull back out by the same. */
+        <ol
+          aria-label={t('Planens faser')}
+          className="ml-[5px] border-l border-line pl-[calc(var(--rail)-6px)] [--rail:22px] sm:[--rail:32px]"
+        >
+          {periods.map((p, i) => {
+            const isOpen = openPeriods.has(p.id);
+            const left = p.total - p.done;
+            const year = p.span?.from.slice(0, 4);
+            const newYear = year && year !== periods[i - 1]?.span?.from.slice(0, 4);
+            const named = !weddingISO || !MONTH_PHASES.has(p.id);
+            return (
+              <React.Fragment key={p.id}>
+                {newYear && (
+                  <li className={cn('ml-[calc(var(--rail)*-1)] pb-1', i > 0 && 'pt-5')}>
+                    <span className="inline-block bg-card py-1 pr-3 font-serif text-[1.3rem] leading-none text-ink">{year}</span>
+                  </li>
                 )}
-              </p>
-            </header>
+                <li className={cn(isOpen && 'pb-6')}>
+                  <h2 style={{ fontFamily: 'var(--font-sans)' }} className="relative">
+                    <span aria-hidden className={cn(
+                      'absolute left-[calc(var(--rail)*-1)] top-1/2 size-[11px] -translate-y-1/2 rounded-full border-2',
+                      p.time === 'now' ? 'border-sage-strong bg-sage-strong ring-4 ring-sage-tint'
+                        : p.time === 'past' ? (left > 0 ? 'border-terracotta bg-card' : 'border-sage-strong bg-sage-strong')
+                        : 'border-line bg-card',
+                    )} />
+                    <button type="button" onClick={() => togglePeriod(p.id)} aria-expanded={isOpen}
+                      className="group flex w-full items-center gap-x-3 py-2 text-left cursor-pointer">
+                      <span className={cn(
+                        'font-serif leading-tight text-ink transition-[font-size] duration-200',
+                        isOpen ? 'text-[1.7rem] sm:text-[2.1rem]' : 'text-[1.3rem] sm:text-[1.45rem]',
+                      )}>
+                        {phaseName(p.id, 'long')}
+                      </span>
+                      {p.time === 'now' && (
+                        <span className="rounded-full bg-sage-tint px-2.5 py-0.5 text-[12px] font-semibold text-success">{t('Nu')}</span>
+                      )}
+                      {named && p.span && !isOpen && (
+                        <span className="hidden text-[13px] text-muted sm:inline">{fmt(p.span.from, false)} – {fmt(p.span.to, false)}</span>
+                      )}
+                      <span className="ml-auto flex shrink-0 items-center gap-2 text-[13px] font-medium tabular-nums">
+                        {!isOpen && (
+                          p.time === 'past'
+                            ? left > 0
+                              ? <span className="text-clay-ink">{tn(left, 'én tilbage', '{n} tilbage')}</span>
+                              : <span className="text-success">{t('Klaret')}</span>
+                            : <span className="text-muted">
+                                {p.total === 0 ? '–'
+                                  : p.done > 0 ? t('{done} af {total} klaret', { done: p.done, total: p.total })
+                                  : tn(p.total, 'Én ting', '{n} ting')}
+                              </span>
+                        )}
+                        <ChevronDown size={16} className={cn('text-muted transition-transform group-hover:text-ink', isOpen && 'rotate-180')} aria-hidden />
+                      </span>
+                    </button>
+                  </h2>
 
-            {/* What earlier phases left behind, on the phase they are in */}
-            {(lateMilestones.length > 0 || leftovers.length > 0) && (
-              <div className="mt-6 rounded-[18px] border border-terracotta/20 bg-terracotta-wash px-4 py-3.5 sm:px-5">
-                <p className="text-[13px] font-semibold text-clay-ink">{t('Fra tidligere faser')}</p>
-                {lateMilestones.length > 0 && (
-                  <div className="mt-1 divide-y divide-terracotta/20">
-                    {lateMilestones.map((r) => <div key={r.id}><TaskRow variant="list" {...rowProps(r)} /></div>)}
-                  </div>
-                )}
-                {leftovers.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {leftovers.map((x) => (
-                      <button key={x.phase} type="button" onClick={() => select(x.phase)}
-                        className="group inline-flex items-center gap-1.5 rounded-full border border-terracotta/20 bg-card px-3 py-1.5 text-[12px] font-semibold text-clay-ink transition-colors hover:border-amber cursor-pointer">
-                        {t(PHASE_STEP[x.phase])} · {tn(x.left, 'én opgave', '{n} opgaver')}
-                        <ArrowRight size={12} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+                  {isOpen && (
+                    <motion.div
+                      initial={reduce ? false : { opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] text-muted">
+                        {p.span && <span>{fmt(p.span.from)} – {fmt(p.span.to)}</span>}
+                        {p.total > 0 && <span>{p.span && '· '}{t('{done} af {total} klaret', { done: p.done, total: p.total })}</span>}
+                      </p>
 
-            {/* The big moments of the phase */}
-            {shown.milestones.length > 0 && (
-              <div className="mt-6 flex flex-col gap-3">
-                {shown.milestones.map((r) => <TaskRow key={r.id} {...rowProps(r)} />)}
-              </div>
-            )}
+                      {p.time === 'now' && lateMilestones.length > 0 && (
+                        <div className="mt-4 rounded-[18px] border border-terracotta/20 bg-terracotta-wash px-4 py-3.5 sm:px-5">
+                          <p className="text-[13px] font-semibold text-clay-ink">{t('Fra tidligere faser')}</p>
+                          <div className="mt-1 divide-y divide-terracotta/20">
+                            {lateMilestones.map((r) => <div key={r.id}><TaskRow variant="list" {...rowProps(r)} /></div>)}
+                          </div>
+                        </div>
+                      )}
 
-            {selected === 'dagen' && (
-              <button type="button" onClick={onOpenDay}
-                className="group mt-3 flex items-center justify-between gap-3 rounded-[18px] bg-shell px-5 py-4 text-left transition-colors hover:bg-line/50 cursor-pointer">
-                <span className="flex items-center gap-3">
-                  <PartyPopper size={18} className="text-sage-strong" aria-hidden />
-                  <span>
-                    <span className="block text-[15px] font-semibold text-ink">{t('Programmet for dagen')}</span>
-                    <span className="block text-[13px] text-muted">{t('Minut for minut, fra ankomst til natmad')}</span>
-                  </span>
-                </span>
-                <ArrowRight size={16} className="shrink-0 text-muted transition-transform group-hover:translate-x-0.5" aria-hidden />
-              </button>
-            )}
-
-            {/* The to-dos, by area */}
-            {byArea.length > 0 && (
-              <div className="mt-8 flex flex-col gap-6">
-                {byArea.map(({ area, rows }) => (
-                  <section key={area.id}>
-                    {/* Hanken set inline: the theme sets every h3 in Cormorant, and
-                        a 13px label in the display face read as a smudge. */}
-                    <h3 style={{ fontFamily: 'var(--font-sans)' }} className="flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
-                      <area.Icon size={14} strokeWidth={2} className="text-sage-strong" aria-hidden />
-                      {t(area.label)}
-                    </h3>
-                    <div className="mt-1 divide-y divide-line/70">
-                      {rows.map((r) => <div key={r.id}><TaskRow variant="list" {...rowProps(r)} /></div>)}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            )}
-
-            {shown.milestones.length === 0 && byArea.length === 0 && (
-              <p className="mt-6 rounded-[18px] bg-shell px-5 py-6 text-center font-serif text-lg text-ink">
-                {group.total === 0 ? t('Intet i denne fase endnu.') : t('Alt i denne fase er klaret.')}
-              </p>
-            )}
-
-            {/* Adding, into this phase */}
-            <AnimatePresence>
-              {adding && (
-                <div className="mt-4">
-                  <AddRow
-                    inputRef={newInputRef} title={newTitle}
-                    placeholder={adding === 'milestone' ? 'Milepælens navn…' : 'Hvad skal huskes?'}
-                    onTitleChange={setNewTitle}
-                    {...(adding === 'milestone' ? { date: newDate, onDateChange: setNewDate } : {})}
-                    onSave={commitAdd} onCancel={() => setAdding(null)}
-                  />
-                </div>
-              )}
-            </AnimatePresence>
-            {!adding && (
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1">
-                <button type="button" onClick={() => openAdd('todo')}
-                  className="inline-flex items-center gap-2 py-2 text-[13px] font-semibold text-muted transition-colors hover:text-ink cursor-pointer">
-                  <Plus size={14} aria-hidden /> {t('Tilføj opgave')}
-                </button>
-                <button type="button" onClick={() => openAdd('milestone')}
-                  className="inline-flex items-center gap-2 py-2 text-[13px] font-semibold text-muted transition-colors hover:text-ink cursor-pointer">
-                  <Plus size={14} aria-hidden /> {t('Tilføj milepæl')}
-                </button>
-              </div>
-            )}
-
-            {/* What is done in this phase, folded away */}
-            {doneRows.length > 0 && (
-              <div className="mt-6 border-t border-line pt-4">
-                <button type="button" onClick={() => setShowDone((v) => !v)} aria-expanded={showDone}
-                  className="inline-flex items-center gap-2 text-[13px] font-semibold text-muted transition-colors hover:text-ink cursor-pointer">
-                  <span className="flex size-5 items-center justify-center rounded-full bg-sage-tint text-sage-strong">
-                    <Check size={11} strokeWidth={3} aria-hidden />
-                  </span>
-                  {tn(doneRows.length, 'Én ting er klaret i denne fase', '{n} ting er klaret i denne fase')}
-                  <ChevronDown size={14} className={cn('transition-transform', showDone && 'rotate-180')} aria-hidden />
-                </button>
-                {showDone && (
-                  <div className="mt-2 divide-y divide-line/70">
-                    {doneRows.map((r) => <div key={r.id}><TaskRow variant="list" {...rowProps(r)} /></div>)}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* On to the next phase, or back */}
-            <nav aria-label={t('Faser')} className="mt-8 flex items-center justify-between gap-3 border-t border-line pt-5">
-              {at > 0 ? (
-                <button type="button" onClick={() => select(order[at - 1])}
-                  className="group inline-flex items-center gap-2 text-[14px] font-semibold text-ink-soft transition-colors hover:text-ink cursor-pointer">
-                  <ArrowLeft size={15} className="transition-transform group-hover:-translate-x-0.5" aria-hidden />
-                  {t(PHASE_TITLE[order[at - 1]])}
-                </button>
-              ) : <span />}
-              {at < order.length - 1 && (
-                <button type="button" onClick={() => select(order[at + 1])}
-                  className="group inline-flex items-center gap-2 text-right text-[14px] font-semibold text-ink transition-colors cursor-pointer">
-                  {t(PHASE_TITLE[order[at + 1]])}
-                  <ArrowRight size={15} className="transition-transform group-hover:translate-x-0.5" aria-hidden />
-                </button>
-              )}
-            </nav>
-          </motion.div>
-        </AnimatePresence>
+                      {p.parts.length === 1 ? phaseBody(p.parts[0]) : p.parts.map((g) => (
+                        <section key={g.phase} className="mt-7 first-of-type:mt-5">
+                          <h3 className="flex flex-wrap items-baseline gap-x-2.5 font-serif text-[1.3rem] leading-tight text-ink">
+                            {t(PART_TITLE[g.phase] ?? PHASE_TITLE[g.phase])}
+                            {g.phase === now && (
+                              <span style={{ fontFamily: 'var(--font-sans)' }} className="self-center rounded-full bg-sage-tint px-2 py-0.5 text-[11px] font-semibold text-success">{t('Nu')}</span>
+                            )}
+                            <span style={{ fontFamily: 'var(--font-sans)' }} className="text-[13px] text-muted">{partDates(g.phase)}</span>
+                          </h3>
+                          {phaseBody(g)}
+                        </section>
+                      ))}
+                    </motion.div>
+                  )}
+                </li>
+              </React.Fragment>
+            );
+          })}
+        </ol>
       )}
 
       <AnimatePresence>

@@ -1,6 +1,6 @@
 /* Carrying out a MILESTONE_ACTIONS entry: open the screen (and the vendor
-   hub's tab and category, when it is the hub), or the guide. Shared by the
-   timeline's rows and the Overblik tab. */
+   hub's tab and category, when it is the hub), or the guide on the website.
+   Shared by the timeline's rows and the Overblik tab. */
 
 import type { ScreenId } from '../../Shell';
 import { navigateToHub } from '../../lib/hub-nav';
